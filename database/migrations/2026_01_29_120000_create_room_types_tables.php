@@ -1,0 +1,38 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('room_types', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('hotel_id')->constrained('hotels')->cascadeOnDelete();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->unsignedInteger('max_guest')->nullable();
+            $table->string('bed_type', 64)->nullable();
+            $table->decimal('base_price', 12, 2)->default(0);
+            $table->unsignedInteger('total_rooms')->default(0);
+            $table->string('status', 16)->default('draft');
+            $table->timestamps();
+
+            $table->index(['hotel_id', 'status']);
+        });
+
+        Schema::create('room_images', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('room_type_id')->constrained('room_types')->cascadeOnDelete();
+            $table->string('image_url');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('room_images');
+        Schema::dropIfExists('room_types');
+    }
+};

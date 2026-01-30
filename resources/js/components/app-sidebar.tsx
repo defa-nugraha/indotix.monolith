@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -11,9 +12,13 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
+import { useCurrentUrl } from '@/hooks/use-current-url';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -38,6 +43,11 @@ const footerNavItems: NavItem[] = [
 ];
 
 export function AppSidebar() {
+    const { isCurrentUrl } = useCurrentUrl();
+    const isHotelSectionActive =
+        isCurrentUrl('/hotels') ||
+        isCurrentUrl('/room-types') ||
+        isCurrentUrl('/room-inventories');
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -54,6 +64,51 @@ export function AppSidebar() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
+                <SidebarMenu className="px-2">
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isHotelSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <Building2 />
+                                    <span>Hotel</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/hotels')}
+                                        >
+                                            <Link href="/hotels">Data Hotel</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/room-types')}
+                                        >
+                                            <Link href="/room-types">
+                                                Tipe Kamar
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/room-inventories')}
+                                        >
+                                            <Link href="/room-inventories">
+                                                Inventory per Tanggal
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                </SidebarMenu>
             </SidebarContent>
 
             <SidebarFooter>
