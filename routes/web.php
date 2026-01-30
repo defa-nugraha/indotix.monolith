@@ -12,11 +12,34 @@ Route::get('/', function () {
 
 Route::get('dashboard', function () {
     return Inertia::render('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
-Route::get('mitra/dashboard', function () {
-    return Inertia::render('mitra/dashboard');
+Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
+    $onboarding = \App\Models\MitraOnboarding::query()->firstOrCreate([
+        'user_id' => $request->user()->id,
+    ]);
+
+    return Inertia::render('mitra/dashboard', [
+        'onboarding' => $onboarding,
+    ]);
 })->middleware(['auth', 'verified', 'mitra'])->name('mitra.dashboard');
+
+Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
+    Route::get('mitra/onboarding', [\App\Http\Controllers\MitraOnboardingController::class, 'show'])
+        ->name('mitra.onboarding');
+    Route::patch('mitra/onboarding/step-1', [\App\Http\Controllers\MitraOnboardingController::class, 'updateStepOne'])
+        ->name('mitra.onboarding.step1');
+    Route::patch('mitra/onboarding/step-2', [\App\Http\Controllers\MitraOnboardingController::class, 'updateStepTwo'])
+        ->name('mitra.onboarding.step2');
+    Route::post('mitra/onboarding/step-2', [\App\Http\Controllers\MitraOnboardingController::class, 'updateStepTwo'])
+        ->name('mitra.onboarding.step2.post');
+    Route::patch('mitra/onboarding/step-3', [\App\Http\Controllers\MitraOnboardingController::class, 'updateStepThree'])
+        ->name('mitra.onboarding.step3');
+    Route::post('mitra/onboarding/submit-verification', [\App\Http\Controllers\MitraOnboardingController::class, 'submitVerification'])
+        ->name('mitra.onboarding.submitVerification');
+    Route::post('mitra/onboarding/submit-payout', [\App\Http\Controllers\MitraOnboardingController::class, 'submitPayout'])
+        ->name('mitra.onboarding.submitPayout');
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('hotels', \App\Http\Controllers\HotelController::class)->except(['show']);

@@ -42,7 +42,7 @@ const footerNavItems: NavItem[] = [
     },
 ];
 
-export function AppSidebar() {
+export function AppSidebarAdmin() {
     const { isCurrentUrl } = useCurrentUrl();
     const isHotelSectionActive =
         isCurrentUrl('/hotels') ||

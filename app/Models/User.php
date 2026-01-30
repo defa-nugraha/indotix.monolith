@@ -37,6 +37,11 @@ class User extends Authenticatable implements MustVerifyEmail
         'remember_token',
     ];
 
+    public function mitraOnboarding()
+    {
+        return $this->hasOne(\App\Models\MitraOnboarding::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

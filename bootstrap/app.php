@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'mitra' => \App\Http\Middleware\EnsureMitra::class,
+            'admin' => \App\Http\Middleware\EnsureAdmin::class,
         ]);
 
         $middleware->web(append: [

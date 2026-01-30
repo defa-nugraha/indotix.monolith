@@ -23,6 +23,10 @@ class LoginResponse implements LoginResponseContract
             return redirect()->route('mitra.dashboard');
         }
 
-        return redirect()->route('dashboard');
+        if ($user->role === 'admin') {
+            return redirect()->route('dashboard');
+        }
+
+        return redirect()->route('home');
     }
 }

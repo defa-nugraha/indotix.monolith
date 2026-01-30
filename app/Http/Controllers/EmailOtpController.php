@@ -104,7 +104,15 @@ class EmailOtpController extends Controller
         EmailOtp::query()->where('user_id', $user->id)->delete();
         RateLimiter::clear($verifyKey);
 
-        return redirect()->route('dashboard');
+        if ($user->role === 'mitra') {
+            return redirect()->route('mitra.dashboard');
+        }
+
+        if ($user->role === 'admin') {
+            return redirect()->route('dashboard');
+        }
+
+        return redirect()->route('home');
     }
 
     public function resend(Request $request): RedirectResponse
