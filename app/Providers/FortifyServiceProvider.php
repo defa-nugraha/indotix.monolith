@@ -3,12 +3,15 @@
 namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
+use App\Actions\Fortify\LoginResponse;
+use App\Actions\Fortify\RegisterResponse;
 use App\Actions\Fortify\ResetUserPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use App\Models\EmailOtp;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
@@ -20,7 +23,14 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\RegisterResponse::class,
+            RegisterResponse::class
+        );
+        $this->app->singleton(
+            \Laravel\Fortify\Contracts\LoginResponse::class,
+            LoginResponse::class
+        );
     }
 
     /**
@@ -62,9 +72,18 @@ class FortifyServiceProvider extends ServiceProvider
             'status' => $request->session()->get('status'),
         ]));
 
-        Fortify::verifyEmailView(fn (Request $request) => Inertia::render('auth/verify-email', [
-            'status' => $request->session()->get('status'),
-        ]));
+        Fortify::verifyEmailView(function (Request $request) {
+            $user = $request->user();
+            $otp = $user
+                ? EmailOtp::query()->where('user_id', $user->id)->latest()->first()
+                : null;
+
+            return Inertia::render('auth/verify-otp', [
+                'status' => $request->session()->get('status'),
+                'email' => $user?->email,
+                'expiresAt' => $otp?->expires_at?->toIso8601String(),
+            ]);
+        });
 
         Fortify::registerView(fn () => Inertia::render('auth/register'));
 
