@@ -1,7 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
-import { CalendarCheck, CreditCard, QrCode, Wallet, Landmark, ShoppingBag, Ticket, Users, MapPinned } from 'lucide-react';
+import { Bell, CalendarCheck, CreditCard, QrCode, Wallet, Landmark, ShoppingBag, Ticket, Users, MapPinned, UserCircle, History, MessageCircle } from 'lucide-react';
 
 type PaymentOption = { id: string; label: string };
 
@@ -153,13 +153,22 @@ export default function BookingPayment({ booking, paymentOptions }: { booking: B
                     )}
                     {isUser && (
                         <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="hover:text-sky-600">
+                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
+                                <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-sky-600">Riwayat</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-sky-600">Live Chat</span>
+                            <Link href="/?tab=riwayat" className="flex items-center gap-2 hover:text-sky-600">
+                                <History className="h-4 w-4" />
+                                Riwayat
+                            </Link>
+                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat
+                            </Link>
+                            <Link href="/?tab=notifikasi" className="flex items-center gap-2 hover:text-sky-600">
+                                <Bell className="h-4 w-4" />
+                                Notifikasi
+                            </Link>
                         </div>
                     )}
                 </div>
@@ -214,8 +223,12 @@ export default function BookingPayment({ booking, paymentOptions }: { booking: B
                                     form.post(`/booking/${booking.encrypted_id ?? booking.id}/payment`, {
                                         onSuccess: () =>
                                             Swal.fire({ title: 'Berhasil', text: 'Instruksi pembayaran dibuat.', icon: 'success' }),
-                                        onError: () =>
-                                            Swal.fire({ title: 'Gagal', text: 'Pembayaran gagal dibuat.', icon: 'error' }),
+                                        onError: (errors) =>
+                                            Swal.fire({
+                                                title: 'Gagal',
+                                                text: errors.payment ?? 'Pembayaran gagal dibuat.',
+                                                icon: 'error',
+                                            }),
                                     });
                                 }}
                             >
@@ -324,7 +337,15 @@ export default function BookingPayment({ booking, paymentOptions }: { booking: B
                                         );
                                     })}
                                 </div>
-                                <button className="h-11 rounded-lg bg-sky-600 text-sm font-semibold text-white">Buat Instruksi Pembayaran</button>
+                                <button
+                                    className="flex h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                                    disabled={form.processing}
+                                >
+                                    {form.processing && (
+                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-white" />
+                                    )}
+                                    {form.processing ? 'Memproses...' : 'Lanjutkan Pembayaran'}
+                                </button>
                             </form>
                         </div>
                     </div>

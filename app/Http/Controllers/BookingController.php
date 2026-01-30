@@ -226,9 +226,9 @@ class BookingController extends Controller
 
         try {
             $charge = $midtransService->charge($payload);
-        } catch (RuntimeException $exception) {
+        } catch (\Throwable $exception) {
             return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)])
-                ->withErrors(['payment' => 'Gagal membuat pembayaran.']);
+                ->withErrors(['payment' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.']);
         }
 
         $payment = Payment::create([
@@ -247,7 +247,7 @@ class BookingController extends Controller
             'payment_status' => $payment->status,
         ]);
 
-        return redirect()->route('booking.show', ['booking' => $this->encryptId($booking->id)]);
+        return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)]);
     }
 
     public function show(Request $request, string $booking): Response|RedirectResponse

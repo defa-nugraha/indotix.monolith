@@ -4,7 +4,7 @@ import { DateRange, RangeKeyDict } from 'react-date-range';
 import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket } from 'lucide-react';
+import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Hotel = {
@@ -39,11 +39,15 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
     const { auth } = usePage().props as { auth?: { user?: unknown } };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const [isReady, setIsReady] = useState(false);
+    const today = new Date();
+    const tomorrow = new Date(Date.now() + 86400000);
+    const defaultCheckIn = format(today, 'yyyy-MM-dd');
+    const defaultCheckOut = format(tomorrow, 'yyyy-MM-dd');
     const [form, setForm] = useState({
         q: filters.q ?? '',
         city: filters.city ?? '',
-        check_in: filters.check_in ?? '',
-        check_out: filters.check_out ?? '',
+        check_in: filters.check_in ?? defaultCheckIn,
+        check_out: filters.check_out ?? defaultCheckOut,
         rooms: filters.rooms ?? 1,
         guests: filters.guests ?? 2,
     });
@@ -98,11 +102,11 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
     })();
 
     const categories = [
-        { label: 'Wisata', icon: MapPinned, active: true },
-        { label: 'Event', icon: CalendarCheck },
-        { label: 'Souvenir', icon: ShoppingBag },
-        { label: 'Spesial Program', icon: Star },
-        { label: 'Hotel', icon: Ticket },
+        { label: 'Wisata', icon: MapPinned, href: '/?tab=wisata' },
+        { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+        { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
+        { label: 'Hotel', icon: Ticket, href: '/stay', active: true },
     ];
 
     const chips = [
@@ -159,28 +163,38 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                     )}
                     {isUser && (
                         <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="hover:text-sky-600">
+                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
+                                <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-sky-600">Riwayat</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-sky-600">Live Chat</span>
+                            <Link href="/?tab=riwayat" className="flex items-center gap-2 hover:text-sky-600">
+                                <History className="h-4 w-4" />
+                                Riwayat
+                            </Link>
+                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat
+                            </Link>
+                            <Link href="/?tab=notifikasi" className="flex items-center gap-2 hover:text-sky-600">
+                                <Bell className="h-4 w-4" />
+                                Notifikasi
+                            </Link>
                         </div>
                     )}
                 </div>
                 <div className="border-t border-slate-100">
                     <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
                         {categories.map((item) => (
-                            <button
+                            <Link
                                 key={item.label}
+                                href={item.href}
                                 className={`flex items-center gap-2 text-sm font-semibold ${
                                     item.active ? 'text-slate-900' : 'text-slate-500'
                                 }`}
                             >
                                 <item.icon className="h-4 w-4" />
                                 {item.label}
-                            </button>
+                            </Link>
                         ))}
                     </div>
                 </div>
@@ -212,22 +226,26 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
 
                 {isReady && (
                 <>
-                <section className="relative rounded-[28px] shadow-lg mb-6">
-                    <div className="overflow-hidden rounded-[28px]">
+                <section className="mb-6">
+                    <div className="relative overflow-hidden rounded-[28px] shadow-lg">
                         <img
                             src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=1920&auto=format&fit=crop"
                             alt="Beach resort"
-                            className="h-64 w-full object-cover md:h-72"
+                            className="h-72 w-full object-cover md:h-88"
                         />
-                    </div>
-                    <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-r from-black/55 via-black/35 to-transparent" />
-                    <div className="absolute bottom-24 left-8 right-8 text-white">
-                        <h1 className="text-2xl font-semibold md:text-3xl">Mau ke mana? Pesan hotel terbaikmu di INDOTIX</h1>
-                        <p className="mt-2 text-sm text-white/80">Temukan hotel, villa, resort, dan banyak pilihan lainnya.</p>
+                        <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-r from-black/60 via-black/45 to-transparent" />
+                        <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 text-center text-white">
+                            <h1 className="text-2xl font-semibold md:text-3xl">
+                                Mau ke mana dulu? Booking hotel nyaman lebih hemat di INDOTIX
+                            </h1>
+                            <p className="mt-2 text-sm text-white/85">
+                                Temukan pilihan hotel, villa, resort, dan banyak lagi — semua dalam satu tempat.
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="relative -mt-8 px-6 pb-6">
-                        <div className="rounded-[24px] bg-white p-5 shadow-[0_12px_30px_-16px_rgba(15,23,42,0.55)]">
+                    <div className="-mt-24 px-6">
+                        <div className="relative z-20 rounded-[24px] bg-white p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)]">
                             <form className="grid gap-4 md:grid-cols-[2fr_2fr_1.5fr_auto]" onSubmit={submitSearch}>
                                 <div className="grid gap-2">
                                     <label className="text-xs font-semibold uppercase text-slate-500">Kota, destinasi, atau nama hotel</label>
@@ -334,29 +352,55 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                     </div>
                 </section>
 
-                <div className="mt-8 grid gap-6 md:grid-cols-2">
+                <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {hotels.map((hotel) => (
-                        <div key={hotel.id} className="rounded-2xl bg-white p-5 shadow-sm">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-lg font-semibold text-slate-900">{hotel.name}</h2>
-                                    <p className="text-sm text-slate-500">{hotel.city_name ?? hotel.address}</p>
+                        <div
+                            key={hotel.id}
+                            className="group overflow-hidden rounded-xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                        >
+                            <Link
+                                href={`/stay/hotels/${hotel.encrypted_id ?? hotel.id}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}`}
+                                className="relative block h-28 overflow-hidden"
+                            >
+                                <img
+                                    src={`https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop&sig=${hotel.id}`}
+                                    alt={hotel.name}
+                                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                                <div className="absolute left-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-semibold text-slate-700 shadow-sm">
+                                    {hotel.star_rating ? `${hotel.star_rating}★` : 'Hotel'}
                                 </div>
-                                <div className="text-xs text-slate-500">{hotel.star_rating ? `${hotel.star_rating}★` : 'Hotel'}</div>
-                            </div>
-                            <div className="mt-4 flex items-center justify-between">
-                                <div>
-                                    <div className="text-xs text-slate-500">Harga mulai dari</div>
-                                    <div className="text-base font-semibold text-sky-600">
-                                        {hotel.min_price ? `Rp ${hotel.min_price.toLocaleString('id-ID')}` : '-'}
+                            </Link>
+                            <div className="p-3">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h2 className="text-sm font-semibold text-slate-900">{hotel.name}</h2>
+                                        <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                                            <MapPinned className="h-3 w-3 text-sky-500" />
+                                            {hotel.city_name ?? hotel.address ?? 'Indonesia'}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-0.5">
+                                        {Array.from({ length: Math.max(0, Math.round(hotel.star_rating ?? 0)) }).map((_, idx) => (
+                                            <Star key={`${hotel.id}-star-${idx}`} className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                                        ))}
                                     </div>
                                 </div>
-                                <Link
-                                    href={`/stay/hotels/${hotel.encrypted_id ?? hotel.id}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}`}
-                                    className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
-                                >
-                                    Lihat Detail
-                                </Link>
+                                <div className="mt-3 flex items-center justify-between">
+                                    <div>
+                                        <div className="text-[11px] text-slate-500">Mulai</div>
+                                        <div className="text-sm font-semibold text-sky-600">
+                                            {hotel.min_price ? `Rp ${hotel.min_price.toLocaleString('id-ID')}` : '-'}
+                                        </div>
+                                    </div>
+                                    <Link
+                                        href={`/stay/hotels/${hotel.encrypted_id ?? hotel.id}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}`}
+                                        className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700"
+                                    >
+                                        Lihat Detail
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     ))}

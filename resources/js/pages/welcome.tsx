@@ -2,11 +2,15 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
+    Bell,
     CalendarCheck,
     MapPinned,
+    MessageCircle,
     ShoppingBag,
     Star,
     Ticket,
+    UserCircle,
+    History,
 } from 'lucide-react';
 
 type Banner = { id: number; image_path: string; link_url?: string | null };
@@ -97,11 +101,11 @@ export default function Welcome({
         return () => window.clearInterval(interval);
     }, [bannerSlides.length, isBannerTransitioning]);
     const categories = [
-        { label: 'Wisata', icon: MapPinned, active: true },
-        { label: 'Event', icon: CalendarCheck },
-        { label: 'Souvenir', icon: ShoppingBag },
-        { label: 'Spesial Program', icon: Star },
-        { label: 'Hotel', icon: Ticket },
+        { label: 'Wisata', icon: MapPinned, active: true, href: '/?tab=wisata' },
+        { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+        { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
+        { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
     const chips = [
@@ -196,30 +200,38 @@ export default function Welcome({
                     )}
                     {isUser && (
                         <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="hover:text-sky-600">
+                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
+                                <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-sky-600">Riwayat</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-sky-600">Live Chat</span>
+                            <Link href="/?tab=riwayat" className="flex items-center gap-2 hover:text-sky-600">
+                                <History className="h-4 w-4" />
+                                Riwayat
+                            </Link>
+                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat
+                            </Link>
+                            <Link href="/?tab=notifikasi" className="flex items-center gap-2 hover:text-sky-600">
+                                <Bell className="h-4 w-4" />
+                                Notifikasi
+                            </Link>
                         </div>
                     )}
                 </div>
                 <div className="border-t border-slate-100">
                     <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
                         {categories.map((item) => (
-                            <button
+                            <Link
                                 key={item.label}
+                                href={item.href}
                                 className={`flex items-center gap-2 text-sm font-semibold ${
-                                    item.active
-                                        ? 'text-slate-900'
-                                        : 'text-slate-500'
+                                    item.active ? 'text-slate-900' : 'text-slate-500'
                                 }`}
                             >
                                 <item.icon className="h-4 w-4" />
                                 {item.label}
-                            </button>
+                            </Link>
                         ))}
                     </div>
                 </div>

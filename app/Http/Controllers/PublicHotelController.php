@@ -16,29 +16,26 @@ class PublicHotelController extends Controller
 {
     public function search(Request $request): Response
     {
-        if (! $request->filled('check_in') || ! $request->filled('check_out')) {
-            return Inertia::render('public/hotels/search', [
-                'filters' => [
-                    'city' => $request->input('city'),
-                    'check_in' => null,
-                    'check_out' => null,
-                    'rooms' => 1,
-                    'guests' => 2,
-                    'q' => $request->input('q'),
-                ],
-                'hotels' => [],
-                'recommendations' => $this->recommendations(),
-            ]);
-        }
+        $today = Carbon::today();
+        $tomorrow = $today->copy()->addDay();
 
-        $data = $request->validate([
+        $payload = [
+            'city' => $request->input('city'),
+            'check_in' => $request->input('check_in') ?? $today->toDateString(),
+            'check_out' => $request->input('check_out') ?? $tomorrow->toDateString(),
+            'rooms' => $request->input('rooms', 1),
+            'guests' => $request->input('guests', 2),
+            'q' => $request->input('q'),
+        ];
+
+        $data = validator($payload, [
             'city' => ['nullable', 'string', 'size:4'],
             'check_in' => ['required', 'date'],
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
             'q' => ['nullable', 'string', 'max:255'],
-        ]);
+        ])->validate();
 
         $dates = $this->dateRange($data['check_in'], $data['check_out']);
 

@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import Swal from 'sweetalert2';
-import { CalendarCheck, ClipboardCheck, Mail, Phone, Star, Ticket, User, Users, MapPinned, ShoppingBag } from 'lucide-react';
+import { Bell, CalendarCheck, ClipboardCheck, Mail, Phone, Star, Ticket, User, Users, MapPinned, ShoppingBag, UserCircle, History, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 
 export default function BookingReview({ draft, hotel, roomType, pricing }: any) {
@@ -52,13 +52,22 @@ export default function BookingReview({ draft, hotel, roomType, pricing }: any) 
                     )}
                     {isUser && (
                         <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="hover:text-sky-600">
+                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
+                                <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-sky-600">Riwayat</span>
-                            <span className="text-slate-300">|</span>
-                            <span className="hover:text-sky-600">Live Chat</span>
+                            <Link href="/?tab=riwayat" className="flex items-center gap-2 hover:text-sky-600">
+                                <History className="h-4 w-4" />
+                                Riwayat
+                            </Link>
+                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat
+                            </Link>
+                            <Link href="/?tab=notifikasi" className="flex items-center gap-2 hover:text-sky-600">
+                                <Bell className="h-4 w-4" />
+                                Notifikasi
+                            </Link>
                         </div>
                     )}
                 </div>
