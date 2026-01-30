@@ -173,7 +173,7 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
                                 <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
-                            <Link href="/?tab=riwayat" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
                                 <History className="h-4 w-4" />
                                 Riwayat
                             </Link>

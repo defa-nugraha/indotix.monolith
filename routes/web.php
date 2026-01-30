@@ -178,6 +178,8 @@ Route::get('/stay/hotels/{hotel}', [\App\Http\Controllers\PublicHotelController:
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
     ->name('booking.prepare');
 Route::middleware(['auth', 'verified', 'user'])->group(function () {
+    Route::get('/history', [\App\Http\Controllers\PublicHistoryController::class, 'index'])
+        ->name('public.history');
     Route::get('/booking/review', [\App\Http\Controllers\BookingController::class, 'review'])
         ->name('booking.review');
     Route::post('/booking/confirm', [\App\Http\Controllers\BookingController::class, 'confirm'])
@@ -186,6 +188,10 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('booking.payment');
     Route::post('/booking/{booking}/payment', [\App\Http\Controllers\BookingController::class, 'pay'])
         ->name('booking.pay');
+    Route::post('/booking/{booking}/cancel', [\App\Http\Controllers\BookingController::class, 'cancel'])
+        ->name('booking.cancel');
+    Route::get('/booking/{booking}/invoice', [\App\Http\Controllers\BookingController::class, 'invoice'])
+        ->name('booking.invoice');
     Route::get('/booking/{booking}', [\App\Http\Controllers\BookingController::class, 'show'])
         ->name('booking.show');
 });

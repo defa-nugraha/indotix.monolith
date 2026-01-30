@@ -269,6 +269,56 @@ class BookingController extends Controller
         ]);
     }
 
+    public function cancel(Request $request, string $booking): RedirectResponse
+    {
+        $booking = $this->resolveBooking($booking);
+
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return redirect()->route('home');
+        }
+
+        if ($booking->status !== 'pending_payment') {
+            return redirect()->route('booking.show', ['booking' => $this->encryptId($booking->id)])
+                ->withErrors(['cancel' => 'Pesanan tidak dapat dibatalkan.']);
+        }
+
+        $booking->load('rooms.roomType');
+        foreach ($booking->rooms as $room) {
+            if (! $room->roomType) {
+                continue;
+            }
+            app(BookingService::class)->releaseInventory(
+                $room->roomType,
+                $booking->check_in->toDateString(),
+                $booking->check_out->toDateString(),
+                $room->rooms_count
+            );
+        }
+
+        $booking->status = 'cancelled';
+        $booking->payment_status = 'cancelled';
+        $booking->save();
+
+        return redirect()->route('booking.show', ['booking' => $this->encryptId($booking->id)]);
+    }
+
+    public function invoice(Request $request, string $booking)
+    {
+        $booking = $this->resolveBooking($booking);
+
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return redirect()->route('home');
+        }
+
+        $booking->load('hotel', 'rooms.roomType');
+
+        $filename = sprintf('invoice-%s.pdf', $booking->id);
+
+        return \PDF::loadView('invoice', [
+            'booking' => $booking,
+        ])->download($filename);
+    }
+
     private function bookingPayload(Booking $booking): array
     {
         $latestPayment = $booking->payments()->latest()->first();
