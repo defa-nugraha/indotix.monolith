@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, Users } from 'lucide-react';
+import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, MonitorPlay, Ticket, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -53,6 +53,12 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/hotels') ||
         isCurrentUrl('/room-types') ||
         isCurrentUrl('/room-inventories');
+    const isPublicSectionActive =
+        isCurrentUrl('/admin/public/banners') ||
+        isCurrentUrl('/admin/public/promo-videos') ||
+        isCurrentUrl('/admin/public/promo-items') ||
+        isCurrentUrl('/admin/public/contacts') ||
+        isCurrentUrl('/admin/public/partners');
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -112,6 +118,61 @@ export function AppSidebarAdmin() {
                                 </SidebarMenuSub>
                             </CollapsibleContent>
                         </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isPublicSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <MonitorPlay />
+                                    <span>Konten Publik</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/public/banners')}
+                                        >
+                                            <Link href="/admin/public/banners">Banner</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/public/promo-videos')}
+                                        >
+                                            <Link href="/admin/public/promo-videos">Promo Video</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/public/promo-items')}
+                                        >
+                                            <Link href="/admin/public/promo-items">Promo Terkini</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                    <SidebarMenuSubButton
+                                        asChild
+                                        isActive={isCurrentUrl('/admin/public/contacts')}
+                                    >
+                                        <Link href="/admin/public/contacts">Kontak</Link>
+                                    </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                                <SidebarMenuSubItem>
+                                    <SidebarMenuSubButton
+                                        asChild
+                                        isActive={isCurrentUrl('/admin/public/partners')}
+                                    >
+                                        <Link href="/admin/public/partners">Partner Kami</Link>
+                                    </SidebarMenuSubButton>
+                                </SidebarMenuSubItem>
+                            </SidebarMenuSub>
+                        </CollapsibleContent>
+                    </Collapsible>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarContent>

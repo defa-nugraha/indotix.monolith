@@ -5,8 +5,35 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 
 Route::get('/', function () {
+    $banners = \App\Models\PublicBanner::query()
+        ->where('is_active', true)
+        ->orderBy('sort_order')
+        ->orderByDesc('id')
+        ->get();
+    $promoVideo = \App\Models\PromoVideo::query()
+        ->where('is_active', true)
+        ->latest()
+        ->first();
+    $promoItems = \App\Models\PromoItem::query()
+        ->where('is_active', true)
+        ->orderBy('sort_order')
+        ->orderByDesc('id')
+        ->take(3)
+        ->get();
+    $contact = \App\Models\PublicContact::query()->first();
+    $partners = \App\Models\PublicPartner::query()
+        ->where('is_active', true)
+        ->orderBy('sort_order')
+        ->orderByDesc('id')
+        ->get();
+
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
+        'banners' => $banners,
+        'promoVideo' => $promoVideo,
+        'promoItems' => $promoItems,
+        'contact' => $contact,
+        'partners' => $partners,
     ]);
 })->name('home');
 
@@ -25,6 +52,62 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
         ->name('admin.mitra.payout');
     Route::post('admin/mitra/{user}/suspend', [\App\Http\Controllers\Admin\MitraController::class, 'suspend'])
         ->name('admin.mitra.suspend');
+
+    Route::get('admin/public/banners', [\App\Http\Controllers\Admin\PublicBannerController::class, 'index'])
+        ->name('admin.public.banners.index');
+    Route::get('admin/public/banners/create', [\App\Http\Controllers\Admin\PublicBannerController::class, 'create'])
+        ->name('admin.public.banners.create');
+    Route::post('admin/public/banners', [\App\Http\Controllers\Admin\PublicBannerController::class, 'store'])
+        ->name('admin.public.banners.store');
+    Route::get('admin/public/banners/{banner}/edit', [\App\Http\Controllers\Admin\PublicBannerController::class, 'edit'])
+        ->name('admin.public.banners.edit');
+    Route::put('admin/public/banners/{banner}', [\App\Http\Controllers\Admin\PublicBannerController::class, 'update'])
+        ->name('admin.public.banners.update');
+    Route::delete('admin/public/banners/{banner}', [\App\Http\Controllers\Admin\PublicBannerController::class, 'destroy'])
+        ->name('admin.public.banners.destroy');
+
+    Route::get('admin/public/promo-videos', [\App\Http\Controllers\Admin\PromoVideoController::class, 'index'])
+        ->name('admin.public.promo-videos.index');
+    Route::get('admin/public/promo-videos/create', [\App\Http\Controllers\Admin\PromoVideoController::class, 'create'])
+        ->name('admin.public.promo-videos.create');
+    Route::post('admin/public/promo-videos', [\App\Http\Controllers\Admin\PromoVideoController::class, 'store'])
+        ->name('admin.public.promo-videos.store');
+    Route::get('admin/public/promo-videos/{promoVideo}/edit', [\App\Http\Controllers\Admin\PromoVideoController::class, 'edit'])
+        ->name('admin.public.promo-videos.edit');
+    Route::put('admin/public/promo-videos/{promoVideo}', [\App\Http\Controllers\Admin\PromoVideoController::class, 'update'])
+        ->name('admin.public.promo-videos.update');
+    Route::delete('admin/public/promo-videos/{promoVideo}', [\App\Http\Controllers\Admin\PromoVideoController::class, 'destroy'])
+        ->name('admin.public.promo-videos.destroy');
+
+    Route::get('admin/public/promo-items', [\App\Http\Controllers\Admin\PromoItemController::class, 'index'])
+        ->name('admin.public.promo-items.index');
+    Route::get('admin/public/promo-items/create', [\App\Http\Controllers\Admin\PromoItemController::class, 'create'])
+        ->name('admin.public.promo-items.create');
+    Route::post('admin/public/promo-items', [\App\Http\Controllers\Admin\PromoItemController::class, 'store'])
+        ->name('admin.public.promo-items.store');
+    Route::get('admin/public/promo-items/{promoItem}/edit', [\App\Http\Controllers\Admin\PromoItemController::class, 'edit'])
+        ->name('admin.public.promo-items.edit');
+    Route::put('admin/public/promo-items/{promoItem}', [\App\Http\Controllers\Admin\PromoItemController::class, 'update'])
+        ->name('admin.public.promo-items.update');
+    Route::delete('admin/public/promo-items/{promoItem}', [\App\Http\Controllers\Admin\PromoItemController::class, 'destroy'])
+        ->name('admin.public.promo-items.destroy');
+    Route::get('admin/public/partners', [\App\Http\Controllers\Admin\PublicPartnerController::class, 'index'])
+        ->name('admin.public.partners.index');
+    Route::get('admin/public/partners/create', [\App\Http\Controllers\Admin\PublicPartnerController::class, 'create'])
+        ->name('admin.public.partners.create');
+    Route::post('admin/public/partners', [\App\Http\Controllers\Admin\PublicPartnerController::class, 'store'])
+        ->name('admin.public.partners.store');
+    Route::get('admin/public/partners/{partner}/edit', [\App\Http\Controllers\Admin\PublicPartnerController::class, 'edit'])
+        ->name('admin.public.partners.edit');
+    Route::put('admin/public/partners/{partner}', [\App\Http\Controllers\Admin\PublicPartnerController::class, 'update'])
+        ->name('admin.public.partners.update');
+    Route::delete('admin/public/partners/{partner}', [\App\Http\Controllers\Admin\PublicPartnerController::class, 'destroy'])
+        ->name('admin.public.partners.destroy');
+
+    Route::get('admin/public/contacts', [\App\Http\Controllers\Admin\PublicContactController::class, 'edit'])
+        ->name('admin.public.contacts.edit');
+    Route::put('admin/public/contacts', [\App\Http\Controllers\Admin\PublicContactController::class, 'update'])
+        ->name('admin.public.contacts.update');
 });
 
 Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
