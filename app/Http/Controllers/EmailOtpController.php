@@ -104,6 +104,16 @@ class EmailOtpController extends Controller
         EmailOtp::query()->where('user_id', $user->id)->delete();
         RateLimiter::clear($verifyKey);
 
+        if ($user->is_suspended) {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Akun Anda sedang disuspend. Hubungi admin.',
+            ]);
+        }
+
         if ($user->role === 'mitra') {
             return redirect()->route('mitra.dashboard');
         }

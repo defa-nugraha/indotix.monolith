@@ -23,6 +23,9 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
+        'is_suspended',
+        'suspended_at',
+        'suspended_reason',
     ];
 
     /**
@@ -53,6 +56,9 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'is_suspended' => 'boolean',
+            'suspended_at' => 'datetime',
+            'suspended_reason' => 'string',
         ];
     }
 }

@@ -16,6 +16,16 @@ class EnsureMitra
             return redirect()->route('dashboard');
         }
 
+        if ($user->is_suspended) {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Akun Anda sedang disuspend. Hubungi admin.',
+            ]);
+        }
+
         return $next($request);
     }
 }

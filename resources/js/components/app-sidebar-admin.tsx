@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -26,6 +26,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+    },
+    {
+        title: 'Kelola Mitra',
+        href: '/admin/mitra',
+        icon: Users,
     },
 ];
 

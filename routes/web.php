@@ -14,6 +14,19 @@ Route::get('dashboard', function () {
     return Inertia::render('dashboard');
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('admin/mitra', [\App\Http\Controllers\Admin\MitraController::class, 'index'])
+        ->name('admin.mitra.index');
+    Route::get('admin/mitra/{user}', [\App\Http\Controllers\Admin\MitraController::class, 'show'])
+        ->name('admin.mitra.show');
+    Route::post('admin/mitra/{user}/verify', [\App\Http\Controllers\Admin\MitraController::class, 'verify'])
+        ->name('admin.mitra.verify');
+    Route::post('admin/mitra/{user}/payout', [\App\Http\Controllers\Admin\MitraController::class, 'payout'])
+        ->name('admin.mitra.payout');
+    Route::post('admin/mitra/{user}/suspend', [\App\Http\Controllers\Admin\MitraController::class, 'suspend'])
+        ->name('admin.mitra.suspend');
+});
+
 Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
     $onboarding = \App\Models\MitraOnboarding::query()->firstOrCreate([
         'user_id' => $request->user()->id,

@@ -15,6 +15,16 @@ class LoginResponse implements LoginResponseContract
             return redirect()->route('login');
         }
 
+        if ($user->is_suspended) {
+            auth()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->withErrors([
+                'email' => 'Akun Anda sedang disuspend. Hubungi admin.',
+            ]);
+        }
+
         if (! $user->hasVerifiedEmail()) {
             return redirect()->route('email-otp.notice');
         }
