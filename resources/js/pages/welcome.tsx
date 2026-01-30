@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -51,6 +51,8 @@ export default function Welcome({
     partners?: Partner[];
     hotelCards?: HotelCard[];
 }) {
+    const { auth } = usePage().props as { auth?: { user?: unknown } };
+    const isUser = Boolean((auth?.user as any)?.role === 'user');
     const [isReady, setIsReady] = useState(false);
     const [bannerIndex, setBannerIndex] = useState(1);
     const [isBannerTransitioning, setIsBannerTransitioning] = useState(false);
@@ -176,20 +178,33 @@ export default function Welcome({
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href={canRegister ? '/register' : '#'}
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
-                        >
-                            Gabung Mitra
-                        </Link>
-                        <Link
-                            href="/login"
-                            className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
-                        >
-                            Login
-                        </Link>
-                    </div>
+                    {!auth?.user && (
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href={canRegister ? '/register' : '#'}
+                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                            >
+                                Register
+                            </Link>
+                            <Link
+                                href="/login"
+                                className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+                            >
+                                Login
+                            </Link>
+                        </div>
+                    )}
+                    {isUser && (
+                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
+                            <Link href="/settings/profile" className="hover:text-sky-600">
+                                Profile
+                            </Link>
+                            <span className="text-slate-300">|</span>
+                            <span className="hover:text-sky-600">Riwayat</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="hover:text-sky-600">Live Chat</span>
+                        </div>
+                    )}
                 </div>
                 <div className="border-t border-slate-100">
                     <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">

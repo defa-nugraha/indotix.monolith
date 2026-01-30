@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 
 type Booking = {
     id: number;
+    encrypted_id?: string;
     status: string;
     payment_status?: string | null;
     payment_deadline?: string | null;
@@ -34,7 +35,7 @@ export default function BookingShow({ booking }: { booking: Booking }) {
 
                     {booking.status === 'pending_payment' && (
                         <Link
-                            href={`/booking/${booking.id}/payment`}
+                            href={`/booking/${booking.encrypted_id ?? booking.id}/payment`}
                             className="mt-4 inline-block rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
                         >
                             Lanjutkan Pembayaran

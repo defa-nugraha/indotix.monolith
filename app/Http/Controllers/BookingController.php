@@ -11,6 +11,7 @@ use App\Services\BookingService;
 use App\Services\MidtransService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -162,11 +163,13 @@ class BookingController extends Controller
 
         $request->session()->forget('booking_draft');
 
-        return redirect()->route('booking.payment', $booking);
+        return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)]);
     }
 
-    public function payment(Request $request, Booking $booking): Response|RedirectResponse
+    public function payment(Request $request, string $booking): Response|RedirectResponse
     {
+        $booking = $this->resolveBooking($booking);
+
         if ((int) $booking->user_id !== (int) $request->user()->id) {
             return redirect()->route('home');
         }
@@ -190,15 +193,17 @@ class BookingController extends Controller
         ]);
     }
 
-    public function pay(Request $request, Booking $booking, MidtransService $midtransService): RedirectResponse
+    public function pay(Request $request, string $booking, MidtransService $midtransService): RedirectResponse
     {
+        $booking = $this->resolveBooking($booking);
+
         if ((int) $booking->user_id !== (int) $request->user()->id) {
             return redirect()->route('home');
         }
 
         if ($booking->isExpired()) {
             $this->expireBooking($booking);
-            return redirect()->route('booking.payment', $booking)
+            return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)])
                 ->withErrors(['payment' => 'Booking sudah kedaluwarsa.']);
         }
 
@@ -207,11 +212,11 @@ class BookingController extends Controller
         ]);
 
         if ($booking->status !== 'pending_payment') {
-            return redirect()->route('booking.payment', $booking);
+            return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)]);
         }
 
         if ($booking->payments()->where('status', 'pending')->exists()) {
-            return redirect()->route('booking.payment', $booking)
+            return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)])
                 ->withErrors(['payment' => 'Pembayaran sedang diproses.']);
         }
 
@@ -222,7 +227,7 @@ class BookingController extends Controller
         try {
             $charge = $midtransService->charge($payload);
         } catch (RuntimeException $exception) {
-            return redirect()->route('booking.payment', $booking)
+            return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)])
                 ->withErrors(['payment' => 'Gagal membuat pembayaran.']);
         }
 
@@ -242,11 +247,13 @@ class BookingController extends Controller
             'payment_status' => $payment->status,
         ]);
 
-        return redirect()->route('booking.show', $booking);
+        return redirect()->route('booking.show', ['booking' => $this->encryptId($booking->id)]);
     }
 
-    public function show(Request $request, Booking $booking): Response|RedirectResponse
+    public function show(Request $request, string $booking): Response|RedirectResponse
     {
+        $booking = $this->resolveBooking($booking);
+
         if ((int) $booking->user_id !== (int) $request->user()->id) {
             return redirect()->route('home');
         }
@@ -267,6 +274,7 @@ class BookingController extends Controller
         $latestPayment = $booking->payments()->latest()->first();
 
         return [
+            'encrypted_id' => $this->encryptId($booking->id),
             'id' => $booking->id,
             'status' => $booking->status,
             'payment_status' => $booking->payment_status,
@@ -357,5 +365,21 @@ class BookingController extends Controller
         $booking->status = 'expired';
         $booking->payment_status = 'expired';
         $booking->save();
+    }
+
+    private function resolveBooking(string $encryptedId): Booking
+    {
+        try {
+            $id = Crypt::decryptString($encryptedId);
+        } catch (\Throwable $exception) {
+            abort(404);
+        }
+
+        return Booking::query()->findOrFail($id);
+    }
+
+    private function encryptId(int $id): string
+    {
+        return Crypt::encryptString((string) $id);
     }
 }

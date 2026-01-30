@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { DateRange, RangeKeyDict } from 'react-date-range';
 import { format } from 'date-fns';
@@ -36,6 +36,8 @@ type Recommendation = {
 };
 
 export default function HotelSearch({ filters, hotels, recommendations }: { filters: Filters; hotels: Hotel[]; recommendations: Recommendation[] }) {
+    const { auth } = usePage().props as { auth?: { user?: unknown } };
+    const isUser = Boolean((auth?.user as any)?.role === 'user');
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
@@ -139,20 +141,33 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                             onChange={(event) => setForm((prev) => ({ ...prev, q: event.target.value }))}
                         />
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Link
-                            href="/register"
-                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
-                        >
-                            Gabung Mitra
-                        </Link>
-                        <Link
-                            href="/login"
-                            className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
-                        >
-                            Login
-                        </Link>
-                    </div>
+                    {!auth?.user && (
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href="/register"
+                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                            >
+                                Register
+                            </Link>
+                            <Link
+                                href="/login"
+                                className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+                            >
+                                Login
+                            </Link>
+                        </div>
+                    )}
+                    {isUser && (
+                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
+                            <Link href="/settings/profile" className="hover:text-sky-600">
+                                Profile
+                            </Link>
+                            <span className="text-slate-300">|</span>
+                            <span className="hover:text-sky-600">Riwayat</span>
+                            <span className="text-slate-300">|</span>
+                            <span className="hover:text-sky-600">Live Chat</span>
+                        </div>
+                    )}
                 </div>
                 <div className="border-t border-slate-100">
                     <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
