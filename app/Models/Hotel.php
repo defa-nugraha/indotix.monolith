@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\User;
 
 class Hotel extends Model
 {
@@ -32,6 +31,16 @@ class Hotel extends Model
     public function vendor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'vendor_id');
+    }
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(Regency::class, 'city_id', 'code');
+    }
+
+    public function roomTypes(): HasMany
+    {
+        return $this->hasMany(RoomType::class);
     }
 
     public function facilities(): HasMany

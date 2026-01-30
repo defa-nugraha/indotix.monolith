@@ -1,0 +1,440 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { useEffect, useRef, useState } from 'react';
+import { DateRange, RangeKeyDict } from 'react-date-range';
+import { format } from 'date-fns';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
+import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+type Hotel = {
+    id: number;
+    encrypted_id?: string;
+    name: string;
+    address?: string | null;
+    city_name?: string | null;
+    star_rating?: number | null;
+    min_price?: number | null;
+};
+
+type Filters = {
+    city?: string | null;
+    check_in?: string | null;
+    check_out?: string | null;
+    rooms?: number;
+    guests?: number;
+    q?: string | null;
+};
+
+type Recommendation = {
+    id: number;
+    encrypted_id: string;
+    name: string;
+    city_name?: string | null;
+    star_rating?: number | null;
+    min_price?: number | null;
+};
+
+export default function HotelSearch({ filters, hotels, recommendations }: { filters: Filters; hotels: Hotel[]; recommendations: Recommendation[] }) {
+    const [isReady, setIsReady] = useState(false);
+    const [form, setForm] = useState({
+        q: filters.q ?? '',
+        city: filters.city ?? '',
+        check_in: filters.check_in ?? '',
+        check_out: filters.check_out ?? '',
+        rooms: filters.rooms ?? 1,
+        guests: filters.guests ?? 2,
+    });
+    const [guestOpen, setGuestOpen] = useState(false);
+    const [dateOpen, setDateOpen] = useState(false);
+    const [adults, setAdults] = useState(Math.max(1, filters.guests ? Math.max(filters.guests - 0, 1) : 2));
+    const [children, setChildren] = useState(0);
+    const [rooms, setRooms] = useState(filters.rooms ?? 1);
+    const guestRef = useRef<HTMLDivElement | null>(null);
+    const dateRef = useRef<HTMLDivElement | null>(null);
+    const parseDate = (value?: string) => (value ? new Date(value) : new Date());
+    const initialStart = form.check_in ? parseDate(form.check_in) : new Date();
+    const initialEnd = form.check_out ? parseDate(form.check_out) : new Date(Date.now() + 86400000);
+    const [range, setRange] = useState([
+        {
+            startDate: initialStart,
+            endDate: initialEnd,
+            key: 'selection',
+        },
+    ]);
+
+    const submitSearch = (event: React.FormEvent) => {
+        event.preventDefault();
+        const totalGuests = adults + children;
+        router.get('/stay', { ...form, guests: totalGuests, rooms }, { preserveState: true, preserveScroll: true });
+    };
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => setIsReady(true), 350);
+        return () => window.clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (guestRef.current && !guestRef.current.contains(event.target as Node)) {
+                setGuestOpen(false);
+            }
+            if (dateRef.current && !dateRef.current.contains(event.target as Node)) {
+                setDateOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const nightCount = (() => {
+        if (!form.check_in || !form.check_out) return null;
+        const start = new Date(form.check_in);
+        const end = new Date(form.check_out);
+        const diff = Math.max(0, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+        return diff > 0 ? diff : null;
+    })();
+
+    const categories = [
+        { label: 'Wisata', icon: MapPinned, active: true },
+        { label: 'Event', icon: CalendarCheck },
+        { label: 'Souvenir', icon: ShoppingBag },
+        { label: 'Spesial Program', icon: Star },
+        { label: 'Hotel', icon: Ticket },
+    ];
+
+    const chips = [
+        'Alam',
+        'Budaya',
+        'Edukasi',
+        'Kuliner',
+        'Desa Wisata',
+        'Religi',
+        'Pantai',
+        'Gunung',
+        'Taman Nasional',
+        'Air Terjun',
+        'Danau',
+    ];
+
+    return (
+        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+            <Head title="Cari Hotel">
+                <link
+                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
+                    rel="stylesheet"
+                />
+            </Head>
+            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
+                    <div className="flex items-center gap-2">
+                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                    </div>
+                    <div className="flex flex-1 items-center">
+                        <input
+                            type="text"
+                            placeholder="Cari kota/hotel/wisata/event..."
+                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
+                            value={form.q}
+                            onChange={(event) => setForm((prev) => ({ ...prev, q: event.target.value }))}
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Link
+                            href="/register"
+                            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                        >
+                            Gabung Mitra
+                        </Link>
+                        <Link
+                            href="/login"
+                            className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+                        >
+                            Login
+                        </Link>
+                    </div>
+                </div>
+                <div className="border-t border-slate-100">
+                    <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
+                        {categories.map((item) => (
+                            <button
+                                key={item.label}
+                                className={`flex items-center gap-2 text-sm font-semibold ${
+                                    item.active ? 'text-slate-900' : 'text-slate-500'
+                                }`}
+                            >
+                                <item.icon className="h-4 w-4" />
+                                {item.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+                <div className="border-t border-slate-100">
+                    <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-4 py-3 md:px-8">
+                        {chips.map((chip) => (
+                            <span
+                                key={chip}
+                                className="rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600"
+                            >
+                                {chip}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            </header>
+
+            <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
+                {!isReady && (
+                    <section className="space-y-8">
+                        <Skeleton className="h-72 w-full rounded-[28px]" />
+                        <div className="grid gap-6 md:grid-cols-2">
+                            {[0, 1].map((idx) => (
+                                <Skeleton key={idx} className="h-32 w-full rounded-2xl" />
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {isReady && (
+                <>
+                <section className="relative rounded-[28px] shadow-lg mb-6">
+                    <div className="overflow-hidden rounded-[28px]">
+                        <img
+                            src="https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=1920&auto=format&fit=crop"
+                            alt="Beach resort"
+                            className="h-64 w-full object-cover md:h-72"
+                        />
+                    </div>
+                    <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-r from-black/55 via-black/35 to-transparent" />
+                    <div className="absolute bottom-24 left-8 right-8 text-white">
+                        <h1 className="text-2xl font-semibold md:text-3xl">Mau ke mana? Pesan hotel terbaikmu di INDOTIX</h1>
+                        <p className="mt-2 text-sm text-white/80">Temukan hotel, villa, resort, dan banyak pilihan lainnya.</p>
+                    </div>
+
+                    <div className="relative -mt-8 px-6 pb-6">
+                        <div className="rounded-[24px] bg-white p-5 shadow-[0_12px_30px_-16px_rgba(15,23,42,0.55)]">
+                            <form className="grid gap-4 md:grid-cols-[2fr_2fr_1.5fr_auto]" onSubmit={submitSearch}>
+                                <div className="grid gap-2">
+                                    <label className="text-xs font-semibold uppercase text-slate-500">Kota, destinasi, atau nama hotel</label>
+                                    <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                        <span className="text-slate-400">📍</span>
+                                        <input
+                                            className="w-full bg-transparent outline-none"
+                                            placeholder="Kota, hotel, atau tempat tujuan"
+                                            value={form.q}
+                                            onChange={(event) => setForm((prev) => ({ ...prev, q: event.target.value }))}
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <label className="text-xs font-semibold uppercase text-slate-500">Tanggal Check-in & Check-out</label>
+                                    <div className="relative" ref={dateRef}>
+                                        <button
+                                            type="button"
+                                            className={`flex w-full items-center gap-2 rounded-xl border px-4 py-3 text-sm ${dateOpen ? 'border-lime-500' : 'border-slate-200'}`}
+                                            onClick={() => setDateOpen((prev) => !prev)}
+                                        >
+                                            <span className="text-slate-400">📅</span>
+                                            <span className="text-left">
+                                                {format(range[0].startDate ?? new Date(), 'EEE, dd MMM yyyy')} -{' '}
+                                                {format(range[0].endDate ?? new Date(), 'EEE, dd MMM yyyy')}
+                                            </span>
+                                        </button>
+                                        {dateOpen && (
+                                            <div className="absolute right-0 z-50 mt-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
+                                                <DateRange
+                                                    ranges={range}
+                                                    onChange={(item: RangeKeyDict) => {
+                                                        const selection = item.selection;
+                                                        setRange([selection]);
+                                                        const start = selection.startDate ?? new Date();
+                                                        const end = selection.endDate ?? new Date();
+                                                        setForm((prev) => ({
+                                                            ...prev,
+                                                            check_in: format(start, 'yyyy-MM-dd'),
+                                                            check_out: format(end, 'yyyy-MM-dd'),
+                                                        }));
+                                                    }}
+                                                    months={2}
+                                                    direction="horizontal"
+                                                    minDate={new Date()}
+                                                    rangeColors={['#0ea5e9']}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-[11px] text-slate-400">Durasi: {nightCount ? `${nightCount} malam` : '-'}</div>
+                                </div>
+                                <div className="relative grid gap-2" ref={guestRef}>
+                                    <label className="text-xs font-semibold uppercase text-slate-500">Tamu dan Kamar</label>
+                                    <button
+                                        type="button"
+                                        className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm"
+                                        onClick={() => setGuestOpen((prev) => !prev)}
+                                    >
+                                        <span className="text-slate-400">👥</span>
+                                        <span className="flex-1 pl-2 text-left">
+                                            {adults} Dewasa, {children} Anak, {rooms} Kamar
+                                        </span>
+                                        <span className="h-8 w-8 rounded-full bg-sky-100 text-sky-700">▾</span>
+                                    </button>
+                                    {guestOpen && (
+                                        <div className="absolute right-0 z-10 mt-2 w-[320px] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-semibold text-slate-700">Dewasa</span>
+                                                <div className="flex items-center gap-3">
+                                                    <button type="button" className="h-8 w-8 rounded-full bg-slate-100" onClick={() => setAdults((prev) => Math.max(1, prev - 1))}>−</button>
+                                                    <span className="w-6 text-center text-sm font-semibold">{adults}</span>
+                                                    <button type="button" className="h-8 w-8 rounded-full bg-sky-100 text-sky-700" onClick={() => setAdults((prev) => prev + 1)}>+</button>
+                                                </div>
+                                            </div>
+                                            <div className="mt-3 flex items-center justify-between">
+                                                <span className="text-sm font-semibold text-slate-700">Anak</span>
+                                                <div className="flex items-center gap-3">
+                                                    <button type="button" className="h-8 w-8 rounded-full bg-slate-100" onClick={() => setChildren((prev) => Math.max(0, prev - 1))}>−</button>
+                                                    <span className="w-6 text-center text-sm font-semibold">{children}</span>
+                                                    <button type="button" className="h-8 w-8 rounded-full bg-sky-100 text-sky-700" onClick={() => setChildren((prev) => prev + 1)}>+</button>
+                                                </div>
+                                            </div>
+                                            <div className="mt-3 flex items-center justify-between">
+                                                <span className="text-sm font-semibold text-slate-700">Kamar</span>
+                                                <div className="flex items-center gap-3">
+                                                    <button type="button" className="h-8 w-8 rounded-full bg-slate-100" onClick={() => setRooms((prev) => Math.max(1, prev - 1))}>−</button>
+                                                    <span className="w-6 text-center text-sm font-semibold">{rooms}</span>
+                                                    <button type="button" className="h-8 w-8 rounded-full bg-sky-100 text-sky-700" onClick={() => setRooms((prev) => prev + 1)}>+</button>
+                                                </div>
+                                            </div>
+                                            <button type="button" className="mt-4 w-full rounded-lg bg-sky-600 py-2 text-sm font-semibold text-white" onClick={() => setGuestOpen(false)}>
+                                                Selesai
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
+                                    Cari
+                                </button>
+                            </form>
+                            <div className="mt-4 text-sm font-semibold text-sky-700">Hotel yang Baru Dilihat</div>
+                        </div>
+                    </div>
+                </section>
+
+                <div className="mt-8 grid gap-6 md:grid-cols-2">
+                    {hotels.map((hotel) => (
+                        <div key={hotel.id} className="rounded-2xl bg-white p-5 shadow-sm">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-slate-900">{hotel.name}</h2>
+                                    <p className="text-sm text-slate-500">{hotel.city_name ?? hotel.address}</p>
+                                </div>
+                                <div className="text-xs text-slate-500">{hotel.star_rating ? `${hotel.star_rating}★` : 'Hotel'}</div>
+                            </div>
+                            <div className="mt-4 flex items-center justify-between">
+                                <div>
+                                    <div className="text-xs text-slate-500">Harga mulai dari</div>
+                                    <div className="text-base font-semibold text-sky-600">
+                                        {hotel.min_price ? `Rp ${hotel.min_price.toLocaleString('id-ID')}` : '-'}
+                                    </div>
+                                </div>
+                                <Link
+                                    href={`/stay/hotels/${hotel.encrypted_id ?? hotel.id}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}`}
+                                    className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
+                                >
+                                    Lihat Detail
+                                </Link>
+                            </div>
+                        </div>
+                    ))}
+
+                    {hotels.length === 0 && (
+                        <div className="md:col-span-2 rounded-2xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
+                            <div className="text-base font-semibold text-slate-800">Belum ada hasil.</div>
+                            <div className="mt-2">Silakan isi tanggal untuk melihat hotel yang tersedia.</div>
+                        </div>
+                    )}
+                </div>
+
+                {hotels.length === 0 && (
+                    <section className="mt-10">
+                        <h2 className="text-xl font-semibold text-slate-900">Rekomendasi untuk kamu</h2>
+                        <p className="mt-2 text-sm text-slate-500">Pilihan hotel favorit dengan lokasi strategis dan fasilitas lengkap.</p>
+                        <div className="mt-6 grid gap-6 md:grid-cols-3">
+                            {recommendations.map((item) => (
+                                <div key={item.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
+                                    <img
+                                        src="https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop"
+                                        alt={item.name}
+                                        className="h-44 w-full object-cover"
+                                    />
+                                    <div className="p-4">
+                                        <h3 className="text-sm font-semibold text-slate-900">{item.name}</h3>
+                                        <p className="text-xs text-slate-500">{item.city_name ?? 'Indonesia'}</p>
+                                        <div className="mt-3 text-sm font-semibold text-sky-600">
+                                            {item.min_price ? `Mulai Rp ${item.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                        </div>
+                                        <Link
+                                            href={`/stay/hotels/${item.encrypted_id}?check_in=${form.check_in || ''}&check_out=${form.check_out || ''}&rooms=${rooms}&guests=${adults + children}`}
+                                            className="mt-4 block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                        >
+                                            Lihat Detail
+                                        </Link>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+                </>
+                )}
+            </div>
+            <footer className="mt-10 border-t border-slate-200 bg-white">
+                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
+                    <div>
+                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                        <p className="mt-3 text-sm text-slate-600">
+                            Neo Soho Capital 40th Floor<br />
+                            Jl. Tanjung Duren Raya No 1<br />
+                            Jakarta Barat, DKI Jakarta 11470
+                        </p>
+                        <p className="mt-4 text-sm text-slate-600">0812 9205 9888</p>
+                        <p className="text-sm text-slate-600">info@indotix.co.id</p>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Layanan</h4>
+                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                            <li>Wisata</li>
+                            <li>Special Program</li>
+                            <li>Event</li>
+                            <li>Hotel</li>
+                            <li>Souvenir</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Perusahaan</h4>
+                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                            <li>Tentang Kami</li>
+                            <li>Karir</li>
+                            <li>Blog</li>
+                            <li>Kebijakan Privasi</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Download Indotix</h4>
+                        <div className="mt-3 h-12 w-40 rounded-lg bg-slate-900" />
+                        <h4 className="mt-6 text-sm font-semibold text-slate-900">Ikuti Kami</h4>
+                        <div className="mt-3 flex gap-2">
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                        </div>
+                    </div>
+                </div>
+                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+                    © 2025 Indotix. All rights reserved.
+                </div>
+            </footer>
+        </div>
+    );
+}

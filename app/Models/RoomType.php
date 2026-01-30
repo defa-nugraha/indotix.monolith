@@ -36,4 +36,9 @@ class RoomType extends Model
     {
         return $this->hasMany(RoomImage::class);
     }
+
+    public function inventories(): HasMany
+    {
+        return $this->hasMany(RoomInventory::class);
+    }
 }

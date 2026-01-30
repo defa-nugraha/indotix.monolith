@@ -37,6 +37,10 @@ class LoginResponse implements LoginResponseContract
             return redirect()->route('dashboard');
         }
 
+        if ($request->session()->has('booking_draft')) {
+            return redirect()->route('booking.review');
+        }
+
         return redirect()->route('home');
     }
 }

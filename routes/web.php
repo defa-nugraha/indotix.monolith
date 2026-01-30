@@ -26,6 +26,22 @@ Route::get('/', function () {
         ->orderBy('sort_order')
         ->orderByDesc('id')
         ->get();
+    $hotelCards = \App\Models\Hotel::query()
+        ->where('status', 'active')
+        ->with(['roomTypes', 'city'])
+        ->latest()
+        ->take(3)
+        ->get()
+        ->map(fn (\App\Models\Hotel $hotel) => [
+            'id' => $hotel->id,
+            'encrypted_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $hotel->id),
+            'name' => $hotel->name,
+            'city_name' => $hotel->city?->name,
+            'star_rating' => $hotel->star_rating,
+            'min_price' => $hotel->roomTypes->min('base_price')
+                ? (int) round($hotel->roomTypes->min('base_price'))
+                : null,
+        ]);
 
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
@@ -34,6 +50,7 @@ Route::get('/', function () {
         'promoItems' => $promoItems,
         'contact' => $contact,
         'partners' => $partners,
+        'hotelCards' => $hotelCards,
     ]);
 })->name('home');
 
@@ -153,5 +170,26 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/email/otp/resend', [\App\Http\Controllers\EmailOtpController::class, 'resend'])
         ->name('email-otp.resend');
 });
+
+Route::get('/stay', [\App\Http\Controllers\PublicHotelController::class, 'search'])
+    ->name('public.hotels.search');
+Route::get('/stay/hotels/{hotel}', [\App\Http\Controllers\PublicHotelController::class, 'show'])
+    ->name('public.hotels.show');
+Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
+    ->name('booking.prepare');
+Route::middleware(['auth', 'verified', 'user'])->group(function () {
+    Route::get('/booking/review', [\App\Http\Controllers\BookingController::class, 'review'])
+        ->name('booking.review');
+    Route::post('/booking/confirm', [\App\Http\Controllers\BookingController::class, 'confirm'])
+        ->name('booking.confirm');
+    Route::get('/booking/{booking}/payment', [\App\Http\Controllers\BookingController::class, 'payment'])
+        ->name('booking.payment');
+    Route::post('/booking/{booking}/payment', [\App\Http\Controllers\BookingController::class, 'pay'])
+        ->name('booking.pay');
+    Route::get('/booking/{booking}', [\App\Http\Controllers\BookingController::class, 'show'])
+        ->name('booking.show');
+});
+Route::post('/payments/midtrans/callback', \App\Http\Controllers\MidtransCallbackController::class)
+    ->name('payments.midtrans.callback');
 
 require __DIR__.'/settings.php';

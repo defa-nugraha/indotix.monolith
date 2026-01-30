@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
     CalendarCheck,
     MapPinned,
@@ -19,6 +20,7 @@ type PromoVideo = {
 };
 type PromoItem = { id: number; image_path: string; link_url?: string | null };
 type Partner = { id: number; image_path: string; link_url?: string | null; name?: string | null };
+type HotelCard = { id: number; encrypted_id?: string; name: string; city_name?: string | null; star_rating?: number | null; min_price?: number | null };
 type Contact = {
     company_name?: string | null;
     address?: string | null;
@@ -39,6 +41,7 @@ export default function Welcome({
     promoItems = [],
     contact,
     partners = [],
+    hotelCards = [],
 }: {
     canRegister?: boolean;
     banners?: Banner[];
@@ -46,7 +49,9 @@ export default function Welcome({
     promoItems?: PromoItem[];
     contact?: Contact | null;
     partners?: Partner[];
+    hotelCards?: HotelCard[];
 }) {
+    const [isReady, setIsReady] = useState(false);
     const [bannerIndex, setBannerIndex] = useState(1);
     const [isBannerTransitioning, setIsBannerTransitioning] = useState(false);
     const bannerSlides =
@@ -76,6 +81,11 @@ export default function Welcome({
             }, 180);
         }, 180);
     };
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => setIsReady(true), 350);
+        return () => window.clearTimeout(timer);
+    }, []);
 
     useEffect(() => {
         const interval = window.setInterval(() => {
@@ -114,25 +124,10 @@ export default function Welcome({
         cta_url: '#',
     };
 
-    const specialPrograms = [
-        {
-            title: 'Wedding Beach Package',
-            subtitle: 'Sungailiat - Bangka',
-            price: 'Rp 11.800.000',
-            original: 'Rp 13.882.352',
-        },
-        {
-            title: 'Royal Family Connection',
-            subtitle: 'Makan Malam Bersama Keluarga Raja',
-            price: 'Rp 13.737.500',
-            original: 'Rp 10.990.000',
-        },
-        {
-            title: 'Fun Games Package',
-            subtitle: 'Private Trip, Group Trip',
-            price: 'Rp 260.000',
-            original: 'Rp 273.684',
-        },
+    const hotelProducts = hotelCards.length > 0 ? hotelCards : [
+        { id: 0, encrypted_id: undefined, name: 'Hotel Indotix', city_name: 'Jakarta', star_rating: 4, min_price: 350000 },
+        { id: 1, encrypted_id: undefined, name: 'Indotix Heritage', city_name: 'Bandung', star_rating: 5, min_price: 520000 },
+        { id: 2, encrypted_id: undefined, name: 'Indotix City Stay', city_name: 'Surabaya', star_rating: 3, min_price: 280000 },
     ];
 
     const mediaPartners = partners.length > 0
@@ -147,6 +142,12 @@ export default function Welcome({
         contact?.address ??
         'Neo Soho Capital 40th Floor\\nJl. Tanjung Duren Raya No 1\\nJakarta Barat, DKI Jakarta 11470';
     const addressLines = addressText.split('\\n');
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+    const formatDate = (value: Date) => value.toISOString().slice(0, 10);
+    const defaultCheckIn = formatDate(today);
+    const defaultCheckOut = formatDate(tomorrow);
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -222,6 +223,52 @@ export default function Welcome({
             </header>
 
             <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+                {!isReady && (
+                    <section className="space-y-8">
+                        <div className="grid w-full gap-6 md:grid-cols-[1fr_2.4fr_1fr]">
+                            {[0, 1, 2].map((idx) => (
+                                <Skeleton key={idx} className="h-56 w-full rounded-2xl" />
+                            ))}
+                        </div>
+                        <div className="grid gap-8 md:grid-cols-[1.1fr_1fr]">
+                            <div className="rounded-2xl bg-white p-6 shadow-sm">
+                                <Skeleton className="h-6 w-40" />
+                                <Skeleton className="mt-6 h-64 w-full rounded-xl" />
+                                <Skeleton className="mt-6 h-4 w-3/4" />
+                                <Skeleton className="mt-2 h-4 w-2/3" />
+                                <Skeleton className="mt-6 h-10 w-40 rounded-lg" />
+                            </div>
+                            <div className="rounded-2xl bg-white p-6 shadow-sm">
+                                <Skeleton className="h-6 w-40" />
+                                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                                    {[0, 1].map((idx) => (
+                                        <Skeleton key={idx} className="h-64 w-full rounded-2xl" />
+                                    ))}
+                                </div>
+                                <Skeleton className="mt-4 h-48 w-full rounded-2xl" />
+                            </div>
+                        </div>
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <Skeleton className="h-6 w-48" />
+                            <div className="mt-6 grid gap-6 md:grid-cols-3">
+                                {[0, 1, 2].map((idx) => (
+                                    <Skeleton key={idx} className="h-56 w-full rounded-2xl" />
+                                ))}
+                            </div>
+                        </div>
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <Skeleton className="h-6 w-48" />
+                            <div className="mt-6 grid gap-4 md:grid-cols-6">
+                                {Array.from({ length: 6 }).map((_, idx) => (
+                                    <Skeleton key={idx} className="h-20 w-full rounded-xl" />
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+                {isReady && (
+                <>
                 <section className="relative left-1/2 right-1/2 mb-8 w-screen -translate-x-1/2 px-4 md:px-8">
                     <div className="relative flex items-center gap-6">
                         <button
@@ -386,32 +433,41 @@ export default function Welcome({
                 <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-semibold text-slate-900">
-                            Special Program
+                            Produk Hotel
                         </h2>
-                        <Link href="#" className="text-sm font-semibold text-sky-600">
-                            Lihat Semua Promo →
+                        <Link href="/stay" className="text-sm font-semibold text-sky-600">
+                            Lihat Semua Hotel →
                         </Link>
                     </div>
                     <div className="mt-6 grid gap-6 md:grid-cols-3">
-                        {specialPrograms.map((program) => (
-                            <div key={program.title} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                        {hotelProducts.map((hotel) => (
+                            <div key={hotel.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="h-40 bg-gradient-to-br from-blue-700 to-sky-400" />
                                 <div className="p-4">
                                     <h3 className="text-sm font-semibold text-slate-900">
-                                        {program.title}
+                                        {hotel.name}
                                     </h3>
                                     <p className="text-xs text-slate-500">
-                                        {program.subtitle}
+                                        {hotel.city_name ?? 'Indonesia'}
                                     </p>
-                                    <div className="mt-3 text-xs text-slate-400 line-through">
-                                        {program.original}
+                                    <div className="mt-3 text-xs text-slate-400">
+                                        {hotel.star_rating ? `${hotel.star_rating}★` : 'Hotel'}
                                     </div>
                                     <div className="text-sm font-semibold text-sky-600">
-                                        {program.price}
+                                        {hotel.min_price ? `Mulai Rp ${hotel.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
                                     </div>
-                                    <button className="mt-4 w-full rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-white">
-                                        Pesan Sekarang
-                                    </button>
+                                    {hotel.encrypted_id ? (
+                                        <Link
+                                            href={`/stay/hotels/${hotel.encrypted_id}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`}
+                                            className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                        >
+                                            Lihat Detail
+                                        </Link>
+                                    ) : (
+                                        <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
+                                            Lihat Detail
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -445,6 +501,8 @@ export default function Welcome({
                         </div>
                     </div>
                 </section>
+                </>
+                )}
             </main>
 
             <footer className="mt-10 border-t border-slate-200 bg-white">
