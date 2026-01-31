@@ -23,6 +23,13 @@ class BookingController extends Controller
         'no_show',
     ];
 
+    private const STAY_STATUSES = [
+        'reserved',
+        'checked_in',
+        'checked_out',
+        'no_show',
+    ];
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -151,6 +158,63 @@ class BookingController extends Controller
         return back()->with('status', 'booking-disputed');
     }
 
+    public function updateStayStatus(Request $request, Booking $booking): RedirectResponse
+    {
+        $user = $request->user();
+        if ((int) $booking->hotel?->vendor_id !== (int) $user->id) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'stay_status' => ['required', 'string', \Illuminate\Validation\Rule::in(self::STAY_STATUSES)],
+        ]);
+
+        if (in_array($booking->status, ['cancelled', 'expired'], true)) {
+            return back()->withErrors(['status' => 'Booking tidak bisa diubah karena sudah dibatalkan atau kedaluwarsa.']);
+        }
+
+        $booking->stay_status = $data['stay_status'];
+        if ($data['stay_status'] === 'checked_in') {
+            $booking->checked_in_at = now();
+        }
+        if ($data['stay_status'] === 'checked_out') {
+            $booking->checked_out_at = now();
+            if ($booking->status !== 'completed') {
+                $booking->status = 'completed';
+            }
+        }
+        if ($data['stay_status'] === 'no_show') {
+            $booking->no_show_at = now();
+            if ($booking->status !== 'no_show') {
+                $booking->status = 'no_show';
+            }
+        }
+        $booking->save();
+
+        $this->logAction($booking, 'stay_status', sprintf('Stay status -> %s', $data['stay_status']));
+
+        return back()->with('status', 'booking-stay-updated');
+    }
+
+    public function updateNotes(Request $request, Booking $booking): RedirectResponse
+    {
+        $user = $request->user();
+        if ((int) $booking->hotel?->vendor_id !== (int) $user->id) {
+            abort(404);
+        }
+
+        $data = $request->validate([
+            'internal_notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $booking->internal_notes = $data['internal_notes'] ?? null;
+        $booking->save();
+
+        $this->logAction($booking, 'internal_notes', 'Update catatan internal');
+
+        return back()->with('status', 'booking-notes-updated');
+    }
+
     private function logAction(Booking $booking, string $action, ?string $reason = null): void
     {
         BookingAuditLog::create([
@@ -191,6 +255,7 @@ class BookingController extends Controller
             'guests_count' => $booking->guests_count,
             'total' => $booking->total,
             'status' => $booking->status,
+            'stay_status' => $booking->stay_status,
             'payment_status' => $booking->payment_status,
             'created_at' => $booking->created_at?->toDateTimeString(),
         ];
@@ -202,6 +267,7 @@ class BookingController extends Controller
             'id' => $booking->id,
             'midtrans_order_id' => $booking->midtrans_order_id,
             'status' => $booking->status,
+            'stay_status' => $booking->stay_status,
             'payment_status' => $booking->payment_status,
             'payment_deadline' => $booking->payment_deadline?->toDateTimeString(),
             'total' => $booking->total,
@@ -213,6 +279,10 @@ class BookingController extends Controller
             'rooms_count' => $booking->rooms_count,
             'guests_count' => $booking->guests_count,
             'special_request' => $booking->special_request,
+            'internal_notes' => $booking->internal_notes,
+            'checked_in_at' => $booking->checked_in_at?->toDateTimeString(),
+            'checked_out_at' => $booking->checked_out_at?->toDateTimeString(),
+            'no_show_at' => $booking->no_show_at?->toDateTimeString(),
             'created_at' => $booking->created_at?->toDateTimeString(),
             'hotel' => [
                 'id' => $booking->hotel?->id,

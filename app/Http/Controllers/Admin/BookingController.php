@@ -178,6 +178,7 @@ class BookingController extends Controller
             'guests_count' => $booking->guests_count,
             'total' => $booking->total,
             'status' => $booking->status,
+            'stay_status' => $booking->stay_status,
             'payment_status' => $booking->payment_status,
             'created_at' => $booking->created_at?->toDateTimeString(),
         ];
@@ -189,6 +190,7 @@ class BookingController extends Controller
             'id' => $booking->id,
             'midtrans_order_id' => $booking->midtrans_order_id,
             'status' => $booking->status,
+            'stay_status' => $booking->stay_status,
             'payment_status' => $booking->payment_status,
             'payment_deadline' => $booking->payment_deadline?->toDateTimeString(),
             'total' => $booking->total,
@@ -200,6 +202,10 @@ class BookingController extends Controller
             'rooms_count' => $booking->rooms_count,
             'guests_count' => $booking->guests_count,
             'special_request' => $booking->special_request,
+            'internal_notes' => $booking->internal_notes,
+            'checked_in_at' => $booking->checked_in_at?->toDateTimeString(),
+            'checked_out_at' => $booking->checked_out_at?->toDateTimeString(),
+            'no_show_at' => $booking->no_show_at?->toDateTimeString(),
             'created_at' => $booking->created_at?->toDateTimeString(),
             'hotel' => [
                 'id' => $booking->hotel?->id,

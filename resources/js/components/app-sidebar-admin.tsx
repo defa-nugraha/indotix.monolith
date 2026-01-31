@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, LineChart, MonitorPlay, Receipt, Ticket, Users, Wallet } from 'lucide-react';
+import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, LineChart, MonitorPlay, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -53,13 +53,11 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/hotels') ||
         isCurrentUrl('/room-types') ||
         isCurrentUrl('/room-inventories') ||
-        isCurrentUrl('/admin/bookings');
-    const isFinanceSectionActive =
+        isCurrentUrl('/admin/bookings') ||
         isCurrentUrl('/admin/finance/commissions') ||
         isCurrentUrl('/admin/finance/payouts') ||
         isCurrentUrl('/admin/finance/payouts/create') ||
-        isCurrentUrl('/admin/finance/reports');
-    const isMarketingSectionActive =
+        isCurrentUrl('/admin/finance/reports') ||
         isCurrentUrl('/admin/marketing/vouchers');
     const isPublicSectionActive =
         isCurrentUrl('/admin/public/banners') ||
@@ -67,6 +65,10 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/public/promo-items') ||
         isCurrentUrl('/admin/public/contacts') ||
         isCurrentUrl('/admin/public/partners');
+    const isSystemSectionActive =
+        isCurrentUrl('/admin/system/audit-logs') ||
+        isCurrentUrl('/admin/system/settings') ||
+        isCurrentUrl('/admin/system/notifications');
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -133,21 +135,6 @@ export function AppSidebarAdmin() {
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
-                                </SidebarMenuSub>
-                            </CollapsibleContent>
-                        </Collapsible>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <Collapsible defaultOpen={isFinanceSectionActive}>
-                            <CollapsibleTrigger asChild>
-                                <SidebarMenuButton>
-                                    <Wallet />
-                                    <span>Keuangan & Monetisasi</span>
-                                    <ChevronDown className="ml-auto size-4" />
-                                </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                                <SidebarMenuSub>
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton
                                             asChild
@@ -178,28 +165,13 @@ export function AppSidebarAdmin() {
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
-                                </SidebarMenuSub>
-                            </CollapsibleContent>
-                        </Collapsible>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <Collapsible defaultOpen={isMarketingSectionActive}>
-                            <CollapsibleTrigger asChild>
-                                <SidebarMenuButton>
-                                    <Ticket />
-                                    <span>Promo & Voucher</span>
-                                    <ChevronDown className="ml-auto size-4" />
-                                </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                                <SidebarMenuSub>
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton
                                             asChild
                                             isActive={isCurrentUrl('/admin/marketing/vouchers')}
                                         >
                                             <Link href="/admin/marketing/vouchers">
-                                                Voucher
+                                                Promo & Voucher
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
@@ -261,6 +233,51 @@ export function AppSidebarAdmin() {
                             </SidebarMenuSub>
                         </CollapsibleContent>
                     </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isSystemSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <LineChart />
+                                    <span>Sistem, Audit & Kontrol</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/system/audit-logs')}
+                                        >
+                                            <Link href="/admin/system/audit-logs">
+                                                Audit Log
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/system/settings')}
+                                        >
+                                            <Link href="/admin/system/settings">
+                                                Konfigurasi Sistem
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/system/notifications')}
+                                        >
+                                            <Link href="/admin/system/notifications">
+                                                Notification Control
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarContent>

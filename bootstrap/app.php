@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'mitra.verified' => \App\Http\Middleware\EnsureMitraVerified::class,
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'user' => \App\Http\Middleware\EnsureUser::class,
+            'admin.log' => \App\Http\Middleware\LogAdminActivity::class,
         ]);
 
         $middleware->web(append: [

@@ -59,7 +59,7 @@ Route::get('dashboard', function () {
     return Inertia::render('dashboard');
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
-Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function () {
     Route::get('admin/mitra', [\App\Http\Controllers\Admin\MitraController::class, 'index'])
         ->name('admin.mitra.index');
     Route::get('admin/mitra/{user}', [\App\Http\Controllers\Admin\MitraController::class, 'show'])
@@ -113,6 +113,23 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
         ->name('admin.vouchers.update');
     Route::delete('admin/marketing/vouchers/{voucher}', [\App\Http\Controllers\Admin\VoucherController::class, 'destroy'])
         ->name('admin.vouchers.destroy');
+
+    Route::get('admin/system/audit-logs', [\App\Http\Controllers\Admin\AdminAuditLogController::class, 'index'])
+        ->name('admin.audit-logs.index');
+    Route::get('admin/system/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'index'])
+        ->name('admin.system.settings.index');
+    Route::post('admin/system/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])
+        ->name('admin.system.settings.update');
+    Route::get('admin/system/notifications', [\App\Http\Controllers\Admin\NotificationControlController::class, 'index'])
+        ->name('admin.system.notifications.index');
+    Route::post('admin/system/notifications/templates', [\App\Http\Controllers\Admin\NotificationControlController::class, 'storeTemplate'])
+        ->name('admin.system.notifications.templates.store');
+    Route::put('admin/system/notifications/templates/{template}', [\App\Http\Controllers\Admin\NotificationControlController::class, 'updateTemplate'])
+        ->name('admin.system.notifications.templates.update');
+    Route::delete('admin/system/notifications/templates/{template}', [\App\Http\Controllers\Admin\NotificationControlController::class, 'destroyTemplate'])
+        ->name('admin.system.notifications.templates.destroy');
+    Route::put('admin/system/notifications/triggers/{trigger}', [\App\Http\Controllers\Admin\NotificationControlController::class, 'updateTrigger'])
+        ->name('admin.system.notifications.triggers.update');
 
     Route::get('admin/public/banners', [\App\Http\Controllers\Admin\PublicBannerController::class, 'index'])
         ->name('admin.public.banners.index');
@@ -175,9 +192,50 @@ Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
     $onboarding = \App\Models\MitraOnboarding::query()->firstOrCreate([
         'user_id' => $request->user()->id,
     ]);
+    $user = $request->user();
+    $today = now()->toDateString();
+    $monthStart = now()->startOfMonth()->toDateString();
+    $monthEnd = now()->endOfMonth()->toDateString();
+
+    $hotelIds = \App\Models\Hotel::query()
+        ->where('vendor_id', $user->id)
+        ->pluck('id');
+
+    $todayBookings = \App\Models\Booking::query()
+        ->whereIn('hotel_id', $hotelIds)
+        ->whereIn('status', ['paid', 'completed'])
+        ->whereDate('check_in', '<=', $today)
+        ->whereDate('check_out', '>', $today)
+        ->count();
+
+    $monthlyRevenue = (int) \App\Models\Booking::query()
+        ->whereIn('hotel_id', $hotelIds)
+        ->whereIn('status', ['paid', 'completed'])
+        ->where('payment_status', '!=', 'refunded')
+        ->whereDate('check_out', '>=', $monthStart)
+        ->whereDate('check_out', '<=', $monthEnd)
+        ->sum('total');
+
+    $totalRooms = (int) \App\Models\RoomType::query()
+        ->whereIn('hotel_id', $hotelIds)
+        ->sum('total_rooms');
+
+    $roomsBookedToday = (int) \App\Models\Booking::query()
+        ->whereIn('hotel_id', $hotelIds)
+        ->whereIn('status', ['paid', 'completed'])
+        ->whereDate('check_in', '<=', $today)
+        ->whereDate('check_out', '>', $today)
+        ->sum('rooms_count');
+
+    $availableRooms = max(0, $totalRooms - $roomsBookedToday);
 
     return Inertia::render('mitra/dashboard', [
         'onboarding' => $onboarding,
+        'stats' => [
+            'reservations_today' => $todayBookings,
+            'monthly_revenue' => $monthlyRevenue,
+            'available_rooms' => $availableRooms,
+        ],
     ]);
 })->middleware(['auth', 'verified', 'mitra'])->name('mitra.dashboard');
 
@@ -217,10 +275,24 @@ Route::prefix('mitra')
             ->name('bookings.show');
         Route::post('bookings/{booking}/cancel', [\App\Http\Controllers\Mitra\BookingController::class, 'cancel'])
             ->name('bookings.cancel');
+        Route::post('bookings/{booking}/stay-status', [\App\Http\Controllers\Mitra\BookingController::class, 'updateStayStatus'])
+            ->name('bookings.stay-status');
+        Route::patch('bookings/{booking}/notes', [\App\Http\Controllers\Mitra\BookingController::class, 'updateNotes'])
+            ->name('bookings.notes');
         Route::post('bookings/{booking}/refund', [\App\Http\Controllers\Mitra\BookingController::class, 'refund'])
             ->name('bookings.refund');
         Route::post('bookings/{booking}/dispute', [\App\Http\Controllers\Mitra\BookingController::class, 'dispute'])
             ->name('bookings.dispute');
+        Route::get('occupancy', [\App\Http\Controllers\Mitra\OccupancyController::class, 'index'])
+            ->name('occupancy.index');
+        Route::get('finance/summary', [\App\Http\Controllers\Mitra\FinanceSummaryController::class, 'index'])
+            ->name('finance.summary');
+        Route::get('finance/payouts', [\App\Http\Controllers\Mitra\PayoutController::class, 'index'])
+            ->name('finance.payouts');
+        Route::get('finance/bank', [\App\Http\Controllers\Mitra\BankAccountController::class, 'edit'])
+            ->name('finance.bank.edit');
+        Route::patch('finance/bank', [\App\Http\Controllers\Mitra\BankAccountController::class, 'update'])
+            ->name('finance.bank.update');
     });
 
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -21,12 +21,18 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function MitraDashboard({
     onboarding,
+    stats,
 }: {
     onboarding: {
         verification_status: 'draft' | 'pending' | 'verified' | 'rejected';
         payout_status: 'draft' | 'pending' | 'verified' | 'rejected';
         verification_reason?: string | null;
         payout_reason?: string | null;
+    };
+    stats: {
+        reservations_today: number;
+        monthly_revenue: number;
+        available_rooms: number;
     };
 }) {
     return (
@@ -96,22 +102,22 @@ export default function MitraDashboard({
                         {[
                             {
                                 title: 'Reservasi Hari Ini',
-                                value: '82',
-                                detail: '+8% dari kemarin',
+                                value: stats.reservations_today.toString(),
+                                detail: 'Booking aktif hari ini',
                                 icon: Ticket,
                                 accent: 'bg-sky-50 text-sky-600',
                             },
                             {
                                 title: 'Pendapatan Bulan Ini',
-                                value: 'Rp 128.400.000',
-                                detail: '6 properti aktif',
+                                value: `Rp ${stats.monthly_revenue.toLocaleString('id-ID')}`,
+                                detail: 'Total booking selesai/paid',
                                 icon: CreditCard,
                                 accent: 'bg-amber-50 text-amber-600',
                             },
                             {
                                 title: 'Kamar Tersedia',
-                                value: '145',
-                                detail: '12 kamar closed',
+                                value: stats.available_rooms.toString(),
+                                detail: 'Kamar siap dijual',
                                 icon: MapPin,
                                 accent: 'bg-emerald-50 text-emerald-600',
                             },

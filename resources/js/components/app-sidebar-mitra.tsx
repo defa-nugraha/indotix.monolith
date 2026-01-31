@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, ChevronDown, LayoutGrid } from 'lucide-react';
+import { Banknote, Building2, CalendarDays, ChevronDown, LayoutGrid } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import { useCurrentUrl } from '@/hooks/use-current-url';
@@ -34,6 +34,11 @@ export function AppSidebarMitra() {
         isCurrentUrl('/mitra/room-types') ||
         isCurrentUrl('/mitra/room-inventories') ||
         isCurrentUrl('/mitra/bookings');
+    const isOperationalActive = isCurrentUrl('/mitra/occupancy');
+    const isFinanceActive =
+        isCurrentUrl('/mitra/finance/summary') ||
+        isCurrentUrl('/mitra/finance/payouts') ||
+        isCurrentUrl('/mitra/finance/bank');
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -98,6 +103,76 @@ export function AppSidebarMitra() {
                                         >
                                             <Link href="/mitra/bookings">
                                                 Booking & Transaksi
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isOperationalActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <CalendarDays />
+                                    <span>Operasional</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/mitra/occupancy')}
+                                        >
+                                            <Link href="/mitra/occupancy">
+                                                Kalender Okupansi
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isFinanceActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <Banknote />
+                                    <span>Keuangan</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/mitra/finance/summary')}
+                                        >
+                                            <Link href="/mitra/finance/summary">
+                                                Ringkasan Pendapatan
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/mitra/finance/payouts')}
+                                        >
+                                            <Link href="/mitra/finance/payouts">
+                                                Riwayat Payout
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/mitra/finance/bank')}
+                                        >
+                                            <Link href="/mitra/finance/bank">
+                                                Pengaturan Rekening
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>

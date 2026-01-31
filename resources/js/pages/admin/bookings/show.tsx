@@ -10,6 +10,7 @@ type BookingDetail = {
     id: number;
     midtrans_order_id?: string | null;
     status: string;
+    stay_status?: string | null;
     payment_status?: string | null;
     payment_deadline?: string | null;
     total?: number | null;
@@ -21,6 +22,10 @@ type BookingDetail = {
     rooms_count?: number | null;
     guests_count?: number | null;
     special_request?: string | null;
+    internal_notes?: string | null;
+    checked_in_at?: string | null;
+    checked_out_at?: string | null;
+    no_show_at?: string | null;
     created_at?: string | null;
     hotel: {
         id?: number | null;
@@ -132,6 +137,67 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
         });
     };
 
+    const handleStayStatus = async (stayStatus: 'checked_in' | 'checked_out' | 'no_show') => {
+        const labelMap: Record<typeof stayStatus, string> = {
+            checked_in: 'Tandai Check-in',
+            checked_out: 'Tandai Check-out',
+            no_show: 'Tandai No-show',
+        };
+
+        const result = await Swal.fire({
+            title: `${labelMap[stayStatus]}?`,
+            text: 'Status tamu akan diperbarui.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, simpan',
+            cancelButtonText: 'Batal',
+        });
+
+        if (!result.isConfirmed) return;
+
+        router.post(`${basePath}/${booking.id}/stay-status`, { stay_status: stayStatus }, {
+            onSuccess: () => {
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Status tamu diperbarui.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                });
+            },
+            onError: () => {
+                Swal.fire({
+                    title: 'Gagal',
+                    text: 'Status tamu gagal diperbarui.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            },
+        });
+    };
+
+    const handleNotesSave = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        router.patch(`${basePath}/${booking.id}/notes`, Object.fromEntries(form.entries()), {
+            onSuccess: () => {
+                Swal.fire({
+                    title: 'Tersimpan',
+                    text: 'Catatan internal diperbarui.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                });
+            },
+            onError: () => {
+                Swal.fire({
+                    title: 'Gagal',
+                    text: 'Catatan internal gagal diperbarui.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            },
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Detail Booking" />
@@ -149,6 +215,11 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(booking.status)}`}>
                                     {booking.status}
                                 </span>
+                                {booking.stay_status && (
+                                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                        Stay: {booking.stay_status}
+                                    </span>
+                                )}
                                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
                                     Pembayaran: {booking.payment_status ?? '-'}
                                 </span>
@@ -225,6 +296,27 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                                 <p className="mt-2">{booking.special_request}</p>
                             </div>
                         )}
+
+                        {isMitra && (
+                            <form onSubmit={handleNotesSave} className="mt-6 rounded-2xl border border-slate-100 bg-white p-4">
+                                <p className="text-sm font-semibold text-slate-900">Catatan internal</p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Hanya terlihat oleh tim hotel Anda.
+                                </p>
+                                <textarea
+                                    name="internal_notes"
+                                    defaultValue={booking.internal_notes ?? ''}
+                                    rows={4}
+                                    className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-sky-300 focus:outline-none"
+                                    placeholder="Tambahkan catatan untuk tim operasional..."
+                                />
+                                <div className="mt-3 flex justify-end">
+                                    <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                                        Simpan catatan
+                                    </Button>
+                                </div>
+                            </form>
+                        )}
                     </div>
 
                     <div className="space-y-6">
@@ -234,6 +326,31 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                                 Semua aksi dicatat sebagai audit log.
                             </p>
                             <div className="mt-4 flex flex-col gap-3">
+                                {isMitra && (
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleStayStatus('checked_in')}
+                                            className="justify-start border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                                        >
+                                            Tandai check-in
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleStayStatus('checked_out')}
+                                            className="justify-start border-sky-200 text-sky-600 hover:bg-sky-50"
+                                        >
+                                            Tandai check-out
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            onClick={() => handleStayStatus('no_show')}
+                                            className="justify-start border-orange-200 text-orange-600 hover:bg-orange-50"
+                                        >
+                                            Tandai no-show
+                                        </Button>
+                                    </>
+                                )}
                                 <Button
                                     variant="outline"
                                     onClick={() => handleAction('cancel')}
