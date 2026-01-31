@@ -1,11 +1,18 @@
 import { Transition } from '@headlessui/react';
-import { Form, Head, Link, usePage } from '@inertiajs/react';
+import { Form, Head, Link, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import InputError from '@/components/input-error';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History, UserCircle, Mail, Phone } from 'lucide-react';
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth } = usePage().props as { auth?: { user?: any } };
+    const [passwordOpen, setPasswordOpen] = useState(false);
+    const passwordForm = useForm({
+        current_password: '',
+        password: '',
+        password_confirmation: '',
+    });
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/?tab=wisata' },
@@ -164,6 +171,28 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                 )}
                             </Form>
                         </div>
+
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <h2 className="text-lg font-semibold text-slate-900">Akun & Keamanan</h2>
+                            <p className="mt-2 text-sm text-slate-500">Kelola kata sandi dan sesi akun kamu.</p>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setPasswordOpen(true)}
+                                    className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
+                                >
+                                    Ubah Password
+                                </button>
+                                <Link
+                                    href="/logout"
+                                    method="post"
+                                    as="button"
+                                    className="rounded-lg border border-rose-200 px-5 py-2 text-sm font-semibold text-rose-600 hover:border-rose-300"
+                                >
+                                    Logout
+                                </Link>
+                            </div>
+                        </div>
                     </div>
 
                     <aside className="space-y-6">
@@ -196,6 +225,94 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         </div>
                     </aside>
                 </div>
+            {passwordOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+                    <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <h3 className="text-lg font-semibold text-slate-900">Ubah Password</h3>
+                                <p className="mt-1 text-sm text-slate-500">Pastikan password baru aman dan mudah diingat.</p>
+                            </div>
+                            <button
+                                type="button"
+                                className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600 hover:bg-slate-200"
+                                onClick={() => {
+                                    setPasswordOpen(false);
+                                    passwordForm.reset();
+                                }}
+                            >
+                                Tutup
+                            </button>
+                        </div>
+
+                        <form
+                            className="mt-5 grid gap-4"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                passwordForm.put('/settings/password', {
+                                    onSuccess: () => {
+                                        passwordForm.reset();
+                                        setPasswordOpen(false);
+                                    },
+                                });
+                            }}
+                        >
+                            <div className="grid gap-2">
+                                <label className="text-sm font-semibold text-slate-700">Password Saat Ini</label>
+                                <input
+                                    type="password"
+                                    value={passwordForm.data.current_password}
+                                    onChange={(event) => passwordForm.setData('current_password', event.target.value)}
+                                    className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+                                    placeholder="Masukkan password lama"
+                                />
+                                <InputError message={passwordForm.errors.current_password} />
+                            </div>
+                            <div className="grid gap-2">
+                                <label className="text-sm font-semibold text-slate-700">Password Baru</label>
+                                <input
+                                    type="password"
+                                    value={passwordForm.data.password}
+                                    onChange={(event) => passwordForm.setData('password', event.target.value)}
+                                    className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+                                    placeholder="Minimal 8 karakter"
+                                />
+                                <InputError message={passwordForm.errors.password} />
+                            </div>
+                            <div className="grid gap-2">
+                                <label className="text-sm font-semibold text-slate-700">Konfirmasi Password</label>
+                                <input
+                                    type="password"
+                                    value={passwordForm.data.password_confirmation}
+                                    onChange={(event) => passwordForm.setData('password_confirmation', event.target.value)}
+                                    className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+                                    placeholder="Ulangi password baru"
+                                />
+                                <InputError message={passwordForm.errors.password_confirmation} />
+                            </div>
+                            <div className="flex items-center justify-end gap-2">
+                                <button
+                                    type="button"
+                                    className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                                    onClick={() => {
+                                        setPasswordOpen(false);
+                                        passwordForm.reset();
+                                    }}
+                                >
+                                    Batal
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={passwordForm.processing}
+                                    className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
+                                >
+                                    {passwordForm.processing ? 'Menyimpan...' : 'Simpan Password'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
             </main>
 
             <footer className="mt-10 border-t border-slate-200 bg-white">
