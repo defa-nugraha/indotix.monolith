@@ -71,6 +71,17 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('admin/mitra/{user}/suspend', [\App\Http\Controllers\Admin\MitraController::class, 'suspend'])
         ->name('admin.mitra.suspend');
 
+    Route::get('admin/bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])
+        ->name('admin.bookings.index');
+    Route::get('admin/bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'show'])
+        ->name('admin.bookings.show');
+    Route::post('admin/bookings/{booking}/cancel', [\App\Http\Controllers\Admin\BookingController::class, 'cancel'])
+        ->name('admin.bookings.cancel');
+    Route::post('admin/bookings/{booking}/refund', [\App\Http\Controllers\Admin\BookingController::class, 'refund'])
+        ->name('admin.bookings.refund');
+    Route::post('admin/bookings/{booking}/dispute', [\App\Http\Controllers\Admin\BookingController::class, 'dispute'])
+        ->name('admin.bookings.dispute');
+
     Route::get('admin/public/banners', [\App\Http\Controllers\Admin\PublicBannerController::class, 'index'])
         ->name('admin.public.banners.index');
     Route::get('admin/public/banners/create', [\App\Http\Controllers\Admin\PublicBannerController::class, 'create'])
@@ -168,6 +179,16 @@ Route::prefix('mitra')
         Route::delete('room-inventories/bulk', [\App\Http\Controllers\Mitra\RoomInventoryController::class, 'bulkDestroy'])
             ->name('room-inventories.bulk-destroy');
         Route::resource('room-inventories', \App\Http\Controllers\Mitra\RoomInventoryController::class)->except(['show']);
+        Route::get('bookings', [\App\Http\Controllers\Mitra\BookingController::class, 'index'])
+            ->name('bookings.index');
+        Route::get('bookings/{booking}', [\App\Http\Controllers\Mitra\BookingController::class, 'show'])
+            ->name('bookings.show');
+        Route::post('bookings/{booking}/cancel', [\App\Http\Controllers\Mitra\BookingController::class, 'cancel'])
+            ->name('bookings.cancel');
+        Route::post('bookings/{booking}/refund', [\App\Http\Controllers\Mitra\BookingController::class, 'refund'])
+            ->name('bookings.refund');
+        Route::post('bookings/{booking}/dispute', [\App\Http\Controllers\Mitra\BookingController::class, 'dispute'])
+            ->name('bookings.dispute');
     });
 
 Route::middleware(['auth', 'verified'])->group(function () {

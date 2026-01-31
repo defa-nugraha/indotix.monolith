@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, MonitorPlay, Ticket, Users } from 'lucide-react';
+import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, MonitorPlay, Receipt, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -52,7 +52,8 @@ export function AppSidebarAdmin() {
     const isHotelSectionActive =
         isCurrentUrl('/hotels') ||
         isCurrentUrl('/room-types') ||
-        isCurrentUrl('/room-inventories');
+        isCurrentUrl('/room-inventories') ||
+        isCurrentUrl('/admin/bookings');
     const isPublicSectionActive =
         isCurrentUrl('/admin/public/banners') ||
         isCurrentUrl('/admin/public/promo-videos') ||
@@ -112,6 +113,16 @@ export function AppSidebarAdmin() {
                                         >
                                             <Link href="/room-inventories">
                                                 Inventory per Tanggal
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/bookings')}
+                                        >
+                                            <Link href="/admin/bookings">
+                                                Booking & Transaksi
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>

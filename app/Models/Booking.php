@@ -64,6 +64,11 @@ class Booking extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function auditLogs(): HasMany
+    {
+        return $this->hasMany(BookingAuditLog::class);
+    }
+
     public function isExpired(): bool
     {
         return $this->status === 'pending_payment'

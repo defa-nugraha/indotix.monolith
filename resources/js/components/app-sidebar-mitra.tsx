@@ -32,7 +32,8 @@ export function AppSidebarMitra() {
     const isHotelSectionActive =
         isCurrentUrl('/mitra/hotels') ||
         isCurrentUrl('/mitra/room-types') ||
-        isCurrentUrl('/mitra/room-inventories');
+        isCurrentUrl('/mitra/room-inventories') ||
+        isCurrentUrl('/mitra/bookings');
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -87,6 +88,16 @@ export function AppSidebarMitra() {
                                         >
                                             <Link href="/mitra/room-inventories">
                                                 Inventory per Tanggal
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/mitra/bookings')}
+                                        >
+                                            <Link href="/mitra/bookings">
+                                                Booking & Transaksi
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>

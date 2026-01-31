@@ -17,5 +17,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call(UserRoleSeeder::class);
         $this->call(IndonesiaRegionSeeder::class);
+        $this->call(BookingSeeder::class);
     }
 }
