@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Hotel;
 use App\Models\User;
+use App\Models\HotelImage;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -88,18 +90,21 @@ class HotelController extends Controller
         $validated = $this->validateHotel($request);
 
         $facilityCodes = $validated['facility_codes'] ?? [];
+        $images = $validated['images'] ?? [];
         unset($validated['facility_codes']);
+        unset($validated['images']);
 
         $hotel = Hotel::create($validated);
 
         $this->syncFacilities($hotel, $facilityCodes);
+        $this->attachImages($hotel, $images);
 
         return redirect()->route('hotels.index');
     }
 
     public function edit(Hotel $hotel): Response
     {
-        $hotel->load('facilities');
+        $hotel->load('facilities', 'images');
 
         return Inertia::render('hotels/edit', [
             'hotel' => $this->toPayload($hotel),
@@ -114,12 +119,30 @@ class HotelController extends Controller
     {
         $validated = $this->validateHotel($request);
         $facilityCodes = $validated['facility_codes'] ?? [];
+        $images = $validated['images'] ?? [];
         unset($validated['facility_codes']);
+        unset($validated['images']);
 
         $hotel->update($validated);
         $this->syncFacilities($hotel, $facilityCodes);
+        $this->attachImages($hotel, $images);
 
         return redirect()->route('hotels.index');
+    }
+
+    public function destroyImage(Hotel $hotel, HotelImage $hotelImage): RedirectResponse
+    {
+        if ((int) $hotelImage->hotel_id !== (int) $hotel->id) {
+            return redirect()->route('hotels.edit', $hotel);
+        }
+
+        if ($hotelImage->image_url) {
+            Storage::disk('public')->delete($hotelImage->image_url);
+        }
+
+        $hotelImage->delete();
+
+        return redirect()->route('hotels.edit', $hotel);
     }
 
     public function destroy(Hotel $hotel): RedirectResponse
@@ -149,6 +172,8 @@ class HotelController extends Controller
             'status' => ['required', Rule::in(self::STATUSES)],
             'facility_codes' => ['nullable', 'array'],
             'facility_codes.*' => ['string', Rule::in(self::FACILITY_CODES)],
+            'images' => ['nullable', 'array'],
+            'images.*' => ['file', 'image', 'max:4096'],
         ]);
     }
 
@@ -167,6 +192,26 @@ class HotelController extends Controller
 
         $hotel->facilities()->createMany(
             $uniqueCodes->map(fn (string $code) => ['facility_code' => $code])->all()
+        );
+    }
+
+    private function attachImages(Hotel $hotel, array $images): void
+    {
+        if (empty($images)) {
+            return;
+        }
+
+        $paths = collect($images)
+            ->map(fn ($file) => $file->store('hotel-images', 'public'))
+            ->filter()
+            ->values();
+
+        if ($paths->isEmpty()) {
+            return;
+        }
+
+        $hotel->images()->createMany(
+            $paths->map(fn (string $path) => ['image_url' => $path])->all()
         );
     }
 
@@ -191,6 +236,14 @@ class HotelController extends Controller
             'status' => $hotel->status,
             'facility_codes' => $hotel->facilities
                 ->pluck('facility_code')
+                ->values()
+                ->all(),
+            'images' => $hotel->images
+                ->map(fn (HotelImage $image) => [
+                    'id' => $image->id,
+                    'url' => $image->image_url ? '/storage/'.$image->image_url : null,
+                ])
+                ->filter(fn ($image) => $image['url'])
                 ->values()
                 ->all(),
         ];

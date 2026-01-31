@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 import Swal from 'sweetalert2';
 import InputError from '@/components/input-error';
 import LocationPickerModal from '@/components/location-picker-modal';
@@ -30,6 +30,7 @@ type FormData = {
     check_out_time: string;
     status: string;
     facility_codes: string[];
+    images: File[];
 };
 
 type CreateProps = {
@@ -62,7 +63,24 @@ export default function CreateHotel({
         check_out_time: '',
         status: statusOptions[0] ?? 'draft',
         facility_codes: [],
+        images: [],
     });
+
+    const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files ? Array.from(event.target.files) : [];
+        if (files.length === 0) {
+            return;
+        }
+        setData('images', [...data.images, ...files]);
+        event.target.value = '';
+    };
+
+    const removeImage = (index: number) => {
+        setData(
+            'images',
+            data.images.filter((_, idx) => idx !== index),
+        );
+    };
 
     const toggleFacility = (code: string) => {
         setData(
@@ -322,6 +340,61 @@ export default function CreateHotel({
                             placeholder="Deskripsi singkat hotel"
                         />
                         <InputError message={errors.description} />
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <Label>Foto hotel</Label>
+                            <Button type="button" variant="outline" asChild>
+                                <label htmlFor="images" className="cursor-pointer">
+                                    <Plus className="mr-2 size-4" />
+                                    Upload foto
+                                </label>
+                            </Button>
+                        </div>
+                        <input
+                            id="images"
+                            name="images"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImagesChange}
+                            className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-100"
+                        />
+                        {data.images.length > 0 ? (
+                            <div className="space-y-3">
+                                <p className="text-xs text-slate-500">
+                                    {data.images.length} foto dipilih.
+                                </p>
+                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                    {data.images.map((file, index) => (
+                                        <div
+                                            key={`${file.name}-${index}`}
+                                            className="relative overflow-hidden rounded-xl border border-slate-200 bg-white"
+                                        >
+                                            <img
+                                                src={URL.createObjectURL(file)}
+                                                alt={file.name}
+                                                className="h-32 w-full object-cover"
+                                            />
+                                            <div className="flex items-center justify-between px-3 py-2 text-xs text-slate-500">
+                                                <span className="truncate">{file.name}</span>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="border-red-200 text-red-600 hover:bg-red-50"
+                                                    onClick={() => removeImage(index)}
+                                                >
+                                                    Hapus
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null}
+                        <InputError message={errors.images} />
                     </div>
 
                     <div className="space-y-3">

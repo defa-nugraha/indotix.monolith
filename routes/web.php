@@ -160,6 +160,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('room-inventories', \App\Http\Controllers\RoomInventoryController::class)->except(['show']);
     Route::delete('room-types/{roomType}/images/{roomImage}', [\App\Http\Controllers\RoomTypeController::class, 'destroyImage'])
         ->name('room-types.images.destroy');
+    Route::delete('hotels/{hotel}/images/{hotelImage}', [\App\Http\Controllers\HotelController::class, 'destroyImage'])
+        ->name('hotels.images.destroy');
 });
 
 Route::middleware(['auth'])->group(function () {
