@@ -45,7 +45,7 @@ class PublicHotelController extends Controller
             ->when($data['q'] ?? null, fn ($query, $term) => $query->where('name', 'like', "%{$term}%"))
             ->with(['roomTypes' => function ($query) {
                 $query->where('status', 'active');
-            }, 'city'])
+            }, 'city', 'images'])
             ->get();
 
         $results = $hotels->map(function (Hotel $hotel) use ($dates, $data) {
@@ -66,6 +66,8 @@ class PublicHotelController extends Controller
                 if ($isClosed || $minAvailable < $data['rooms']) {
                     return null;
                 }
+                $breakfastIncluded = $inventories->every(fn ($item) => (bool) $item->breakfast_included);
+                $smokingAllowed = $inventories->every(fn ($item) => (bool) $item->smoking_allowed);
 
                 $total = 0;
                 foreach ($dates as $date) {
@@ -82,6 +84,8 @@ class PublicHotelController extends Controller
                     'total_price' => $total,
                     'price_per_night' => (int) round($roomType->base_price),
                     'available_rooms' => $minAvailable,
+                    'breakfast_included' => $breakfastIncluded,
+                    'smoking_allowed' => $smokingAllowed,
                 ];
             })->filter();
 
@@ -91,6 +95,7 @@ class PublicHotelController extends Controller
 
             $minPrice = $availableRoomTypes->min('price_per_night');
 
+            $coverImage = $hotel->images->first();
             return [
                 'id' => $hotel->id,
                 'encrypted_id' => Crypt::encryptString((string) $hotel->id),
@@ -100,6 +105,9 @@ class PublicHotelController extends Controller
                 'city_name' => $hotel->city?->name,
                 'min_price' => $minPrice,
                 'available_rooms' => $availableRoomTypes->sum('available_rooms'),
+                'image_url' => $coverImage?->image_url ? '/storage/'.$coverImage->image_url : null,
+                'breakfast_included' => $availableRoomTypes->contains('breakfast_included', true),
+                'smoking_allowed' => $availableRoomTypes->contains('smoking_allowed', true),
             ];
         })->filter()->values();
 
@@ -139,7 +147,7 @@ class PublicHotelController extends Controller
 
         $dates = $this->dateRange($data['check_in'], $data['check_out']);
 
-        $hotel->load(['facilities', 'roomTypes.images', 'city']);
+        $hotel->load(['facilities', 'roomTypes.images', 'city', 'images']);
 
         $roomTypes = $hotel->roomTypes
             ->where('status', 'active')
@@ -160,6 +168,8 @@ class PublicHotelController extends Controller
                 if ($isClosed || $minAvailable < $data['rooms']) {
                     return null;
                 }
+                $breakfastIncluded = $inventories->every(fn ($item) => (bool) $item->breakfast_included);
+                $smokingAllowed = $inventories->every(fn ($item) => (bool) $item->smoking_allowed);
 
                 $total = 0;
                 foreach ($dates as $date) {
@@ -178,6 +188,8 @@ class PublicHotelController extends Controller
                     'strike_price' => $roomType->strike_price ? (int) round($roomType->strike_price) : null,
                     'available_rooms' => $minAvailable,
                     'total_price' => $total,
+                    'breakfast_included' => $breakfastIncluded,
+                    'smoking_allowed' => $smokingAllowed,
                     'images' => $roomType->images->map(fn ($image) => [
                         'id' => $image->id,
                         'url' => $image->image_url ? '/storage/'.$image->image_url : null,
@@ -201,6 +213,10 @@ class PublicHotelController extends Controller
                 'latitude' => $hotel->latitude,
                 'longitude' => $hotel->longitude,
                 'facilities' => $hotel->facilities->pluck('facility_code'),
+                'images' => $hotel->images->map(fn ($image) => [
+                    'id' => $image->id,
+                    'url' => $image->image_url ? '/storage/'.$image->image_url : null,
+                ])->filter(fn ($image) => $image['url'])->values(),
             ],
             'roomTypes' => $roomTypes,
             'filters' => [
@@ -229,7 +245,7 @@ class PublicHotelController extends Controller
     {
         return Hotel::query()
             ->where('status', 'active')
-            ->with(['roomTypes', 'city'])
+            ->with(['roomTypes', 'city', 'images'])
             ->latest()
             ->take(3)
             ->get()
@@ -242,6 +258,7 @@ class PublicHotelController extends Controller
                 'min_price' => $hotel->roomTypes->min('base_price')
                     ? (int) round($hotel->roomTypes->min('base_price'))
                     : null,
+                'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
             ])->all();
     }
 }

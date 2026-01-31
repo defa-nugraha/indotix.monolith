@@ -4,7 +4,7 @@ import { DateRange, RangeKeyDict } from 'react-date-range';
 import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Wifi, ParkingSquare, Waves, Dumbbell, Utensils, Coffee, Users, ShieldCheck } from 'lucide-react';
+import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Wifi, ParkingSquare, Waves, Dumbbell, Utensils, Coffee, Users, ShieldCheck, Cigarette, CigaretteOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Hotel = {
@@ -19,6 +19,7 @@ type Hotel = {
     latitude?: number | null;
     longitude?: number | null;
     facilities?: string[];
+    images?: { id: number; url: string }[];
 };
 
 type RoomType = {
@@ -32,6 +33,8 @@ type RoomType = {
     available_rooms?: number | null;
     total_price?: number | null;
     images?: { id: number; url: string }[];
+    breakfast_included?: boolean;
+    smoking_allowed?: boolean;
 };
 
 type Filters = {
@@ -126,10 +129,14 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
         'Danau',
     ];
 
-    const hotelImages = roomTypes
+    const hotelImages = (hotel.images ?? [])
+        .map((image) => image.url)
+        .filter(Boolean) as string[];
+    const fallbackRoomImages = roomTypes
         .flatMap((room) => room.images ?? [])
         .map((image) => image.url)
         .filter(Boolean) as string[];
+    const galleryImages = hotelImages.length > 0 ? hotelImages : fallbackRoomImages;
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -351,9 +358,9 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
 
                     <div className="mt-4 grid gap-4 md:grid-cols-[1.6fr_1fr]">
                         <div className="grid gap-3">
-                            {hotelImages.length > 0 ? (
+                            {galleryImages.length > 0 ? (
                                 <img
-                                    src={hotelImages[0]}
+                                    src={galleryImages[0]}
                                     alt={hotel.name}
                                     className="h-64 w-full rounded-xl object-cover md:h-full"
                                 />
@@ -362,17 +369,17 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
                             )}
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2">
-                            {hotelImages.slice(1, 5).map((image, idx) => (
+                            {galleryImages.slice(1, 5).map((image, idx) => (
                                 <div key={`${image}-${idx}`} className="relative">
                                     <img src={image} alt={`Foto ${idx + 2}`} className="h-32 w-full rounded-xl object-cover" />
-                                    {idx === 3 && hotelImages.length > 5 && (
+                                    {idx === 3 && galleryImages.length > 5 && (
                                         <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 text-sm font-semibold text-white">
                                             Lihat semua foto
                                         </div>
                                     )}
                                 </div>
                             ))}
-                            {hotelImages.length === 0 && (
+                            {galleryImages.length === 0 && (
                                 <div className="h-32 rounded-xl bg-slate-100" />
                             )}
                         </div>
@@ -456,6 +463,24 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
                                 <div>
                                     <h2 className="text-lg font-semibold text-slate-900">{room.name}</h2>
                                     <p className="text-sm text-slate-500">{room.bed_type} · Maks {room.max_guest} tamu</p>
+                                    <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                                        <span
+                                            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${
+                                                room.breakfast_included ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                                            }`}
+                                        >
+                                            <Coffee className="h-3 w-3" />
+                                            {room.breakfast_included ? 'Termasuk sarapan' : 'Tanpa sarapan'}
+                                        </span>
+                                        <span
+                                            className={`inline-flex items-center gap-1 rounded-full px-2 py-1 ${
+                                                room.smoking_allowed ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'
+                                            }`}
+                                        >
+                                            {room.smoking_allowed ? <Cigarette className="h-3 w-3" /> : <CigaretteOff className="h-3 w-3" />}
+                                            {room.smoking_allowed ? 'Boleh merokok' : 'No smoking'}
+                                        </span>
+                                    </div>
                                     <p className="mt-2 text-sm text-slate-600">{room.description}</p>
                                 </div>
                                 <div className="text-right">

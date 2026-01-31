@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\RoomInventory;
 use App\Models\RoomType;
+use App\Models\Hotel;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -17,6 +20,11 @@ class RoomInventoryController extends Controller
         $query = RoomInventory::query()
             ->with('roomType')
             ->latest('date');
+
+        if ($request->filled('hotel_id')) {
+            $hotelId = (int) $request->input('hotel_id');
+            $query->whereHas('roomType', fn ($builder) => $builder->where('hotel_id', $hotelId));
+        }
 
         if ($request->filled('room_type_id')) {
             $query->where('room_type_id', $request->input('room_type_id'));
@@ -35,10 +43,41 @@ class RoomInventoryController extends Controller
             ->withQueryString()
             ->through(fn (RoomInventory $inventory) => $this->toPayload($inventory));
 
+        $groupQuery = RoomInventory::query()
+            ->selectRaw('DATE_FORMAT(date, "%Y-%m") as month_key, COUNT(*) as total');
+
+        if ($request->filled('hotel_id')) {
+            $hotelId = (int) $request->input('hotel_id');
+            $groupQuery->whereHas('roomType', fn ($builder) => $builder->where('hotel_id', $hotelId));
+        }
+
+        if ($request->filled('room_type_id')) {
+            $groupQuery->where('room_type_id', $request->input('room_type_id'));
+        }
+
+        $monthGroups = $groupQuery
+            ->groupBy('month_key')
+            ->orderByDesc('month_key')
+            ->get()
+            ->map(function ($row) {
+                $start = Carbon::createFromFormat('Y-m', $row->month_key)->startOfMonth();
+                $end = $start->copy()->endOfMonth();
+                return [
+                    'key' => $row->month_key,
+                    'label' => $start->isoFormat('MMMM YYYY'),
+                    'total' => (int) $row->total,
+                    'date_from' => $start->toDateString(),
+                    'date_to' => $end->toDateString(),
+                ];
+            });
+
         return Inertia::render('room-inventories/index', [
             'inventories' => $inventories,
             'roomTypeOptions' => $this->roomTypeOptions(),
+            'hotelOptions' => $this->hotelOptions(),
+            'monthGroups' => $monthGroups,
             'filters' => [
+                'hotel_id' => $request->input('hotel_id'),
                 'room_type_id' => $request->input('room_type_id'),
                 'date_from' => $request->input('date_from'),
                 'date_to' => $request->input('date_to'),
@@ -56,6 +95,30 @@ class RoomInventoryController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $this->validateInventory($request);
+
+        if (! empty($validated['date_from']) && ! empty($validated['date_to'])) {
+            $start = Carbon::parse($validated['date_from']);
+            $end = Carbon::parse($validated['date_to']);
+            $period = CarbonPeriod::create($start, $end);
+
+            foreach ($period as $date) {
+                RoomInventory::updateOrCreate(
+                    [
+                        'room_type_id' => $validated['room_type_id'],
+                        'date' => $date->toDateString(),
+                    ],
+                    [
+                        'available_rooms' => $validated['available_rooms'],
+                        'price_override' => $validated['price_override'] ?? null,
+                        'is_closed' => $validated['is_closed'] ?? false,
+                        'breakfast_included' => $validated['breakfast_included'] ?? false,
+                        'smoking_allowed' => $validated['smoking_allowed'] ?? false,
+                    ]
+                );
+            }
+
+            return redirect()->route('room-inventories.index');
+        }
 
         RoomInventory::create($validated);
 
@@ -87,13 +150,44 @@ class RoomInventoryController extends Controller
         return redirect()->route('room-inventories.index');
     }
 
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array'],
+            'ids.*' => ['integer', 'exists:room_inventories,id'],
+        ]);
+
+        RoomInventory::query()
+            ->whereIn('id', $data['ids'])
+            ->delete();
+
+        return redirect()->route('room-inventories.index');
+    }
+
     private function validateInventory(Request $request, ?int $inventoryId = null): array
     {
+        $isBulk = $request->filled('date_from') || $request->filled('date_to');
+
+        if ($isBulk && $inventoryId === null) {
+            return $request->validate([
+                'date_from' => ['required', 'date'],
+                'date_to' => ['required', 'date', 'after_or_equal:date_from'],
+                'available_rooms' => ['required', 'integer', 'min:0'],
+                'price_override' => ['nullable', 'numeric', 'min:0'],
+                'is_closed' => ['boolean'],
+                'breakfast_included' => ['boolean'],
+                'smoking_allowed' => ['boolean'],
+                'room_type_id' => ['required', 'integer', 'exists:room_types,id'],
+            ]);
+        }
+
         return $request->validate([
             'date' => ['required', 'date'],
             'available_rooms' => ['required', 'integer', 'min:0'],
             'price_override' => ['nullable', 'numeric', 'min:0'],
             'is_closed' => ['boolean'],
+            'breakfast_included' => ['boolean'],
+            'smoking_allowed' => ['boolean'],
             'room_type_id' => [
                 'required',
                 'integer',
@@ -121,6 +215,19 @@ class RoomInventoryController extends Controller
             ->all();
     }
 
+    private function hotelOptions(): array
+    {
+        return Hotel::query()
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Hotel $hotel) => [
+                'id' => $hotel->id,
+                'label' => $hotel->name,
+            ])
+            ->all();
+    }
+
     private function toPayload(RoomInventory $inventory): array
     {
         return [
@@ -132,6 +239,8 @@ class RoomInventoryController extends Controller
             'available_rooms' => $inventory->available_rooms,
             'price_override' => $inventory->price_override,
             'is_closed' => $inventory->is_closed,
+            'breakfast_included' => $inventory->breakfast_included,
+            'smoking_allowed' => $inventory->smoking_allowed,
         ];
     }
 }

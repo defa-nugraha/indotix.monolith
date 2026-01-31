@@ -24,7 +24,15 @@ type PromoVideo = {
 };
 type PromoItem = { id: number; image_path: string; link_url?: string | null };
 type Partner = { id: number; image_path: string; link_url?: string | null; name?: string | null };
-type HotelCard = { id: number; encrypted_id?: string; name: string; city_name?: string | null; star_rating?: number | null; min_price?: number | null };
+type HotelCard = {
+    id: number;
+    encrypted_id?: string;
+    name: string;
+    city_name?: string | null;
+    star_rating?: number | null;
+    min_price?: number | null;
+    image_url?: string | null;
+};
 type Contact = {
     company_name?: string | null;
     address?: string | null;
@@ -469,7 +477,16 @@ export default function Welcome({
                     <div className="mt-6 grid gap-6 md:grid-cols-3">
                         {hotelProducts.map((hotel) => (
                             <div key={hotel.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
-                                <div className="h-40 bg-gradient-to-br from-blue-700 to-sky-400" />
+                                <div className="h-40 overflow-hidden bg-gradient-to-br from-blue-700 to-sky-400">
+                                    <img
+                                        src={
+                                            hotel.image_url ??
+                                            `https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop&sig=${hotel.id}`
+                                        }
+                                        alt={hotel.name}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
                                 <div className="p-4">
                                     <h3 className="text-sm font-semibold text-slate-900">
                                         {hotel.name}
@@ -477,8 +494,13 @@ export default function Welcome({
                                     <p className="text-xs text-slate-500">
                                         {hotel.city_name ?? 'Indonesia'}
                                     </p>
-                                    <div className="mt-3 text-xs text-slate-400">
-                                        {hotel.star_rating ? `${hotel.star_rating}★` : 'Hotel'}
+                                    <div className="mt-3 flex items-center gap-1">
+                                        {Array.from({ length: Math.max(0, Math.round(hotel.star_rating ?? 0)) }).map((_, idx) => (
+                                            <Star key={`${hotel.id}-star-${idx}`} className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                                        ))}
+                                        {(!hotel.star_rating || hotel.star_rating <= 0) && (
+                                            <span className="text-xs text-slate-400">Hotel</span>
+                                        )}
                                     </div>
                                     <div className="text-sm font-semibold text-sky-600">
                                         {hotel.min_price ? `Mulai Rp ${hotel.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}

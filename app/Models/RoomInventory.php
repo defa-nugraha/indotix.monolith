@@ -15,6 +15,8 @@ class RoomInventory extends Model
         'available_rooms',
         'price_override',
         'is_closed',
+        'breakfast_included',
+        'smoking_allowed',
     ];
 
     protected $casts = [
@@ -22,6 +24,8 @@ class RoomInventory extends Model
         'available_rooms' => 'integer',
         'price_override' => 'decimal:2',
         'is_closed' => 'boolean',
+        'breakfast_included' => 'boolean',
+        'smoking_allowed' => 'boolean',
     ];
 
     public function roomType(): BelongsTo

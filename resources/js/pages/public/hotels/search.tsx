@@ -4,7 +4,7 @@ import { DateRange, RangeKeyDict } from 'react-date-range';
 import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History } from 'lucide-react';
+import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Coffee, Cigarette, CigaretteOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Hotel = {
@@ -15,6 +15,9 @@ type Hotel = {
     city_name?: string | null;
     star_rating?: number | null;
     min_price?: number | null;
+    image_url?: string | null;
+    breakfast_included?: boolean;
+    smoking_allowed?: boolean;
 };
 
 type Filters = {
@@ -33,6 +36,7 @@ type Recommendation = {
     city_name?: string | null;
     star_rating?: number | null;
     min_price?: number | null;
+    image_url?: string | null;
 };
 
 export default function HotelSearch({ filters, hotels, recommendations }: { filters: Filters; hotels: Hotel[]; recommendations: Recommendation[] }) {
@@ -363,7 +367,10 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                                 className="relative block h-28 overflow-hidden"
                             >
                                 <img
-                                    src={`https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop&sig=${hotel.id}`}
+                                    src={
+                                        hotel.image_url ??
+                                        `https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop&sig=${hotel.id}`
+                                    }
                                     alt={hotel.name}
                                     className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                                 />
@@ -401,6 +408,24 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                                         Lihat Detail
                                     </Link>
                                 </div>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    <span
+                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold ${
+                                            hotel.breakfast_included ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
+                                        }`}
+                                    >
+                                        <Coffee className="h-3 w-3" />
+                                        {hotel.breakfast_included ? 'Termasuk sarapan' : 'Tanpa sarapan'}
+                                    </span>
+                                    <span
+                                        className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold ${
+                                            hotel.smoking_allowed ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-500'
+                                        }`}
+                                    >
+                                        {hotel.smoking_allowed ? <Cigarette className="h-3 w-3" /> : <CigaretteOff className="h-3 w-3" />}
+                                        {hotel.smoking_allowed ? 'Boleh merokok' : 'No smoking'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -421,7 +446,10 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                             {recommendations.map((item) => (
                                 <div key={item.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
                                     <img
-                                        src="https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop"
+                                        src={
+                                            item.image_url ??
+                                            'https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop'
+                                        }
                                         alt={item.name}
                                         className="h-44 w-full object-cover"
                                     />

@@ -25,6 +25,8 @@ type Inventory = {
     available_rooms: number;
     price_override: string | null;
     is_closed: boolean;
+    breakfast_included?: boolean;
+    smoking_allowed?: boolean;
 };
 
 type FormData = {
@@ -34,6 +36,8 @@ type FormData = {
     available_rooms: string;
     price_override: string;
     is_closed: boolean;
+    breakfast_included: boolean;
+    smoking_allowed: boolean;
 };
 
 type EditProps = {
@@ -49,6 +53,8 @@ export default function EditRoomInventory({ inventory, roomTypeOptions }: EditPr
         available_rooms: String(inventory.available_rooms),
         price_override: inventory.price_override ?? '',
         is_closed: inventory.is_closed ?? false,
+        breakfast_included: inventory.breakfast_included ?? false,
+        smoking_allowed: inventory.smoking_allowed ?? false,
     });
     const formatRupiah = (value: string) => {
         const digits = value.replace(/\D/g, '');
@@ -184,6 +190,34 @@ export default function EditRoomInventory({ inventory, roomTypeOptions }: EditPr
                                 placeholder="10.000"
                             />
                             <InputError message={errors.price_override} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label>Opsi kamar</Label>
+                            <div className="flex flex-wrap items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="breakfast_included"
+                                        checked={data.breakfast_included}
+                                        onCheckedChange={(value) =>
+                                            setData('breakfast_included', Boolean(value))
+                                        }
+                                    />
+                                    <Label htmlFor="breakfast_included">Termasuk sarapan</Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="smoking_allowed"
+                                        checked={data.smoking_allowed}
+                                        onCheckedChange={(value) =>
+                                            setData('smoking_allowed', Boolean(value))
+                                        }
+                                    />
+                                    <Label htmlFor="smoking_allowed">Smoking room</Label>
+                                </div>
+                            </div>
+                            <InputError message={errors.breakfast_included} />
+                            <InputError message={errors.smoking_allowed} />
                         </div>
 
                         <div className="flex items-center gap-3">

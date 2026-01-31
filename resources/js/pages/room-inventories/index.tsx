@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { useMemo, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -20,6 +21,8 @@ type Inventory = {
     available_rooms: number;
     price_override: string | null;
     is_closed: boolean;
+    breakfast_included?: boolean;
+    smoking_allowed?: boolean;
 };
 
 type PaginationLink = {
@@ -34,7 +37,10 @@ type Props = {
         links: PaginationLink[];
     };
     roomTypeOptions: Array<{ id: number; label: string }>;
+    monthGroups: Array<{ key: string; label: string; total: number; date_from: string; date_to: string }>;
+    hotelOptions: Array<{ id: number; label: string }>;
     filters: {
+        hotel_id?: string;
         room_type_id?: string;
         date_from?: string;
         date_to?: string;
@@ -44,8 +50,14 @@ type Props = {
 export default function RoomInventoryIndex({
     inventories,
     roomTypeOptions,
+    monthGroups,
+    hotelOptions,
     filters,
 }: Props) {
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const allIds = useMemo(() => inventories.data.map((inv) => inv.id), [inventories.data]);
+    const allSelected = selectedIds.length > 0 && selectedIds.length === allIds.length;
+
     const handleDelete = async (inventoryId: number) => {
         const result = await Swal.fire({
             title: 'Hapus inventory?',
@@ -74,6 +86,53 @@ export default function RoomInventoryIndex({
                 Swal.fire({
                     title: 'Gagal',
                     text: 'Inventory gagal dihapus.',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
+            },
+        });
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) {
+            Swal.fire({
+                title: 'Belum ada pilihan',
+                text: 'Pilih data inventory yang ingin dihapus.',
+                icon: 'info',
+                confirmButtonText: 'OK',
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: 'Hapus data terpilih?',
+            text: `Sebanyak ${selectedIds.length} data akan dihapus permanen.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        router.delete('/room-inventories/bulk', {
+            data: { ids: selectedIds },
+            onSuccess: () => {
+                setSelectedIds([]);
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Data inventory berhasil dihapus.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                });
+            },
+            onError: () => {
+                Swal.fire({
+                    title: 'Gagal',
+                    text: 'Data inventory gagal dihapus.',
                     icon: 'error',
                     confirmButtonText: 'OK',
                 });
@@ -124,10 +183,70 @@ export default function RoomInventoryIndex({
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between">
+                        <div>
+                            <h2 className="text-lg font-semibold text-slate-900">Grouping per Bulan</h2>
+                            <p className="text-sm text-slate-500">Klik detail untuk melihat inventory di bulan tersebut.</p>
+                        </div>
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {monthGroups.map((group) => (
+                            <div key={group.key} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <div className="text-sm font-semibold text-slate-900">{group.label}</div>
+                                <div className="mt-2 text-xs text-slate-500">{group.total} data inventory</div>
+                                <div className="mt-3">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const params: Record<string, string> = {
+                                                date_from: group.date_from,
+                                                date_to: group.date_to,
+                                            };
+                                            if (filters.room_type_id) {
+                                                params.room_type_id = filters.room_type_id;
+                                            }
+                                            if (filters.hotel_id) {
+                                                params.hotel_id = filters.hotel_id;
+                                            }
+                                            router.get('/room-inventories', params, { preserveState: true });
+                                        }}
+                                    >
+                                        Lihat detail
+                                    </Button>
+                                </div>
+                            </div>
+                        ))}
+                        {monthGroups.length === 0 && (
+                            <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-sm text-slate-500">
+                                Belum ada data inventory untuk dikelompokkan.
+                            </div>
+                        )}
+                    </div>
+                </section>
+
+                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form
                         onSubmit={applyFilters}
-                        className="grid gap-4 md:grid-cols-4"
+                        className="grid gap-4 md:grid-cols-5"
                     >
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Hotel
+                            </label>
+                            <select
+                                name="hotel_id"
+                                defaultValue={filters.hotel_id ?? ''}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                            >
+                                <option value="">Semua hotel</option>
+                                {hotelOptions.map((hotel) => (
+                                    <option key={hotel.id} value={hotel.id}>
+                                        {hotel.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                         <div className="grid gap-2">
                             <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                                 Tipe kamar
@@ -187,25 +306,52 @@ export default function RoomInventoryIndex({
                         <table className="min-w-full text-left text-sm">
                             <thead className="text-xs uppercase tracking-wider text-slate-400">
                                 <tr>
+                                    <th className="py-3 pr-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={allSelected}
+                                            onChange={(event) => {
+                                                if (event.target.checked) {
+                                                    setSelectedIds(allIds);
+                                                } else {
+                                                    setSelectedIds([]);
+                                                }
+                                            }}
+                                        />
+                                    </th>
                                     <th className="py-3 pr-4">Tanggal</th>
                                     <th className="py-3 pr-4">Hotel</th>
                                     <th className="py-3 pr-4">Tipe Kamar</th>
                                     <th className="py-3 pr-4">Stok</th>
                                     <th className="py-3 pr-4">Harga Override</th>
                                     <th className="py-3 pr-4">Status</th>
+                                    <th className="py-3 pr-4">Opsi</th>
                                     <th className="py-3 text-right">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {inventories.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="py-8 text-center text-slate-500">
+                                        <td colSpan={9} className="py-8 text-center text-slate-500">
                                             Belum ada inventory.
                                         </td>
                                     </tr>
                                 )}
                                 {inventories.data.map((inv) => (
                                     <tr key={inv.id}>
+                                        <td className="py-4 pr-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(inv.id)}
+                                                onChange={(event) => {
+                                                    if (event.target.checked) {
+                                                        setSelectedIds((prev) => [...prev, inv.id]);
+                                                    } else {
+                                                        setSelectedIds((prev) => prev.filter((id) => id !== inv.id));
+                                                    }
+                                                }}
+                                            />
+                                        </td>
                                         <td className="py-4 pr-4 text-slate-600">
                                             <div className="flex items-center gap-2">
                                                 <CalendarDays className="size-4 text-slate-400" />
@@ -230,6 +376,24 @@ export default function RoomInventoryIndex({
                                             <Badge variant={inv.is_closed ? 'destructive' : 'secondary'}>
                                                 {inv.is_closed ? 'Closed' : 'Open'}
                                             </Badge>
+                                        </td>
+                                        <td className="py-4 pr-4 text-xs text-slate-500">
+                                            <div className="flex flex-wrap gap-2">
+                                                <span
+                                                    className={`rounded-full px-2 py-1 ${
+                                                        inv.breakfast_included ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-500'
+                                                    }`}
+                                                >
+                                                    Sarapan
+                                                </span>
+                                                <span
+                                                    className={`rounded-full px-2 py-1 ${
+                                                        inv.smoking_allowed ? 'bg-rose-100 text-rose-600' : 'bg-slate-100 text-slate-500'
+                                                    }`}
+                                                >
+                                                    Smoking
+                                                </span>
+                                            </div>
                                         </td>
                                         <td className="py-4 text-right">
                                             <div className="flex items-center justify-end gap-2">
@@ -261,6 +425,21 @@ export default function RoomInventoryIndex({
                         </table>
                     </div>
 
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                        <div className="text-xs text-slate-500">
+                            {selectedIds.length > 0 ? `${selectedIds.length} data dipilih` : 'Belum ada data dipilih'}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-red-200 text-red-600 hover:bg-red-50"
+                            onClick={handleBulkDelete}
+                        >
+                            <Trash2 className="mr-1 size-4" />
+                            Hapus Terpilih
+                        </Button>
+                    </div>
+
                     {inventories.links?.length > 0 && (
                         <div className="mt-6 flex flex-wrap gap-2">
                             {inventories.links.map((link) => (
@@ -279,6 +458,7 @@ export default function RoomInventoryIndex({
                         </div>
                     )}
                 </section>
+
             </div>
         </AppLayout>
     );

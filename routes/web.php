@@ -28,7 +28,7 @@ Route::get('/', function () {
         ->get();
     $hotelCards = \App\Models\Hotel::query()
         ->where('status', 'active')
-        ->with(['roomTypes', 'city'])
+        ->with(['roomTypes', 'city', 'images'])
         ->latest()
         ->take(3)
         ->get()
@@ -41,6 +41,7 @@ Route::get('/', function () {
             'min_price' => $hotel->roomTypes->min('base_price')
                 ? (int) round($hotel->roomTypes->min('base_price'))
                 : null,
+            'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
         ]);
 
     return Inertia::render('welcome', [
@@ -157,6 +158,8 @@ Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('hotels', \App\Http\Controllers\HotelController::class)->except(['show']);
     Route::resource('room-types', \App\Http\Controllers\RoomTypeController::class);
+    Route::delete('room-inventories/bulk', [\App\Http\Controllers\RoomInventoryController::class, 'bulkDestroy'])
+        ->name('room-inventories.bulk-destroy');
     Route::resource('room-inventories', \App\Http\Controllers\RoomInventoryController::class)->except(['show']);
     Route::delete('room-types/{roomType}/images/{roomImage}', [\App\Http\Controllers\RoomTypeController::class, 'destroyImage'])
         ->name('room-types.images.destroy');

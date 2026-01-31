@@ -19,9 +19,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 type FormData = {
     room_type_id: string;
     date: string;
+    date_from: string;
+    date_to: string;
     available_rooms: string;
     price_override: string;
     is_closed: boolean;
+    breakfast_included: boolean;
+    smoking_allowed: boolean;
+    is_bulk: boolean;
 };
 
 type CreateProps = {
@@ -32,9 +37,14 @@ export default function CreateRoomInventory({ roomTypeOptions }: CreateProps) {
     const { data, setData, post, processing, errors } = useForm<FormData>({
         room_type_id: '',
         date: '',
+        date_from: '',
+        date_to: '',
         available_rooms: '',
         price_override: '',
         is_closed: false,
+        breakfast_included: false,
+        smoking_allowed: false,
+        is_bulk: false,
     });
     const [priceDisplay, setPriceDisplay] = useState('');
 
@@ -129,19 +139,59 @@ export default function CreateRoomInventory({ roomTypeOptions }: CreateProps) {
                             <InputError message={errors.room_type_id} />
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="date">Tanggal</Label>
-                            <Input
-                                id="date"
-                                type="date"
-                                value={data.date}
-                                onChange={(event) =>
-                                    setData('date', event.target.value)
-                                }
-                                required
+                        <div className="flex items-center gap-3">
+                            <Checkbox
+                                id="is_bulk"
+                                checked={data.is_bulk}
+                                onCheckedChange={(value) => setData('is_bulk', Boolean(value))}
                             />
-                            <InputError message={errors.date} />
+                            <Label htmlFor="is_bulk">Bulk create (rentang tanggal)</Label>
                         </div>
+
+                        {data.is_bulk ? (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="date_from">Tanggal mulai</Label>
+                                    <Input
+                                        id="date_from"
+                                        type="date"
+                                        value={data.date_from}
+                                        onChange={(event) =>
+                                            setData('date_from', event.target.value)
+                                        }
+                                        required
+                                    />
+                                    <InputError message={errors.date_from} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="date_to">Tanggal akhir</Label>
+                                    <Input
+                                        id="date_to"
+                                        type="date"
+                                        value={data.date_to}
+                                        onChange={(event) =>
+                                            setData('date_to', event.target.value)
+                                        }
+                                        required
+                                    />
+                                    <InputError message={errors.date_to} />
+                                </div>
+                            </>
+                        ) : (
+                            <div className="grid gap-2">
+                                <Label htmlFor="date">Tanggal</Label>
+                                <Input
+                                    id="date"
+                                    type="date"
+                                    value={data.date}
+                                    onChange={(event) =>
+                                        setData('date', event.target.value)
+                                    }
+                                    required
+                                />
+                                <InputError message={errors.date} />
+                            </div>
+                        )}
 
                         <div className="grid gap-2">
                             <Label htmlFor="available_rooms">Jumlah tersedia</Label>
@@ -169,6 +219,34 @@ export default function CreateRoomInventory({ roomTypeOptions }: CreateProps) {
                                 placeholder="10.000"
                             />
                             <InputError message={errors.price_override} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label>Opsi kamar</Label>
+                            <div className="flex flex-wrap items-center gap-4">
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="breakfast_included"
+                                        checked={data.breakfast_included}
+                                        onCheckedChange={(value) =>
+                                            setData('breakfast_included', Boolean(value))
+                                        }
+                                    />
+                                    <Label htmlFor="breakfast_included">Termasuk sarapan</Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="smoking_allowed"
+                                        checked={data.smoking_allowed}
+                                        onCheckedChange={(value) =>
+                                            setData('smoking_allowed', Boolean(value))
+                                        }
+                                    />
+                                    <Label htmlFor="smoking_allowed">Smoking room</Label>
+                                </div>
+                            </div>
+                            <InputError message={errors.breakfast_included} />
+                            <InputError message={errors.smoking_allowed} />
                         </div>
 
                         <div className="flex items-center gap-3">
