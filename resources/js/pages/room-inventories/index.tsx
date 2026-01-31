@@ -7,11 +7,6 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { useMemo, useState } from 'react';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Inventory Tanggal', href: '/room-inventories' },
-];
-
 type Inventory = {
     id: number;
     room_type_id: number;
@@ -45,6 +40,8 @@ type Props = {
         date_from?: string;
         date_to?: string;
     };
+    isMitra?: boolean;
+    basePath?: string;
 };
 
 export default function RoomInventoryIndex({
@@ -53,7 +50,13 @@ export default function RoomInventoryIndex({
     monthGroups,
     hotelOptions,
     filters,
+    isMitra = false,
+    basePath = '/room-inventories',
 }: Props) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Inventory Tanggal', href: basePath },
+    ];
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const allIds = useMemo(() => inventories.data.map((inv) => inv.id), [inventories.data]);
     const allSelected = selectedIds.length > 0 && selectedIds.length === allIds.length;
@@ -73,7 +76,7 @@ export default function RoomInventoryIndex({
             return;
         }
 
-        router.delete(`/room-inventories/${inventoryId}`, {
+        router.delete(`${basePath}/${inventoryId}`, {
             onSuccess: () => {
                 Swal.fire({
                     title: 'Berhasil',
@@ -118,7 +121,7 @@ export default function RoomInventoryIndex({
             return;
         }
 
-        router.delete('/room-inventories/bulk', {
+        router.delete(`${basePath}/bulk`, {
             data: { ids: selectedIds },
             onSuccess: () => {
                 setSelectedIds([]);
@@ -143,7 +146,7 @@ export default function RoomInventoryIndex({
     const applyFilters = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
-        router.get('/room-inventories', Object.fromEntries(form.entries()), {
+        router.get(basePath, Object.fromEntries(form.entries()), {
             preserveState: true,
         });
     };
@@ -174,7 +177,7 @@ export default function RoomInventoryIndex({
                             asChild
                             className="bg-sky-600 text-white hover:bg-sky-700"
                         >
-                            <Link href="/room-inventories/create">
+                            <Link href={`${basePath}/create`}>
                                 <Plus className="mr-2 size-4" />
                                 Tambah inventory
                             </Link>
@@ -209,7 +212,7 @@ export default function RoomInventoryIndex({
                                             if (filters.hotel_id) {
                                                 params.hotel_id = filters.hotel_id;
                                             }
-                                            router.get('/room-inventories', params, { preserveState: true });
+                                            router.get(basePath, params, { preserveState: true });
                                         }}
                                     >
                                         Lihat detail
@@ -293,7 +296,7 @@ export default function RoomInventoryIndex({
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => router.get('/room-inventories')}
+                                onClick={() => router.get(basePath)}
                             >
                                 Reset
                             </Button>
@@ -403,7 +406,7 @@ export default function RoomInventoryIndex({
                                                     asChild
                                                     className="border-slate-200"
                                                 >
-                                                    <Link href={`/room-inventories/${inv.id}/edit`}>
+                                                    <Link href={`${basePath}/${inv.id}/edit`}>
                                                         <Pencil className="mr-1 size-3" />
                                                         Edit
                                                     </Link>

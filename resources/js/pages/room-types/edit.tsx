@@ -9,12 +9,6 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Tipe Kamar', href: '/room-types' },
-    { title: 'Edit', href: '#' },
-];
-
 type RoomType = {
     id: number;
     hotel_id: number;
@@ -47,6 +41,8 @@ type EditProps = {
     roomType: RoomType;
     hotelOptions: Array<{ id: number; label: string }>;
     statusOptions: string[];
+    isMitra?: boolean;
+    basePath?: string;
 };
 
 const textareaClass =
@@ -56,7 +52,14 @@ export default function EditRoomType({
     roomType,
     hotelOptions,
     statusOptions,
+    isMitra = false,
+    basePath = '/room-types',
 }: EditProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Tipe Kamar', href: basePath },
+        { title: 'Edit', href: '#' },
+    ];
     const { data, setData, post, processing, errors } = useForm<FormData>({
         _method: 'put',
         hotel_id: String(roomType.hotel_id),
@@ -130,7 +133,7 @@ export default function EditRoomType({
                             </p>
                         </div>
                         <Button variant="outline" asChild>
-                            <Link href="/room-types">
+                            <Link href={basePath}>
                                 <ArrowLeft className="mr-2 size-4" />
                                 Kembali
                             </Link>
@@ -141,7 +144,7 @@ export default function EditRoomType({
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
-                        post(`/room-types/${roomType.id}`, {
+                        post(`${basePath}/${roomType.id}`, {
                             forceFormData: true,
                             onSuccess: () => {
                                 Swal.fire({
@@ -370,7 +373,7 @@ export default function EditRoomType({
                                                                 return;
                                                             }
                                                             router.delete(
-                                                                `/room-types/${roomType.id}/images/${image.id}`,
+                                                                `${basePath}/${roomType.id}/images/${image.id}`,
                                                                 {
                                                                     preserveScroll: true,
                                                                     onSuccess: () => {

@@ -10,12 +10,6 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Inventory Tanggal', href: '/room-inventories' },
-    { title: 'Edit', href: '#' },
-];
-
 type Inventory = {
     id: number;
     room_type_id: number;
@@ -43,9 +37,16 @@ type FormData = {
 type EditProps = {
     inventory: Inventory;
     roomTypeOptions: Array<{ id: number; label: string }>;
+    isMitra?: boolean;
+    basePath?: string;
 };
 
-export default function EditRoomInventory({ inventory, roomTypeOptions }: EditProps) {
+export default function EditRoomInventory({ inventory, roomTypeOptions, isMitra = false, basePath = '/room-inventories' }: EditProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Inventory Tanggal', href: basePath },
+        { title: 'Edit', href: '#' },
+    ];
     const { data, setData, post, processing, errors } = useForm<FormData>({
         _method: 'put',
         room_type_id: String(inventory.room_type_id),
@@ -96,7 +97,7 @@ export default function EditRoomInventory({ inventory, roomTypeOptions }: EditPr
                             </p>
                         </div>
                         <Button variant="outline" asChild>
-                            <Link href="/room-inventories">
+                            <Link href={basePath}>
                                 <ArrowLeft className="mr-2 size-4" />
                                 Kembali
                             </Link>
@@ -107,7 +108,7 @@ export default function EditRoomInventory({ inventory, roomTypeOptions }: EditPr
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
-                        post(`/room-inventories/${inventory.id}`, {
+                        post(`${basePath}/${inventory.id}`, {
                             onSuccess: () => {
                                 Swal.fire({
                                     title: 'Berhasil',

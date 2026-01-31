@@ -11,12 +11,6 @@ import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Data Hotel', href: '/hotels' },
-    { title: 'Edit', href: '#' },
-];
-
 type Hotel = {
     id: number;
     vendor_id: number | null;
@@ -56,6 +50,9 @@ type EditProps = {
     facilityOptions: string[];
     mitraOptions: Array<{ id: number; label: string }>;
     cityOptions: Array<{ code: string; label: string }>;
+    isMitra?: boolean;
+    basePath?: string;
+    mitraId?: number;
 };
 
 const textareaClass =
@@ -67,10 +64,18 @@ export default function EditHotel({
     facilityOptions,
     mitraOptions,
     cityOptions,
+    isMitra = false,
+    basePath = '/hotels',
+    mitraId,
 }: EditProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Data Hotel', href: basePath },
+        { title: 'Edit', href: '#' },
+    ];
     const [isMapOpen, setIsMapOpen] = useState(false);
     const { data, setData, put, processing, errors } = useForm<FormData>({
-        vendor_id: hotel.vendor_id ? String(hotel.vendor_id) : '',
+        vendor_id: hotel.vendor_id ? String(hotel.vendor_id) : mitraId ? String(mitraId) : '',
         name: hotel.name ?? '',
         description: hotel.description ?? '',
         city_id: hotel.city_id ?? '',
@@ -133,7 +138,7 @@ export default function EditHotel({
                             </p>
                         </div>
                         <Button variant="outline" asChild>
-                            <Link href="/hotels">
+                            <Link href={basePath}>
                                 <ArrowLeft className="mr-2 size-4" />
                                 Kembali
                             </Link>
@@ -144,7 +149,7 @@ export default function EditHotel({
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
-                        put(`/hotels/${hotel.id}`, {
+                        put(`${basePath}/${hotel.id}`, {
                             onSuccess: () => {
                                 Swal.fire({
                                     title: 'Berhasil',
@@ -180,25 +185,27 @@ export default function EditHotel({
                             <InputError message={errors.name} />
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="vendor_id">Mitra</Label>
-                            <select
-                                id="vendor_id"
-                                value={data.vendor_id}
-                                onChange={(event) =>
-                                    setData('vendor_id', event.target.value)
-                                }
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            >
-                                <option value="">Pilih mitra</option>
-                                {mitraOptions.map((mitra) => (
-                                    <option key={mitra.id} value={mitra.id}>
-                                        {mitra.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <InputError message={errors.vendor_id} />
-                        </div>
+                        {!isMitra && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="vendor_id">Mitra</Label>
+                                <select
+                                    id="vendor_id"
+                                    value={data.vendor_id}
+                                    onChange={(event) =>
+                                        setData('vendor_id', event.target.value)
+                                    }
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                >
+                                    <option value="">Pilih mitra</option>
+                                    {mitraOptions.map((mitra) => (
+                                        <option key={mitra.id} value={mitra.id}>
+                                            {mitra.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.vendor_id} />
+                            </div>
+                        )}
 
                         <div className="grid gap-2">
                             <Label htmlFor="city_id">Kota/Kabupaten</Label>
@@ -417,7 +424,7 @@ export default function EditHotel({
                                                                 return;
                                                             }
                                                             router.delete(
-                                                                `/hotels/${hotel.id}/images/${image.id}`,
+                                                                `${basePath}/${hotel.id}/images/${image.id}`,
                                                                 {
                                                                     preserveScroll: true,
                                                                     onSuccess: () => {

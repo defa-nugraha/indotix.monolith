@@ -11,12 +11,6 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Data Hotel', href: '/hotels' },
-    { title: 'Tambah', href: '/hotels/create' },
-];
-
 type FormData = {
     vendor_id: string;
     name: string;
@@ -38,6 +32,9 @@ type CreateProps = {
     facilityOptions: string[];
     mitraOptions: Array<{ id: number; label: string }>;
     cityOptions: Array<{ code: string; label: string }>;
+    isMitra?: boolean;
+    basePath?: string;
+    mitraId?: number;
 };
 
 const textareaClass =
@@ -48,10 +45,18 @@ export default function CreateHotel({
     facilityOptions,
     mitraOptions,
     cityOptions,
+    isMitra = false,
+    basePath = '/hotels',
+    mitraId,
 }: CreateProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Data Hotel', href: basePath },
+        { title: 'Tambah', href: `${basePath}/create` },
+    ];
     const [isMapOpen, setIsMapOpen] = useState(false);
     const { data, setData, post, processing, errors } = useForm<FormData>({
-        vendor_id: '',
+        vendor_id: mitraId ? String(mitraId) : '',
         name: '',
         description: '',
         city_id: '',
@@ -114,7 +119,7 @@ export default function CreateHotel({
                             </p>
                         </div>
                         <Button variant="outline" asChild>
-                            <Link href="/hotels">
+                            <Link href={basePath}>
                                 <ArrowLeft className="mr-2 size-4" />
                                 Kembali
                             </Link>
@@ -125,7 +130,7 @@ export default function CreateHotel({
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
-                        post('/hotels', {
+                        post(basePath, {
                             onSuccess: () => {
                                 Swal.fire({
                                     title: 'Berhasil',
@@ -161,25 +166,27 @@ export default function CreateHotel({
                             <InputError message={errors.name} />
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="vendor_id">Mitra</Label>
-                            <select
-                                id="vendor_id"
-                                value={data.vendor_id}
-                                onChange={(event) =>
-                                    setData('vendor_id', event.target.value)
-                                }
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            >
-                                <option value="">Pilih mitra</option>
-                                {mitraOptions.map((mitra) => (
-                                    <option key={mitra.id} value={mitra.id}>
-                                        {mitra.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <InputError message={errors.vendor_id} />
-                        </div>
+                        {!isMitra && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="vendor_id">Mitra</Label>
+                                <select
+                                    id="vendor_id"
+                                    value={data.vendor_id}
+                                    onChange={(event) =>
+                                        setData('vendor_id', event.target.value)
+                                    }
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                >
+                                    <option value="">Pilih mitra</option>
+                                    {mitraOptions.map((mitra) => (
+                                        <option key={mitra.id} value={mitra.id}>
+                                            {mitra.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={errors.vendor_id} />
+                            </div>
+                        )}
 
                         <div className="grid gap-2">
                             <Label htmlFor="city_id">Kota/Kabupaten</Label>

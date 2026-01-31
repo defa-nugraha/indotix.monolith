@@ -6,11 +6,6 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Tipe Kamar', href: '/room-types' },
-];
-
 type RoomType = {
     id: number;
     hotel_id: number;
@@ -44,6 +39,8 @@ type RoomTypesPageProps = {
     };
     statusOptions: string[];
     hotelOptions: Array<{ id: number; label: string }>;
+    isMitra?: boolean;
+    basePath?: string;
 };
 
 export default function RoomTypeIndex({
@@ -51,7 +48,13 @@ export default function RoomTypeIndex({
     filters,
     statusOptions,
     hotelOptions,
+    isMitra = false,
+    basePath = '/room-types',
 }: RoomTypesPageProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Tipe Kamar', href: basePath },
+    ];
     const handleDelete = async (roomTypeId: number) => {
         const result = await Swal.fire({
             title: 'Hapus tipe kamar?',
@@ -67,7 +70,7 @@ export default function RoomTypeIndex({
             return;
         }
 
-        router.delete(`/room-types/${roomTypeId}`, {
+        router.delete(`${basePath}/${roomTypeId}`, {
             onSuccess: () => {
                 Swal.fire({
                     title: 'Berhasil',
@@ -90,7 +93,7 @@ export default function RoomTypeIndex({
     const applyFilters = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
-        router.get('/room-types', Object.fromEntries(form.entries()), {
+        router.get(basePath, Object.fromEntries(form.entries()), {
             preserveState: true,
         });
     };
@@ -121,7 +124,7 @@ export default function RoomTypeIndex({
                             asChild
                             className="bg-sky-600 text-white hover:bg-sky-700"
                         >
-                            <Link href="/room-types/create">
+                            <Link href={`${basePath}/create`}>
                                 <Plus className="mr-2 size-4" />
                                 Tambah tipe kamar
                             </Link>
@@ -189,7 +192,7 @@ export default function RoomTypeIndex({
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => router.get('/room-types')}
+                                onClick={() => router.get(basePath)}
                             >
                                 Reset
                             </Button>
@@ -278,7 +281,7 @@ export default function RoomTypeIndex({
                                                     asChild
                                                     className="border-slate-200"
                                                 >
-                                                    <Link href={`/room-types/${room.id}`}>
+                                                    <Link href={`${basePath}/${room.id}`}>
                                                         <Eye className="mr-1 size-3" />
                                                         Detail
                                                     </Link>
@@ -290,7 +293,7 @@ export default function RoomTypeIndex({
                                                     className="border-slate-200"
                                                 >
                                                     <Link
-                                                        href={`/room-types/${room.id}/edit`}
+                                                        href={`${basePath}/${room.id}/edit`}
                                                     >
                                                         <Pencil className="mr-1 size-3" />
                                                         Edit

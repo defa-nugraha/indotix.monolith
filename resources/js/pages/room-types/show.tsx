@@ -22,13 +22,15 @@ type RoomType = {
 
 type ShowProps = {
     roomType: RoomType;
+    isMitra?: boolean;
+    basePath?: string;
 };
 
-export default function RoomTypeShow({ roomType }: ShowProps) {
+export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/room-types' }: ShowProps) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Dashboard', href: '/dashboard' },
-        { title: 'Tipe Kamar', href: '/room-types' },
-        { title: roomType.name, href: `/room-types/${roomType.id}` },
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Tipe Kamar', href: basePath },
+        { title: roomType.name, href: `${basePath}/${roomType.id}` },
     ];
 
     return (
@@ -62,13 +64,13 @@ export default function RoomTypeShow({ roomType }: ShowProps) {
                         </div>
                         <div className="flex flex-wrap gap-3">
                             <Button variant="outline" asChild>
-                                <Link href="/room-types">
+                                <Link href={basePath}>
                                     <ArrowLeft className="mr-2 size-4" />
                                     Kembali
                                 </Link>
                             </Button>
                             <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">
-                                <Link href={`/room-types/${roomType.id}/edit`}>
+                                <Link href={`${basePath}/${roomType.id}/edit`}>
                                     <Pencil className="mr-2 size-4" />
                                     Edit
                                 </Link>

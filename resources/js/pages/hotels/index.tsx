@@ -6,11 +6,6 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Data Hotel', href: '/hotels' },
-];
-
 type Hotel = {
     id: number;
     vendor_id: number | null;
@@ -47,6 +42,9 @@ type HotelsPageProps = {
     statusOptions: string[];
     cityOptions: Array<{ code: string; label: string }>;
     mitraOptions: Array<{ id: number; label: string }>;
+    isMitra?: boolean;
+    basePath?: string;
+    canCreate?: boolean;
 };
 
 export default function HotelIndex({
@@ -55,7 +53,14 @@ export default function HotelIndex({
     statusOptions,
     cityOptions,
     mitraOptions,
+    isMitra = false,
+    basePath = '/hotels',
+    canCreate = true,
 }: HotelsPageProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Data Hotel', href: basePath },
+    ];
     const handleDelete = async (hotelId: number) => {
         const result = await Swal.fire({
             title: 'Hapus hotel?',
@@ -71,7 +76,7 @@ export default function HotelIndex({
             return;
         }
 
-        router.delete(`/hotels/${hotelId}`, {
+        router.delete(`${basePath}/${hotelId}`, {
             onSuccess: () => {
                 Swal.fire({
                     title: 'Berhasil',
@@ -94,7 +99,7 @@ export default function HotelIndex({
     const applyFilters = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);
-        router.get('/hotels', Object.fromEntries(form.entries()), {
+        router.get(basePath, Object.fromEntries(form.entries()), {
             preserveState: true,
         });
     };
@@ -125,102 +130,108 @@ export default function HotelIndex({
                                 operasional dalam satu tempat.
                             </p>
                         </div>
-                        <Button
-                            asChild
-                            className="bg-sky-600 text-white hover:bg-sky-700"
-                        >
-                            <Link href="/hotels/create">
-                                <Plus className="mr-2 size-4" />
-                                Tambah hotel
-                            </Link>
-                        </Button>
+                        {canCreate && (
+                            <Button
+                                asChild
+                                className="bg-sky-600 text-white hover:bg-sky-700"
+                            >
+                                <Link href={`${basePath}/create`}>
+                                    <Plus className="mr-2 size-4" />
+                                    Tambah hotel
+                                </Link>
+                            </Button>
+                        )}
                     </div>
                 </section>
 
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <form
-                        onSubmit={applyFilters}
-                        className="grid gap-4 md:grid-cols-4"
-                    >
-                        <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Cari hotel
-                            </label>
-                            <input
-                                name="search"
-                                defaultValue={filters.search ?? ''}
-                                placeholder="Nama hotel atau alamat"
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Status
-                            </label>
-                            <select
-                                name="status"
-                                defaultValue={filters.status ?? ''}
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            >
-                                <option value="">Semua</option>
-                                {statusOptions.map((status) => (
-                                    <option key={status} value={status}>
-                                        {status}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Mitra
-                            </label>
-                            <select
-                                name="vendor_id"
-                                defaultValue={filters.vendor_id ?? ''}
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            >
-                                <option value="">Semua</option>
-                                {mitraOptions.map((mitra) => (
-                                    <option key={mitra.id} value={mitra.id}>
-                                        {mitra.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                                Kota/Kabupaten
-                            </label>
-                            <select
-                                name="city_id"
-                                defaultValue={filters.city_id ?? ''}
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            >
-                                <option value="">Semua</option>
-                                {cityOptions.map((city) => (
-                                    <option key={city.code} value={city.code}>
-                                        {city.label}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="flex items-end gap-3 md:col-span-2">
-                            <Button
-                                type="submit"
-                                className="bg-sky-600 text-white hover:bg-sky-700"
-                            >
-                                Terapkan
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                onClick={() => router.get('/hotels')}
-                            >
-                                Reset
-                            </Button>
-                        </div>
-                    </form>
-                </section>
+                {!isMitra && (
+                    <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                        <form
+                            onSubmit={applyFilters}
+                            className="grid gap-4 md:grid-cols-4"
+                        >
+                            <div className="grid gap-2 md:col-span-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    Cari hotel
+                                </label>
+                                <input
+                                    name="search"
+                                    defaultValue={filters.search ?? ''}
+                                    placeholder="Nama hotel atau alamat"
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    Status
+                                </label>
+                                <select
+                                    name="status"
+                                    defaultValue={filters.status ?? ''}
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                >
+                                    <option value="">Semua</option>
+                                    {statusOptions.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            {!isMitra && (
+                                <div className="grid gap-2">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                        Mitra
+                                    </label>
+                                    <select
+                                        name="vendor_id"
+                                        defaultValue={filters.vendor_id ?? ''}
+                                        className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                    >
+                                        <option value="">Semua</option>
+                                        {mitraOptions.map((mitra) => (
+                                            <option key={mitra.id} value={mitra.id}>
+                                                {mitra.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            <div className="grid gap-2 md:col-span-2">
+                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    Kota/Kabupaten
+                                </label>
+                                <select
+                                    name="city_id"
+                                    defaultValue={filters.city_id ?? ''}
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                >
+                                    <option value="">Semua</option>
+                                    {cityOptions.map((city) => (
+                                        <option key={city.code} value={city.code}>
+                                            {city.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="flex items-end gap-3 md:col-span-2">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
+                                    Terapkan
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => router.get(basePath)}
+                                >
+                                    Reset
+                                </Button>
+                            </div>
+                        </form>
+                    </section>
+                )}
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-x-auto">
@@ -302,7 +313,7 @@ export default function HotelIndex({
                                                     className="border-slate-200"
                                                 >
                                                     <Link
-                                                        href={`/hotels/${hotel.id}/edit`}
+                                                        href={`${basePath}/${hotel.id}/edit`}
                                                     >
                                                         <Pencil className="mr-1 size-3" />
                                                         Edit

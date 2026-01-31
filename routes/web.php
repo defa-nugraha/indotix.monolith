@@ -155,6 +155,21 @@ Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
         ->name('mitra.onboarding.submitPayout');
 });
 
+Route::prefix('mitra')
+    ->name('mitra.')
+    ->middleware(['auth', 'verified', 'mitra', 'mitra.verified'])
+    ->group(function () {
+        Route::resource('hotels', \App\Http\Controllers\Mitra\HotelController::class)->except(['show']);
+        Route::delete('hotels/{hotel}/images/{hotelImage}', [\App\Http\Controllers\Mitra\HotelController::class, 'destroyImage'])
+            ->name('hotels.images.destroy');
+        Route::resource('room-types', \App\Http\Controllers\Mitra\RoomTypeController::class);
+        Route::delete('room-types/{roomType}/images/{roomImage}', [\App\Http\Controllers\Mitra\RoomTypeController::class, 'destroyImage'])
+            ->name('room-types.images.destroy');
+        Route::delete('room-inventories/bulk', [\App\Http\Controllers\Mitra\RoomInventoryController::class, 'bulkDestroy'])
+            ->name('room-inventories.bulk-destroy');
+        Route::resource('room-inventories', \App\Http\Controllers\Mitra\RoomInventoryController::class)->except(['show']);
+    });
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('hotels', \App\Http\Controllers\HotelController::class)->except(['show']);
     Route::resource('room-types', \App\Http\Controllers\RoomTypeController::class);

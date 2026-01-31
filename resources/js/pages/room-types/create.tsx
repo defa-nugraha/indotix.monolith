@@ -9,12 +9,6 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Tipe Kamar', href: '/room-types' },
-    { title: 'Tambah', href: '/room-types/create' },
-];
-
 type FormData = {
     hotel_id: string;
     name: string;
@@ -31,6 +25,8 @@ type FormData = {
 type CreateProps = {
     hotelOptions: Array<{ id: number; label: string }>;
     statusOptions: string[];
+    isMitra?: boolean;
+    basePath?: string;
 };
 
 const textareaClass =
@@ -39,7 +35,14 @@ const textareaClass =
 export default function CreateRoomType({
     hotelOptions,
     statusOptions,
+    isMitra = false,
+    basePath = '/room-types',
 }: CreateProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Tipe Kamar', href: basePath },
+        { title: 'Tambah', href: `${basePath}/create` },
+    ];
     const { data, setData, post, processing, errors } = useForm<FormData>({
         hotel_id: '',
         name: '',
@@ -107,7 +110,7 @@ export default function CreateRoomType({
                             </p>
                         </div>
                         <Button variant="outline" asChild>
-                            <Link href="/room-types">
+                            <Link href={basePath}>
                                 <ArrowLeft className="mr-2 size-4" />
                                 Kembali
                             </Link>
@@ -118,7 +121,7 @@ export default function CreateRoomType({
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
-                        post('/room-types', {
+                        post(basePath, {
                             forceFormData: true,
                             onSuccess: () => {
                                 Swal.fire({

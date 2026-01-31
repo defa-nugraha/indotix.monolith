@@ -10,12 +10,6 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
-const breadcrumbs: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Inventory Tanggal', href: '/room-inventories' },
-    { title: 'Tambah', href: '/room-inventories/create' },
-];
-
 type FormData = {
     room_type_id: string;
     date: string;
@@ -31,9 +25,16 @@ type FormData = {
 
 type CreateProps = {
     roomTypeOptions: Array<{ id: number; label: string }>;
+    isMitra?: boolean;
+    basePath?: string;
 };
 
-export default function CreateRoomInventory({ roomTypeOptions }: CreateProps) {
+export default function CreateRoomInventory({ roomTypeOptions, isMitra = false, basePath = '/room-inventories' }: CreateProps) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
+        { title: 'Inventory Tanggal', href: basePath },
+        { title: 'Tambah', href: `${basePath}/create` },
+    ];
     const { data, setData, post, processing, errors } = useForm<FormData>({
         room_type_id: '',
         date: '',
@@ -85,7 +86,7 @@ export default function CreateRoomInventory({ roomTypeOptions }: CreateProps) {
                             </p>
                         </div>
                         <Button variant="outline" asChild>
-                            <Link href="/room-inventories">
+                            <Link href={basePath}>
                                 <ArrowLeft className="mr-2 size-4" />
                                 Kembali
                             </Link>
@@ -96,7 +97,7 @@ export default function CreateRoomInventory({ roomTypeOptions }: CreateProps) {
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
-                        post('/room-inventories', {
+                        post(basePath, {
                             onSuccess: () => {
                                 Swal.fire({
                                     title: 'Berhasil',
