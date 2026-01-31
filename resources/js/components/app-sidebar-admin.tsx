@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, MonitorPlay, Receipt, Users } from 'lucide-react';
+import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, LineChart, MonitorPlay, Receipt, Ticket, Users, Wallet } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -54,6 +54,13 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/room-types') ||
         isCurrentUrl('/room-inventories') ||
         isCurrentUrl('/admin/bookings');
+    const isFinanceSectionActive =
+        isCurrentUrl('/admin/finance/commissions') ||
+        isCurrentUrl('/admin/finance/payouts') ||
+        isCurrentUrl('/admin/finance/payouts/create') ||
+        isCurrentUrl('/admin/finance/reports');
+    const isMarketingSectionActive =
+        isCurrentUrl('/admin/marketing/vouchers');
     const isPublicSectionActive =
         isCurrentUrl('/admin/public/banners') ||
         isCurrentUrl('/admin/public/promo-videos') ||
@@ -123,6 +130,76 @@ export function AppSidebarAdmin() {
                                         >
                                             <Link href="/admin/bookings">
                                                 Booking & Transaksi
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isFinanceSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <Wallet />
+                                    <span>Keuangan & Monetisasi</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/finance/commissions')}
+                                        >
+                                            <Link href="/admin/finance/commissions">
+                                                Komisi Platform
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/finance/payouts')}
+                                        >
+                                            <Link href="/admin/finance/payouts">
+                                                Payout Mitra
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/finance/reports')}
+                                        >
+                                            <Link href="/admin/finance/reports">
+                                                Laporan Keuangan
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isMarketingSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <Ticket />
+                                    <span>Promo & Voucher</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/marketing/vouchers')}
+                                        >
+                                            <Link href="/admin/marketing/vouchers">
+                                                Voucher
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>

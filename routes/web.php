@@ -82,6 +82,38 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('admin/bookings/{booking}/dispute', [\App\Http\Controllers\Admin\BookingController::class, 'dispute'])
         ->name('admin.bookings.dispute');
 
+    Route::get('admin/finance/commissions', [\App\Http\Controllers\Admin\CommissionRuleController::class, 'index'])
+        ->name('admin.finance.commissions.index');
+    Route::post('admin/finance/commissions', [\App\Http\Controllers\Admin\CommissionRuleController::class, 'store'])
+        ->name('admin.finance.commissions.store');
+    Route::put('admin/finance/commissions/{commissionRule}', [\App\Http\Controllers\Admin\CommissionRuleController::class, 'update'])
+        ->name('admin.finance.commissions.update');
+    Route::delete('admin/finance/commissions/{commissionRule}', [\App\Http\Controllers\Admin\CommissionRuleController::class, 'destroy'])
+        ->name('admin.finance.commissions.destroy');
+
+    Route::get('admin/finance/payouts', [\App\Http\Controllers\Admin\PayoutController::class, 'index'])
+        ->name('admin.payouts.index');
+    Route::get('admin/finance/payouts/create', [\App\Http\Controllers\Admin\PayoutController::class, 'create'])
+        ->name('admin.payouts.create');
+    Route::post('admin/finance/payouts', [\App\Http\Controllers\Admin\PayoutController::class, 'store'])
+        ->name('admin.payouts.store');
+    Route::post('admin/finance/payouts/{payout}/approve', [\App\Http\Controllers\Admin\PayoutController::class, 'approve'])
+        ->name('admin.payouts.approve');
+    Route::post('admin/finance/payouts/{payout}/transfer', [\App\Http\Controllers\Admin\PayoutController::class, 'transfer'])
+        ->name('admin.payouts.transfer');
+
+    Route::get('admin/finance/reports', [\App\Http\Controllers\Admin\FinanceReportController::class, 'index'])
+        ->name('admin.finance.reports.index');
+
+    Route::get('admin/marketing/vouchers', [\App\Http\Controllers\Admin\VoucherController::class, 'index'])
+        ->name('admin.vouchers.index');
+    Route::post('admin/marketing/vouchers', [\App\Http\Controllers\Admin\VoucherController::class, 'store'])
+        ->name('admin.vouchers.store');
+    Route::put('admin/marketing/vouchers/{voucher}', [\App\Http\Controllers\Admin\VoucherController::class, 'update'])
+        ->name('admin.vouchers.update');
+    Route::delete('admin/marketing/vouchers/{voucher}', [\App\Http\Controllers\Admin\VoucherController::class, 'destroy'])
+        ->name('admin.vouchers.destroy');
+
     Route::get('admin/public/banners', [\App\Http\Controllers\Admin\PublicBannerController::class, 'index'])
         ->name('admin.public.banners.index');
     Route::get('admin/public/banners/create', [\App\Http\Controllers\Admin\PublicBannerController::class, 'create'])
