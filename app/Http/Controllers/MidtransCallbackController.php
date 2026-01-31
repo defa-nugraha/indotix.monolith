@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\Payment;
+use App\Models\UserNotification;
 use App\Services\BookingService;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
@@ -47,6 +48,16 @@ class MidtransCallbackController extends Controller
                 'status' => 'paid',
                 'payment_status' => $status,
             ]);
+
+            UserNotification::create([
+                'user_id' => $booking->user_id,
+                'title' => 'Pembayaran berhasil',
+                'message' => 'Pembayaran kamu sudah diterima. Booking sudah aktif.',
+                'type' => 'payment_paid',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $booking->id),
+                ],
+            ]);
         }
 
         if (in_array($status, ['cancel', 'expire', 'deny'], true)) {
@@ -65,6 +76,16 @@ class MidtransCallbackController extends Controller
             $booking->update([
                 'status' => 'expired',
                 'payment_status' => $status,
+            ]);
+
+            UserNotification::create([
+                'user_id' => $booking->user_id,
+                'title' => 'Pembayaran gagal',
+                'message' => 'Pembayaran tidak berhasil atau kedaluwarsa. Silakan buat pesanan baru.',
+                'type' => 'booking_expired',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $booking->id),
+                ],
             ]);
         }
 

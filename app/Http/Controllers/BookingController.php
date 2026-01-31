@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\RoomType;
 use App\Services\BookingService;
 use App\Services\MidtransService;
+use App\Models\UserNotification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -161,6 +162,16 @@ class BookingController extends Controller
             return back()->withErrors(['rooms' => $exception->getMessage()]);
         }
 
+        UserNotification::create([
+            'user_id' => $request->user()->id,
+            'title' => 'Pemesanan berhasil dibuat',
+            'message' => 'Pesanan kamu sudah kami simpan. Silakan lanjutkan pembayaran agar booking dikonfirmasi.',
+            'type' => 'booking_created',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+            ],
+        ]);
+
         $request->session()->forget('booking_draft');
 
         return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)]);
@@ -247,6 +258,16 @@ class BookingController extends Controller
             'payment_status' => $payment->status,
         ]);
 
+        UserNotification::create([
+            'user_id' => $booking->user_id,
+            'title' => 'Instruksi pembayaran dibuat',
+            'message' => 'Instruksi pembayaran sudah tersedia. Segera selesaikan pembayaran agar pesanan kamu aktif.',
+            'type' => 'payment_pending',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+            ],
+        ]);
+
         return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)]);
     }
 
@@ -298,6 +319,16 @@ class BookingController extends Controller
         $booking->status = 'cancelled';
         $booking->payment_status = 'cancelled';
         $booking->save();
+
+        UserNotification::create([
+            'user_id' => $booking->user_id,
+            'title' => 'Pesanan dibatalkan',
+            'message' => 'Pesanan kamu berhasil dibatalkan dan kamar telah dilepas.',
+            'type' => 'booking_cancelled',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+            ],
+        ]);
 
         return redirect()->route('booking.show', ['booking' => $this->encryptId($booking->id)]);
     }
@@ -415,6 +446,16 @@ class BookingController extends Controller
         $booking->status = 'expired';
         $booking->payment_status = 'expired';
         $booking->save();
+
+        UserNotification::create([
+            'user_id' => $booking->user_id,
+            'title' => 'Pesanan kedaluwarsa',
+            'message' => 'Batas waktu pembayaran terlewat. Pesanan kamu otomatis kedaluwarsa.',
+            'type' => 'booking_expired',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+            ],
+        ]);
     }
 
     private function resolveBooking(string $encryptedId): Booking

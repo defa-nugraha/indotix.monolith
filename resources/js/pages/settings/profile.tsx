@@ -48,7 +48,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             <MessageCircle className="h-4 w-4" />
                             Chat
                         </Link>
-                        <Link href="/?tab=notifikasi" className="flex items-center gap-2 hover:text-sky-600">
+                        <Link href="/notifications" className="flex items-center gap-2 hover:text-sky-600">
                             <Bell className="h-4 w-4" />
                             Notifikasi
                         </Link>

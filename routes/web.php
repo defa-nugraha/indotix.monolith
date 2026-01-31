@@ -178,6 +178,12 @@ Route::get('/stay/hotels/{hotel}', [\App\Http\Controllers\PublicHotelController:
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
     ->name('booking.prepare');
 Route::middleware(['auth', 'verified', 'user'])->group(function () {
+    Route::get('/notifications', [\App\Http\Controllers\PublicNotificationController::class, 'index'])
+        ->name('public.notifications');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\PublicNotificationController::class, 'markAllRead'])
+        ->name('public.notifications.readAll');
+    Route::post('/notifications/{notification}/read', [\App\Http\Controllers\PublicNotificationController::class, 'markRead'])
+        ->name('public.notifications.read');
     Route::get('/history', [\App\Http\Controllers\PublicHistoryController::class, 'index'])
         ->name('public.history');
     Route::get('/booking/review', [\App\Http\Controllers\BookingController::class, 'review'])
