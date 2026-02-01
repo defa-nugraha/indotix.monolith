@@ -58,7 +58,9 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/public/partners');
     const isWisataSectionActive =
         isCurrentUrl('/admin/wisata/destinations') ||
-        isCurrentUrl('/admin/wisata/tickets');
+        isCurrentUrl('/admin/wisata/tickets') ||
+        isCurrentUrl('/admin/wisata/bookings') ||
+        isCurrentUrl('/admin/wisata/scans');
     const isSystemSectionActive =
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
@@ -199,6 +201,26 @@ export function AppSidebarAdmin() {
                                         >
                                             <Link href="/admin/wisata/tickets">
                                                 Produk Tiket
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/bookings')}
+                                        >
+                                            <Link href="/admin/wisata/bookings">
+                                                Monitoring Booking
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/scans')}
+                                        >
+                                            <Link href="/admin/wisata/scans">
+                                                Monitoring Validasi QR
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>

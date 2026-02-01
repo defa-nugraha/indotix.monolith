@@ -64,6 +64,11 @@ class MitraWisataOnboarding extends Model
         return $this->hasMany(WisataTicket::class);
     }
 
+    public function bookings()
+    {
+        return $this->hasMany(WisataBooking::class, 'mitra_wisata_onboarding_id');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

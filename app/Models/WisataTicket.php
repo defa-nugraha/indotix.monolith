@@ -30,4 +30,9 @@ class WisataTicket extends Model
     {
         return $this->belongsTo(MitraWisataOnboarding::class, 'mitra_wisata_onboarding_id');
     }
+
+    public function bookings()
+    {
+        return $this->hasMany(WisataBooking::class, 'wisata_ticket_id');
+    }
 }

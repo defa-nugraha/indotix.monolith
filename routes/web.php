@@ -101,6 +101,14 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::delete('admin/wisata/tickets/{ticket}', [\App\Http\Controllers\Admin\WisataTicketController::class, 'destroy'])
         ->name('admin.wisata.tickets.destroy');
 
+    Route::get('admin/wisata/bookings', [\App\Http\Controllers\Admin\WisataBookingController::class, 'index'])
+        ->name('admin.wisata.bookings.index');
+    Route::get('admin/wisata/bookings/{booking}', [\App\Http\Controllers\Admin\WisataBookingController::class, 'show'])
+        ->name('admin.wisata.bookings.show');
+
+    Route::get('admin/wisata/scans', [\App\Http\Controllers\Admin\WisataScanController::class, 'index'])
+        ->name('admin.wisata.scans.index');
+
     Route::get('admin/bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])
         ->name('admin.bookings.index');
     Route::get('admin/bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'show'])
