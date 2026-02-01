@@ -10,6 +10,7 @@ use App\Models\RoomType;
 use App\Services\BookingService;
 use App\Services\MidtransService;
 use App\Models\UserNotification;
+use App\Models\Voucher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -89,6 +90,30 @@ class BookingController extends Controller
                 ->withErrors(['rooms' => $exception->getMessage()]);
         }
 
+        $voucherPayload = null;
+        $discountAmount = 0;
+        if (! empty($draft['voucher_code'])) {
+            $voucher = $this->resolveVoucher($draft['voucher_code'], (int) $draft['hotel_id']);
+            $userId = (int) $request->user()->id;
+            if (
+                $voucher
+                && ($voucher->min_transaction <= 0 || $pricing['subtotal'] >= $voucher->min_transaction)
+                && $this->canUseVoucherForUser($voucher, $userId)
+            ) {
+                $discountAmount = $this->calculateDiscountAmount($pricing['subtotal'], $voucher);
+                $voucherPayload = [
+                    'code' => $voucher->code,
+                    'discount_type' => $voucher->discount_type,
+                    'discount_value' => $voucher->discount_value,
+                    'discount_amount' => $discountAmount,
+                ];
+            } else {
+                $this->clearVoucherDraft($request);
+            }
+        }
+
+        $total = max(0, $pricing['subtotal'] - $discountAmount);
+
         return Inertia::render('public/booking/review', [
             'draft' => $draft,
             'hotel' => [
@@ -104,8 +129,65 @@ class BookingController extends Controller
                 'bed_type' => $roomType->bed_type,
                 'max_guest' => $roomType->max_guest,
             ],
-            'pricing' => $pricing,
+            'pricing' => [
+                'nights' => $pricing['nights'],
+                'subtotal' => $pricing['subtotal'],
+                'discount_amount' => $discountAmount,
+                'total' => $total,
+            ],
+            'voucher' => $voucherPayload,
         ]);
+    }
+
+    public function applyVoucher(Request $request): RedirectResponse
+    {
+        $draft = $request->session()->get('booking_draft');
+        if (! $draft) {
+            return redirect()->route('home')->withErrors(['voucher' => 'Data booking tidak ditemukan.']);
+        }
+
+        $data = $request->validate([
+            'voucher_code' => ['required', 'string', 'max:50'],
+        ]);
+
+        $code = strtoupper(trim($data['voucher_code']));
+        $voucher = $this->resolveVoucher($code, (int) $draft['hotel_id']);
+        if (! $voucher) {
+            return back()->withErrors(['voucher_code' => 'Voucher tidak valid atau sudah habis.']);
+        }
+
+        $roomType = RoomType::query()->findOrFail($draft['room_type_id']);
+        try {
+            $pricing = app(BookingService::class)
+                ->calculatePricing($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms']);
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['voucher_code' => 'Voucher tidak bisa digunakan untuk tanggal ini.']);
+        }
+
+        if ($voucher->min_transaction > 0 && $pricing['subtotal'] < $voucher->min_transaction) {
+            return back()->withErrors(['voucher_code' => 'Minimum transaksi belum memenuhi syarat voucher.']);
+        }
+
+        if (! $this->canUseVoucherForUser($voucher, (int) $request->user()->id)) {
+            return back()->withErrors(['voucher_code' => 'Voucher sudah mencapai limit penggunaan untuk akun ini.']);
+        }
+
+        $draft['voucher_code'] = $voucher->code;
+        $request->session()->put('booking_draft', $draft);
+
+        return back()->with('status', 'voucher-applied');
+    }
+
+    public function removeVoucher(Request $request): RedirectResponse
+    {
+        $draft = $request->session()->get('booking_draft');
+        if (! $draft) {
+            return redirect()->route('home');
+        }
+
+        $this->clearVoucherDraft($request);
+
+        return back()->with('status', 'voucher-removed');
     }
 
     public function confirm(Request $request, BookingService $bookingService): RedirectResponse
@@ -127,19 +209,52 @@ class BookingController extends Controller
         try {
             $booking = DB::transaction(function () use ($request, $draft, $roomType, $data, $bookingService) {
                 $pricing = $bookingService->calculatePricing($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms']);
+                $voucher = null;
+                $discountAmount = 0;
+
+                if (! empty($draft['voucher_code'])) {
+                    $voucher = Voucher::query()
+                        ->where('code', strtoupper($draft['voucher_code']))
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $voucher || ! $this->isVoucherValid($voucher, (int) $draft['hotel_id'])) {
+                        throw new RuntimeException('Voucher tidak valid atau kuota habis.');
+                    }
+
+                    if ($voucher->min_transaction > 0 && $pricing['subtotal'] < $voucher->min_transaction) {
+                        throw new RuntimeException('Minimum transaksi belum memenuhi syarat voucher.');
+                    }
+
+                    if (! $this->canUseVoucherForUser($voucher, (int) $request->user()->id)) {
+                        throw new RuntimeException('Voucher sudah mencapai limit penggunaan untuk akun ini.');
+                    }
+
+                    $discountAmount = $this->calculateDiscountAmount($pricing['subtotal'], $voucher);
+                    if ($voucher->quota_total > 0 && $voucher->quota_used >= $voucher->quota_total) {
+                        throw new RuntimeException('Voucher sudah habis.');
+                    }
+                    $voucher->quota_used = (int) $voucher->quota_used + 1;
+                    $voucher->save();
+                }
 
                 $bookingService->reserveInventory($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms'], false);
 
                 $booking = Booking::create([
                     'user_id' => $request->user()->id,
                     'hotel_id' => $draft['hotel_id'],
+                    'voucher_id' => $voucher?->id,
+                    'voucher_code' => $voucher?->code,
                     'check_in' => $draft['check_in'],
                     'check_out' => $draft['check_out'],
                     'nights' => $pricing['nights'],
                     'rooms_count' => $draft['rooms'],
                     'guests_count' => $draft['guests'],
                     'subtotal' => $pricing['subtotal'],
-                    'total' => $pricing['subtotal'],
+                    'discount_type' => $voucher?->discount_type,
+                    'discount_value' => $voucher?->discount_value,
+                    'discount_amount' => $discountAmount > 0 ? $discountAmount : null,
+                    'total' => max(0, $pricing['subtotal'] - $discountAmount),
                     'status' => 'pending_payment',
                     'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
                     'guest_name' => $data['guest_name'],
@@ -370,6 +485,9 @@ class BookingController extends Controller
             'rooms_count' => $booking->rooms_count,
             'guests_count' => $booking->guests_count,
             'total' => $booking->total,
+            'subtotal' => $booking->subtotal,
+            'discount_amount' => $booking->discount_amount,
+            'voucher_code' => $booking->voucher_code,
             'guest_name' => $booking->guest_name,
             'guest_email' => $booking->guest_email,
             'guest_phone' => $booking->guest_phone,
@@ -472,5 +590,80 @@ class BookingController extends Controller
     private function encryptId(int $id): string
     {
         return Crypt::encryptString((string) $id);
+    }
+
+    private function resolveVoucher(string $code, int $hotelId): ?Voucher
+    {
+        $voucher = Voucher::query()
+            ->where('code', strtoupper($code))
+            ->where('is_active', true)
+            ->first();
+
+        if (! $voucher) {
+            return null;
+        }
+
+        return $this->isVoucherValid($voucher, $hotelId) ? $voucher : null;
+    }
+
+    private function isVoucherValid(Voucher $voucher, int $hotelId): bool
+    {
+        $today = now()->toDateString();
+        if ($voucher->starts_at && $voucher->starts_at->toDateString() > $today) {
+            return false;
+        }
+        if ($voucher->ends_at && $voucher->ends_at->toDateString() < $today) {
+            return false;
+        }
+        if ($voucher->hotel_id && (int) $voucher->hotel_id !== $hotelId) {
+            return false;
+        }
+        if ($voucher->quota_total > 0 && $voucher->quota_used >= $voucher->quota_total) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function calculateDiscountAmount(int $subtotal, Voucher $voucher): int
+    {
+        if ($voucher->discount_type === 'fixed') {
+            return min($subtotal, (int) $voucher->discount_value);
+        }
+
+        return (int) round($subtotal * ((int) $voucher->discount_value / 100));
+    }
+
+    private function canUseVoucherForUser(Voucher $voucher, int $userId): bool
+    {
+        if ((int) $voucher->max_per_user_per_day <= 0) {
+            return true;
+        }
+
+        $query = Booking::query()
+            ->where('voucher_id', $voucher->id)
+            ->where('user_id', $userId);
+
+        if ($voucher->starts_at) {
+            $query->whereDate('created_at', '>=', $voucher->starts_at->toDateString());
+        }
+        if ($voucher->ends_at) {
+            $query->whereDate('created_at', '<=', $voucher->ends_at->toDateString());
+        }
+
+        $count = $query->count();
+
+        return $count < (int) $voucher->max_per_user_per_day;
+    }
+
+    private function clearVoucherDraft(Request $request): void
+    {
+        $draft = $request->session()->get('booking_draft');
+        if (! $draft) {
+            return;
+        }
+
+        unset($draft['voucher_code']);
+        $request->session()->put('booking_draft', $draft);
     }
 }

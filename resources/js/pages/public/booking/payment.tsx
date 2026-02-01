@@ -17,6 +17,9 @@ type Booking = {
     nights: number;
     rooms_count: number;
     guests_count: number;
+    subtotal?: number;
+    discount_amount?: number | null;
+    voucher_code?: string | null;
     total: number;
     payment?: { status?: string | null; payment_type?: string | null; payload?: any } | null;
 };
@@ -212,6 +215,22 @@ export default function BookingPayment({ booking, paymentOptions }: { booking: B
                                 </div>
                             </div>
                             <div className="mt-4 text-lg font-semibold text-sky-600">Rp {booking.total.toLocaleString('id-ID')}</div>
+                            <div className="mt-3 border-t border-slate-100 pt-3 text-sm text-slate-600">
+                                <div className="flex items-center justify-between">
+                                    <span>Subtotal</span>
+                                    <span>Rp {(booking.subtotal ?? booking.total).toLocaleString('id-ID')}</span>
+                                </div>
+                                {booking.discount_amount && booking.discount_amount > 0 && (
+                                    <div className="mt-2 flex items-center justify-between text-emerald-600">
+                                        <span>Voucher {booking.voucher_code ?? ''}</span>
+                                        <span>- Rp {booking.discount_amount.toLocaleString('id-ID')}</span>
+                                    </div>
+                                )}
+                                <div className="mt-2 flex items-center justify-between border-t border-dashed border-slate-200 pt-2 font-semibold text-slate-900">
+                                    <span>Total</span>
+                                    <span>Rp {booking.total.toLocaleString('id-ID')}</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">

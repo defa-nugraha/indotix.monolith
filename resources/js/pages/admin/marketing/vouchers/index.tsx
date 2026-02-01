@@ -16,8 +16,10 @@ type Voucher = {
     code: string;
     discount_type: 'percentage' | 'fixed';
     discount_value: number;
+    min_transaction?: number | null;
     quota_total: number;
     quota_used: number;
+    max_per_user_per_day?: number | null;
     starts_at?: string | null;
     ends_at?: string | null;
     hotel_id?: number | null;
@@ -33,9 +35,9 @@ type Props = {
 
 const isActiveLabel = (voucher: Voucher) => {
     if (!voucher.is_active) return false;
-    const today = new Date();
-    const start = voucher.starts_at ? new Date(voucher.starts_at) : null;
-    const end = voucher.ends_at ? new Date(voucher.ends_at) : null;
+    const today = new Date().toISOString().slice(0, 10);
+    const start = voucher.starts_at ?? null;
+    const end = voucher.ends_at ?? null;
     if (start && today < start) return false;
     if (end && today > end) return false;
     return true;
@@ -47,12 +49,23 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
         code: '',
         discount_type: 'percentage',
         discount_value: '',
+        min_transaction: '',
         quota_total: '',
+        max_per_user_per_day: '',
         starts_at: '',
         ends_at: '',
         hotel_id: '',
         is_active: true,
     });
+    const [minTransactionDisplay, setMinTransactionDisplay] = useState('');
+
+    const formatCurrencyInput = (value: string) => {
+        const digits = value.replace(/\D/g, '');
+        if (!digits) return '';
+        return Number(digits).toLocaleString('id-ID');
+    };
+
+    const parseCurrencyInput = (value: string) => value.replace(/\D/g, '');
 
     const startEdit = (voucher: Voucher) => {
         setEditingId(voucher.id);
@@ -60,12 +73,17 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
             code: voucher.code,
             discount_type: voucher.discount_type,
             discount_value: String(voucher.discount_value),
+            min_transaction: String(voucher.min_transaction ?? ''),
             quota_total: String(voucher.quota_total),
+            max_per_user_per_day: String(voucher.max_per_user_per_day ?? ''),
             starts_at: voucher.starts_at ?? '',
             ends_at: voucher.ends_at ?? '',
             hotel_id: voucher.hotel_id ? String(voucher.hotel_id) : '',
             is_active: voucher.is_active,
         });
+        setMinTransactionDisplay(
+            voucher.min_transaction ? Number(voucher.min_transaction).toLocaleString('id-ID') : ''
+        );
     };
 
     const resetForm = () => {
@@ -74,12 +92,15 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
             code: '',
             discount_type: 'percentage',
             discount_value: '',
+            min_transaction: '',
             quota_total: '',
+            max_per_user_per_day: '',
             starts_at: '',
             ends_at: '',
             hotel_id: '',
             is_active: true,
         });
+        setMinTransactionDisplay('');
     };
 
     const submit = (event: React.FormEvent) => {
@@ -87,7 +108,9 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
         const payload = {
             ...form,
             discount_value: Number(form.discount_value),
+            min_transaction: form.min_transaction ? Number(form.min_transaction) : 0,
             quota_total: Number(form.quota_total),
+            max_per_user_per_day: form.max_per_user_per_day ? Number(form.max_per_user_per_day) : 0,
             hotel_id: form.hotel_id || null,
             is_active: form.is_active ? 1 : 0,
         };
@@ -148,7 +171,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <form onSubmit={submit} className="grid gap-4 md:grid-cols-6">
+                    <form onSubmit={submit} className="grid gap-4 md:grid-cols-8">
                         <div className="grid gap-2 md:col-span-2">
                             <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                                 Kode
@@ -193,6 +216,22 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                         </div>
                         <div className="grid gap-2">
                             <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Min Transaksi
+                            </label>
+                            <input
+                                inputMode="numeric"
+                                value={minTransactionDisplay}
+                                onChange={(event) => {
+                                    const raw = parseCurrencyInput(event.target.value);
+                                    setForm((prev) => ({ ...prev, min_transaction: raw }));
+                                    setMinTransactionDisplay(formatCurrencyInput(raw));
+                                }}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                placeholder="0"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                                 Kuota
                             </label>
                             <input
@@ -203,6 +242,19 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                                 className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
                                 placeholder="100"
                                 required
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Limit / user
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                value={form.max_per_user_per_day}
+                                onChange={(event) => setForm((prev) => ({ ...prev, max_per_user_per_day: event.target.value }))}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                placeholder="0"
                             />
                         </div>
                         <div className="grid gap-2">
@@ -272,7 +324,9 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                                 <tr>
                                     <th className="py-3 pr-4">Kode</th>
                                     <th className="py-3 pr-4">Diskon</th>
+                                    <th className="py-3 pr-4">Min Transaksi</th>
                                     <th className="py-3 pr-4">Kuota</th>
+                                    <th className="py-3 pr-4">Limit User</th>
                                     <th className="py-3 pr-4">Periode</th>
                                     <th className="py-3 pr-4">Scope</th>
                                     <th className="py-3 pr-4">Status</th>
@@ -282,7 +336,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             <tbody className="divide-y divide-slate-100">
                                 {vouchers.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="py-8 text-center text-slate-500">
+                                        <td colSpan={9} className="py-8 text-center text-slate-500">
                                             Belum ada voucher.
                                         </td>
                                     </tr>
@@ -298,7 +352,13 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                                                 : `Rp ${voucher.discount_value.toLocaleString('id-ID')}`}
                                         </td>
                                         <td className="py-4 pr-4 text-slate-600">
+                                            {voucher.min_transaction ? `Rp ${voucher.min_transaction.toLocaleString('id-ID')}` : '-'}
+                                        </td>
+                                        <td className="py-4 pr-4 text-slate-600">
                                             {voucher.quota_used}/{voucher.quota_total}
+                                        </td>
+                                        <td className="py-4 pr-4 text-slate-600">
+                                            {voucher.max_per_user_per_day ? voucher.max_per_user_per_day : '-'}
                                         </td>
                                         <td className="py-4 pr-4 text-slate-600">
                                             {voucher.starts_at ?? '-'} → {voucher.ends_at ?? '-'}

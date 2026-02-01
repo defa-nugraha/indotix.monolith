@@ -1,7 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, ChevronDown, Folder, LayoutGrid, LineChart, MonitorPlay, Users } from 'lucide-react';
+import { Building2, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -31,19 +30,6 @@ const mainNavItems: NavItem[] = [
         title: 'Kelola Mitra',
         href: '/admin/mitra',
         icon: Users,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
     },
 ];
 
@@ -283,7 +269,6 @@ export function AppSidebarAdmin() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

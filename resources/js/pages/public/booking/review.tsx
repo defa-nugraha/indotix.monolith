@@ -3,7 +3,7 @@ import Swal from 'sweetalert2';
 import { Bell, CalendarCheck, ClipboardCheck, Mail, Phone, Star, Ticket, User, Users, MapPinned, ShoppingBag, UserCircle, History, MessageCircle } from 'lucide-react';
 import { useState } from 'react';
 
-export default function BookingReview({ draft, hotel, roomType, pricing }: any) {
+export default function BookingReview({ draft, hotel, roomType, pricing, voucher }: any) {
     const { auth } = usePage().props as { auth?: { user?: unknown } };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const form = useForm({
@@ -11,6 +11,9 @@ export default function BookingReview({ draft, hotel, roomType, pricing }: any) 
         guest_email: '',
         guest_phone: '',
         special_request: '',
+    });
+    const voucherForm = useForm({
+        voucher_code: '',
     });
     const [showPrice, setShowPrice] = useState(true);
 
@@ -221,13 +224,76 @@ export default function BookingReview({ draft, hotel, roomType, pricing }: any) 
                                             <span>Harga kamar</span>
                                             <span>Rp {pricing.subtotal.toLocaleString('id-ID')}</span>
                                         </div>
+                                        {pricing.discount_amount > 0 && (
+                                            <div className="flex items-center justify-between text-emerald-600">
+                                                <span>Diskon voucher</span>
+                                                <span>- Rp {pricing.discount_amount.toLocaleString('id-ID')}</span>
+                                            </div>
+                                        )}
                                         <div className="flex items-center justify-between border-t border-dashed border-slate-200 pt-2 font-semibold text-slate-900">
                                             <span>Total</span>
-                                            <span>Rp {pricing.subtotal.toLocaleString('id-ID')}</span>
+                                            <span>Rp {pricing.total.toLocaleString('id-ID')}</span>
                                         </div>
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-lg font-semibold text-slate-900">Promo & Voucher</h3>
+                                <Ticket className="h-5 w-5 text-sky-500" />
+                            </div>
+                            <p className="mt-2 text-sm text-slate-500">
+                                Masukkan kode voucher untuk potongan harga.
+                            </p>
+                            {voucher ? (
+                                <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-700">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <div className="text-xs uppercase tracking-wider text-emerald-500">Voucher aktif</div>
+                                            <div className="mt-1 text-base font-semibold">{voucher.code}</div>
+                                            <div className="text-xs text-emerald-600">
+                                                Potongan Rp {voucher.discount_amount?.toLocaleString('id-ID')}
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="rounded-lg border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                                            onClick={() => voucherForm.post('/booking/voucher/remove')}
+                                        >
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <form
+                                    className="mt-4 flex flex-col gap-3 sm:flex-row"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        voucherForm.post('/booking/voucher', {
+                                            onSuccess: () =>
+                                                Swal.fire({ title: 'Berhasil', text: 'Voucher diterapkan.', icon: 'success' }),
+                                            onError: (errors) =>
+                                                Swal.fire({
+                                                    title: 'Gagal',
+                                                    text: errors.voucher_code ?? 'Voucher tidak valid.',
+                                                    icon: 'error',
+                                                }),
+                                        });
+                                    }}
+                                >
+                                    <input
+                                        className="h-11 flex-1 rounded-xl border border-slate-200 px-3 text-sm"
+                                        placeholder="Masukkan kode voucher"
+                                        value={voucherForm.data.voucher_code}
+                                        onChange={(event) => voucherForm.setData('voucher_code', event.target.value)}
+                                    />
+                                    <button className="h-11 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm">
+                                        Terapkan
+                                    </button>
+                                </form>
+                            )}
                         </div>
                     </div>
                 </div>

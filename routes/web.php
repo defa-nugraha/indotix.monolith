@@ -335,6 +335,10 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('booking.review');
     Route::post('/booking/confirm', [\App\Http\Controllers\BookingController::class, 'confirm'])
         ->name('booking.confirm');
+    Route::post('/booking/voucher', [\App\Http\Controllers\BookingController::class, 'applyVoucher'])
+        ->name('booking.voucher.apply');
+    Route::post('/booking/voucher/remove', [\App\Http\Controllers\BookingController::class, 'removeVoucher'])
+        ->name('booking.voucher.remove');
     Route::get('/booking/{booking}/payment', [\App\Http\Controllers\BookingController::class, 'payment'])
         ->name('booking.payment');
     Route::post('/booking/{booking}/payment', [\App\Http\Controllers\BookingController::class, 'pay'])

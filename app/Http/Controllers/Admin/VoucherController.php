@@ -24,8 +24,10 @@ class VoucherController extends Controller
                 'code' => $voucher->code,
                 'discount_type' => $voucher->discount_type,
                 'discount_value' => $voucher->discount_value,
+                'min_transaction' => $voucher->min_transaction,
                 'quota_total' => $voucher->quota_total,
                 'quota_used' => $voucher->quota_used,
+                'max_per_user_per_day' => $voucher->max_per_user_per_day,
                 'starts_at' => $voucher->starts_at?->toDateString(),
                 'ends_at' => $voucher->ends_at?->toDateString(),
                 'hotel_id' => $voucher->hotel_id,
@@ -43,6 +45,7 @@ class VoucherController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateVoucher($request);
+        $data['is_active'] = $request->boolean('is_active');
         $data['code'] = strtoupper($data['code']);
         Voucher::create($data);
 
@@ -52,6 +55,7 @@ class VoucherController extends Controller
     public function update(Request $request, Voucher $voucher): RedirectResponse
     {
         $data = $this->validateVoucher($request, $voucher->id);
+        $data['is_active'] = $request->boolean('is_active');
         $data['code'] = strtoupper($data['code']);
         $voucher->update($data);
 
@@ -71,7 +75,9 @@ class VoucherController extends Controller
             'code' => ['required', 'string', 'max:50', Rule::unique('vouchers', 'code')->ignore($id)],
             'discount_type' => ['required', Rule::in(['percentage', 'fixed'])],
             'discount_value' => ['required', 'numeric', 'min:0'],
+            'min_transaction' => ['nullable', 'numeric', 'min:0'],
             'quota_total' => ['required', 'integer', 'min:0'],
+            'max_per_user_per_day' => ['nullable', 'integer', 'min:0'],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
             'hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
