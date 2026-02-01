@@ -70,6 +70,36 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra.payout');
     Route::post('admin/mitra/{user}/suspend', [\App\Http\Controllers\Admin\MitraController::class, 'suspend'])
         ->name('admin.mitra.suspend');
+    Route::get('admin/mitra-wisata', [\App\Http\Controllers\Admin\MitraWisataController::class, 'index'])
+        ->name('admin.mitra-wisata.index');
+    Route::get('admin/mitra-wisata/{user}', [\App\Http\Controllers\Admin\MitraWisataController::class, 'show'])
+        ->name('admin.mitra-wisata.show');
+    Route::post('admin/mitra-wisata/{user}/verify', [\App\Http\Controllers\Admin\MitraWisataController::class, 'verify'])
+        ->name('admin.mitra-wisata.verify');
+    Route::post('admin/mitra-wisata/{user}/payout', [\App\Http\Controllers\Admin\MitraWisataController::class, 'payout'])
+        ->name('admin.mitra-wisata.payout');
+    Route::post('admin/mitra-wisata/{user}/suspend', [\App\Http\Controllers\Admin\MitraWisataController::class, 'suspend'])
+        ->name('admin.mitra-wisata.suspend');
+
+    Route::get('admin/wisata/destinations', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'index'])
+        ->name('admin.wisata.destinations.index');
+    Route::get('admin/wisata/destinations/{destination}', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'show'])
+        ->name('admin.wisata.destinations.show');
+    Route::put('admin/wisata/destinations/{destination}', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'update'])
+        ->name('admin.wisata.destinations.update');
+    Route::post('admin/wisata/destinations/{destination}/suspend', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'suspend'])
+        ->name('admin.wisata.destinations.suspend');
+
+    Route::get('admin/wisata/tickets', [\App\Http\Controllers\Admin\WisataTicketController::class, 'index'])
+        ->name('admin.wisata.tickets.index');
+    Route::get('admin/wisata/tickets/create', [\App\Http\Controllers\Admin\WisataTicketController::class, 'create'])
+        ->name('admin.wisata.tickets.create');
+    Route::post('admin/wisata/tickets', [\App\Http\Controllers\Admin\WisataTicketController::class, 'store'])
+        ->name('admin.wisata.tickets.store');
+    Route::put('admin/wisata/tickets/{ticket}', [\App\Http\Controllers\Admin\WisataTicketController::class, 'update'])
+        ->name('admin.wisata.tickets.update');
+    Route::delete('admin/wisata/tickets/{ticket}', [\App\Http\Controllers\Admin\WisataTicketController::class, 'destroy'])
+        ->name('admin.wisata.tickets.destroy');
 
     Route::get('admin/bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])
         ->name('admin.bookings.index');
@@ -189,9 +219,19 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
 });
 
 Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
-    $onboarding = \App\Models\MitraOnboarding::query()->firstOrCreate([
-        'user_id' => $request->user()->id,
-    ]);
+    $onboardingType = $request->user()->mitra_onboarding_type;
+    $onboarding = null;
+    $wisataOnboarding = null;
+    if ($onboardingType === 'hotel') {
+        $onboarding = \App\Models\MitraOnboarding::query()->firstOrCreate([
+            'user_id' => $request->user()->id,
+        ]);
+    }
+    if ($onboardingType === 'wisata') {
+        $wisataOnboarding = \App\Models\MitraWisataOnboarding::query()->firstOrCreate([
+            'user_id' => $request->user()->id,
+        ]);
+    }
     $user = $request->user();
     $today = now()->toDateString();
     $monthStart = now()->startOfMonth()->toDateString();
@@ -231,6 +271,8 @@ Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
 
     return Inertia::render('mitra/dashboard', [
         'onboarding' => $onboarding,
+        'wisataOnboarding' => $wisataOnboarding,
+        'onboardingType' => $onboardingType,
         'stats' => [
             'reservations_today' => $todayBookings,
             'monthly_revenue' => $monthlyRevenue,
@@ -240,6 +282,8 @@ Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
 })->middleware(['auth', 'verified', 'mitra'])->name('mitra.dashboard');
 
 Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
+    Route::post('mitra/onboarding/type', [\App\Http\Controllers\MitraOnboardingController::class, 'selectType'])
+        ->name('mitra.onboarding.type');
     Route::get('mitra/onboarding', [\App\Http\Controllers\MitraOnboardingController::class, 'show'])
         ->name('mitra.onboarding');
     Route::patch('mitra/onboarding/step-1', [\App\Http\Controllers\MitraOnboardingController::class, 'updateStepOne'])
@@ -254,6 +298,25 @@ Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
         ->name('mitra.onboarding.submitVerification');
     Route::post('mitra/onboarding/submit-payout', [\App\Http\Controllers\MitraOnboardingController::class, 'submitPayout'])
         ->name('mitra.onboarding.submitPayout');
+
+    Route::get('mitra/wisata/onboarding', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'show'])
+        ->name('mitra.wisata.onboarding');
+    Route::patch('mitra/wisata/onboarding/step-1', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepOne'])
+        ->name('mitra.wisata.onboarding.step1');
+    Route::post('mitra/wisata/onboarding/step-1', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepOne'])
+        ->name('mitra.wisata.onboarding.step1.post');
+    Route::patch('mitra/wisata/onboarding/step-2', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepTwo'])
+        ->name('mitra.wisata.onboarding.step2');
+    Route::post('mitra/wisata/onboarding/step-2', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepTwo'])
+        ->name('mitra.wisata.onboarding.step2.post');
+    Route::patch('mitra/wisata/onboarding/step-3', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepThree'])
+        ->name('mitra.wisata.onboarding.step3');
+    Route::post('mitra/wisata/onboarding/step-3', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepThree'])
+        ->name('mitra.wisata.onboarding.step3.post');
+    Route::post('mitra/wisata/onboarding/submit-verification', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'submitVerification'])
+        ->name('mitra.wisata.onboarding.submitVerification');
+    Route::post('mitra/wisata/onboarding/submit-payout', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'submitPayout'])
+        ->name('mitra.wisata.onboarding.submitPayout');
 });
 
 Route::prefix('mitra')

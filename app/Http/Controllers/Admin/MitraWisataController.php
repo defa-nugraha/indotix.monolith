@@ -3,24 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\MitraOnboarding;
+use App\Models\MitraWisataOnboarding;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class MitraController extends Controller
+class MitraWisataController extends Controller
 {
     public function index(Request $request): Response
     {
         $query = User::query()
             ->where('role', 'mitra')
-            ->where(function ($builder) {
-                $builder->whereNull('mitra_onboarding_type')
-                    ->orWhere('mitra_onboarding_type', 'hotel');
-            })
-            ->with(['mitraOnboarding']);
+            ->where('mitra_onboarding_type', 'wisata')
+            ->with(['mitraWisataOnboarding']);
 
         if ($request->filled('search')) {
             $term = '%'.$request->string('search')->toString().'%';
@@ -31,13 +28,13 @@ class MitraController extends Controller
         }
 
         if ($request->filled('verification_status')) {
-            $query->whereHas('mitraOnboarding', function ($builder) use ($request) {
+            $query->whereHas('mitraWisataOnboarding', function ($builder) use ($request) {
                 $builder->where('verification_status', $request->string('verification_status')->toString());
             });
         }
 
         if ($request->filled('payout_status')) {
-            $query->whereHas('mitraOnboarding', function ($builder) use ($request) {
+            $query->whereHas('mitraWisataOnboarding', function ($builder) use ($request) {
                 $builder->where('payout_status', $request->string('payout_status')->toString());
             });
         }
@@ -49,18 +46,29 @@ class MitraController extends Controller
 
         $paginator = $query->latest()->paginate(10)->withQueryString();
         $cityCodes = $paginator->getCollection()
-            ->map(fn (User $user) => $user->mitraOnboarding?->city_code)
+            ->map(fn (User $user) => $user->mitraWisataOnboarding?->city_code)
             ->filter()
             ->unique()
             ->values()
             ->all();
+        $provinceCodes = $paginator->getCollection()
+            ->map(fn (User $user) => $user->mitraWisataOnboarding?->province_code)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
         $cityNames = \App\Models\Regency::query()
             ->whereIn('code', $cityCodes)
             ->pluck('name', 'code');
+        $provinceNames = \App\Models\Province::query()
+            ->whereIn('code', $provinceCodes)
+            ->pluck('name', 'code');
 
-        $mitra = $paginator->through(function (User $user) use ($cityNames) {
-            $onboarding = $user->mitraOnboarding;
+        $mitra = $paginator->through(function (User $user) use ($cityNames, $provinceNames) {
+            $onboarding = $user->mitraWisataOnboarding;
             $cityCode = $onboarding?->city_code;
+            $provinceCode = $onboarding?->province_code;
 
             return [
                 'id' => $user->id,
@@ -69,13 +77,15 @@ class MitraController extends Controller
                 'verification_status' => $onboarding?->verification_status ?? 'draft',
                 'payout_status' => $onboarding?->payout_status ?? 'draft',
                 'is_suspended' => (bool) $user->is_suspended,
-                'hotel_name' => $onboarding?->hotel_name,
+                'destination_name' => $onboarding?->destination_name,
+                'destination_type' => $onboarding?->destination_type,
                 'city_name' => $cityCode ? ($cityNames[$cityCode] ?? null) : null,
+                'province_name' => $provinceCode ? ($provinceNames[$provinceCode] ?? null) : null,
                 'updated_at' => optional($onboarding?->updated_at)->toDateTimeString(),
             ];
         });
 
-        return Inertia::render('admin/mitra/index', [
+        return Inertia::render('admin/mitra-wisata/index', [
             'mitra' => $mitra,
             'filters' => $request->only(['search', 'verification_status', 'payout_status', 'suspended']),
             'verificationStatuses' => ['draft', 'pending', 'verified', 'rejected'],
@@ -88,7 +98,7 @@ class MitraController extends Controller
     {
         abort_unless($user->role === 'mitra', 404);
 
-        $onboarding = MitraOnboarding::query()->firstOrCreate([
+        $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
 
@@ -99,7 +109,14 @@ class MitraController extends Controller
                 ->value('name');
         }
 
-        return Inertia::render('admin/mitra/show', [
+        $provinceName = null;
+        if ($onboarding->province_code) {
+            $provinceName = \App\Models\Province::query()
+                ->where('code', $onboarding->province_code)
+                ->value('name');
+        }
+
+        return Inertia::render('admin/mitra-wisata/show', [
             'mitra' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -110,6 +127,7 @@ class MitraController extends Controller
             ],
             'onboarding' => $onboarding,
             'cityName' => $cityName,
+            'provinceName' => $provinceName,
         ]);
     }
 
@@ -122,7 +140,7 @@ class MitraController extends Controller
             'reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $onboarding = MitraOnboarding::query()->firstOrCreate([
+        $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
 
@@ -149,7 +167,7 @@ class MitraController extends Controller
             'reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $onboarding = MitraOnboarding::query()->firstOrCreate([
+        $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
 

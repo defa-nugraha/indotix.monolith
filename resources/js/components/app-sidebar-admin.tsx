@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users } from 'lucide-react';
+import { Building2, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Ticket, Users, MapPinned } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -31,6 +31,11 @@ const mainNavItems: NavItem[] = [
         href: '/admin/mitra',
         icon: Users,
     },
+    {
+        title: 'Mitra Wisata',
+        href: '/admin/mitra-wisata',
+        icon: Users,
+    },
 ];
 
 export function AppSidebarAdmin() {
@@ -51,6 +56,9 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/public/promo-items') ||
         isCurrentUrl('/admin/public/contacts') ||
         isCurrentUrl('/admin/public/partners');
+    const isWisataSectionActive =
+        isCurrentUrl('/admin/wisata/destinations') ||
+        isCurrentUrl('/admin/wisata/tickets');
     const isSystemSectionActive =
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
@@ -158,6 +166,39 @@ export function AppSidebarAdmin() {
                                         >
                                             <Link href="/admin/marketing/vouchers">
                                                 Promo & Voucher
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isWisataSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <MapPinned />
+                                    <span>Wisata</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/destinations')}
+                                        >
+                                            <Link href="/admin/wisata/destinations">Master Destinasi</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/tickets')}
+                                        >
+                                            <Link href="/admin/wisata/tickets">
+                                                Produk Tiket
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>

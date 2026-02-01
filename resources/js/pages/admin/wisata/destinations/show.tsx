@@ -1,0 +1,259 @@
+import { Head, router } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import Swal from 'sweetalert2';
+
+type Option = { id: string; label: string };
+
+type Destination = {
+    id: number;
+    destination_name: string | null;
+    destination_type: string | null;
+    description: string | null;
+    highlights: string | null;
+    province_code: string | null;
+    city_code: string | null;
+    address_full: string | null;
+    maps_pin_url: string | null;
+    open_days: string[] | null;
+    open_time: string | null;
+    close_time: string | null;
+    holiday_notes: string | null;
+    contact_phone: string | null;
+    contact_hours: string | null;
+    is_live: boolean;
+    is_suspended: boolean;
+    suspended_reason?: string | null;
+    suspended_at?: string | null;
+    verification_status: string;
+    user?: { id: number; name: string; email: string };
+};
+
+type Props = {
+    destination: Destination;
+    provinces: Option[];
+    cities: Option[];
+    cityName?: string | null;
+};
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Wisata', href: '/admin/wisata/destinations' },
+    { title: 'Detail Destinasi', href: '#' },
+];
+
+const statusTone = (status?: string | null) => {
+    if (status === 'verified') return 'bg-emerald-50 text-emerald-700';
+    if (status === 'pending') return 'bg-amber-50 text-amber-700';
+    if (status === 'rejected') return 'bg-red-50 text-red-700';
+    return 'bg-slate-50 text-slate-600';
+};
+
+export default function AdminWisataDestinationShow({ destination, provinces, cities, cityName }: Props) {
+    const handleSuspend = async () => {
+        const result = await Swal.fire({
+            title: destination.is_suspended ? 'Aktifkan destinasi?' : 'Suspend destinasi?',
+            text: destination.is_suspended
+                ? 'Destinasi akan aktif kembali.'
+                : 'Destinasi tidak akan tampil di publik.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: destination.is_suspended ? 'Aktifkan' : 'Suspend',
+            cancelButtonText: 'Batal',
+            input: destination.is_suspended ? undefined : 'textarea',
+            inputLabel: destination.is_suspended ? undefined : 'Alasan suspend',
+            inputPlaceholder: destination.is_suspended ? undefined : 'Tulis alasan',
+            inputValidator: (value) => {
+                if (!destination.is_suspended && !value) return 'Alasan wajib diisi.';
+                return null;
+            },
+        });
+
+        if (!result.isConfirmed) return;
+
+        router.post(`/admin/wisata/destinations/${destination.id}/suspend`, {
+            action: destination.is_suspended ? 'unsuspend' : 'suspend',
+            reason: destination.is_suspended ? null : result.value,
+        });
+    };
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Detail Destinasi Wisata" />
+            <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
+                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                                Destinasi Wisata
+                            </p>
+                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                                {destination.destination_name ?? 'Destinasi'}
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                {destination.user?.name} · {destination.user?.email}
+                            </p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            <Badge className={statusTone(destination.verification_status)}>
+                                {destination.verification_status}
+                            </Badge>
+                            <Badge className={destination.is_live ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}>
+                                {destination.is_live ? 'Live' : 'Draft'}
+                            </Badge>
+                            {destination.is_suspended && (
+                                <Badge className="bg-red-50 text-red-600">Suspended</Badge>
+                            )}
+                        </div>
+                    </div>
+                    {destination.is_suspended && destination.suspended_reason && (
+                        <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            Alasan suspend: {destination.suspended_reason}
+                        </div>
+                    )}
+                </section>
+
+                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold text-slate-900">Detail Destinasi</h2>
+                    <div className="mt-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                            <p className="text-xs uppercase tracking-wider text-slate-400">Jenis wisata</p>
+                            <p className="text-sm font-semibold text-slate-900">{destination.destination_type ?? '-'}</p>
+                        </div>
+                        <div>
+                            <p className="text-xs uppercase tracking-wider text-slate-400">Kota</p>
+                            <p className="text-sm font-semibold text-slate-900">{cityName ?? destination.city_code ?? '-'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                            <p className="text-xs uppercase tracking-wider text-slate-400">Alamat lengkap</p>
+                            <p className="text-sm font-semibold text-slate-900">{destination.address_full ?? '-'}</p>
+                        </div>
+                        <div className="md:col-span-2">
+                            <p className="text-xs uppercase tracking-wider text-slate-400">Deskripsi</p>
+                            <p className="text-sm text-slate-700">{destination.description ?? '-'}</p>
+                        </div>
+                    </div>
+
+                    <form
+                        className="mt-6 grid gap-4 md:grid-cols-2"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            const form = new FormData(event.currentTarget);
+                            router.put(`/admin/wisata/destinations/${destination.id}`, Object.fromEntries(form.entries()));
+                        }}
+                    >
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium text-slate-700">Nama destinasi</label>
+                            <input
+                                name="destination_name"
+                                defaultValue={destination.destination_name ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium text-slate-700">Jenis wisata</label>
+                            <select
+                                name="destination_type"
+                                defaultValue={destination.destination_type ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="alam">Alam</option>
+                                <option value="edukasi">Edukasi</option>
+                                <option value="budaya">Budaya</option>
+                                <option value="wahana">Wahana</option>
+                                <option value="event">Event</option>
+                            </select>
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium text-slate-700">Provinsi</label>
+                            <select
+                                name="province_code"
+                                defaultValue={destination.province_code ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Pilih provinsi</option>
+                                {provinces.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium text-slate-700">Kota/Kabupaten</label>
+                            <select
+                                name="city_code"
+                                defaultValue={destination.city_code ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Pilih kota</option>
+                                {cities.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="grid gap-2 md:col-span-2">
+                            <label className="text-sm font-medium text-slate-700">Alamat lengkap</label>
+                            <input
+                                name="address_full"
+                                defaultValue={destination.address_full ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </div>
+                        <div className="grid gap-2 md:col-span-2">
+                            <label className="text-sm font-medium text-slate-700">Titik Google Maps</label>
+                            <input
+                                name="maps_pin_url"
+                                defaultValue={destination.maps_pin_url ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium text-slate-700">Jam buka</label>
+                            <input
+                                name="open_time"
+                                defaultValue={destination.open_time ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium text-slate-700">Jam tutup</label>
+                            <input
+                                name="close_time"
+                                defaultValue={destination.close_time ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </div>
+                        <div className="grid gap-2 md:col-span-2">
+                            <label className="text-sm font-medium text-slate-700">Status Live</label>
+                            <select
+                                name="is_live"
+                                defaultValue={destination.is_live ? '1' : '0'}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="0">Draft</option>
+                                <option value="1">Live</option>
+                            </select>
+                        </div>
+                        <div className="md:col-span-2 flex flex-wrap gap-3">
+                            <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                                Simpan Perubahan
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className={destination.is_suspended ? 'border-emerald-200 text-emerald-700' : 'border-rose-200 text-rose-600'}
+                                onClick={handleSuspend}
+                            >
+                                {destination.is_suspended ? 'Aktifkan Destinasi' : 'Suspend Destinasi'}
+                            </Button>
+                        </div>
+                    </form>
+                </section>
+            </div>
+        </AppLayout>
+    );
+}

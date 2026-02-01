@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Swal from 'sweetalert2';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 type CityOption = { id: string; label: string };
 
@@ -166,6 +167,32 @@ export default function MitraOnboarding({
         });
     };
 
+    const submitVerification = () => {
+        step1Form.patch('/mitra/onboarding/step-1', {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () =>
+                step2Form.post('/mitra/onboarding/step-2', {
+                    preserveScroll: true,
+                    forceFormData: true,
+                    onSuccess: () =>
+                        step2Form.post('/mitra/onboarding/submit-verification', {
+                            preserveScroll: true,
+                            onSuccess: () =>
+                                showSuccess(
+                                    'Terkirim',
+                                    'Dokumen verifikasi dikirim untuk review.'
+                                ),
+                            onError: (errors) =>
+                                showError('Gagal mengirim', getFirstError(errors)),
+                        }),
+                    onError: (errors) => {
+                        showError('Gagal menyimpan', getFirstError(errors));
+                    },
+                }),
+        });
+    };
+
     const getFirstError = (errors: Record<string, string>): string => {
         const firstKey = Object.keys(errors)[0];
         return firstKey ? errors[firstKey] : 'Terjadi kesalahan. Silakan coba lagi.';
@@ -250,6 +277,89 @@ export default function MitraOnboarding({
         tax_npwp: onboarding.tax_npwp ?? '',
         tax_type: onboarding.tax_type ?? '',
     });
+
+    const isFilled = (value?: string | number | null) => {
+        if (typeof value === 'number') {
+            return value > 0;
+        }
+        return Boolean(value && String(value).trim().length > 0);
+    };
+
+    const hasFile = (file?: File | null, path?: string | null) => Boolean(file || path);
+
+    const isHotelVerificationReady = useMemo(() => {
+        const hotelName = step1Form.data.hotel_name || onboarding.hotel_name;
+        const propertyType = step1Form.data.property_type || onboarding.property_type;
+        const cityCode = step1Form.data.city_code || onboarding.city_code;
+        const addressShort = step1Form.data.address_short || onboarding.address_short;
+        const responsibleName = step2Form.data.responsible_name || onboarding.responsible_name;
+        const responsibleNik = step2Form.data.responsible_nik || onboarding.responsible_nik;
+        const responsibleRole = step2Form.data.responsible_role || onboarding.responsible_role;
+        const addressFull = step2Form.data.address_full || onboarding.address_full;
+        const mapsPin = step2Form.data.maps_pin_url || onboarding.maps_pin_url;
+        const receptionPhone = step2Form.data.reception_phone || onboarding.reception_phone;
+        const operationalHours = step2Form.data.operational_hours || onboarding.operational_hours;
+        const reservationPic = step2Form.data.reservation_pic || onboarding.reservation_pic;
+
+        return (
+            isFilled(hotelName) &&
+            isFilled(propertyType) &&
+            isFilled(cityCode) &&
+            isFilled(addressShort) &&
+            isFilled(responsibleName) &&
+            isFilled(responsibleNik) &&
+            isFilled(responsibleRole) &&
+            isFilled(addressFull) &&
+            isFilled(mapsPin) &&
+            isFilled(receptionPhone) &&
+            isFilled(operationalHours) &&
+            isFilled(reservationPic) &&
+            hasFile(step2Form.data.ktp_file, onboarding.ktp_path) &&
+            hasFile(step2Form.data.selfie_ktp_file, onboarding.selfie_ktp_path) &&
+            hasFile(step2Form.data.photo_front_file, onboarding.photo_front_path) &&
+            hasFile(step2Form.data.photo_lobby_file, onboarding.photo_lobby_path) &&
+            hasFile(step2Form.data.photo_room_file, onboarding.photo_room_path)
+        );
+    }, [
+        onboarding,
+        step1Form.data,
+        step2Form.data,
+    ]);
+
+    const hotelChecklist = useMemo(() => {
+        const hotelName = step1Form.data.hotel_name || onboarding.hotel_name;
+        const propertyType = step1Form.data.property_type || onboarding.property_type;
+        const cityCode = step1Form.data.city_code || onboarding.city_code;
+        const addressShort = step1Form.data.address_short || onboarding.address_short;
+        const responsibleName = step2Form.data.responsible_name || onboarding.responsible_name;
+        const responsibleNik = step2Form.data.responsible_nik || onboarding.responsible_nik;
+        const responsibleRole = step2Form.data.responsible_role || onboarding.responsible_role;
+        const addressFull = step2Form.data.address_full || onboarding.address_full;
+        const mapsPin = step2Form.data.maps_pin_url || onboarding.maps_pin_url;
+        const receptionPhone = step2Form.data.reception_phone || onboarding.reception_phone;
+        const operationalHours = step2Form.data.operational_hours || onboarding.operational_hours;
+        const reservationPic = step2Form.data.reservation_pic || onboarding.reservation_pic;
+
+        return [
+            { label: 'Nama hotel/properti', ok: isFilled(hotelName) },
+            { label: 'Jenis properti', ok: isFilled(propertyType) },
+            { label: 'Kota/Kabupaten', ok: isFilled(cityCode) },
+            { label: 'Alamat singkat', ok: isFilled(addressShort) },
+            { label: 'Nama penanggung jawab', ok: isFilled(responsibleName) },
+            { label: 'NIK penanggung jawab', ok: isFilled(responsibleNik) },
+            { label: 'Jabatan penanggung jawab', ok: isFilled(responsibleRole) },
+            { label: 'Alamat lengkap', ok: isFilled(addressFull) },
+            { label: 'Titik Google Maps', ok: isFilled(mapsPin) },
+            { label: 'Nomor resepsionis', ok: isFilled(receptionPhone) },
+            { label: 'Jam operasional', ok: isFilled(operationalHours) },
+            { label: 'PIC reservasi', ok: isFilled(reservationPic) },
+            { label: 'Upload KTP', ok: hasFile(step2Form.data.ktp_file, onboarding.ktp_path) },
+            { label: 'Upload selfie + KTP', ok: hasFile(step2Form.data.selfie_ktp_file, onboarding.selfie_ktp_path) },
+            { label: 'Foto tampak depan', ok: hasFile(step2Form.data.photo_front_file, onboarding.photo_front_path) },
+            { label: 'Foto resepsionis/pintu masuk', ok: hasFile(step2Form.data.photo_lobby_file, onboarding.photo_lobby_path) },
+            { label: 'Foto salah satu kamar', ok: hasFile(step2Form.data.photo_room_file, onboarding.photo_room_path) },
+        ];
+    }, [onboarding, step1Form.data, step2Form.data]);
 
     const step1AutoSave = useMemo(
         () => ({
@@ -771,38 +881,36 @@ export default function MitraOnboarding({
                                 >
                                     Simpan dokumen
                                 </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="border-sky-200 text-slate-700 hover:bg-sky-50"
-                                    disabled={isVerificationPending || isVerificationVerified}
-                                    onClick={() =>
-                                        step2Form.post('/mitra/onboarding/step-2', {
-                                            preserveScroll: true,
-                                            forceFormData: true,
-                                            onSuccess: () =>
-                                                step2Form.post('/mitra/onboarding/submit-verification', {
-                                                    preserveScroll: true,
-                                                    onSuccess: () =>
-                                                        showSuccess(
-                                                            'Terkirim',
-                                                            'Dokumen verifikasi dikirim untuk review.'
-                                                        ),
-                                                    onError: (errors) =>
-                                                        showError(
-                                                            'Gagal mengirim',
-                                                            getFirstError(errors)
-                                                        ),
-                                                }),
-                                            onError: (errors) => {
-                                                showError('Gagal menyimpan', getFirstError(errors));
-                                            },
-                                        })
-                                    }
-                                >
-                                    Kirim untuk review
-                                </Button>
+                                {onboarding.verification_status === 'draft' && isHotelVerificationReady && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="border-sky-200 text-slate-700 hover:bg-sky-50"
+                                        onClick={submitVerification}
+                                    >
+                                        Kirim untuk review
+                                    </Button>
+                                )}
                             </div>
+                            {onboarding.verification_status === 'draft' && !isHotelVerificationReady && (
+                                <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                        Checklist kelengkapan
+                                    </p>
+                                    <div className="mt-3 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
+                                        {hotelChecklist.map((item) => (
+                                            <div key={item.label} className="flex items-center gap-2">
+                                                {item.ok ? (
+                                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                                ) : (
+                                                    <XCircle className="h-4 w-4 text-rose-500" />
+                                                )}
+                                                <span>{item.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </form>
                     </section>
                 )}
@@ -892,29 +1000,6 @@ export default function MitraOnboarding({
                                 }
                             >
                                 Simpan draft
-                            </Button>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="border-sky-200 text-slate-700 hover:bg-sky-50"
-                                disabled={isPayoutPending}
-                                onClick={() =>
-                                    step3Form.post('/mitra/onboarding/submit-payout', {
-                                        preserveScroll: true,
-                                        onSuccess: () =>
-                                            showSuccess(
-                                                'Terkirim',
-                                                'Data rekening dikirim untuk review.'
-                                            ),
-                                        onError: (errors) =>
-                                            showError(
-                                                'Gagal mengirim',
-                                                getFirstError(errors)
-                                            ),
-                                    })
-                                }
-                            >
-                                Kirim data rekening
                             </Button>
                         </div>
                     </section>

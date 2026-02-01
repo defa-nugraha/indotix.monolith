@@ -23,6 +23,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'password',
         'role',
+        'mitra_onboarding_type',
         'is_suspended',
         'suspended_at',
         'suspended_reason',
@@ -43,6 +44,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function mitraOnboarding()
     {
         return $this->hasOne(\App\Models\MitraOnboarding::class);
+    }
+
+    public function mitraWisataOnboarding()
+    {
+        return $this->hasOne(\App\Models\MitraWisataOnboarding::class);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\MitraOnboarding;
+use App\Models\MitraWisataOnboarding;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +18,12 @@ class EnsureMitraVerified
             return redirect()->route('dashboard');
         }
 
-        $onboarding = MitraOnboarding::query()->where('user_id', $user->id)->first();
+        $type = $user->mitra_onboarding_type ?? 'hotel';
+        if ($type === 'wisata') {
+            $onboarding = MitraWisataOnboarding::query()->where('user_id', $user->id)->first();
+        } else {
+            $onboarding = MitraOnboarding::query()->where('user_id', $user->id)->first();
+        }
 
         if (! $onboarding || $onboarding->verification_status !== 'verified') {
             return redirect()->route('mitra.dashboard')->withErrors([

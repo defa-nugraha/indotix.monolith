@@ -64,38 +64,46 @@ const statusTone = (status: string) => {
 const fileUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
 
 const Preview = ({ label, path }: { label: string; path?: string | null }) => {
-    if (!path) {
-        return (
-            <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 text-xs text-slate-400">
-                {label}: belum diunggah
-            </div>
-        );
-    }
-
     const url = fileUrl(path);
-    const isPdf = path.toLowerCase().endsWith('.pdf');
+    const isPdf = path?.toLowerCase().endsWith('.pdf') ?? false;
+    const hasFile = Boolean(path);
 
     return (
-        <div className="rounded-xl border border-slate-100 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
-                {label}
-            </p>
-            {isPdf ? (
-                <a
-                    href={url ?? '#'}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex text-sm font-semibold text-sky-600 hover:underline"
-                >
-                    Lihat dokumen
-                </a>
+        <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3">
+            {hasFile ? (
+                isPdf ? (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-[10px] font-semibold text-slate-500">
+                        PDF
+                    </div>
+                ) : (
+                    <img
+                        src={url ?? ''}
+                        alt={label}
+                        className="h-12 w-12 rounded-lg object-cover"
+                    />
+                )
             ) : (
-                <img
-                    src={url ?? ''}
-                    alt={label}
-                    className="mt-2 h-32 w-full max-w-[240px] rounded-lg object-cover"
-                />
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-slate-200 text-[10px] text-slate-400">
+                    -
+                </div>
             )}
+            <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                    {label}
+                </p>
+                {hasFile ? (
+                    <a
+                        href={url ?? '#'}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs font-semibold text-sky-600 hover:underline"
+                    >
+                        Lihat
+                    </a>
+                ) : (
+                    <p className="text-xs text-slate-400">Belum diunggah</p>
+                )}
+            </div>
         </div>
     );
 };
@@ -462,7 +470,7 @@ export default function AdminMitraShow({
                         </div>
                     </div>
 
-                    <div className="mt-6 grid gap-4 md:grid-cols-3">
+                    <div className="mt-6 grid gap-3 md:grid-cols-3 xl:grid-cols-4">
                         <Preview label="KTP" path={onboarding.ktp_path} />
                         <Preview label="Selfie + KTP" path={onboarding.selfie_ktp_path} />
                         <Preview label="Dokumen Legalitas" path={onboarding.legal_doc_path} />

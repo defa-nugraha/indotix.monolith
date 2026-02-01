@@ -12,9 +12,41 @@ use Inertia\Response;
 
 class MitraOnboardingController extends Controller
 {
+    public function selectType(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'type' => ['required', 'in:hotel,wisata'],
+        ]);
+
+        if ($user->mitra_onboarding_type && $user->mitra_onboarding_type !== $data['type']) {
+            return back()->withErrors([
+                'type' => 'Jenis mitra sudah dipilih dan tidak bisa diubah.',
+            ]);
+        }
+
+        $user->mitra_onboarding_type = $data['type'];
+        $user->save();
+
+        if ($data['type'] === 'wisata') {
+            return redirect()->route('mitra.wisata.onboarding');
+        }
+
+        return redirect()->route('mitra.onboarding');
+    }
+
     public function show(Request $request): Response
     {
         $user = $request->user();
+        if ($user->mitra_onboarding_type === 'wisata') {
+            return redirect()->route('mitra.wisata.onboarding');
+        }
+
+        if (! $user->mitra_onboarding_type) {
+            return redirect()->route('mitra.dashboard')->withErrors([
+                'mitra' => 'Silakan pilih jenis mitra terlebih dahulu.',
+            ]);
+        }
         $onboarding = MitraOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
