@@ -158,6 +158,26 @@ export default function MitraWisataOnboarding({
         legal_doc_file: null as File | null,
     });
 
+    const provinceItems = useMemo(
+        () =>
+            provinces.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                    {item.label}
+                </SelectItem>
+            )),
+        [provinces]
+    );
+
+    const cityItems = useMemo(
+        () =>
+            cities.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                    {item.label}
+                </SelectItem>
+            )),
+        [cities]
+    );
+
     const isFilled = (value?: string | number | null) => {
         if (typeof value === 'number') {
             return value > 0;
@@ -220,11 +240,33 @@ export default function MitraWisataOnboarding({
     };
 
     const submitVerification = () => {
-        router.post('/mitra/wisata/onboarding/submit-verification', {}, {
+        step1Form.post('/mitra/wisata/onboarding/step-1', {
+            preserveScroll: true,
+            preserveState: true,
             onSuccess: () =>
-                showSuccess('Terkirim', 'Dokumen verifikasi dikirim untuk review.'),
-            onError: (errors) =>
-                showError('Gagal mengirim', getFirstError(errors)),
+                step2Form.post('/mitra/wisata/onboarding/step-2', {
+                    preserveScroll: true,
+                    forceFormData: true,
+                    onSuccess: () =>
+                        step3Form.post('/mitra/wisata/onboarding/step-3', {
+                            preserveScroll: true,
+                            forceFormData: true,
+                            onSuccess: () =>
+                                router.post('/mitra/wisata/onboarding/submit-verification', {}, {
+                                    onSuccess: () => {
+                                        showSuccess('Terkirim', 'Dokumen verifikasi dikirim untuk review.');
+                                        router.reload({ only: ['onboarding'] });
+                                    },
+                                    onError: (errors) =>
+                                        showError('Gagal mengirim', getFirstError(errors)),
+                                }),
+                            onError: (errors) =>
+                                showError('Gagal menyimpan', getFirstError(errors)),
+                        }),
+                    onError: (errors) =>
+                        showError('Gagal menyimpan', getFirstError(errors)),
+                }),
+            onError: (errors) => showError('Gagal menyimpan', getFirstError(errors)),
         });
     };
 
@@ -515,11 +557,7 @@ export default function MitraWisataOnboarding({
                                         <SelectValue placeholder="Pilih provinsi" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {provinces.map((item) => (
-                                            <SelectItem key={item.id} value={item.id}>
-                                                {item.label}
-                                            </SelectItem>
-                                        ))}
+                                        {provinceItems}
                                     </SelectContent>
                                 </Select>
                                 <InputError message={step2Form.errors.province_code} />
@@ -534,11 +572,7 @@ export default function MitraWisataOnboarding({
                                         <SelectValue placeholder="Pilih kota" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {cities.map((item) => (
-                                            <SelectItem key={item.id} value={item.id}>
-                                                {item.label}
-                                            </SelectItem>
-                                        ))}
+                                        {cityItems}
                                     </SelectContent>
                                 </Select>
                                 <InputError message={step2Form.errors.city_code} />

@@ -15,15 +15,25 @@ class WisataTicket extends Model
         'description',
         'price',
         'quota',
+        'ticket_type',
+        'daily_quota',
+        'valid_from',
+        'valid_until',
+        'refund_policy',
         'max_quota_override',
         'is_active',
+        'is_closed',
     ];
 
     protected $casts = [
         'price' => 'integer',
         'quota' => 'integer',
+        'daily_quota' => 'integer',
         'max_quota_override' => 'integer',
         'is_active' => 'boolean',
+        'is_closed' => 'boolean',
+        'valid_from' => 'date',
+        'valid_until' => 'date',
     ];
 
     public function destination()

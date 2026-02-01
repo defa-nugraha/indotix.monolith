@@ -54,6 +54,8 @@ class MitraWisataOnboarding extends Model
         'photo_gate_hidden',
         'photo_area_hidden',
         'photo_ticket_hidden',
+        'is_temporarily_closed',
+        'closure_note',
     ];
 
     protected $casts = [
@@ -66,11 +68,17 @@ class MitraWisataOnboarding extends Model
         'photo_gate_hidden' => 'boolean',
         'photo_area_hidden' => 'boolean',
         'photo_ticket_hidden' => 'boolean',
+        'is_temporarily_closed' => 'boolean',
     ];
 
     public function tickets()
     {
         return $this->hasMany(WisataTicket::class);
+    }
+
+    public function staff()
+    {
+        return $this->hasMany(MitraWisataStaff::class, 'mitra_wisata_onboarding_id');
     }
 
     public function bookings()

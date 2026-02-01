@@ -26,7 +26,13 @@ export default function AdminWisataTicketCreate({ destinations }: Props) {
         description: '',
         price: '',
         quota: '',
+        daily_quota: '',
+        ticket_type: 'perorangan',
+        valid_from: '',
+        valid_until: '',
+        refund_policy: '',
         is_active: false,
+        is_closed: false,
     });
 
     return (
@@ -119,6 +125,52 @@ export default function AdminWisataTicketCreate({ destinations }: Props) {
                             />
                             <InputError message={form.errors.quota} />
                         </div>
+                        <div className="grid gap-2">
+                            <Label>Kuota Harian (opsional)</Label>
+                            <Input
+                                type="number"
+                                min={0}
+                                value={form.data.daily_quota}
+                                onChange={(event) => form.setData('daily_quota', event.target.value)}
+                                placeholder="50"
+                            />
+                            <InputError message={form.errors.daily_quota} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Jenis Tiket</Label>
+                            <select
+                                value={form.data.ticket_type}
+                                onChange={(event) => form.setData('ticket_type', event.target.value)}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="perorangan">Perorangan</option>
+                                <option value="grup">Grup</option>
+                            </select>
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Berlaku Dari</Label>
+                            <Input
+                                type="date"
+                                value={form.data.valid_from}
+                                onChange={(event) => form.setData('valid_from', event.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Berlaku Sampai</Label>
+                            <Input
+                                type="date"
+                                value={form.data.valid_until}
+                                onChange={(event) => form.setData('valid_until', event.target.value)}
+                            />
+                        </div>
+                        <div className="grid gap-2 md:col-span-2">
+                            <Label>Kebijakan Refund</Label>
+                            <Input
+                                value={form.data.refund_policy}
+                                onChange={(event) => form.setData('refund_policy', event.target.value)}
+                                placeholder="Contoh: refund H-1"
+                            />
+                        </div>
                         <div className="flex items-center gap-2 md:col-span-2">
                             <input
                                 type="checkbox"
@@ -126,6 +178,14 @@ export default function AdminWisataTicketCreate({ destinations }: Props) {
                                 onChange={(event) => form.setData('is_active', event.target.checked)}
                             />
                             <span className="text-sm text-slate-700">Aktifkan tiket saat dibuat</span>
+                        </div>
+                        <div className="flex items-center gap-2 md:col-span-2">
+                            <input
+                                type="checkbox"
+                                checked={form.data.is_closed}
+                                onChange={(event) => form.setData('is_closed', event.target.checked)}
+                            />
+                            <span className="text-sm text-slate-700">Tutup penjualan sementara</span>
                         </div>
                         <div className="md:col-span-2 flex gap-2">
                             <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">

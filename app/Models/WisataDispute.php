@@ -16,6 +16,7 @@ class WisataDispute extends Model
         'wisata_ticket_id',
         'subject',
         'description',
+        'attachment_path',
         'status',
         'resolution',
     ];

@@ -84,10 +84,29 @@ class WisataTicketController extends Controller
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
             'quota' => ['required', 'integer', 'min:0'],
+            'daily_quota' => ['nullable', 'integer', 'min:0'],
+            'ticket_type' => ['nullable', 'in:perorangan,grup'],
+            'valid_from' => ['nullable', 'date'],
+            'valid_until' => ['nullable', 'date'],
+            'refund_policy' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
+            'is_closed' => ['nullable', 'boolean'],
         ]);
 
-        WisataTicket::create($data);
+        WisataTicket::create([
+            'mitra_wisata_onboarding_id' => $data['mitra_wisata_onboarding_id'],
+            'name' => $data['name'],
+            'description' => $data['description'] ?? null,
+            'price' => $data['price'],
+            'quota' => $data['quota'],
+            'daily_quota' => $data['daily_quota'] ?? null,
+            'ticket_type' => $data['ticket_type'] ?? 'perorangan',
+            'valid_from' => $data['valid_from'] ?? null,
+            'valid_until' => $data['valid_until'] ?? null,
+            'refund_policy' => $data['refund_policy'] ?? null,
+            'is_active' => (bool) ($data['is_active'] ?? false),
+            'is_closed' => (bool) ($data['is_closed'] ?? false),
+        ]);
 
         return redirect()->route('admin.wisata.tickets.index')->with('status', 'ticket-created');
     }
@@ -97,6 +116,7 @@ class WisataTicketController extends Controller
         $data = $request->validate([
             'is_active' => ['nullable', 'boolean'],
             'max_quota_override' => ['nullable', 'integer', 'min:0'],
+            'is_closed' => ['nullable', 'boolean'],
         ]);
 
         $ticket->update($data);

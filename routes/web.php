@@ -395,6 +395,59 @@ Route::prefix('mitra')
             ->name('finance.bank.update');
     });
 
+Route::prefix('mitra/wisata')
+    ->name('mitra.wisata.')
+    ->middleware(['auth', 'verified', 'mitra', 'mitra.wisata'])
+    ->group(function () {
+        Route::get('destination', [\App\Http\Controllers\Mitra\Wisata\DestinationController::class, 'edit'])
+            ->name('destination.edit');
+        Route::put('destination', [\App\Http\Controllers\Mitra\Wisata\DestinationController::class, 'update'])
+            ->name('destination.update');
+
+        Route::get('tickets', [\App\Http\Controllers\Mitra\Wisata\TicketController::class, 'index'])
+            ->name('tickets.index');
+        Route::get('tickets/create', [\App\Http\Controllers\Mitra\Wisata\TicketController::class, 'create'])
+            ->name('tickets.create');
+        Route::post('tickets', [\App\Http\Controllers\Mitra\Wisata\TicketController::class, 'store'])
+            ->name('tickets.store');
+        Route::put('tickets/{ticket}', [\App\Http\Controllers\Mitra\Wisata\TicketController::class, 'update'])
+            ->name('tickets.update');
+        Route::delete('tickets/{ticket}', [\App\Http\Controllers\Mitra\Wisata\TicketController::class, 'destroy'])
+            ->name('tickets.destroy');
+
+        Route::get('bookings', [\App\Http\Controllers\Mitra\Wisata\BookingController::class, 'index'])
+            ->name('bookings.index');
+        Route::get('bookings/{booking}', [\App\Http\Controllers\Mitra\Wisata\BookingController::class, 'show'])
+            ->name('bookings.show');
+
+        Route::get('scans', [\App\Http\Controllers\Mitra\Wisata\ScanController::class, 'index'])
+            ->name('scans.index');
+        Route::post('scans', [\App\Http\Controllers\Mitra\Wisata\ScanController::class, 'store'])
+            ->name('scans.store');
+
+        Route::get('finance/summary', [\App\Http\Controllers\Mitra\Wisata\FinanceController::class, 'summary'])
+            ->name('finance.summary');
+        Route::get('finance/payouts', [\App\Http\Controllers\Mitra\Wisata\FinanceController::class, 'payouts'])
+            ->name('finance.payouts');
+
+        Route::get('staff', [\App\Http\Controllers\Mitra\Wisata\StaffController::class, 'index'])
+            ->name('staff.index');
+        Route::post('staff', [\App\Http\Controllers\Mitra\Wisata\StaffController::class, 'store'])
+            ->name('staff.store');
+        Route::put('staff/{staff}', [\App\Http\Controllers\Mitra\Wisata\StaffController::class, 'update'])
+            ->name('staff.update');
+        Route::delete('staff/{staff}', [\App\Http\Controllers\Mitra\Wisata\StaffController::class, 'destroy'])
+            ->name('staff.destroy');
+
+        Route::get('notifications', [\App\Http\Controllers\Mitra\Wisata\NotificationController::class, 'index'])
+            ->name('notifications.index');
+
+        Route::get('disputes', [\App\Http\Controllers\Mitra\Wisata\DisputeController::class, 'index'])
+            ->name('disputes.index');
+        Route::post('disputes', [\App\Http\Controllers\Mitra\Wisata\DisputeController::class, 'store'])
+            ->name('disputes.store');
+    });
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('hotels', \App\Http\Controllers\HotelController::class)->except(['show']);
     Route::resource('room-types', \App\Http\Controllers\RoomTypeController::class);
