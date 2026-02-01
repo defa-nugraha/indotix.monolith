@@ -19,6 +19,13 @@ class WisataBooking extends Model
         'unit_price',
         'total_price',
         'status',
+        'cancel_reason',
+        'cancelled_at',
+        'cancelled_by_admin_id',
+        'refund_status',
+        'refund_amount',
+        'refund_reason',
+        'refund_processed_at',
     ];
 
     protected $casts = [
@@ -26,6 +33,8 @@ class WisataBooking extends Model
         'quantity' => 'integer',
         'unit_price' => 'integer',
         'total_price' => 'integer',
+        'cancelled_at' => 'datetime',
+        'refund_processed_at' => 'datetime',
     ];
 
     public function user()
@@ -46,5 +55,10 @@ class WisataBooking extends Model
     public function scans()
     {
         return $this->hasMany(WisataTicketScan::class);
+    }
+
+    public function disputes()
+    {
+        return $this->hasMany(WisataDispute::class, 'wisata_booking_id');
     }
 }

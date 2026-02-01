@@ -14,6 +14,9 @@ type Props = {
         booking_timeout_minutes: number;
         tax_rate: number;
         service_fee: number;
+        wisata_booking_timeout_minutes: number;
+        wisata_max_quota_per_ticket: number;
+        wisata_refund_policy: string;
     };
 };
 
@@ -22,6 +25,9 @@ export default function SystemSettings({ settings }: Props) {
         booking_timeout_minutes: settings.booking_timeout_minutes,
         tax_rate: settings.tax_rate,
         service_fee: settings.service_fee,
+        wisata_booking_timeout_minutes: settings.wisata_booking_timeout_minutes,
+        wisata_max_quota_per_ticket: settings.wisata_max_quota_per_ticket,
+        wisata_refund_policy: settings.wisata_refund_policy,
     });
 
     return (
@@ -87,6 +93,41 @@ export default function SystemSettings({ settings }: Props) {
                                 min="0"
                                 value={data.service_fee}
                                 onChange={(event) => setData('service_fee', Number(event.target.value))}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Booking timeout wisata (menit)
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={data.wisata_booking_timeout_minutes}
+                                onChange={(event) => setData('wisata_booking_timeout_minutes', Number(event.target.value))}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Maks kuota per tiket wisata
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={data.wisata_max_quota_per_ticket}
+                                onChange={(event) => setData('wisata_max_quota_per_ticket', Number(event.target.value))}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Kebijakan refund wisata
+                            </label>
+                            <input
+                                type="text"
+                                value={data.wisata_refund_policy}
+                                onChange={(event) => setData('wisata_refund_policy', event.target.value)}
                                 className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
                             />
                         </div>

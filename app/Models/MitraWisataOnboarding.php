@@ -49,6 +49,11 @@ class MitraWisataOnboarding extends Model
         'is_suspended',
         'suspended_reason',
         'suspended_at',
+        'content_hidden',
+        'content_hidden_reason',
+        'photo_gate_hidden',
+        'photo_area_hidden',
+        'photo_ticket_hidden',
     ];
 
     protected $casts = [
@@ -57,6 +62,10 @@ class MitraWisataOnboarding extends Model
         'is_live' => 'boolean',
         'is_suspended' => 'boolean',
         'suspended_at' => 'datetime',
+        'content_hidden' => 'boolean',
+        'photo_gate_hidden' => 'boolean',
+        'photo_area_hidden' => 'boolean',
+        'photo_ticket_hidden' => 'boolean',
     ];
 
     public function tickets()

@@ -109,6 +109,35 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::get('admin/wisata/scans', [\App\Http\Controllers\Admin\WisataScanController::class, 'index'])
         ->name('admin.wisata.scans.index');
 
+    Route::get('admin/wisata/exceptions', [\App\Http\Controllers\Admin\WisataExceptionController::class, 'index'])
+        ->name('admin.wisata.exceptions.index');
+    Route::post('admin/wisata/bookings/{booking}/cancel', [\App\Http\Controllers\Admin\WisataExceptionController::class, 'cancel'])
+        ->name('admin.wisata.bookings.cancel');
+    Route::post('admin/wisata/bookings/{booking}/refund', [\App\Http\Controllers\Admin\WisataExceptionController::class, 'refund'])
+        ->name('admin.wisata.bookings.refund');
+    Route::post('admin/wisata/disputes/{dispute}', [\App\Http\Controllers\Admin\WisataExceptionController::class, 'resolveDispute'])
+        ->name('admin.wisata.disputes.update');
+
+    Route::get('admin/wisata/finance/commissions', [\App\Http\Controllers\Admin\WisataFinanceController::class, 'commissions'])
+        ->name('admin.wisata.finance.commissions');
+    Route::post('admin/wisata/finance/commissions', [\App\Http\Controllers\Admin\WisataFinanceController::class, 'storeCommission'])
+        ->name('admin.wisata.finance.commissions.store');
+    Route::get('admin/wisata/finance/payouts', [\App\Http\Controllers\Admin\WisataFinanceController::class, 'payouts'])
+        ->name('admin.wisata.finance.payouts');
+    Route::post('admin/wisata/finance/payouts', [\App\Http\Controllers\Admin\WisataFinanceController::class, 'generatePayout'])
+        ->name('admin.wisata.finance.payouts.create');
+    Route::post('admin/wisata/finance/payouts/{payout}', [\App\Http\Controllers\Admin\WisataFinanceController::class, 'updatePayout'])
+        ->name('admin.wisata.finance.payouts.update');
+    Route::get('admin/wisata/finance/reports', [\App\Http\Controllers\Admin\WisataFinanceController::class, 'reports'])
+        ->name('admin.wisata.finance.reports');
+
+    Route::get('admin/wisata/content', [\App\Http\Controllers\Admin\WisataContentController::class, 'index'])
+        ->name('admin.wisata.content.index');
+    Route::post('admin/wisata/content/{destination}', [\App\Http\Controllers\Admin\WisataContentController::class, 'hideContent'])
+        ->name('admin.wisata.content.update');
+    Route::post('admin/wisata/reviews/{review}', [\App\Http\Controllers\Admin\WisataContentController::class, 'updateReview'])
+        ->name('admin.wisata.reviews.update');
+
     Route::get('admin/bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])
         ->name('admin.bookings.index');
     Route::get('admin/bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'show'])

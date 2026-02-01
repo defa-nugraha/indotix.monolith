@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Ticket, Users, MapPinned } from 'lucide-react';
+import { Building2, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -60,7 +60,12 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/wisata/destinations') ||
         isCurrentUrl('/admin/wisata/tickets') ||
         isCurrentUrl('/admin/wisata/bookings') ||
-        isCurrentUrl('/admin/wisata/scans');
+        isCurrentUrl('/admin/wisata/scans') ||
+        isCurrentUrl('/admin/wisata/exceptions') ||
+        isCurrentUrl('/admin/wisata/finance/commissions') ||
+        isCurrentUrl('/admin/wisata/finance/payouts') ||
+        isCurrentUrl('/admin/wisata/finance/reports') ||
+        isCurrentUrl('/admin/wisata/content');
     const isSystemSectionActive =
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
@@ -221,6 +226,76 @@ export function AppSidebarAdmin() {
                                         >
                                             <Link href="/admin/wisata/scans">
                                                 Monitoring Validasi QR
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/exceptions')}
+                                        >
+                                            <Link href="/admin/wisata/exceptions">
+                                                Refund & Exception
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/finance/commissions')}
+                                        >
+                                            <Link href="/admin/wisata/finance/commissions">
+                                                Komisi Platform
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/finance/payouts')}
+                                        >
+                                            <Link href="/admin/wisata/finance/payouts">
+                                                Payout Mitra
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/finance/reports')}
+                                        >
+                                            <Link href="/admin/wisata/finance/reports">
+                                                Laporan Keuangan
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/wisata/content')}
+                                        >
+                                            <Link href="/admin/wisata/content">
+                                                Konten & Review
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/system/audit-logs')}
+                                        >
+                                            <Link href="/admin/system/audit-logs">
+                                                Audit Log
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/system/settings')}
+                                        >
+                                            <Link href="/admin/system/settings">
+                                                Konfigurasi Sistem
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
