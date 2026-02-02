@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class BookingController extends Controller
 {
@@ -451,7 +452,7 @@ class BookingController extends Controller
 
         $filename = sprintf('invoice-%s.pdf', $booking->id);
 
-        return \PDF::loadView('invoice', [
+        return Pdf::view('invoice', [
             'booking' => $booking,
         ])->download($filename);
     }
@@ -494,6 +495,8 @@ class BookingController extends Controller
                 'payment_type' => $latestPayment->payment_type,
                 'payload' => $latestPayment->payload,
             ] : null,
+            'qr_data' => $this->buildQrData('HOTEL', $this->encryptId($booking->id)),
+            'qr_url' => $this->buildQrUrl('HOTEL', $this->encryptId($booking->id)),
         ];
     }
 
@@ -553,6 +556,18 @@ class BookingController extends Controller
                 'booking_id' => $this->encryptId($booking->id),
             ],
         ]);
+    }
+
+    private function buildQrData(string $type, string $code): string
+    {
+        return sprintf('INDOTIX|%s|%s', $type, $code);
+    }
+
+    private function buildQrUrl(string $type, string $code): string
+    {
+        $data = rawurlencode($this->buildQrData($type, $code));
+
+        return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
     }
 
     private function resolveBooking(string $encryptedId): Booking

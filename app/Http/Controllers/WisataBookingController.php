@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class WisataBookingController extends Controller
 {
@@ -345,6 +346,35 @@ class WisataBookingController extends Controller
         ]);
     }
 
+    public function ticket(Request $request, string $booking)
+    {
+        $booking = $this->resolveBooking($booking);
+
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return redirect()->route('home');
+        }
+
+        $booking->load('ticket', 'destination');
+
+        $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
+        $cacheAllowed = in_array($booking->status, ['paid', 'completed'], true);
+
+        $qrImage = null;
+        if ($cacheAllowed) {
+            $qrUrl = $this->buildQrUrl('WISATA', $booking->booking_code);
+            $context = stream_context_create(['http' => ['timeout' => 4]]);
+            $contents = @file_get_contents($qrUrl, false, $context);
+            if ($contents !== false) {
+                $qrImage = 'data:image/png;base64,'.base64_encode($contents);
+            }
+        }
+
+        return Pdf::view('wisata-ticket', [
+            'booking' => $booking,
+            'qrImage' => $qrImage,
+        ])->download($filename);
+    }
+
     private function availableTickets(WisataTicket $ticket, string $date, bool $lock = false): int
     {
         $query = WisataBooking::query()
@@ -396,6 +426,8 @@ class WisataBookingController extends Controller
                 'payment_type' => $latestPayment->payment_type,
                 'payload' => $latestPayment->payload,
             ] : null,
+            'qr_data' => $this->buildQrData('WISATA', $booking->booking_code),
+            'qr_url' => $this->buildQrUrl('WISATA', $booking->booking_code),
         ];
     }
 
@@ -475,5 +507,17 @@ class WisataBookingController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function buildQrData(string $type, string $code): string
+    {
+        return sprintf('INDOTIX|%s|%s', $type, $code);
+    }
+
+    private function buildQrUrl(string $type, string $code): string
+    {
+        $data = rawurlencode($this->buildQrData($type, $code));
+
+        return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
     }
 }

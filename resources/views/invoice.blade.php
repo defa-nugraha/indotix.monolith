@@ -9,7 +9,7 @@
         body { font-family: "Arial", sans-serif; background: #f4f6f8; margin: 0; padding: 24px; color: #0f172a; }
         .container { max-width: 820px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; }
         .header { display: flex; justify-content: space-between; align-items: center; }
-        .logo { height: 32px; }
+        .logo { height: 40px; }
         .badge { background: #e0f2fe; color: #0369a1; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
         .section { margin-top: 20px; }
         .section h2 { font-size: 16px; margin: 0 0 12px; }

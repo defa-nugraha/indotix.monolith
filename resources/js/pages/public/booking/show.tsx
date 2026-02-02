@@ -25,6 +25,8 @@ type Booking = {
     status: string;
     payment_status?: string | null;
     payment_deadline?: string | null;
+    qr_url?: string | null;
+    qr_data?: string | null;
     hotel: { name?: string | null; address?: string | null };
     check_in: string;
     check_out: string;
@@ -236,6 +238,16 @@ export default function BookingShow({ booking }: { booking: Booking }) {
                                 >
                                     Lanjutkan Pembayaran
                                 </Link>
+                            )}
+                            {(booking.status === 'paid' || booking.status === 'completed') && booking.qr_url && (
+                                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4 text-center">
+                                    <div className="text-sm font-semibold text-slate-900">QR Validasi Check-in</div>
+                                    <img src={booking.qr_url} alt="QR Booking" className="mx-auto mt-3 h-44 w-44" />
+                                    {booking.qr_data && (
+                                        <div className="mt-2 text-xs text-slate-500">Kode: {booking.qr_data}</div>
+                                    )}
+                                    <div className="mt-2 text-xs text-slate-500">Tunjukkan QR ini saat check-in.</div>
+                                </div>
                             )}
                             <a
                                 href={`/booking/${booking.encrypted_id ?? booking.id}/invoice`}

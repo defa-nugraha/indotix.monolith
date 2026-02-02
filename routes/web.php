@@ -544,6 +544,8 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('wisata.booking.payment');
     Route::post('/wisata/booking/{booking}/payment', [\App\Http\Controllers\WisataBookingController::class, 'pay'])
         ->name('wisata.booking.pay');
+    Route::get('/wisata/booking/{booking}/ticket', [\App\Http\Controllers\WisataBookingController::class, 'ticket'])
+        ->name('wisata.booking.ticket');
     Route::get('/wisata/booking/{booking}', [\App\Http\Controllers\WisataBookingController::class, 'show'])
         ->name('wisata.booking.show');
 });
