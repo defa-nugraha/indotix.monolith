@@ -126,6 +126,10 @@ class EmailOtpController extends Controller
             return redirect()->route('booking.review');
         }
 
+        if ($request->session()->has('wisata_booking_draft')) {
+            return redirect()->route('wisata.booking.review');
+        }
+
         return redirect()->route('home');
     }
 

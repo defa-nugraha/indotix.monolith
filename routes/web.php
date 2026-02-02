@@ -473,6 +473,12 @@ Route::get('/stay', [\App\Http\Controllers\PublicHotelController::class, 'search
     ->name('public.hotels.search');
 Route::get('/stay/hotels/{hotel}', [\App\Http\Controllers\PublicHotelController::class, 'show'])
     ->name('public.hotels.show');
+Route::get('/wisata', [\App\Http\Controllers\PublicWisataController::class, 'index'])
+    ->name('wisata.search');
+Route::get('/wisata/{destination}', [\App\Http\Controllers\PublicWisataController::class, 'show'])
+    ->name('wisata.show');
+Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingController::class, 'prepare'])
+    ->name('wisata.booking.prepare');
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
     ->name('booking.prepare');
 Route::middleware(['auth', 'verified', 'user'])->group(function () {
@@ -502,6 +508,17 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('booking.invoice');
     Route::get('/booking/{booking}', [\App\Http\Controllers\BookingController::class, 'show'])
         ->name('booking.show');
+
+    Route::get('/wisata/booking/review', [\App\Http\Controllers\WisataBookingController::class, 'review'])
+        ->name('wisata.booking.review');
+    Route::post('/wisata/booking/confirm', [\App\Http\Controllers\WisataBookingController::class, 'confirm'])
+        ->name('wisata.booking.confirm');
+    Route::get('/wisata/booking/{booking}/payment', [\App\Http\Controllers\WisataBookingController::class, 'payment'])
+        ->name('wisata.booking.payment');
+    Route::post('/wisata/booking/{booking}/payment', [\App\Http\Controllers\WisataBookingController::class, 'pay'])
+        ->name('wisata.booking.pay');
+    Route::get('/wisata/booking/{booking}', [\App\Http\Controllers\WisataBookingController::class, 'show'])
+        ->name('wisata.booking.show');
 });
 Route::post('/payments/midtrans/callback', \App\Http\Controllers\MidtransCallbackController::class)
     ->name('payments.midtrans.callback');

@@ -109,7 +109,7 @@ export default function Welcome({
         return () => window.clearInterval(interval);
     }, [bannerSlides.length, isBannerTransitioning]);
     const categories = [
-        { label: 'Wisata', icon: MapPinned, active: true, href: '/?tab=wisata' },
+        { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },

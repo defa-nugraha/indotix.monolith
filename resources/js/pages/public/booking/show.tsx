@@ -43,7 +43,7 @@ export default function BookingShow({ booking }: { booking: Booking }) {
     const { auth } = usePage().props as { auth?: { user?: any } };
 
     const categories = [
-        { label: 'Wisata', icon: MapPinned, href: '/?tab=wisata' },
+        { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },

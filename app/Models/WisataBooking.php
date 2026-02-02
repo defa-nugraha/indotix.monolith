@@ -19,6 +19,13 @@ class WisataBooking extends Model
         'unit_price',
         'total_price',
         'status',
+        'guest_name',
+        'guest_email',
+        'guest_phone',
+        'special_request',
+        'payment_status',
+        'payment_deadline',
+        'midtrans_order_id',
         'cancel_reason',
         'cancelled_at',
         'cancelled_by_admin_id',
@@ -33,6 +40,7 @@ class WisataBooking extends Model
         'quantity' => 'integer',
         'unit_price' => 'integer',
         'total_price' => 'integer',
+        'payment_deadline' => 'datetime',
         'cancelled_at' => 'datetime',
         'refund_processed_at' => 'datetime',
     ];
@@ -60,5 +68,17 @@ class WisataBooking extends Model
     public function disputes()
     {
         return $this->hasMany(WisataDispute::class, 'wisata_booking_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(WisataPayment::class, 'wisata_booking_id');
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->status === 'pending_payment'
+            && $this->payment_deadline
+            && $this->payment_deadline->isPast();
     }
 }
