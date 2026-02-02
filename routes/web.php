@@ -515,6 +515,8 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('public.notifications.read');
     Route::get('/history', [\App\Http\Controllers\PublicHistoryController::class, 'index'])
         ->name('public.history');
+    Route::get('/wisata/history', [\App\Http\Controllers\PublicWisataHistoryController::class, 'index'])
+        ->name('public.wisata.history');
     Route::get('/booking/review', [\App\Http\Controllers\BookingController::class, 'review'])
         ->name('booking.review');
     Route::post('/booking/confirm', [\App\Http\Controllers\BookingController::class, 'confirm'])

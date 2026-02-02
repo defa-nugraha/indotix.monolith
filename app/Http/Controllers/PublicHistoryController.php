@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\WisataBooking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -12,7 +14,7 @@ class PublicHistoryController extends Controller
 {
     public function index(Request $request): Response
     {
-        $bookings = Booking::query()
+        $hotelBookings = Booking::query()
             ->where('user_id', $request->user()->id)
             ->with(['hotel.city'])
             ->latest()
@@ -20,7 +22,8 @@ class PublicHistoryController extends Controller
             ->map(fn (Booking $booking) => [
                 'id' => $booking->id,
                 'encrypted_id' => Crypt::encryptString((string) $booking->id),
-                'hotel_name' => $booking->hotel?->name,
+                'type' => 'hotel',
+                'title' => $booking->hotel?->name ?? 'Hotel',
                 'city_name' => $booking->hotel?->city?->name,
                 'address' => $booking->hotel?->address,
                 'check_in' => $booking->check_in?->toDateString(),
@@ -28,6 +31,8 @@ class PublicHistoryController extends Controller
                 'nights' => $booking->nights,
                 'rooms_count' => $booking->rooms_count,
                 'guests_count' => $booking->guests_count,
+                'visit_date' => null,
+                'quantity' => null,
                 'total' => $booking->total,
                 'status' => $booking->status,
                 'payment_status' => $booking->payment_status,
@@ -37,10 +42,63 @@ class PublicHistoryController extends Controller
                 'guest_phone' => $booking->guest_phone,
                 'created_at' => $booking->created_at?->toIso8601String(),
                 'midtrans_order_id' => $booking->midtrans_order_id,
+                'payment_url' => route('booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                'detail_url' => route('booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
             ]);
+
+        $wisataBookings = WisataBooking::query()
+            ->where('user_id', $request->user()->id)
+            ->with(['destination', 'ticket'])
+            ->latest()
+            ->get()
+            ->map(function (WisataBooking $booking) {
+                $destination = $booking->destination;
+
+                return [
+                    'id' => $booking->id,
+                    'encrypted_id' => Crypt::encryptString((string) $booking->id),
+                    'type' => 'wisata',
+                    'title' => $destination?->destination_name ?? 'Wisata',
+                    'city_name' => $this->resolveCityName($destination?->city_code),
+                    'address' => $destination?->address_full,
+                    'check_in' => null,
+                    'check_out' => null,
+                    'nights' => null,
+                    'rooms_count' => null,
+                    'guests_count' => null,
+                    'visit_date' => $booking->visit_date?->toDateString(),
+                    'quantity' => $booking->quantity,
+                    'total' => $booking->total_price,
+                    'status' => $booking->status,
+                    'payment_status' => $booking->payment_status,
+                    'payment_deadline' => $booking->payment_deadline?->toIso8601String(),
+                    'guest_name' => $booking->guest_name,
+                    'guest_email' => $booking->guest_email,
+                    'guest_phone' => $booking->guest_phone,
+                    'created_at' => $booking->created_at?->toIso8601String(),
+                    'midtrans_order_id' => $booking->midtrans_order_id,
+                    'payment_url' => route('wisata.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'detail_url' => route('wisata.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'ticket_name' => $booking->ticket?->name,
+                ];
+            });
+
+        $bookings = $hotelBookings
+            ->merge($wisataBookings)
+            ->sortByDesc('created_at')
+            ->values();
 
         return Inertia::render('public/history', [
             'bookings' => $bookings,
         ]);
+    }
+
+    private function resolveCityName(?string $cityCode): ?string
+    {
+        if (! $cityCode) {
+            return null;
+        }
+
+        return DB::table('regencies')->where('code', $cityCode)->value('name');
     }
 }
