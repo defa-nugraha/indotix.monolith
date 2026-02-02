@@ -69,7 +69,7 @@ export default function WisataShow({
         if (destination.maps_pin_url.includes('google.com/maps')) {
             return `${destination.maps_pin_url}${destination.maps_pin_url.includes('?') ? '&' : '?'}output=embed`;
         }
-        return destination.maps_pin_url;
+        return null;
     })();
 
     const categories = [
