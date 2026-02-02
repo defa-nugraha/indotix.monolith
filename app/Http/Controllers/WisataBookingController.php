@@ -101,10 +101,14 @@ class WisataBookingController extends Controller
             'pricing' => [
                 'total' => $total,
             ],
+            'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+            'snapScriptUrl' => config('services.midtrans.is_production')
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js',
         ]);
     }
 
-    public function confirm(Request $request): RedirectResponse
+    public function confirm(Request $request, MidtransService $midtransService): RedirectResponse|\Illuminate\Http\JsonResponse|\Inertia\Response
     {
         $draft = $request->session()->get('wisata_booking_draft');
         if (! $draft) {
@@ -117,6 +121,50 @@ class WisataBookingController extends Controller
             'guest_phone' => ['required', 'string', 'max:30'],
             'special_request' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $existingBookingId = $request->session()->get('wisata_booking_pending');
+        if ($existingBookingId) {
+            $existingBooking = WisataBooking::query()->find($existingBookingId);
+            if ($existingBooking) {
+                if ($request->expectsJson()) {
+                    $snap = $this->createSnapPayment($existingBooking, $midtransService);
+
+                    return response()->json([
+                        'booking_id' => $this->encryptId($existingBooking->id),
+                        'snap_token' => $snap['token'] ?? null,
+                        'redirect_url' => $snap['redirect_url'] ?? null,
+                    ]);
+                }
+
+                $destination = MitraWisataOnboarding::query()->findOrFail($draft['destination_id']);
+                $ticket = WisataTicket::query()->findOrFail($draft['ticket_id']);
+                $total = (int) $ticket->price * (int) $draft['quantity'];
+                $snap = $this->createSnapPayment($existingBooking, $midtransService);
+
+                return Inertia::render('public/wisata/booking/review', [
+                    'draft' => $draft,
+                    'destination' => [
+                        'id' => $destination->id,
+                        'destination_name' => $destination->destination_name,
+                        'city_name' => $this->resolveCityName($destination->city_code),
+                        'address_full' => $destination->address_full,
+                    ],
+                    'ticket' => [
+                        'id' => $ticket->id,
+                        'name' => $ticket->name,
+                        'price' => $ticket->price,
+                    ],
+                    'pricing' => [
+                        'total' => $total,
+                    ],
+                    'snapToken' => $snap['token'] ?? null,
+                    'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+                    'snapScriptUrl' => config('services.midtrans.is_production')
+                        ? 'https://app.midtrans.com/snap/snap.js'
+                        : 'https://app.sandbox.midtrans.com/snap/snap.js',
+                ]);
+            }
+        }
 
         $booking = DB::transaction(function () use ($draft, $data, $request) {
             $ticket = WisataTicket::query()->lockForUpdate()->findOrFail($draft['ticket_id']);
@@ -158,8 +206,51 @@ class WisataBookingController extends Controller
         ]);
 
         $request->session()->forget('wisata_booking_draft');
+        $request->session()->put('wisata_booking_pending', $booking->id);
 
-        return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)]);
+        if ($request->expectsJson()) {
+            try {
+                $snap = $this->createSnapPayment($booking, $midtransService);
+            } catch (\Throwable $exception) {
+                return response()->json([
+                    'message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.',
+                ], 422);
+            }
+
+            return response()->json([
+                'booking_id' => $this->encryptId($booking->id),
+                'snap_token' => $snap['token'] ?? null,
+                'redirect_url' => $snap['redirect_url'] ?? null,
+            ]);
+        }
+
+        $destination = MitraWisataOnboarding::query()->findOrFail($draft['destination_id']);
+        $ticket = WisataTicket::query()->findOrFail($draft['ticket_id']);
+        $total = (int) $ticket->price * (int) $draft['quantity'];
+        $snap = $this->createSnapPayment($booking, $midtransService);
+
+        return Inertia::render('public/wisata/booking/review', [
+            'draft' => $draft,
+            'destination' => [
+                'id' => $destination->id,
+                'destination_name' => $destination->destination_name,
+                'city_name' => $this->resolveCityName($destination->city_code),
+                'address_full' => $destination->address_full,
+            ],
+            'ticket' => [
+                'id' => $ticket->id,
+                'name' => $ticket->name,
+                'price' => $ticket->price,
+            ],
+            'pricing' => [
+                'total' => $total,
+            ],
+            'snapToken' => $snap['token'] ?? null,
+            'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+            'snapScriptUrl' => config('services.midtrans.is_production')
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js',
+        ]);
     }
 
     public function payment(Request $request, string $booking): Response|RedirectResponse
@@ -181,14 +272,10 @@ class WisataBookingController extends Controller
 
         return Inertia::render('public/wisata/booking/payment', [
             'booking' => $this->bookingPayload($booking),
-            'paymentOptions' => [
-                ['id' => 'bca_va', 'label' => 'BCA Virtual Account'],
-                ['id' => 'bni_va', 'label' => 'BNI Virtual Account'],
-                ['id' => 'bri_va', 'label' => 'BRI Virtual Account'],
-                ['id' => 'mandiri_va', 'label' => 'Mandiri Virtual Account'],
-                ['id' => 'gopay', 'label' => 'GoPay'],
-                ['id' => 'qris', 'label' => 'QRIS'],
-            ],
+            'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+            'snapScriptUrl' => config('services.midtrans.is_production')
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js',
         ]);
     }
 
@@ -206,24 +293,19 @@ class WisataBookingController extends Controller
                 ->withErrors(['payment' => 'Booking sudah kedaluwarsa.']);
         }
 
-        $data = $request->validate([
-            'payment_type' => ['required', 'string'],
-        ]);
-
         if ($booking->status !== 'pending_payment') {
             return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)]);
         }
 
         if ($booking->payments()->where('status', 'pending')->exists()) {
-            return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)])
-                ->withErrors(['payment' => 'Pembayaran sedang diproses.']);
+            return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)]);
         }
 
         $orderId = sprintf('WISATA-%s-%s', $booking->id, now()->format('YmdHis'));
-        $payload = $this->buildChargePayload($booking, $data['payment_type'], $orderId);
+        $payload = $this->buildSnapPayload($booking, $orderId);
 
         try {
-            $charge = $midtransService->charge($payload);
+            $charge = $midtransService->snap($payload);
         } catch (\Throwable $exception) {
             return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)])
                 ->withErrors(['payment' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.']);
@@ -232,9 +314,9 @@ class WisataBookingController extends Controller
         $payment = WisataPayment::create([
             'wisata_booking_id' => $booking->id,
             'provider' => 'midtrans',
-            'status' => $charge['transaction_status'] ?? 'pending',
+            'status' => 'pending',
             'gross_amount' => (int) $booking->total_price,
-            'payment_type' => $charge['payment_type'] ?? $data['payment_type'],
+            'payment_type' => 'snap',
             'transaction_id' => $charge['transaction_id'] ?? null,
             'order_id' => $orderId,
             'payload' => $charge,
@@ -317,9 +399,9 @@ class WisataBookingController extends Controller
         ];
     }
 
-    private function buildChargePayload(WisataBooking $booking, string $paymentType, string $orderId): array
+    private function buildSnapPayload(WisataBooking $booking, string $orderId): array
     {
-        $payload = [
+        return [
             'transaction_details' => [
                 'order_id' => $orderId,
                 'gross_amount' => (int) $booking->total_price,
@@ -338,20 +420,36 @@ class WisataBookingController extends Controller
                 'phone' => $booking->guest_phone,
             ],
         ];
+    }
 
-        if (str_ends_with($paymentType, '_va')) {
-            $bank = str_replace('_va', '', $paymentType);
-            $payload['payment_type'] = 'bank_transfer';
-            $payload['bank_transfer'] = [
-                'bank' => $bank,
-            ];
-
-            return $payload;
+    private function createSnapPayment(WisataBooking $booking, MidtransService $midtransService): array
+    {
+        if ($booking->payments()->where('status', 'pending')->exists()) {
+            return (array) ($booking->payments()->latest()->value('payload') ?? []);
         }
 
-        $payload['payment_type'] = $paymentType;
+        $orderId = sprintf('WISATA-%s-%s', $booking->id, now()->format('YmdHis'));
+        $payload = $this->buildSnapPayload($booking, $orderId);
 
-        return $payload;
+        $snap = $midtransService->snap($payload);
+
+        $payment = WisataPayment::create([
+            'wisata_booking_id' => $booking->id,
+            'provider' => 'midtrans',
+            'status' => 'pending',
+            'gross_amount' => (int) $booking->total_price,
+            'payment_type' => 'snap',
+            'transaction_id' => $snap['transaction_id'] ?? null,
+            'order_id' => $orderId,
+            'payload' => $snap,
+        ]);
+
+        $booking->update([
+            'midtrans_order_id' => $payment->order_id,
+            'payment_status' => $payment->status,
+        ]);
+
+        return $snap;
     }
 
     private function resolveBooking(string $booking): WisataBooking

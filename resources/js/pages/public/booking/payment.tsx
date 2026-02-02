@@ -1,9 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
-import { Bell, CalendarCheck, CreditCard, QrCode, Wallet, Landmark, ShoppingBag, Ticket, Users, MapPinned, UserCircle, History, MessageCircle } from 'lucide-react';
-
-type PaymentOption = { id: string; label: string };
+import { Bell, CalendarCheck, Ticket, Users, MapPinned, UserCircle, History, MessageCircle } from 'lucide-react';
 
 type Booking = {
     id: number;
@@ -24,12 +22,29 @@ type Booking = {
     payment?: { status?: string | null; payment_type?: string | null; payload?: any } | null;
 };
 
-export default function BookingPayment({ booking, paymentOptions }: { booking: Booking; paymentOptions: PaymentOption[] }) {
+declare global {
+    interface Window {
+        snap?: {
+            pay: (token: string, options?: Record<string, unknown>) => void;
+        };
+    }
+}
+
+export default function BookingPayment({
+    booking,
+    snapClientKey,
+    snapScriptUrl,
+}: {
+    booking: Booking;
+    snapClientKey: string;
+    snapScriptUrl: string;
+}) {
     const { auth } = usePage().props as { auth?: { user?: unknown } };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
-    const form = useForm({ payment_type: '' });
+    const form = useForm({});
     const [remaining, setRemaining] = useState<number | null>(null);
-    const [expandedGroup, setExpandedGroup] = useState<string | null>(null);
+    const snapOpened = useRef(false);
+    const snapToken = booking.payment?.payload?.token;
 
     useEffect(() => {
         if (!booking.payment_deadline) return;
@@ -48,75 +63,28 @@ export default function BookingPayment({ booking, paymentOptions }: { booking: B
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }, [remaining]);
 
-    const instruction = booking.payment?.payload;
-    const vaNumbers = instruction?.va_numbers ?? [];
-    const permataVa = instruction?.permata_va_number;
-    const qrisAction = instruction?.actions?.find((action: any) => action?.name?.includes('qr-code'))?.url;
-
-    const paymentGroups = [
-        {
-            id: 'qris',
-            label: 'QRIS',
-            icon: QrCode,
-            options: paymentOptions.filter((item) => item.id === 'qris'),
-        },
-        {
-            id: 'va',
-            label: 'Transfer Bank (VA)',
-            icon: Landmark,
-            options: paymentOptions.filter((item) => item.id.endsWith('_va')),
-        },
-        {
-            id: 'ewallet',
-            label: 'E-Wallet',
-            icon: Wallet,
-            options: paymentOptions.filter((item) => ['gopay', 'shopeepay', 'ovo', 'dana', 'linkaja'].includes(item.id)),
-        },
-        {
-            id: 'card',
-            label: 'Kartu Kredit/Debit',
-            icon: CreditCard,
-            options: paymentOptions.filter((item) => item.id === 'credit_card'),
-        },
-        {
-            id: 'retail',
-            label: 'Mini Market',
-            icon: ShoppingBag,
-            options: paymentOptions.filter((item) => ['alfamart', 'indomaret'].includes(item.id)),
-        },
-    ].filter((group) => group.options.length > 0);
-
-    const bankLogoMap: Record<string, string> = {
-        bca_va: '/images/logo/bca.png',
-        bni_va: '/images/logo/bni.png',
-        bri_va: '/images/logo/bri.png',
-        mandiri_va: '/images/logo/mandiri.png',
-        permata_va: '/images/logo/permata_bank.png',
-    };
-    const paymentLogoMap: Record<string, string[]> = {
-        qris: ['/images/logo/qris.png'],
-        gopay: ['/images/logo/gopay.png'],
-        shopeepay: ['/images/logo/shopeepay.png'],
-        dana: ['/images/logo/dan+dan.png'],
-        ovo: [],
-        linkaja: [],
-        credit_card: ['/images/logo/visa.png', '/images/logo/mastercard.png'],
-        alfamart: ['/images/logo/alfamart.png'],
-        indomaret: ['/images/logo/indomaret.png'],
-    };
+    useEffect(() => {
+        if (!snapScriptUrl || !snapClientKey) return;
+        if (document.querySelector('script[data-midtrans-snap]')) return;
+        const script = document.createElement('script');
+        script.src = snapScriptUrl;
+        script.setAttribute('data-client-key', snapClientKey);
+        script.setAttribute('data-midtrans-snap', 'true');
+        script.async = true;
+        script.onload = () => {
+            if (snapToken && !snapOpened.current && window.snap) {
+                snapOpened.current = true;
+                window.snap.pay(snapToken);
+            }
+        };
+        document.body.appendChild(script);
+    }, [snapClientKey, snapScriptUrl]);
 
     useEffect(() => {
-        if (!form.data.payment_type) {
-            setExpandedGroup(null);
-            return;
-        }
-        if (form.data.payment_type.endsWith('_va')) {
-            setExpandedGroup('va');
-            return;
-        }
-        const group = paymentGroups.find((item) => item.options.some((opt) => opt.id === form.data.payment_type));
-        setExpandedGroup(group?.id ?? null);
-    }, [form.data.payment_type, paymentGroups]);
+        if (!snapToken || snapOpened.current || !window.snap) return;
+        snapOpened.current = true;
+        window.snap.pay(snapToken);
+    }, [snapToken]);
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -231,141 +199,23 @@ export default function BookingPayment({ booking, paymentOptions }: { booking: B
                                     <span>Rp {booking.total.toLocaleString('id-ID')}</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Metode Pembayaran</h2>
-                            <form
-                                className="mt-4 grid gap-3"
-                                onSubmit={(event) => {
-                                    event.preventDefault();
+                            <button
+                                type="button"
+                                className="mt-4 w-full rounded-full bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-70"
+                                disabled={form.processing}
+                                onClick={() => {
+                                    if (snapToken && window.snap) {
+                                        window.snap.pay(snapToken);
+                                        return;
+                                    }
                                     form.post(`/booking/${booking.encrypted_id ?? booking.id}/payment`, {
-                                        onSuccess: () =>
-                                            Swal.fire({ title: 'Berhasil', text: 'Instruksi pembayaran dibuat.', icon: 'success' }),
-                                        onError: (errors) =>
-                                            Swal.fire({
-                                                title: 'Gagal',
-                                                text: errors.payment ?? 'Pembayaran gagal dibuat.',
-                                                icon: 'error',
-                                            }),
+                                        preserveScroll: true,
+                                        onError: () => Swal.fire({ title: 'Gagal', text: 'Gagal membuat pembayaran.', icon: 'error' }),
                                     });
                                 }}
                             >
-                                <div className="grid gap-3">
-                                    {paymentGroups.map((group) => {
-                                        const Icon = group.icon;
-                                        const isActive = form.data.payment_type.startsWith(group.id);
-                                        return (
-                                            <div key={group.id} className="space-y-2">
-                                                <button
-                                                    type="button"
-                                                    className={`flex w-full items-center justify-between gap-4 rounded-xl border px-4 py-3 text-sm transition ${
-                                                        expandedGroup === group.id ? 'border-sky-500 bg-sky-50' : 'border-slate-200'
-                                                    } hover:border-sky-300`}
-                                                    onClick={() => {
-                                                        if (group.options.length <= 1) {
-                                                            const fallback = group.options[0]?.id ?? group.id;
-                                                            form.setData('payment_type', fallback);
-                                                            setExpandedGroup(null);
-                                                            return;
-                                                        }
-                                                        setExpandedGroup((prev) => (prev === group.id ? null : group.id));
-                                                    }}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <Icon className="h-5 w-5 text-sky-600" />
-                                                        <span className="text-sm font-semibold text-slate-900">{group.label}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex items-center gap-1">
-                                                            {group.options.slice(0, 3).flatMap((option) =>
-                                                                (paymentLogoMap[option.id] ?? []).map((logo) => (
-                                                                    <img
-                                                                        key={`${group.id}-${option.id}-${logo}`}
-                                                                        src={logo}
-                                                                        alt={option.label}
-                                                                        className="h-5 w-auto object-contain"
-                                                                    />
-                                                                ))
-                                                            )}
-                                                        </div>
-                                                        <span className="text-slate-400">›</span>
-                                                    </div>
-                                                </button>
-
-                                                {expandedGroup === group.id && group.id === 'va' && group.options.length > 0 && (
-                                                    <div className="grid gap-2 rounded-xl border border-slate-200 bg-white p-3">
-                                                        <div className="text-xs font-semibold text-slate-500">Pilih Bank</div>
-                                                        <div className="grid gap-2 sm:grid-cols-2">
-                                                            {group.options.map((option) => (
-                                                                <button
-                                                                    key={option.id}
-                                                                    type="button"
-                                                                    className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition ${
-                                                                        form.data.payment_type === option.id
-                                                                            ? 'border-sky-500 bg-sky-50 text-sky-700'
-                                                                            : 'border-slate-200 text-slate-600 hover:border-sky-300'
-                                                                    }`}
-                                                                    onClick={() => form.setData('payment_type', option.id)}
-                                                                >
-                                                                    <span className="flex items-center gap-2">
-                                                                        {bankLogoMap[option.id] && (
-                                                                            <img
-                                                                                src={bankLogoMap[option.id]}
-                                                                                alt={option.label}
-                                                                                className="h-6 w-auto object-contain"
-                                                                            />
-                                                                        )}
-                                                                        <span>{option.label}</span>
-                                                                    </span>
-                                                                    <span className="text-slate-400">›</span>
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {expandedGroup === group.id && group.id !== 'va' && group.options.length > 1 && (
-                                                    <div className="grid gap-2 rounded-xl border border-slate-200 bg-white p-3">
-                                                        <div className="text-xs font-semibold text-slate-500">Pilih Opsi</div>
-                                                        <div className="grid gap-2 sm:grid-cols-2">
-                                                            {group.options.map((option) => (
-                                                                <button
-                                                                    key={option.id}
-                                                                    type="button"
-                                                                    className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition ${
-                                                                        form.data.payment_type === option.id
-                                                                            ? 'border-sky-500 bg-sky-50 text-sky-700'
-                                                                            : 'border-slate-200 text-slate-600 hover:border-sky-300'
-                                                                    }`}
-                                                                    onClick={() => form.setData('payment_type', option.id)}
-                                                                >
-                                                                    <span className="flex items-center gap-2">
-                                                                        {(paymentLogoMap[option.id] ?? []).map((logo) => (
-                                                                            <img key={`${option.id}-${logo}`} src={logo} alt={option.label} className="h-6 w-auto object-contain" />
-                                                                        ))}
-                                                                        <span>{option.label}</span>
-                                                                    </span>
-                                                                    <span className="text-slate-400">›</span>
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                                <button
-                                    className="flex h-11 items-center justify-center gap-2 rounded-lg bg-sky-600 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
-                                    disabled={form.processing}
-                                >
-                                    {form.processing && (
-                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/60 border-t-white" />
-                                    )}
-                                    {form.processing ? 'Memproses...' : 'Lanjutkan Pembayaran'}
-                                </button>
-                            </form>
+                                {form.processing ? 'Memproses...' : snapToken ? 'Buka Pembayaran' : 'Lanjutkan Pembayaran'}
+                            </button>
                         </div>
                     </div>
 
@@ -378,42 +228,6 @@ export default function BookingPayment({ booking, paymentOptions }: { booking: B
                             <div className="mt-4 text-sm text-slate-600">
                                 Status: <span className="font-semibold text-slate-900">{booking.status}</span>
                             </div>
-
-                            {instruction && (
-                                <div className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
-                                    <div className="font-semibold text-slate-900">Instruksi Pembayaran</div>
-
-                                    {qrisAction && (
-                                        <div className="mt-4 flex flex-col items-center gap-3 rounded-xl bg-white p-4 text-center">
-                                            <img src={qrisAction} alt="QRIS" className="h-48 w-48 rounded-lg border border-slate-200 object-contain" />
-                                            <div className="text-xs text-slate-500">Scan QRIS untuk melanjutkan pembayaran.</div>
-                                        </div>
-                                    )}
-
-                                    {vaNumbers.length > 0 && (
-                                        <div className="mt-3 space-y-2 text-sm">
-                                            {vaNumbers.map((va: any) => (
-                                                <div key={`${va.bank}-${va.va_number}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
-                                                    <span className="text-slate-700">{va.bank?.toUpperCase()} Virtual Account</span>
-                                                    <span className="font-semibold text-slate-900">{va.va_number}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                    {permataVa && (
-                                        <div className="mt-3 flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm">
-                                            <span className="text-slate-700">PERMATA Virtual Account</span>
-                                            <span className="font-semibold text-slate-900">{permataVa}</span>
-                                        </div>
-                                    )}
-
-                                    <div className="mt-3 grid gap-2 text-xs text-slate-500">
-                                        {instruction?.order_id && <div>Order ID: {instruction.order_id}</div>}
-                                        {instruction?.expiry_time && <div>Berakhir: {instruction.expiry_time}</div>}
-                                        {instruction?.transaction_status && <div>Status: {instruction.transaction_status}</div>}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

@@ -30,6 +30,17 @@ class MidtransService
         return $response->json();
     }
 
+    public function snap(array $payload): array
+    {
+        $response = $this->client()->post($this->snapUrl().'/transactions', $payload);
+
+        if (! $response->successful()) {
+            throw new RuntimeException('Midtrans snap failed: '.$response->body());
+        }
+
+        return $response->json();
+    }
+
     public function validateSignature(string $orderId, string $statusCode, string $grossAmount, string $signature): bool
     {
         $serverKey = config('services.midtrans.server_key');
@@ -54,5 +65,14 @@ class MidtransService
         return $isProduction
             ? 'https://api.midtrans.com/v2'
             : 'https://api.sandbox.midtrans.com/v2';
+    }
+
+    private function snapUrl(): string
+    {
+        $isProduction = (bool) config('services.midtrans.is_production');
+
+        return $isProduction
+            ? 'https://app.midtrans.com/snap/v1'
+            : 'https://app.sandbox.midtrans.com/snap/v1';
     }
 }

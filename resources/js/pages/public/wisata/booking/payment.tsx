@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 
 type Booking = {
@@ -19,16 +19,28 @@ type Booking = {
     payment?: { status?: string; payment_type?: string; payload?: any } | null;
 };
 
-type PaymentOption = { id: string; label: string };
+declare global {
+    interface Window {
+        snap?: {
+            pay: (token: string, options?: Record<string, unknown>) => void;
+        };
+    }
+}
 
-export default function WisataBookingPayment({ booking, paymentOptions }: { booking: Booking; paymentOptions: PaymentOption[] }) {
+export default function WisataBookingPayment({
+    booking,
+    snapClientKey,
+    snapScriptUrl,
+}: {
+    booking: Booking;
+    snapClientKey: string;
+    snapScriptUrl: string;
+}) {
     const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
     const [remaining, setRemaining] = useState<string | null>(null);
-    const form = useForm({ payment_type: '' });
-    const instruction = booking.payment?.payload;
-    const vaNumbers = instruction?.va_numbers ?? [];
-    const permataVa = instruction?.permata_va_number;
-    const qrisAction = instruction?.actions?.find((action: any) => action?.name?.includes('qr-code'))?.url;
+    const form = useForm({});
+    const snapOpened = useRef(false);
+    const snapToken = booking.payment?.payload?.token;
 
     useEffect(() => {
         if (!booking.payment_deadline) return;
@@ -47,16 +59,28 @@ export default function WisataBookingPayment({ booking, paymentOptions }: { book
         return () => clearInterval(interval);
     }, [booking.payment_deadline]);
 
-    const handlePay = () => {
-        if (!form.data.payment_type) {
-            Swal.fire({ icon: 'warning', title: 'Pilih metode', text: 'Silakan pilih metode pembayaran.' });
-            return;
-        }
-        form.post(`/wisata/booking/${booking.encrypted_id}/payment`, {
-            onError: (errors) =>
-                Swal.fire({ icon: 'error', title: 'Gagal', text: errors.payment ?? 'Tidak dapat memproses pembayaran.' }),
-        });
-    };
+    useEffect(() => {
+        if (!snapScriptUrl || !snapClientKey) return;
+        if (document.querySelector('script[data-midtrans-snap]')) return;
+        const script = document.createElement('script');
+        script.src = snapScriptUrl;
+        script.setAttribute('data-client-key', snapClientKey);
+        script.setAttribute('data-midtrans-snap', 'true');
+        script.async = true;
+        script.onload = () => {
+            if (snapToken && !snapOpened.current && window.snap) {
+                snapOpened.current = true;
+                window.snap.pay(snapToken);
+            }
+        };
+        document.body.appendChild(script);
+    }, [snapClientKey, snapScriptUrl]);
+
+    useEffect(() => {
+        if (!snapToken || snapOpened.current || !window.snap) return;
+        snapOpened.current = true;
+        window.snap.pay(snapToken);
+    }, [snapToken]);
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -116,49 +140,23 @@ export default function WisataBookingPayment({ booking, paymentOptions }: { book
                         )}
 
                         <div className="mt-6">
-                            <h2 className="text-sm font-semibold text-slate-700">Metode Pembayaran</h2>
-                            <div className="mt-3 grid gap-3">
-                                {paymentOptions.map((option) => (
-                                    <label key={option.id} className="flex cursor-pointer items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm">
-                                        <input
-                                            type="radio"
-                                            name="payment_type"
-                                            checked={form.data.payment_type === option.id}
-                                            onChange={() => form.setData('payment_type', option.id)}
-                                        />
-                                        <span>{option.label}</span>
-                                    </label>
-                                ))}
-                            </div>
                             <button
                                 type="button"
-                                onClick={handlePay}
+                                onClick={() => {
+                                    if (snapToken && window.snap) {
+                                        window.snap.pay(snapToken);
+                                        return;
+                                    }
+                                    form.post(`/wisata/booking/${booking.encrypted_id}/payment`, {
+                                        onError: (errors) =>
+                                            Swal.fire({ icon: 'error', title: 'Gagal', text: errors.payment ?? 'Tidak dapat memproses pembayaran.' }),
+                                    });
+                                }}
                                 className="mt-6 w-full rounded-full bg-sky-600 px-6 py-2 text-sm font-semibold text-white"
+                                disabled={form.processing}
                             >
-                                Lanjutkan Pembayaran
+                                {form.processing ? 'Memproses...' : snapToken ? 'Buka Pembayaran' : 'Lanjutkan Pembayaran'}
                             </button>
-                            {instruction && (
-                                <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm text-slate-600">
-                                    <div className="font-semibold text-slate-900">Instruksi Pembayaran</div>
-                                    {qrisAction && (
-                                        <div className="mt-3">
-                                            <img src={qrisAction} alt="QRIS" className="h-40 w-40 rounded-xl object-contain" />
-                                        </div>
-                                    )}
-                                    {permataVa && (
-                                        <p className="mt-2">Permata VA: <span className="font-semibold">{permataVa}</span></p>
-                                    )}
-                                    {vaNumbers.length > 0 && (
-                                        <div className="mt-2 space-y-1">
-                                            {vaNumbers.map((va: any, index: number) => (
-                                                <p key={index}>
-                                                    {va.bank?.toUpperCase()}: <span className="font-semibold">{va.va_number}</span>
-                                                </p>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
                         </div>
                     </div>
 

@@ -1,5 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { Mail, Phone, Ticket, User } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
+import { Bell, CalendarCheck, ClipboardCheck, Mail, MessageCircle, Phone, Ticket, User, UserCircle, History } from 'lucide-react';
 
 type Draft = {
     destination_id: number;
@@ -24,16 +26,68 @@ type Props = {
     pricing: {
         total: number;
     };
+    snapClientKey: string;
+    snapScriptUrl: string;
+    snapToken?: string | null;
 };
 
-export default function WisataBookingReview({ draft, destination, ticket, pricing }: Props) {
+declare global {
+    interface Window {
+        snap?: {
+            pay: (token: string, options?: Record<string, unknown>) => void;
+        };
+    }
+}
+
+export default function WisataBookingReview({
+    draft,
+    destination,
+    ticket,
+    pricing,
+    snapClientKey,
+    snapScriptUrl,
+    snapToken: initialSnapToken,
+}: Props) {
     const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
+    const isUser = Boolean(auth?.user?.role === 'user');
     const form = useForm({
         guest_name: '',
         guest_email: '',
         guest_phone: '',
         special_request: '',
     });
+    const [loading, setLoading] = useState(false);
+    const [snapToken, setSnapToken] = useState<string | null>(initialSnapToken ?? null);
+    const snapOpened = useRef(false);
+
+    useEffect(() => {
+        if (initialSnapToken) {
+            setSnapToken(initialSnapToken);
+        }
+    }, [initialSnapToken]);
+
+    useEffect(() => {
+        if (!snapScriptUrl || !snapClientKey) return;
+        if (document.querySelector('script[data-midtrans-snap]')) return;
+        const script = document.createElement('script');
+        script.src = snapScriptUrl;
+        script.setAttribute('data-client-key', snapClientKey);
+        script.setAttribute('data-midtrans-snap', 'true');
+        script.async = true;
+        script.onload = () => {
+            if (snapToken && !snapOpened.current && window.snap) {
+                snapOpened.current = true;
+                window.snap.pay(snapToken);
+            }
+        };
+        document.body.appendChild(script);
+    }, [snapClientKey, snapScriptUrl, snapToken]);
+
+    useEffect(() => {
+        if (!snapToken || snapOpened.current || !window.snap) return;
+        snapOpened.current = true;
+        window.snap.pay(snapToken);
+    }, [snapToken]);
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -55,49 +109,97 @@ export default function WisataBookingReview({ draft, destination, ticket, pricin
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
-                    {auth?.user ? (
-                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="hover:text-sky-600">Profile</Link>
-                            <Link href="/history" className="hover:text-sky-600">Riwayat</Link>
-                            <Link href="/?tab=chat" className="hover:text-sky-600">Chat</Link>
-                            <Link href="/notifications" className="hover:text-sky-600">Notifikasi</Link>
-                        </div>
-                    ) : (
-                        <>
+                    {!auth?.user && (
+                        <div className="flex items-center gap-2">
                             <Link
                                 href="/register"
-                                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
+                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
                             >
-                                Gabung Mitra
+                                Register
                             </Link>
                             <Link
                                 href="/login"
-                                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                                className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
                             >
                                 Login
                             </Link>
-                        </>
+                        </div>
                     )}
+                    {isUser && (
+                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
+                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
+                                <UserCircle className="h-4 w-4" />
+                                Profile
+                            </Link>
+                            <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
+                                <History className="h-4 w-4" />
+                                Riwayat
+                            </Link>
+                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat
+                            </Link>
+                            <Link href="/notifications" className="flex items-center gap-2 hover:text-sky-600">
+                                <Bell className="h-4 w-4" />
+                                Notifikasi
+                            </Link>
+                        </div>
+                    )}
+                </div>
+                <div className="border-t border-slate-100">
+                    <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8 text-sm font-semibold text-slate-600">
+                        <div className="flex items-center gap-2 text-slate-900">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-sky-600 text-xs font-semibold text-white">1</span>
+                            Review
+                        </div>
+                        <span className="text-slate-300">—</span>
+                        <div className="flex items-center gap-2 text-slate-500">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-500">2</span>
+                            Bayar
+                        </div>
+                    </div>
                 </div>
             </header>
 
             <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8">
                 <section className="flex flex-col gap-6 lg:flex-row">
                     <div className="flex-1 rounded-3xl bg-white p-6 shadow-sm">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-full bg-sky-50 p-2 text-sky-600">
-                                <Ticket className="h-5 w-5" />
-                            </div>
+                        <div className="flex items-start justify-between">
                             <div>
-                                <h1 className="text-xl font-semibold text-slate-900">Review Pemesanan Tiket</h1>
-                                <p className="text-sm text-slate-500">Lengkapi data untuk konfirmasi booking.</p>
+                                <h1 className="text-2xl font-semibold text-slate-900">Review Pemesanan Tiket</h1>
+                                <div className="mt-2 text-sm text-slate-500">Pastikan data sudah benar sebelum melanjutkan.</div>
+                            </div>
+                            <ClipboardCheck className="h-6 w-6 text-sky-500" />
+                        </div>
+                        <div className="mt-4 grid gap-2 text-sm text-slate-600">
+                            <div className="flex items-center gap-2">
+                                <Ticket className="h-4 w-4 text-sky-500" />
+                                {destination.destination_name} · {destination.city_name ?? destination.address_full}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <CalendarCheck className="h-4 w-4 text-sky-500" />
+                                {draft.visit_date} · {draft.quantity} tiket
                             </div>
                         </div>
                         <form
                             className="mt-6 space-y-4"
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                form.post('/wisata/booking/confirm');
+                                setLoading(true);
+                                form.post('/wisata/booking/confirm', {
+                                    preserveScroll: true,
+                                    onError: (errors) => {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Gagal',
+                                            text: errors.booking ?? errors.guest_name ?? 'Tidak dapat memproses pembayaran.',
+                                        });
+                                        setLoading(false);
+                                    },
+                                    onSuccess: () => {
+                                        setLoading(false);
+                                    },
+                                });
                             }}
                         >
                             <div className="grid gap-4 md:grid-cols-2">
@@ -150,9 +252,10 @@ export default function WisataBookingReview({ draft, destination, ticket, pricin
                             <div className="flex justify-end">
                                 <button
                                     type="submit"
-                                    className="rounded-full bg-sky-600 px-6 py-2 text-sm font-semibold text-white"
+                                    className="rounded-full bg-sky-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-70"
+                                    disabled={loading}
                                 >
-                                    Lanjutkan Pembayaran
+                                    {loading ? 'Memproses...' : 'Lanjutkan Pembayaran'}
                                 </button>
                             </div>
                         </form>
@@ -181,6 +284,54 @@ export default function WisataBookingReview({ draft, destination, ticket, pricin
                     </aside>
                 </section>
             </main>
+            <footer className="mt-10 border-t border-slate-200 bg-white">
+                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
+                    <div>
+                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                        <p className="mt-3 text-sm text-slate-600">
+                            Neo Soho Capital 40th Floor<br />
+                            Jl. Tanjung Duren Raya No 1<br />
+                            Jakarta Barat, DKI Jakarta 11470
+                        </p>
+                        <p className="mt-4 text-sm text-slate-600">0812 9205 9888</p>
+                        <p className="text-sm text-slate-600">info@indotix.co.id</p>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Layanan</h4>
+                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                            <li>Wisata</li>
+                            <li>Special Program</li>
+                            <li>Event</li>
+                            <li>Hotel</li>
+                            <li>Souvenir</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Perusahaan</h4>
+                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                            <li>Tentang Kami</li>
+                            <li>Karir</li>
+                            <li>Blog</li>
+                            <li>Kebijakan Privasi</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Download Indotix</h4>
+                        <div className="mt-3 h-12 w-40 rounded-lg bg-slate-900" />
+                        <h4 className="mt-6 text-sm font-semibold text-slate-900">Ikuti Kami</h4>
+                        <div className="mt-3 flex gap-2">
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                        </div>
+                    </div>
+                </div>
+                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+                    © 2025 Indotix. All rights reserved.
+                </div>
+            </footer>
         </div>
     );
 }

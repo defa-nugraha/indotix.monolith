@@ -308,14 +308,10 @@ class BookingController extends Controller
 
         return Inertia::render('public/booking/payment', [
             'booking' => $this->bookingPayload($booking),
-            'paymentOptions' => [
-                ['id' => 'bca_va', 'label' => 'BCA Virtual Account'],
-                ['id' => 'bni_va', 'label' => 'BNI Virtual Account'],
-                ['id' => 'bri_va', 'label' => 'BRI Virtual Account'],
-                ['id' => 'mandiri_va', 'label' => 'Mandiri Virtual Account'],
-                ['id' => 'gopay', 'label' => 'GoPay'],
-                ['id' => 'qris', 'label' => 'QRIS'],
-            ],
+            'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+            'snapScriptUrl' => config('services.midtrans.is_production')
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js',
         ]);
     }
 
@@ -333,25 +329,20 @@ class BookingController extends Controller
                 ->withErrors(['payment' => 'Booking sudah kedaluwarsa.']);
         }
 
-        $data = $request->validate([
-            'payment_type' => ['required', 'string'],
-        ]);
-
         if ($booking->status !== 'pending_payment') {
             return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)]);
         }
 
         if ($booking->payments()->where('status', 'pending')->exists()) {
-            return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)])
-                ->withErrors(['payment' => 'Pembayaran sedang diproses.']);
+            return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)]);
         }
 
         $orderId = sprintf('INDOTIX-%s-%s', $booking->id, now()->format('YmdHis'));
 
-        $payload = $this->buildChargePayload($booking, $data['payment_type'], $orderId);
+        $payload = $this->buildSnapPayload($booking, $orderId);
 
         try {
-            $charge = $midtransService->charge($payload);
+            $charge = $midtransService->snap($payload);
         } catch (\Throwable $exception) {
             return redirect()->route('booking.payment', ['booking' => $this->encryptId($booking->id)])
                 ->withErrors(['payment' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.']);
@@ -360,11 +351,11 @@ class BookingController extends Controller
         $payment = Payment::create([
             'booking_id' => $booking->id,
             'provider' => 'midtrans',
-            'status' => $charge['transaction_status'] ?? 'pending',
+            'status' => 'pending',
             'gross_amount' => (int) $booking->total,
-            'payment_type' => $charge['payment_type'] ?? $data['payment_type'],
+            'payment_type' => 'snap',
             'transaction_id' => $charge['transaction_id'] ?? null,
-            'order_id' => $charge['order_id'] ?? $orderId,
+            'order_id' => $orderId,
             'payload' => $charge,
         ]);
 
@@ -506,7 +497,7 @@ class BookingController extends Controller
         ];
     }
 
-    private function buildChargePayload(Booking $booking, string $paymentType, string $orderId): array
+    private function buildSnapPayload(Booking $booking, string $orderId): array
     {
         $transactionDetails = [
             'order_id' => $orderId,
@@ -519,7 +510,7 @@ class BookingController extends Controller
             'phone' => $booking->guest_phone,
         ];
 
-        $payload = [
+        return [
             'transaction_details' => $transactionDetails,
             'customer_details' => $customer,
             'item_details' => [
@@ -531,18 +522,6 @@ class BookingController extends Controller
                 ],
             ],
         ];
-
-        if (str_ends_with($paymentType, '_va')) {
-            $bank = str_replace('_va', '', $paymentType);
-            $payload['payment_type'] = 'bank_transfer';
-            $payload['bank_transfer'] = [
-                'bank' => $bank,
-            ];
-        } else {
-            $payload['payment_type'] = $paymentType;
-        }
-
-        return $payload;
     }
 
     private function expireBooking(Booking $booking): void
