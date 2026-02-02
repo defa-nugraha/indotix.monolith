@@ -169,6 +169,8 @@ class PublicWisataController extends Controller
                 'photo_area_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
                 'photo_ticket_url' => $destination->photo_ticket_path ? '/storage/'.$destination->photo_ticket_path : null,
                 'maps_pin_url' => $destination->maps_pin_url,
+                'latitude' => $this->extractLatitude($destination->maps_pin_url),
+                'longitude' => $this->extractLongitude($destination->maps_pin_url),
             ],
             'tickets' => $tickets,
         ]);
@@ -181,5 +183,39 @@ class PublicWisataController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function extractLatitude(?string $mapsUrl): ?string
+    {
+        if (! $mapsUrl) {
+            return null;
+        }
+
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $mapsUrl, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $mapsUrl, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    private function extractLongitude(?string $mapsUrl): ?string
+    {
+        if (! $mapsUrl) {
+            return null;
+        }
+
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $mapsUrl, $matches)) {
+            return $matches[2];
+        }
+
+        if (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $mapsUrl, $matches)) {
+            return $matches[2];
+        }
+
+        return null;
     }
 }

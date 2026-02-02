@@ -1,6 +1,21 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarDays, MapPinned, Ticket } from 'lucide-react';
+import {
+    Bell,
+    CalendarCheck,
+    CalendarDays,
+    History,
+    MapPinned,
+    MessageCircle,
+    ParkingSquare,
+    ShoppingBag,
+    Star,
+    Ticket,
+    UserCircle,
+    Utensils,
+    Users,
+    Wifi,
+} from 'lucide-react';
 
 type TicketItem = {
     id: number;
@@ -48,6 +63,46 @@ export default function WisataShow({
     const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
     const [visitDate, setVisitDate] = useState(filters.visit_date);
     const [quantity, setQuantity] = useState(filters.quantity ?? 1);
+    const mapEmbedUrl = (() => {
+        if (!destination.maps_pin_url) return null;
+        if (destination.maps_pin_url.includes('output=embed')) return destination.maps_pin_url;
+        if (destination.maps_pin_url.includes('google.com/maps')) {
+            return `${destination.maps_pin_url}${destination.maps_pin_url.includes('?') ? '&' : '?'}output=embed`;
+        }
+        return destination.maps_pin_url;
+    })();
+
+    const categories = [
+        { label: 'Wisata', icon: MapPinned, href: '/wisata', active: true },
+        { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+        { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
+        { label: 'Hotel', icon: Ticket, href: '/stay' },
+    ];
+
+    const chips = [
+        'Alam',
+        'Budaya',
+        'Edukasi',
+        'Kuliner',
+        'Desa Wisata',
+        'Religi',
+        'Pantai',
+        'Gunung',
+        'Taman Nasional',
+        'Air Terjun',
+        'Danau',
+    ];
+
+    const facilityIcon = (facility: string) => {
+        const value = facility.toLowerCase();
+        if (value.includes('parkir') || value.includes('parking')) return ParkingSquare;
+        if (value.includes('wifi') || value.includes('internet')) return Wifi;
+        if (value.includes('toilet') || value.includes('restroom')) return Users;
+        if (value.includes('mushola') || value.includes('masjid')) return MapPinned;
+        if (value.includes('warung') || value.includes('makan') || value.includes('kuliner')) return Utensils;
+        return Ticket;
+    };
 
     const handleFilter = () => {
         router.get(`/wisata/${destination.encrypted_id}`, { visit_date: visitDate, quantity }, { preserveState: true });
@@ -57,100 +112,225 @@ export default function WisataShow({
         <div className="min-h-screen bg-[#f6fbff] font-['Plus_Jakarta_Sans'] text-slate-900">
             <Head title={`${destination.destination_name} - INDOTIX`} />
 
-            <header className="border-b border-slate-100 bg-white">
-                <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-4">
-                    <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-                        <img src="/logo.png" alt="Indotix" className="h-9" />
-                    </Link>
-                    <div className="flex flex-1 items-center gap-4">
-                        <div className="flex w-full items-center gap-3 rounded-full border border-slate-200 px-4 py-2 text-sm">
-                            <MapPinned className="h-4 w-4 text-slate-400" />
-                            <span>{destination.destination_name}</span>
+            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
+                    <div className="flex items-center gap-2">
+                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                    </div>
+                    <div className="flex flex-1 items-center">
+                        <input
+                            type="text"
+                            placeholder="Cari kota/hotel/wisata/event..."
+                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
+                        />
+                    </div>
+                    {!auth?.user && (
+                        <div className="flex items-center gap-2">
+                            <Link
+                                href="/register"
+                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                            >
+                                Register
+                            </Link>
+                            <Link
+                                href="/login"
+                                className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+                            >
+                                Login
+                            </Link>
                         </div>
-                        {auth?.user?.role === 'user' ? (
-                            <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                                <Link href="/settings/profile" className="hover:text-sky-600">Profile</Link>
-                                <Link href="/history" className="hover:text-sky-600">Riwayat</Link>
-                                <Link href="/?tab=chat" className="hover:text-sky-600">Chat</Link>
-                                <Link href="/notifications" className="hover:text-sky-600">Notifikasi</Link>
-                            </div>
-                        ) : (
-                            <>
-                                <Link href="/register" className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white">
-                                    Gabung Mitra
-                                </Link>
-                                <Link href="/login" className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-                                    Login
-                                </Link>
-                            </>
-                        )}
+                    )}
+                    {auth?.user?.role === 'user' && (
+                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
+                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
+                                <UserCircle className="h-4 w-4" />
+                                Profile
+                            </Link>
+                            <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
+                                <History className="h-4 w-4" />
+                                Riwayat
+                            </Link>
+                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                                <MessageCircle className="h-4 w-4" />
+                                Chat
+                            </Link>
+                            <Link href="/notifications" className="flex items-center gap-2 hover:text-sky-600">
+                                <Bell className="h-4 w-4" />
+                                Notifikasi
+                            </Link>
+                        </div>
+                    )}
+                </div>
+                <div className="border-t border-slate-100">
+                    <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
+                        {categories.map((item) => (
+                            <Link
+                                key={item.label}
+                                href={item.href}
+                                className={`flex items-center gap-2 text-sm font-semibold ${
+                                    item.active ? 'text-sky-600' : 'text-slate-500 hover:text-sky-600'
+                                }`}
+                            >
+                                <item.icon className="h-4 w-4" />
+                                {item.label}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+                <div className="border-t border-slate-100 bg-slate-50">
+                    <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-4 py-3 md:px-8">
+                        {chips.map((chip) => (
+                            <span key={chip} className="rounded-full bg-white px-4 py-1 text-xs font-semibold text-slate-600">
+                                {chip}
+                            </span>
+                        ))}
                     </div>
                 </div>
             </header>
 
-            <main className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-8">
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
+            <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+                <div className="rounded-2xl bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 text-xs text-slate-500">
+                        <div className="flex flex-wrap gap-2">
+                            <span className="text-sky-600">Wisata</span>/
+                            <span>Indonesia</span>/
+                            <span>{destination.city_name ?? 'Kota'}</span>/
+                            <span className="text-slate-700">{destination.destination_name}</span>
+                        </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-4 lg:grid-cols-[1.6fr_1fr]">
+                        <div className="grid gap-3">
+                            <img
+                                src={destination.photo_area_url ?? destination.photo_gate_url ?? destination.photo_ticket_url ?? '/images/placeholder-hotel.jpg'}
+                                alt={destination.destination_name}
+                                className="h-64 w-full rounded-xl object-cover md:h-full"
+                            />
+                        </div>
+                        <div className="grid gap-3">
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                {[destination.photo_gate_url, destination.photo_ticket_url]
+                                    .filter(Boolean)
+                                    .slice(0, 4)
+                                    .map((photo, idx) => (
+                                        <div key={`${photo}-${idx}`} className="relative">
+                                            <img src={photo ?? ''} alt={`Foto ${idx + 2}`} className="h-28 w-full rounded-xl object-cover" />
+                                        </div>
+                                    ))}
+                                {(!destination.photo_gate_url && !destination.photo_ticket_url) && (
+                                    <div className="h-28 rounded-xl bg-slate-100" />
+                                )}
+                            </div>
+                            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                                <div className="text-center text-sm font-semibold text-slate-700">Pemesanan Tiket</div>
+                                <div className="mt-3 grid gap-3">
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold uppercase text-slate-500">Nama destinasi wisata</label>
+                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                            <span className="text-slate-400">📍</span>
+                                            <span className="w-full text-slate-700">{destination.destination_name}</span>
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold uppercase text-slate-500">Pilih Jadwal Kunjungan</label>
+                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                            <input
+                                                type="date"
+                                                value={visitDate}
+                                                onChange={(event) => setVisitDate(event.target.value)}
+                                                className="w-full bg-transparent outline-none"
+                                            />
+                                        </div>
+                                        <div className="text-[11px] text-slate-400">Jam operasional: {destination.open_time ?? '-'} - {destination.close_time ?? '-'}</div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold uppercase text-slate-500">Jumlah tiket</label>
+                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={quantity}
+                                                onChange={(event) => setQuantity(Number(event.target.value))}
+                                                className="w-20 bg-transparent outline-none"
+                                            />
+                                            <span className="text-slate-500">tiket</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleFilter}
+                                        className="h-11 rounded-full bg-sky-600 px-6 text-sm font-semibold text-white shadow-md"
+                                    >
+                                        Perbarui
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
-                                Destinasi Wisata
-                            </p>
-                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">{destination.destination_name}</h1>
-                            <p className="text-sm text-slate-500">{destination.city_name ?? 'Indonesia'}</p>
-                            <p className="mt-4 text-sm text-slate-600">{destination.description}</p>
-                            {destination.highlights && (
-                                <p className="mt-2 text-sm text-slate-500">{destination.highlights}</p>
+                            <h1 className="text-2xl font-semibold text-slate-900">{destination.destination_name}</h1>
+                            <p className="text-sm text-slate-500">{destination.city_name} · {destination.address_full ?? '-'}</p>
+                            {destination.destination_type && (
+                                <div className="mt-2 text-sm font-semibold text-sky-600">{destination.destination_type}</div>
                             )}
                         </div>
-                        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                                <CalendarDays className="h-4 w-4" />
-                                Jadwal Kunjungan
+                        <div className="rounded-xl bg-slate-50 px-4 py-3 text-right">
+                            <div className="text-xs text-slate-500">Mulai dari</div>
+                            <div className="text-lg font-semibold text-orange-500">
+                                Rp {tickets[0]?.price?.toLocaleString('id-ID') ?? '-'}
                             </div>
-                            <div className="mt-3 grid gap-3">
-                                <input
-                                    type="date"
-                                    value={visitDate}
-                                    onChange={(event) => setVisitDate(event.target.value)}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                />
-                                <input
-                                    type="number"
-                                    min={1}
-                                    value={quantity}
-                                    onChange={(event) => setQuantity(Number(event.target.value))}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={handleFilter}
-                                    className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
-                                >
-                                    Perbarui
-                                </button>
+                            <button className="mt-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-semibold text-white">Pilih Tiket</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="sticky top-[120px] z-20 mt-6 flex items-center gap-6 border-b border-slate-200 bg-white/95 px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur">
+                    {['Overview', 'Tickets', 'Location', 'Facilities'].map((tab) => (
+                        <a key={tab} href={`#${tab.toLowerCase()}`} className="hover:text-slate-900">
+                            {tab}
+                        </a>
+                    ))}
+                </div>
+
+                <section id="overview" className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="grid gap-6 md:grid-cols-3">
+                        <div className="rounded-2xl border border-slate-100 p-4">
+                            <div className="text-sm font-semibold text-slate-900">Kenapa harus ke sini?</div>
+                            <p className="mt-2 text-sm text-slate-600">
+                                {destination.highlights ?? 'Destinasi ini cocok untuk liburan singkat yang seru dan berkesan.'}
+                            </p>
+                        </div>
+                        <div className="rounded-2xl border border-slate-100 p-4 md:col-span-2">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-900">Tentang destinasi</h3>
+                                <a href="#location" className="text-xs text-sky-600">Lihat peta</a>
                             </div>
-                            <div className="mt-4 text-xs text-slate-500">
-                                Jam operasional: {destination.open_time ?? '-'} - {destination.close_time ?? '-'}
+                            <p className="mt-3 text-sm text-slate-600">{destination.description ?? 'Deskripsi destinasi akan tampil di sini.'}</p>
+                            <div className="mt-4 grid gap-2 text-sm text-slate-600">
+                                <div>Alamat: {destination.address_full ?? '-'}</div>
+                                <div>Jam buka: {destination.open_time ?? '-'} · Jam tutup: {destination.close_time ?? '-'}</div>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section className="grid gap-4 md:grid-cols-3">
-                    {[destination.photo_area_url, destination.photo_gate_url, destination.photo_ticket_url].filter(Boolean).map((photo, index) => (
-                        <img key={index} src={photo ?? ''} className="h-40 w-full rounded-2xl object-cover" />
-                    ))}
-                </section>
-
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h2 className="text-xl font-semibold text-slate-900">Produk Tiket</h2>
+                <section id="tickets" className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-semibold text-slate-900">Produk Tiket</h2>
+                        <span className="text-xs text-slate-500">Pilih tiket sesuai kebutuhanmu</span>
+                    </div>
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         {tickets.map((ticket) => (
                             <div key={ticket.id} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-slate-900">{ticket.name}</h3>
-                                        <p className="text-sm text-slate-500">{ticket.description}</p>
+                                        <div className="flex items-center gap-2 text-slate-900">
+                                            <Ticket className="h-4 w-4 text-sky-600" />
+                                            <h3 className="text-base font-semibold">{ticket.name}</h3>
+                                        </div>
+                                        <p className="mt-1 text-sm text-slate-500">{ticket.description}</p>
                                     </div>
                                     <div className="text-right">
                                         <div className="text-lg font-semibold text-sky-600">Rp {ticket.price.toLocaleString('id-ID')}</div>
@@ -190,21 +370,113 @@ export default function WisataShow({
                     </div>
                 </section>
 
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h2 className="text-xl font-semibold text-slate-900">Lokasi</h2>
-                    <p className="mt-2 text-sm text-slate-600">{destination.address_full ?? '-'}</p>
-                    {destination.maps_pin_url && (
-                        <a
-                            href={destination.maps_pin_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="mt-2 inline-block text-sm font-semibold text-sky-600"
-                        >
-                            Lihat di peta →
-                        </a>
-                    )}
+                <section id="location" className="mt-8 grid gap-4 lg:grid-cols-[1.2fr,1fr]">
+                    <div className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
+                        {mapEmbedUrl ? (
+                            <iframe
+                                title="Peta lokasi destinasi"
+                                src={mapEmbedUrl}
+                                className="h-64 w-full border-0"
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                            />
+                        ) : (
+                            <div className="flex h-64 items-center justify-center text-sm text-slate-500">
+                                Lokasi peta belum tersedia.
+                            </div>
+                        )}
+                    </div>
+                    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold text-slate-900">Lokasi & Akses</h2>
+                        <p className="mt-2 text-sm text-slate-600">{destination.address_full ?? '-'}</p>
+                        {destination.maps_pin_url && (
+                            <a
+                                href={destination.maps_pin_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-sky-600"
+                            >
+                                Lihat di peta
+                                <MapPinned className="h-4 w-4" />
+                            </a>
+                        )}
+                        <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+                            Tips: Datang lebih awal untuk menikmati suasana yang lebih santai.
+                        </div>
+                    </div>
+                </section>
+
+                <section id="facilities" className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
+                    <h2 className="text-xl font-semibold text-slate-900">Fasilitas Destinasi</h2>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {(destination.facilities ?? []).length > 0 ? (
+                            destination.facilities?.map((facility) => {
+                                const Icon = facilityIcon(facility);
+                                return (
+                                    <div key={facility} className="flex items-center gap-3 rounded-xl border border-slate-100 px-4 py-3 text-sm text-slate-700">
+                                        <span className="rounded-full bg-sky-50 p-2 text-sky-600">
+                                            <Icon className="h-4 w-4" />
+                                        </span>
+                                        {facility}
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="rounded-xl border border-slate-100 p-4 text-sm text-slate-500">
+                                Belum ada data fasilitas.
+                            </div>
+                        )}
+                    </div>
                 </section>
             </main>
+            <footer className="mt-10 border-t border-slate-200 bg-white">
+                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
+                    <div>
+                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                        <p className="mt-3 text-sm text-slate-600">
+                            Neo Soho Capital 40th Floor<br />
+                            Jl. Tanjung Duren Raya No 1<br />
+                            Jakarta Barat, DKI Jakarta 11470
+                        </p>
+                        <p className="mt-4 text-sm text-slate-600">0812 9205 9888</p>
+                        <p className="text-sm text-slate-600">info@indotix.co.id</p>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Layanan</h4>
+                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                            <li>Wisata</li>
+                            <li>Special Program</li>
+                            <li>Event</li>
+                            <li>Hotel</li>
+                            <li>Souvenir</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Perusahaan</h4>
+                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
+                            <li>Tentang Kami</li>
+                            <li>Karir</li>
+                            <li>Blog</li>
+                            <li>Kebijakan Privasi</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-semibold text-slate-900">Download Indotix</h4>
+                        <div className="mt-3 h-12 w-40 rounded-lg bg-slate-900" />
+                        <h4 className="mt-6 text-sm font-semibold text-slate-900">Ikuti Kami</h4>
+                        <div className="mt-3 flex gap-2">
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                            <div className="h-9 w-9 rounded-full bg-slate-200" />
+                        </div>
+                    </div>
+                </div>
+                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+                    © 2025 Indotix. All rights reserved.
+                </div>
+            </footer>
         </div>
     );
 }

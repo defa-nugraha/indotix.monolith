@@ -43,6 +43,30 @@ Route::get('/', function () {
                 : null,
             'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
         ]);
+    $wisataCards = \App\Models\MitraWisataOnboarding::query()
+        ->where('verification_status', 'verified')
+        ->where('is_suspended', false)
+        ->where('is_temporarily_closed', false)
+        ->with(['tickets'])
+        ->latest()
+        ->take(3)
+        ->get()
+        ->map(function (\App\Models\MitraWisataOnboarding $destination) {
+            $tickets = $destination->tickets->where('is_active', true)->where('is_closed', false);
+            $minPrice = $tickets->min('price');
+
+            return [
+                'id' => $destination->id,
+                'encrypted_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $destination->id),
+                'name' => $destination->destination_name,
+                'city_name' => \Illuminate\Support\Facades\DB::table('regencies')
+                    ->where('code', $destination->city_code)
+                    ->value('name'),
+                'min_price' => $minPrice ? (int) round($minPrice) : null,
+                'image_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
+                'type' => $destination->destination_type,
+            ];
+        });
 
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
@@ -52,6 +76,7 @@ Route::get('/', function () {
         'contact' => $contact,
         'partners' => $partners,
         'hotelCards' => $hotelCards,
+        'wisataCards' => $wisataCards,
     ]);
 })->name('home');
 

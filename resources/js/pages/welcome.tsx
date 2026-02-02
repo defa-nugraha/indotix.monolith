@@ -33,6 +33,15 @@ type HotelCard = {
     min_price?: number | null;
     image_url?: string | null;
 };
+type WisataCard = {
+    id: number;
+    encrypted_id?: string;
+    name: string;
+    city_name?: string | null;
+    min_price?: number | null;
+    image_url?: string | null;
+    type?: string | null;
+};
 type Contact = {
     company_name?: string | null;
     address?: string | null;
@@ -54,6 +63,7 @@ export default function Welcome({
     contact,
     partners = [],
     hotelCards = [],
+    wisataCards = [],
 }: {
     canRegister?: boolean;
     banners?: Banner[];
@@ -62,6 +72,7 @@ export default function Welcome({
     contact?: Contact | null;
     partners?: Partner[];
     hotelCards?: HotelCard[];
+    wisataCards?: WisataCard[];
 }) {
     const { auth } = usePage().props as { auth?: { user?: unknown } };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
@@ -142,6 +153,11 @@ export default function Welcome({
         { id: 0, encrypted_id: undefined, name: 'Hotel Indotix', city_name: 'Jakarta', star_rating: 4, min_price: 350000 },
         { id: 1, encrypted_id: undefined, name: 'Indotix Heritage', city_name: 'Bandung', star_rating: 5, min_price: 520000 },
         { id: 2, encrypted_id: undefined, name: 'Indotix City Stay', city_name: 'Surabaya', star_rating: 3, min_price: 280000 },
+    ];
+    const wisataProducts = wisataCards.length > 0 ? wisataCards : [
+        { id: 0, encrypted_id: undefined, name: 'Wisata Pantai Ceria', city_name: 'Bali', min_price: 25000, type: 'alam' },
+        { id: 1, encrypted_id: undefined, name: 'Desa Wisata Lestari', city_name: 'Yogyakarta', min_price: 15000, type: 'budaya' },
+        { id: 2, encrypted_id: undefined, name: 'Taman Edukasi Indotix', city_name: 'Bogor', min_price: 20000, type: 'edukasi' },
     ];
 
     const mediaPartners = partners.length > 0
@@ -509,6 +525,57 @@ export default function Welcome({
                                         <Link
                                             href={`/stay/hotels/${hotel.encrypted_id}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`}
                                             className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                        >
+                                            Lihat Detail
+                                        </Link>
+                                    ) : (
+                                        <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
+                                            Lihat Detail
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold text-slate-900">Wisata Seru buat Kamu</h2>
+                            <p className="text-sm text-slate-500">Cari tiket wisata dengan suasana yang paling kamu suka.</p>
+                        </div>
+                        <Link href="/wisata" className="text-sm font-semibold text-sky-600">
+                            Lihat Semua Wisata →
+                        </Link>
+                    </div>
+                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                        {wisataProducts.map((item) => (
+                            <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                                <div className="h-40 overflow-hidden bg-gradient-to-br from-emerald-500 to-sky-400">
+                                    <img
+                                        src={
+                                            item.image_url ??
+                                            `https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop&sig=${item.id}`
+                                        }
+                                        alt={item.name}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                        {item.name}
+                                    </h3>
+                                    <p className="text-xs text-slate-500">
+                                        {item.city_name ?? 'Indonesia'} · {item.type ?? 'wisata'}
+                                    </p>
+                                    <div className="text-sm font-semibold text-emerald-600">
+                                        {item.min_price ? `Mulai Rp ${item.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                    </div>
+                                    {item.encrypted_id ? (
+                                        <Link
+                                            href={`/wisata/${item.encrypted_id}`}
+                                            className="mt-4 inline-block w-full rounded-lg bg-emerald-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
                                         </Link>
