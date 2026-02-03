@@ -18,6 +18,9 @@ class MitraWisataOnboardingController extends Controller
         if ($user->mitra_onboarding_type === 'hotel') {
             return redirect()->route('mitra.onboarding');
         }
+        if ($user->mitra_onboarding_type === 'event') {
+            return redirect()->route('mitra.event.onboarding');
+        }
         if (! $user->mitra_onboarding_type) {
             return redirect()->route('mitra.dashboard')->withErrors([
                 'mitra' => 'Silakan pilih jenis mitra terlebih dahulu.',

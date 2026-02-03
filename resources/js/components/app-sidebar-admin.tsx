@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned } from 'lucide-react';
+import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -69,6 +69,21 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
         isCurrentUrl('/admin/system/notifications');
+    const isEventSectionActive =
+        isCurrentUrl('/admin/events') ||
+        isCurrentUrl('/admin/events/organizers') ||
+        isCurrentUrl('/admin/events/tickets') ||
+        isCurrentUrl('/admin/events/bookings') ||
+        isCurrentUrl('/admin/events/attendees') ||
+        isCurrentUrl('/admin/events/scans') ||
+        isCurrentUrl('/admin/events/content') ||
+        isCurrentUrl('/admin/events/reviews') ||
+        isCurrentUrl('/admin/events/exceptions') ||
+        isCurrentUrl('/admin/events/finance/commissions') ||
+        isCurrentUrl('/admin/events/finance/settlements') ||
+        isCurrentUrl('/admin/events/finance/reports') ||
+        isCurrentUrl('/admin/events/system/audit-logs') ||
+        isCurrentUrl('/admin/events/system/settings');
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -296,6 +311,91 @@ export function AppSidebarAdmin() {
                                             <Link href="/admin/system/settings">
                                                 Konfigurasi Sistem
                                             </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isEventSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <CalendarCheck />
+                                    <span>Event</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/organizers')}>
+                                            <Link href="/admin/events/organizers">Mitra Event (EO)</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events')}>
+                                            <Link href="/admin/events">Manajemen Event</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/tickets')}>
+                                            <Link href="/admin/events/tickets">Produk Tiket</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/bookings')}>
+                                            <Link href="/admin/events/bookings">Booking Event</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/attendees')}>
+                                            <Link href="/admin/events/attendees">Data Peserta</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/scans')}>
+                                            <Link href="/admin/events/scans">Monitoring QR</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/content')}>
+                                            <Link href="/admin/events/content">Moderasi Konten</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/reviews')}>
+                                            <Link href="/admin/events/reviews">Review & Rating</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/exceptions')}>
+                                            <Link href="/admin/events/exceptions">Exception & Refund</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/finance/commissions')}>
+                                            <Link href="/admin/events/finance/commissions">Komisi Event</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/finance/settlements')}>
+                                            <Link href="/admin/events/finance/settlements">Settlement EO</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/finance/reports')}>
+                                            <Link href="/admin/events/finance/reports">Laporan Event</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/system/audit-logs')}>
+                                            <Link href="/admin/events/system/audit-logs">Audit Log</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/system/settings')}>
+                                            <Link href="/admin/events/system/settings">Konfigurasi Event</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

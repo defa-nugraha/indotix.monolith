@@ -22,6 +22,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function MitraDashboard({
     onboarding,
     wisataOnboarding,
+    eventOnboarding,
     onboardingType,
     stats,
 }: {
@@ -37,16 +38,24 @@ export default function MitraDashboard({
         verification_reason?: string | null;
         payout_reason?: string | null;
     } | null;
-    onboardingType?: 'hotel' | 'wisata' | null;
+    onboardingType?: 'hotel' | 'wisata' | 'event' | null;
     stats: {
         reservations_today: number;
         monthly_revenue: number;
         available_rooms: number;
     };
+    eventOnboarding: {
+        verification_status: 'draft' | 'pending' | 'verified' | 'rejected';
+        verification_reason?: string | null;
+    } | null;
 }) {
     const isChoosingType = !onboardingType;
     const activeOnboarding =
-        onboardingType === 'wisata' ? wisataOnboarding : onboarding;
+        onboardingType === 'wisata'
+            ? wisataOnboarding
+            : onboardingType === 'event'
+            ? eventOnboarding
+            : onboarding;
     const safeOnboarding = activeOnboarding ?? {
         verification_status: 'draft',
         payout_status: 'draft',
@@ -87,7 +96,15 @@ export default function MitraDashboard({
                                     asChild
                                     className="bg-sky-600 text-white hover:bg-sky-700"
                                 >
-                                    <Link href={onboardingType === 'wisata' ? '/mitra/wisata/onboarding' : '/mitra/onboarding'}>
+                                    <Link
+                                        href={
+                                            onboardingType === 'wisata'
+                                                ? '/mitra/wisata/onboarding'
+                                                : onboardingType === 'event'
+                                                ? '/mitra/event/onboarding'
+                                                : '/mitra/onboarding'
+                                        }
+                                    >
                                         Lengkapi dokumen
                                     </Link>
                                 </Button>
@@ -112,7 +129,9 @@ export default function MitraDashboard({
                             Ditolak: {safeOnboarding.verification_reason}
                         </div>
                     )}
-                    {safeOnboarding.payout_status === 'rejected' && safeOnboarding.payout_reason && (
+                    {'payout_status' in safeOnboarding &&
+                        safeOnboarding.payout_status === 'rejected' &&
+                        safeOnboarding.payout_reason && (
                         <div className="mt-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
                             Payout ditolak: {safeOnboarding.payout_reason}
                         </div>
@@ -120,7 +139,15 @@ export default function MitraDashboard({
 
                     <div className="mt-6 grid gap-4 lg:grid-cols-3">
                         {[
-                            {
+                            onboardingType === 'event'
+                                ? {
+                                      title: 'Event Aktif',
+                                      value: '0',
+                                      detail: 'Event yang sedang berjalan',
+                                      icon: Ticket,
+                                      accent: 'bg-sky-50 text-sky-600',
+                                  }
+                                : {
                                 title: 'Reservasi Hari Ini',
                                 value: stats.reservations_today.toString(),
                                 detail: 'Booking aktif hari ini',
@@ -134,7 +161,15 @@ export default function MitraDashboard({
                                 icon: CreditCard,
                                 accent: 'bg-amber-50 text-amber-600',
                             },
-                            {
+                            onboardingType === 'event'
+                                ? {
+                                      title: 'Tiket Terjual',
+                                      value: '0',
+                                      detail: 'Total tiket terjual bulan ini',
+                                      icon: Users,
+                                      accent: 'bg-emerald-50 text-emerald-600',
+                                  }
+                                : {
                                 title: 'Kamar Tersedia',
                                 value: stats.available_rooms.toString(),
                                 detail: 'Kamar siap dijual',
@@ -180,7 +215,7 @@ export default function MitraDashboard({
                                 Pilih salah satu agar kami tampilkan form pendaftaran yang sesuai.
                             </p>
                         </div>
-                        <div className="mt-6 grid gap-4 md:grid-cols-2">
+                        <div className="mt-6 grid gap-4 md:grid-cols-3">
                             <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                                 <div className="text-sm font-semibold text-slate-900">Mitra Hotel</div>
                                 <p className="mt-2 text-sm text-slate-500">
@@ -205,6 +240,19 @@ export default function MitraDashboard({
                                     onClick={() => router.post('/mitra/onboarding/type', { type: 'wisata' })}
                                 >
                                     Daftar Wisata
+                                </Button>
+                            </div>
+                            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                                <div className="text-sm font-semibold text-slate-900">Mitra Event</div>
+                                <p className="mt-2 text-sm text-slate-500">
+                                    Cocok untuk EO, komunitas, kampus, atau individu penyelenggara event.
+                                </p>
+                                <Button
+                                    type="button"
+                                    className="mt-4 bg-indigo-600 text-white hover:bg-indigo-700"
+                                    onClick={() => router.post('/mitra/onboarding/type', { type: 'event' })}
+                                >
+                                    Daftar Event
                                 </Button>
                             </div>
                         </div>
@@ -251,6 +299,38 @@ export default function MitraDashboard({
                                             : 'bg-slate-100 text-slate-600'
                                     }`}>
                                         {safeOnboarding.payout_status}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                )}
+                {onboardingType === 'event' && (
+                    <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                        <div className="flex flex-col gap-2">
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">
+                                Status Pendaftaran Event
+                            </p>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Pantau status verifikasi EO kamu
+                            </h2>
+                        </div>
+                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Verifikasi</p>
+                                <div className="mt-2">
+                                    <span
+                                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                            safeOnboarding.verification_status === 'verified'
+                                                ? 'bg-emerald-50 text-emerald-700'
+                                                : safeOnboarding.verification_status === 'pending'
+                                                ? 'bg-amber-50 text-amber-700'
+                                                : safeOnboarding.verification_status === 'rejected'
+                                                ? 'bg-red-50 text-red-700'
+                                                : 'bg-slate-100 text-slate-600'
+                                        }`}
+                                    >
+                                        {safeOnboarding.verification_status}
                                     </span>
                                 </div>
                             </div>

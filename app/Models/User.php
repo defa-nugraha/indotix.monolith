@@ -51,6 +51,11 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(\App\Models\MitraWisataOnboarding::class);
     }
 
+    public function mitraEventOnboarding()
+    {
+        return $this->hasOne(\App\Models\MitraEventOnboarding::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

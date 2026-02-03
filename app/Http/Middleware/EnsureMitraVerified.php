@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\MitraEventOnboarding;
 use App\Models\MitraOnboarding;
 use App\Models\MitraWisataOnboarding;
 use Closure;
@@ -21,6 +22,8 @@ class EnsureMitraVerified
         $type = $user->mitra_onboarding_type ?? 'hotel';
         if ($type === 'wisata') {
             $onboarding = MitraWisataOnboarding::query()->where('user_id', $user->id)->first();
+        } elseif ($type === 'event') {
+            $onboarding = MitraEventOnboarding::query()->where('user_id', $user->id)->first();
         } else {
             $onboarding = MitraOnboarding::query()->where('user_id', $user->id)->first();
         }

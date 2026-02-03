@@ -1,0 +1,143 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\EventAuditLog;
+use App\Models\EventOrganizer;
+use App\Models\MitraEventOnboarding;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class EventOrganizerController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $status = $request->string('status')->toString();
+        $eventUserIds = User::query()
+            ->where('role', 'mitra')
+            ->where('mitra_onboarding_type', 'event')
+            ->pluck('id');
+
+        if ($eventUserIds->isNotEmpty()) {
+            $existingOrganizerUserIds = EventOrganizer::query()
+                ->whereIn('user_id', $eventUserIds)
+                ->pluck('user_id')
+                ->all();
+
+            $missingUserIds = $eventUserIds->diff($existingOrganizerUserIds);
+
+            if ($missingUserIds->isNotEmpty()) {
+                $onboardings = MitraEventOnboarding::query()
+                    ->whereIn('user_id', $missingUserIds)
+                    ->with('user')
+                    ->get();
+
+                foreach ($onboardings as $onboarding) {
+                    $mappedStatus = match ($onboarding->verification_status) {
+                        'verified' => 'verified',
+                        'rejected' => 'suspended',
+                        default => 'pending',
+                    };
+
+                    EventOrganizer::updateOrCreate(
+                        ['user_id' => $onboarding->user_id],
+                        [
+                            'name' => $onboarding->eo_name ?: ($onboarding->responsible_name ?? 'Mitra Event'),
+                            'email' => $onboarding->user?->email,
+                            'phone' => $onboarding->responsible_phone,
+                            'status' => $mappedStatus,
+                            'notes' => $onboarding->verification_reason,
+                            'documents' => [
+                                'responsible_name' => $onboarding->responsible_name,
+                                'responsible_role' => $onboarding->responsible_role,
+                                'legal_doc_type' => $onboarding->legal_doc_type,
+                                'legal_doc_number' => $onboarding->legal_doc_number,
+                                'legal_doc_path' => $onboarding->legal_doc_path,
+                                'ktp_path' => $onboarding->ktp_path,
+                                'selfie_ktp_path' => $onboarding->selfie_ktp_path,
+                                'bank_name' => $onboarding->bank_name,
+                                'bank_account_number' => $onboarding->bank_account_number,
+                                'bank_account_name' => $onboarding->bank_account_name,
+                                'bank_account_relation' => $onboarding->bank_account_relation,
+                                'operational_phone' => $onboarding->operational_phone,
+                                'operational_email' => $onboarding->operational_email,
+                                'operational_hours' => $onboarding->operational_hours,
+                            ],
+                        ]
+                    );
+                }
+            }
+        }
+
+        $query = EventOrganizer::query()->with(['user', 'onboarding'])->latest();
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return Inertia::render('admin/events/organizers/index', [
+            'organizers' => $query->paginate(20)->withQueryString()->through(function (EventOrganizer $organizer) {
+                return [
+                    'id' => $organizer->id,
+                    'name' => $organizer->name,
+                    'email' => $organizer->email,
+                    'phone' => $organizer->phone,
+                    'status' => $organizer->status,
+                    'verification_status' => $organizer->onboarding?->verification_status,
+                ];
+            }),
+            'filters' => [
+                'status' => $status,
+            ],
+        ]);
+    }
+
+    public function show(EventOrganizer $organizer): Response
+    {
+        return Inertia::render('admin/events/organizers/show', [
+            'organizer' => $organizer->load(['user', 'onboarding']),
+        ]);
+    }
+
+    public function updateStatus(Request $request, EventOrganizer $organizer): RedirectResponse
+    {
+        $data = $request->validate([
+            'status' => ['required', 'in:pending,verified,suspended'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $organizer->update([
+            'status' => $data['status'],
+            'notes' => $data['notes'] ?? $organizer->notes,
+        ]);
+
+        $onboarding = MitraEventOnboarding::query()
+            ->where('user_id', $organizer->user_id)
+            ->first();
+        if ($onboarding) {
+            $verificationStatus = match ($data['status']) {
+                'verified' => 'verified',
+                'pending' => 'pending',
+                'suspended' => 'rejected',
+                default => $onboarding->verification_status,
+            };
+            $onboarding->update([
+                'verification_status' => $verificationStatus,
+                'verification_reason' => $data['status'] === 'suspended' ? ($data['notes'] ?? $onboarding->verification_reason) : null,
+            ]);
+        }
+
+        EventAuditLog::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'event_organizer_status_updated',
+            'subject_type' => EventOrganizer::class,
+            'subject_id' => $organizer->id,
+            'metadata' => $data,
+        ]);
+
+        return back();
+    }
+}

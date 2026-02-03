@@ -16,7 +16,7 @@ class MitraOnboardingController extends Controller
     {
         $user = $request->user();
         $data = $request->validate([
-            'type' => ['required', 'in:hotel,wisata'],
+            'type' => ['required', 'in:hotel,wisata,event'],
         ]);
 
         if ($user->mitra_onboarding_type && $user->mitra_onboarding_type !== $data['type']) {
@@ -31,6 +31,9 @@ class MitraOnboardingController extends Controller
         if ($data['type'] === 'wisata') {
             return redirect()->route('mitra.wisata.onboarding');
         }
+        if ($data['type'] === 'event') {
+            return redirect()->route('mitra.event.onboarding');
+        }
 
         return redirect()->route('mitra.onboarding');
     }
@@ -40,6 +43,9 @@ class MitraOnboardingController extends Controller
         $user = $request->user();
         if ($user->mitra_onboarding_type === 'wisata') {
             return redirect()->route('mitra.wisata.onboarding');
+        }
+        if ($user->mitra_onboarding_type === 'event') {
+            return redirect()->route('mitra.event.onboarding');
         }
 
         if (! $user->mitra_onboarding_type) {

@@ -85,6 +85,70 @@ Route::get('dashboard', function () {
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function () {
+    Route::get('admin/events/organizers', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'index'])
+        ->name('admin.events.organizers.index');
+    Route::get('admin/events/organizers/{organizer}', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'show'])
+        ->name('admin.events.organizers.show');
+    Route::post('admin/events/organizers/{organizer}/status', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'updateStatus'])
+        ->name('admin.events.organizers.status');
+
+    Route::get('admin/events', [\App\Http\Controllers\Admin\EventController::class, 'index'])
+        ->name('admin.events.index');
+
+    Route::get('admin/events/tickets', [\App\Http\Controllers\Admin\EventTicketController::class, 'index'])
+        ->name('admin.events.tickets.index');
+    Route::post('admin/events/tickets/{ticket}', [\App\Http\Controllers\Admin\EventTicketController::class, 'update'])
+        ->name('admin.events.tickets.update');
+
+    Route::get('admin/events/bookings', [\App\Http\Controllers\Admin\EventBookingController::class, 'index'])
+        ->name('admin.events.bookings.index');
+    Route::get('admin/events/bookings/{booking}', [\App\Http\Controllers\Admin\EventBookingController::class, 'show'])
+        ->name('admin.events.bookings.show');
+
+    Route::get('admin/events/attendees', [\App\Http\Controllers\Admin\EventAttendeeController::class, 'index'])
+        ->name('admin.events.attendees.index');
+
+    Route::get('admin/events/scans', [\App\Http\Controllers\Admin\EventScanController::class, 'index'])
+        ->name('admin.events.scans.index');
+    Route::get('admin/events/content', [\App\Http\Controllers\Admin\EventContentController::class, 'index'])
+        ->name('admin.events.content.index');
+    Route::get('admin/events/reviews', [\App\Http\Controllers\Admin\EventReviewController::class, 'index'])
+        ->name('admin.events.reviews.index');
+
+    Route::get('admin/events/exceptions', [\App\Http\Controllers\Admin\EventExceptionController::class, 'index'])
+        ->name('admin.events.exceptions.index');
+    Route::post('admin/events/{event}/exception', [\App\Http\Controllers\Admin\EventExceptionController::class, 'updateEvent'])
+        ->whereNumber('event')
+        ->name('admin.events.exceptions.update');
+    Route::post('admin/events/bookings/{booking}/refund', [\App\Http\Controllers\Admin\EventExceptionController::class, 'refund'])
+        ->name('admin.events.refunds.store');
+
+    Route::get('admin/events/finance/commissions', [\App\Http\Controllers\Admin\EventFinanceController::class, 'commissions'])
+        ->name('admin.events.finance.commissions');
+    Route::post('admin/events/finance/commissions', [\App\Http\Controllers\Admin\EventFinanceController::class, 'storeCommission'])
+        ->name('admin.events.finance.commissions.store');
+    Route::get('admin/events/finance/settlements', [\App\Http\Controllers\Admin\EventFinanceController::class, 'settlements'])
+        ->name('admin.events.finance.settlements');
+    Route::post('admin/events/finance/settlements', [\App\Http\Controllers\Admin\EventFinanceController::class, 'createSettlement'])
+        ->name('admin.events.finance.settlements.create');
+    Route::get('admin/events/finance/reports', [\App\Http\Controllers\Admin\EventFinanceController::class, 'reports'])
+        ->name('admin.events.finance.reports');
+
+    Route::get('admin/events/system/audit-logs', [\App\Http\Controllers\Admin\EventAuditController::class, 'index'])
+        ->name('admin.events.audit.index');
+    Route::get('admin/events/system/settings', [\App\Http\Controllers\Admin\EventSettingController::class, 'index'])
+        ->name('admin.events.settings.index');
+    Route::post('admin/events/system/settings', [\App\Http\Controllers\Admin\EventSettingController::class, 'update'])
+        ->name('admin.events.settings.update');
+    Route::get('admin/events/{event}', [\App\Http\Controllers\Admin\EventController::class, 'show'])
+        ->whereNumber('event')
+        ->name('admin.events.show');
+    Route::post('admin/events/{event}/status', [\App\Http\Controllers\Admin\EventController::class, 'updateStatus'])
+        ->whereNumber('event')
+        ->name('admin.events.status');
+    Route::post('admin/events/{event}/capacity', [\App\Http\Controllers\Admin\EventController::class, 'updateCapacity'])
+        ->whereNumber('event')
+        ->name('admin.events.capacity');
     Route::get('admin/mitra', [\App\Http\Controllers\Admin\MitraController::class, 'index'])
         ->name('admin.mitra.index');
     Route::get('admin/mitra/{user}', [\App\Http\Controllers\Admin\MitraController::class, 'show'])
@@ -284,6 +348,7 @@ Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
     $onboardingType = $request->user()->mitra_onboarding_type;
     $onboarding = null;
     $wisataOnboarding = null;
+    $eventOnboarding = null;
     if ($onboardingType === 'hotel') {
         $onboarding = \App\Models\MitraOnboarding::query()->firstOrCreate([
             'user_id' => $request->user()->id,
@@ -291,6 +356,11 @@ Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
     }
     if ($onboardingType === 'wisata') {
         $wisataOnboarding = \App\Models\MitraWisataOnboarding::query()->firstOrCreate([
+            'user_id' => $request->user()->id,
+        ]);
+    }
+    if ($onboardingType === 'event') {
+        $eventOnboarding = \App\Models\MitraEventOnboarding::query()->firstOrCreate([
             'user_id' => $request->user()->id,
         ]);
     }
@@ -334,6 +404,7 @@ Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
     return Inertia::render('mitra/dashboard', [
         'onboarding' => $onboarding,
         'wisataOnboarding' => $wisataOnboarding,
+        'eventOnboarding' => $eventOnboarding ?? null,
         'onboardingType' => $onboardingType,
         'stats' => [
             'reservations_today' => $todayBookings,
@@ -379,6 +450,27 @@ Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
         ->name('mitra.wisata.onboarding.submitVerification');
     Route::post('mitra/wisata/onboarding/submit-payout', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'submitPayout'])
         ->name('mitra.wisata.onboarding.submitPayout');
+
+    Route::get('mitra/event/onboarding', [\App\Http\Controllers\MitraEventOnboardingController::class, 'show'])
+        ->name('mitra.event.onboarding');
+    Route::patch('mitra/event/onboarding/step-1', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepOne'])
+        ->name('mitra.event.onboarding.step1');
+    Route::post('mitra/event/onboarding/step-1', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepOne'])
+        ->name('mitra.event.onboarding.step1.post');
+    Route::patch('mitra/event/onboarding/step-2', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepTwo'])
+        ->name('mitra.event.onboarding.step2');
+    Route::post('mitra/event/onboarding/step-2', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepTwo'])
+        ->name('mitra.event.onboarding.step2.post');
+    Route::patch('mitra/event/onboarding/step-3', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepThree'])
+        ->name('mitra.event.onboarding.step3');
+    Route::post('mitra/event/onboarding/step-3', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepThree'])
+        ->name('mitra.event.onboarding.step3.post');
+    Route::patch('mitra/event/onboarding/step-4', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepFour'])
+        ->name('mitra.event.onboarding.step4');
+    Route::post('mitra/event/onboarding/step-4', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepFour'])
+        ->name('mitra.event.onboarding.step4.post');
+    Route::post('mitra/event/onboarding/submit-verification', [\App\Http\Controllers\MitraEventOnboardingController::class, 'submitVerification'])
+        ->name('mitra.event.onboarding.submitVerification');
 });
 
 Route::prefix('mitra')
