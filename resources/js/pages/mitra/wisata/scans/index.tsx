@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
+import { useEffect, useRef, useState } from 'react';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
 type ScanRow = {
     id: number;
@@ -35,6 +37,11 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
         officer_name: '',
         location: '',
     });
+    const videoRef = useRef<HTMLVideoElement | null>(null);
+    const readerRef = useRef<BrowserMultiFormatReader | null>(null);
+    const [isScanning, setIsScanning] = useState(false);
+    const [cameraError, setCameraError] = useState<string | null>(null);
+    const lastScannedRef = useRef<string | null>(null);
 
     const submitFilters = (formEl: HTMLFormElement) => {
         const data = new FormData(formEl);
@@ -42,6 +49,98 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
             preserveState: true,
         });
     };
+
+    const normalizeBookingCode = (value: string) => {
+        const trimmed = value.trim();
+        if (!trimmed) return trimmed;
+        const parts = trimmed.split('|').map((item) => item.trim()).filter(Boolean);
+        return parts.length > 1 ? parts[parts.length - 1] : trimmed;
+    };
+
+    const submitScan = (rawValue: string) => {
+        const bookingCode = normalizeBookingCode(rawValue);
+        if (!bookingCode) return;
+        if (lastScannedRef.current === bookingCode) return;
+        lastScannedRef.current = bookingCode;
+        form.setData('booking_code', bookingCode);
+        form.post('/mitra/wisata/scans', {
+            preserveScroll: true,
+            onSuccess: () =>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Terscan',
+                    text: 'Tiket berhasil diverifikasi.',
+                }).then(() => {
+                    if (navigator.vibrate) {
+                        navigator.vibrate(120);
+                    }
+                    playBeep(740, 140);
+                    lastScannedRef.current = null;
+                }),
+            onError: () =>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Tidak dapat memvalidasi tiket.',
+                }).then(() => {
+                    if (navigator.vibrate) {
+                        navigator.vibrate([80, 80, 80]);
+                    }
+                    playBeep(320, 200);
+                    lastScannedRef.current = null;
+                }),
+        });
+    };
+
+    const playBeep = (frequency: number, duration = 120) => {
+        try {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            const oscillator = ctx.createOscillator();
+            const gain = ctx.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = frequency;
+            gain.gain.value = 0.08;
+            oscillator.connect(gain);
+            gain.connect(ctx.destination);
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+                ctx.close().catch(() => {});
+            }, duration);
+        } catch {
+            // ignore audio errors
+        }
+    };
+
+    useEffect(() => {
+        if (!isScanning) return;
+        if (!videoRef.current) return;
+        setCameraError(null);
+        const reader = new BrowserMultiFormatReader();
+        readerRef.current = reader;
+
+        reader
+            .decodeFromConstraints(
+                { video: { facingMode: 'environment' } },
+                videoRef.current,
+                (result) => {
+                    if (result?.getText()) {
+                        submitScan(result.getText());
+                    }
+                }
+            )
+            .catch((error) => {
+                setCameraError('Tidak dapat mengakses kamera. Pastikan izin kamera diaktifkan.');
+                setIsScanning(false);
+            });
+
+        return () => {
+            readerRef.current?.reset();
+            readerRef.current = null;
+        };
+    }, [isScanning]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -59,54 +158,72 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
                             Input kode booking untuk validasi tiket masuk.
                         </p>
                     </div>
-                    <form
-                        className="mt-6 grid gap-3 md:grid-cols-3"
-                        onSubmit={(event) => {
-                            event.preventDefault();
-                            form.post('/mitra/wisata/scans', {
-                                preserveScroll: true,
-                                onSuccess: () =>
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Terscan',
-                                        text: 'Tiket berhasil diverifikasi.',
-                                    }),
-                                onError: () =>
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Gagal',
-                                        text: 'Tidak dapat memvalidasi tiket.',
-                                    }),
-                            });
-                        }}
-                    >
+                    <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                        <div className="rounded-2xl border border-dashed border-sky-200 bg-sky-50/40 p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-semibold text-slate-900">Scan QR dengan Kamera</p>
+                                    <p className="text-xs text-slate-500">Arahkan kamera ke QR pada tiket wisata.</p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant={isScanning ? 'destructive' : 'default'}
+                                    className={isScanning ? '' : 'bg-sky-600 text-white hover:bg-sky-700'}
+                                    onClick={() => {
+                                        if (isScanning) {
+                                            readerRef.current?.reset();
+                                            readerRef.current = null;
+                                            setIsScanning(false);
+                                            return;
+                                        }
+                                        setIsScanning(true);
+                                    }}
+                                >
+                                    {isScanning ? 'Stop Scan' : 'Mulai Scan'}
+                                </Button>
+                            </div>
+                            <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-900/80">
+                                <video ref={videoRef} className="h-64 w-full object-cover" muted />
+                            </div>
+                            {cameraError && (
+                                <p className="mt-3 text-xs font-semibold text-rose-600">{cameraError}</p>
+                            )}
+                        </div>
                         <div>
-                            <input
-                                value={form.data.booking_code}
-                                onChange={(event) => form.setData('booking_code', event.target.value)}
-                                placeholder="Kode booking"
-                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <InputError message={form.errors.booking_code} />
+                            <form
+                                className="grid gap-3"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    submitScan(form.data.booking_code);
+                                }}
+                            >
+                                <div>
+                                    <input
+                                        value={form.data.booking_code}
+                                        onChange={(event) => form.setData('booking_code', event.target.value)}
+                                        placeholder="Kode booking"
+                                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    />
+                                    <InputError message={form.errors.booking_code} />
+                                </div>
+                                <input
+                                    value={form.data.officer_name}
+                                    onChange={(event) => form.setData('officer_name', event.target.value)}
+                                    placeholder="Nama petugas"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <input
+                                    value={form.data.location}
+                                    onChange={(event) => form.setData('location', event.target.value)}
+                                    placeholder="Lokasi (opsional)"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                                    Simpan Scan
+                                </Button>
+                            </form>
                         </div>
-                        <input
-                            value={form.data.officer_name}
-                            onChange={(event) => form.setData('officer_name', event.target.value)}
-                            placeholder="Nama petugas"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <input
-                            value={form.data.location}
-                            onChange={(event) => form.setData('location', event.target.value)}
-                            placeholder="Lokasi (opsional)"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <div className="md:col-span-3 flex justify-end">
-                            <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
-                                Simpan Scan
-                            </Button>
-                        </div>
-                    </form>
+                    </div>
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">

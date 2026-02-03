@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Mitra\Wisata;
 
 use App\Http\Controllers\Controller;
+use App\Models\UserNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -11,17 +12,17 @@ class NotificationController extends Controller
 {
     public function index(Request $request): Response
     {
-        $notifications = $request->user()
-            ->notifications()
+        $notifications = UserNotification::query()
+            ->where('user_id', $request->user()->id)
             ->latest()
             ->take(50)
             ->get()
-            ->map(fn ($item) => [
+            ->map(fn (UserNotification $item) => [
                 'id' => $item->id,
-                'title' => $item->data['title'] ?? 'Notifikasi',
-                'message' => $item->data['message'] ?? '',
-                'created_at' => $item->created_at->format('Y-m-d H:i'),
-                'read_at' => $item->read_at,
+                'title' => $item->title ?? 'Notifikasi',
+                'message' => $item->message ?? '',
+                'created_at' => $item->created_at?->format('Y-m-d H:i'),
+                'read_at' => $item->is_read ? $item->updated_at?->format('Y-m-d H:i') : null,
             ]);
 
         return Inertia::render('mitra/wisata/notifications/index', [

@@ -2,7 +2,6 @@ import { Link } from '@inertiajs/react';
 import { Building2, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -406,9 +405,6 @@ export function AppSidebarAdmin() {
                 </SidebarMenu>
             </SidebarContent>
 
-            <SidebarFooter>
-                <NavUser />
-            </SidebarFooter>
         </Sidebar>
     );
 }
