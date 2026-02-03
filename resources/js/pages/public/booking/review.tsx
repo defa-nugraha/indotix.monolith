@@ -4,7 +4,7 @@ import { Bell, CalendarCheck, ClipboardCheck, Mail, Phone, Star, Ticket, User, U
 import { useState } from 'react';
 
 export default function BookingReview({ draft, hotel, roomType, pricing, voucher }: any) {
-    const { auth } = usePage().props as { auth?: { user?: unknown } };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -67,9 +67,14 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
-                            <Link href="/notifications" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
                                 <Bell className="h-4 w-4" />
                                 Notifikasi
+                                {Boolean(unread_notifications) && (
+                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                        {unread_notifications}
+                                    </span>
+                                )}
                             </Link>
                         </div>
                     )}

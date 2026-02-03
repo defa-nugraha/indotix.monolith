@@ -36,7 +36,7 @@ export default function WisataBookingPayment({
     snapClientKey: string;
     snapScriptUrl: string;
 }) {
-    const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number };
     const [remaining, setRemaining] = useState<string | null>(null);
     const form = useForm({});
     const snapOpened = useRef(false);
@@ -107,7 +107,14 @@ export default function WisataBookingPayment({
                             <Link href="/settings/profile" className="hover:text-sky-600">Profile</Link>
                             <Link href="/history" className="hover:text-sky-600">Riwayat</Link>
                             <Link href="/?tab=chat" className="hover:text-sky-600">Chat</Link>
-                            <Link href="/notifications" className="hover:text-sky-600">Notifikasi</Link>
+                            <Link href="/notifications" className="relative hover:text-sky-600">
+                                Notifikasi
+                                {Boolean(unread_notifications) && (
+                                    <span className="absolute -right-4 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                        {unread_notifications}
+                                    </span>
+                                )}
+                            </Link>
                         </div>
                     ) : (
                         <>

@@ -6,7 +6,7 @@ import InputError from '@/components/input-error';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History, UserCircle, Mail, Phone } from 'lucide-react';
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
-    const { auth } = usePage().props as { auth?: { user?: any } };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
     const [passwordOpen, setPasswordOpen] = useState(false);
     const passwordForm = useForm({
         current_password: '',
@@ -55,9 +55,14 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             <MessageCircle className="h-4 w-4" />
                             Chat
                         </Link>
-                        <Link href="/notifications" className="flex items-center gap-2 hover:text-sky-600">
+                        <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
                             <Bell className="h-4 w-4" />
                             Notifikasi
+                            {Boolean(unread_notifications) && (
+                                <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                    {unread_notifications}
+                                </span>
+                            )}
                         </Link>
                     </div>
                 </div>

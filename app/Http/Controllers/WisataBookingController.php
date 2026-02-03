@@ -203,6 +203,19 @@ class WisataBookingController extends Controller
             'data' => [
                 'booking_id' => $this->encryptId($booking->id),
                 'type' => 'wisata',
+                'category' => 'wisata',
+            ],
+        ]);
+
+        UserNotification::create([
+            'user_id' => $request->user()->id,
+            'title' => 'Menunggu pembayaran tiket',
+            'message' => 'Ada pembayaran tiket wisata yang perlu diselesaikan.',
+            'type' => 'wisata_payment_pending',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+                'type' => 'wisata',
+                'category' => 'wisata',
             ],
         ]);
 

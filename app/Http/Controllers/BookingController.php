@@ -285,6 +285,18 @@ class BookingController extends Controller
             'type' => 'booking_created',
             'data' => [
                 'booking_id' => $this->encryptId($booking->id),
+                'category' => 'hotel',
+            ],
+        ]);
+
+        UserNotification::create([
+            'user_id' => $request->user()->id,
+            'title' => 'Menunggu pembayaran',
+            'message' => 'Ada pembayaran yang perlu diselesaikan agar booking aktif.',
+            'type' => 'payment_pending',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+                'category' => 'hotel',
             ],
         ]);
 

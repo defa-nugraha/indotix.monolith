@@ -14,8 +14,9 @@ type NotificationItem = {
 };
 
 export default function Notifications({ notifications = [] }: { notifications: NotificationItem[] }) {
-    const { auth } = usePage().props as { auth?: { user?: any } };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
@@ -39,10 +40,12 @@ export default function Notifications({ notifications = [] }: { notifications: N
     const filteredNotifications = useMemo(() => {
         return notifications.filter((item) => {
             if (activeFilter === 'unread' && item.is_read) return false;
+            const category = item.data?.category ?? (item.type?.startsWith('wisata_') ? 'wisata' : 'hotel');
+            if (categoryFilter !== 'all' && category !== categoryFilter) return false;
             const haystack = `${item.title} ${item.message}`.toLowerCase();
             return query.trim().length === 0 ? true : haystack.includes(query.toLowerCase());
         });
-    }, [notifications, activeFilter, query]);
+    }, [notifications, activeFilter, categoryFilter, query]);
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -75,9 +78,14 @@ export default function Notifications({ notifications = [] }: { notifications: N
                             <MessageCircle className="h-4 w-4" />
                             Chat
                         </Link>
-                        <Link href="/notifications" className="flex items-center gap-2 text-sky-600">
+                        <Link href="/notifications" className="relative flex items-center gap-2 text-sky-600">
                             <Bell className="h-4 w-4" />
                             Notifikasi
+                            {Boolean(unread_notifications) && (
+                                <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                    {unread_notifications}
+                                </span>
+                            )}
                         </Link>
                     </div>
                 </div>
@@ -129,7 +137,7 @@ export default function Notifications({ notifications = [] }: { notifications: N
                             <Filter className="h-4 w-4 text-sky-500" />
                             Filter Notifikasi
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                             {[
                                 { id: 'all', label: 'Semua' },
                                 { id: 'unread', label: 'Belum Dibaca' },
@@ -140,6 +148,25 @@ export default function Notifications({ notifications = [] }: { notifications: N
                                     className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                                         activeFilter === item.id
                                             ? 'bg-sky-600 text-white'
+                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    }`}
+                                >
+                                    {item.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { id: 'all', label: 'Semua' },
+                                { id: 'hotel', label: 'Hotel' },
+                                { id: 'wisata', label: 'Wisata' },
+                            ].map((item) => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setCategoryFilter(item.id as any)}
+                                    className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                                        categoryFilter === item.id
+                                            ? 'bg-emerald-500 text-white'
                                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                     }`}
                                 >

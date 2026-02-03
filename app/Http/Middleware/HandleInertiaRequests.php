@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\UserNotification;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -41,6 +42,12 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'unread_notifications' => $request->user()
+                ? UserNotification::query()
+                    ->where('user_id', $request->user()->id)
+                    ->where('is_read', false)
+                    ->count()
+                : 0,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

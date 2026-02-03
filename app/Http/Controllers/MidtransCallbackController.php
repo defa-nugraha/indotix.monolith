@@ -74,6 +74,7 @@ class MidtransCallbackController extends Controller
                 'type' => 'payment_paid',
                 'data' => [
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $booking->id),
+                    'category' => 'hotel',
                 ],
             ]);
         }
@@ -92,6 +93,7 @@ class MidtransCallbackController extends Controller
                 'data' => [
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id),
                     'type' => 'wisata',
+                    'category' => 'wisata',
                 ],
             ]);
         }
@@ -121,6 +123,7 @@ class MidtransCallbackController extends Controller
                 'type' => 'booking_expired',
                 'data' => [
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $booking->id),
+                    'category' => 'hotel',
                 ],
             ]);
         }
@@ -141,6 +144,7 @@ class MidtransCallbackController extends Controller
                 'data' => [
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id),
                     'type' => 'wisata',
+                    'category' => 'wisata',
                 ],
             ]);
         }

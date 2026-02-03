@@ -30,7 +30,7 @@ const navItems = [
 const chips = ['Alam', 'Budaya', 'Edukasi', 'Kuliner', 'Desa Wisata', 'Religi', 'Pantai', 'Gunung', 'Taman Nasional', 'Air Terjun', 'Danau'];
 
 export default function WisataSearch({ filters, destinations }: { filters: Filters; destinations: Destination[] }) {
-    const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
@@ -97,9 +97,14 @@ export default function WisataSearch({ filters, destinations }: { filters: Filte
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
-                            <Link href="/notifications" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
                                 <Bell className="h-4 w-4" />
                                 Notifikasi
+                                {Boolean(unread_notifications) && (
+                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                        {unread_notifications}
+                                    </span>
+                                )}
                             </Link>
                         </div>
                     )}

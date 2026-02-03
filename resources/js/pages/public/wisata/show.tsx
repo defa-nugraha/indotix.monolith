@@ -60,7 +60,7 @@ export default function WisataShow({
     tickets: TicketItem[];
     filters: Filters;
 }) {
-    const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number };
     const [visitDate, setVisitDate] = useState(filters.visit_date);
     const [quantity, setQuantity] = useState(filters.quantity ?? 1);
     const mapEmbedUrl = (() => {
@@ -154,9 +154,14 @@ export default function WisataShow({
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
-                            <Link href="/notifications" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
                                 <Bell className="h-4 w-4" />
                                 Notifikasi
+                                {Boolean(unread_notifications) && (
+                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                        {unread_notifications}
+                                    </span>
+                                )}
                             </Link>
                         </div>
                     )}

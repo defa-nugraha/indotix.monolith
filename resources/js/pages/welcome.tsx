@@ -74,7 +74,7 @@ export default function Welcome({
     hotelCards?: HotelCard[];
     wisataCards?: WisataCard[];
 }) {
-    const { auth } = usePage().props as { auth?: { user?: unknown } };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const [isReady, setIsReady] = useState(false);
     const [bannerIndex, setBannerIndex] = useState(1);
@@ -236,9 +236,14 @@ export default function Welcome({
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
-                            <Link href="/notifications" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
                                 <Bell className="h-4 w-4" />
                                 Notifikasi
+                                {Boolean(unread_notifications) && (
+                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                        {unread_notifications}
+                                    </span>
+                                )}
                             </Link>
                         </div>
                     )}
