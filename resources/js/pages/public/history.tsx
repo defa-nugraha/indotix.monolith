@@ -5,7 +5,7 @@ import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircl
 type Booking = {
     id: number;
     encrypted_id: string;
-    type?: 'hotel' | 'wisata' | 'event';
+    type?: 'hotel' | 'wisata' | 'event' | 'special_program';
     title?: string | null;
     city_name?: string | null;
     address?: string | null;
@@ -33,14 +33,14 @@ type Booking = {
 export default function History({ bookings = [] }: { bookings: Booking[] }) {
     const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
     const [activeStatus, setActiveStatus] = useState<'all' | 'pending_payment' | 'paid' | 'expired' | 'cancelled'>('all');
-    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event'>('all');
+    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
-        { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
+        { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
@@ -181,6 +181,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                 { id: 'hotel', label: 'Hotel' },
                                 { id: 'wisata', label: 'Wisata' },
                                 { id: 'event', label: 'Event' },
+                                { id: 'special_program', label: 'Special Program' },
                             ].map((item) => (
                                 <button
                                     key={item.id}
@@ -257,7 +258,13 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                 </span>
                                                 {booking.type && (
                                                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                                        {booking.type === 'hotel' ? 'Hotel' : booking.type === 'event' ? 'Event' : 'Wisata'}
+                                                        {booking.type === 'hotel'
+                                                            ? 'Hotel'
+                                                            : booking.type === 'event'
+                                                                ? 'Event'
+                                                                : booking.type === 'special_program'
+                                                                    ? 'Special Program'
+                                                                    : 'Wisata'}
                                                     </span>
                                                 )}
                                             </div>
@@ -318,7 +325,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                     <div>{booking.guest_name ?? '-'}</div>
                                                     <div>{booking.guest_email ?? '-'}</div>
                                                     <div>{booking.guest_phone ?? '-'}</div>
-                                                    {(booking.type === 'wisata' || booking.type === 'event') && booking.ticket_name && (
+                                                    {(booking.type === 'wisata' || booking.type === 'event' || booking.type === 'special_program') && booking.ticket_name && (
                                                         <div className="text-slate-500">Tiket: {booking.ticket_name}</div>
                                                     )}
                                                 </div>

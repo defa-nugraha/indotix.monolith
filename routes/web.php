@@ -106,6 +106,20 @@ Route::get('dashboard', function () {
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function () {
+    Route::get('admin/special-programs/{section?}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'index'])
+        ->where('section', 'programs|scope|benefits|visibility|monitoring|finance|compliance')
+        ->name('admin.special-programs.index');
+    Route::post('admin/special-programs', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'store'])
+        ->name('admin.special-programs.store');
+    Route::put('admin/special-programs/{program}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'update'])
+        ->name('admin.special-programs.update');
+    Route::post('admin/special-programs/{program}/duplicate', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'duplicate'])
+        ->name('admin.special-programs.duplicate');
+    Route::post('admin/special-programs/{program}/status', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'updateStatus'])
+        ->name('admin.special-programs.status');
+    Route::delete('admin/special-programs/{program}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'destroy'])
+        ->name('admin.special-programs.destroy');
+
     Route::get('admin/events/organizers', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'index'])
         ->name('admin.events.organizers.index');
     Route::get('admin/events/organizers/{organizer}', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'show'])
@@ -615,12 +629,18 @@ Route::get('/events', [\App\Http\Controllers\PublicEventController::class, 'inde
     ->name('events.search');
 Route::get('/events/{event}', [\App\Http\Controllers\PublicEventController::class, 'show'])
     ->name('events.show');
+Route::get('/special-programs', [\App\Http\Controllers\PublicSpecialProgramController::class, 'index'])
+    ->name('special-programs.search');
+Route::get('/special-programs/{program}', [\App\Http\Controllers\PublicSpecialProgramController::class, 'show'])
+    ->name('special-programs.show');
 Route::get('/wisata', [\App\Http\Controllers\PublicWisataController::class, 'index'])
     ->name('wisata.search');
 Route::get('/wisata/{destination}', [\App\Http\Controllers\PublicWisataController::class, 'show'])
     ->name('wisata.show');
 Route::post('/events/booking/prepare', [\App\Http\Controllers\EventPublicBookingController::class, 'prepare'])
     ->name('events.booking.prepare');
+Route::post('/special-programs/booking/prepare', [\App\Http\Controllers\SpecialProgramBookingController::class, 'prepare'])
+    ->name('special-programs.booking.prepare');
 Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingController::class, 'prepare'])
     ->name('wisata.booking.prepare');
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
@@ -665,6 +685,17 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('events.booking.ticket');
     Route::get('/events/booking/{booking}', [\App\Http\Controllers\EventPublicBookingController::class, 'show'])
         ->name('events.booking.show');
+
+    Route::get('/special-programs/booking/review', [\App\Http\Controllers\SpecialProgramBookingController::class, 'review'])
+        ->name('special-programs.booking.review');
+    Route::post('/special-programs/booking/confirm', [\App\Http\Controllers\SpecialProgramBookingController::class, 'confirm'])
+        ->name('special-programs.booking.confirm');
+    Route::get('/special-programs/booking/{booking}/payment', [\App\Http\Controllers\SpecialProgramBookingController::class, 'payment'])
+        ->name('special-programs.booking.payment');
+    Route::get('/special-programs/booking/{booking}/ticket', [\App\Http\Controllers\SpecialProgramBookingController::class, 'ticket'])
+        ->name('special-programs.booking.ticket');
+    Route::get('/special-programs/booking/{booking}', [\App\Http\Controllers\SpecialProgramBookingController::class, 'show'])
+        ->name('special-programs.booking.show');
 
     Route::get('/wisata/booking/review', [\App\Http\Controllers\WisataBookingController::class, 'review'])
         ->name('wisata.booking.review');

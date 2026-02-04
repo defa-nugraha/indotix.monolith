@@ -16,14 +16,14 @@ type NotificationItem = {
 export default function Notifications({ notifications = [] }: { notifications: NotificationItem[] }) {
     const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
-    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata' | 'event'>('all');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
-        { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
+        { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
@@ -39,12 +39,23 @@ export default function Notifications({ notifications = [] }: { notifications: N
         event_payment_pending: CreditCard,
         event_payment_paid: CheckCircle,
         event_booking_expired: Clock,
+        special_program_booking_created: Ticket,
+        special_program_payment_pending: CreditCard,
+        special_program_payment_paid: CheckCircle,
+        special_program_booking_expired: Clock,
     };
 
     const filteredNotifications = useMemo(() => {
         return notifications.filter((item) => {
             if (activeFilter === 'unread' && item.is_read) return false;
-            const category = item.data?.category ?? (item.type?.startsWith('wisata_') ? 'wisata' : item.type?.startsWith('event_') ? 'event' : 'hotel');
+            const category = item.data?.category
+                ?? (item.type?.startsWith('wisata_')
+                    ? 'wisata'
+                    : item.type?.startsWith('event_')
+                        ? 'event'
+                        : item.type?.startsWith('special_program_')
+                            ? 'special_program'
+                            : 'hotel');
             if (categoryFilter !== 'all' && category !== categoryFilter) return false;
             const haystack = `${item.title} ${item.message}`.toLowerCase();
             return query.trim().length === 0 ? true : haystack.includes(query.toLowerCase());
@@ -165,6 +176,7 @@ export default function Notifications({ notifications = [] }: { notifications: N
                                 { id: 'hotel', label: 'Hotel' },
                                 { id: 'wisata', label: 'Wisata' },
                                 { id: 'event', label: 'Event' },
+                                { id: 'special_program', label: 'Special Program' },
                             ].map((item) => (
                                 <button
                                     key={item.id}
@@ -225,7 +237,15 @@ export default function Notifications({ notifications = [] }: { notifications: N
                                         <div className="flex flex-wrap items-center gap-2">
                                             {item.data?.booking_id && (
                                                 <Link
-                                                    href={`/booking/${item.data.booking_id}`}
+                                                    href={
+                                                        item.data?.category === 'wisata'
+                                                            ? `/wisata/booking/${item.data.booking_id}`
+                                                            : item.data?.category === 'event'
+                                                                ? `/events/booking/${item.data.booking_id}`
+                                                                : item.data?.category === 'special_program'
+                                                                    ? `/special-programs/booking/${item.data.booking_id}`
+                                                                    : `/booking/${item.data.booking_id}`
+                                                    }
                                                     className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
                                                 >
                                                     Lihat Detail

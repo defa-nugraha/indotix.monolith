@@ -1,0 +1,94 @@
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useEffect, useRef } from 'react';
+
+type Booking = {
+    encrypted_id: string;
+    total: number;
+    payment_status?: string | null;
+    payment_deadline?: string | null;
+    item: { name: string; type: string };
+    ticket_name?: string | null;
+    program: { name?: string | null };
+    payment?: { payload?: Record<string, any> | null } | null;
+};
+
+type Props = {
+    booking: Booking;
+    snapClientKey: string;
+    snapScriptUrl: string;
+};
+
+declare global {
+    interface Window {
+        snap?: { pay: (token: string, options?: Record<string, unknown>) => void };
+    }
+}
+
+export default function SpecialProgramPayment({ booking, snapClientKey, snapScriptUrl }: Props) {
+    const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
+    const snapOpened = useRef(false);
+
+    useEffect(() => {
+        if (!snapScriptUrl || !snapClientKey) return;
+        if (document.querySelector('script[data-midtrans-snap]')) return;
+        const script = document.createElement('script');
+        script.src = snapScriptUrl;
+        script.setAttribute('data-client-key', snapClientKey);
+        script.setAttribute('data-midtrans-snap', 'true');
+        script.async = true;
+        script.onload = () => {
+            if (!snapOpened.current && booking.payment?.payload?.token && window.snap) {
+                snapOpened.current = true;
+                window.snap.pay(booking.payment.payload.token as string);
+            }
+        };
+        document.body.appendChild(script);
+    }, [snapClientKey, snapScriptUrl, booking.payment?.payload]);
+
+    return (
+        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+            <Head title="Pembayaran Special Program" />
+            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
+                    <div className="flex items-center gap-2">
+                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                    </div>
+                    <div className="flex flex-1 items-center">
+                        <input
+                            type="text"
+                            placeholder="Cari kota/hotel/wisata/event..."
+                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
+                        />
+                    </div>
+                    {!auth?.user && (
+                        <div className="flex items-center gap-2">
+                            <Link href="/register" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">Register</Link>
+                            <Link href="/login" className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50">Login</Link>
+                        </div>
+                    )}
+                </div>
+            </header>
+
+            <main className="mx-auto w-full max-w-4xl px-4 py-10 md:px-8">
+                <div className="rounded-3xl bg-white p-6 shadow-sm">
+                    <h1 className="text-xl font-semibold text-slate-900">Pembayaran Special Program</h1>
+                    <p className="mt-2 text-sm text-slate-500">Booking kamu sudah siap, lanjutkan pembayaran.</p>
+                    <div className="mt-6 grid gap-4 text-sm text-slate-600">
+                        <div className="flex items-center justify-between">
+                            <span>Program</span>
+                            <span className="font-semibold text-slate-900">{booking.program?.name ?? '-'}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span>Produk</span>
+                            <span className="font-semibold text-slate-900">{booking.item.name}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span>Total</span>
+                            <span className="text-lg font-semibold text-sky-600">Rp {Number(booking.total).toLocaleString('id-ID')}</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}

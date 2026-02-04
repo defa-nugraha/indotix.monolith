@@ -40,7 +40,7 @@ export default function EventShow({ event, tickets }: { event: EventDetail; tick
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
-        { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
+        { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 

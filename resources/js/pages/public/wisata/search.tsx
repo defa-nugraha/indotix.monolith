@@ -21,9 +21,9 @@ type Filters = {
 
 const navItems = [
     { label: 'Wisata', icon: MapPinned, href: '/wisata', active: true },
-    { label: 'Event', icon: CalendarCheck, href: '/?/events' },
+    { label: 'Event', icon: CalendarCheck, href: '/events' },
     { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
-    { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
+    { label: 'Spesial Program', icon: Star, href: '/special-programs' },
     { label: 'Hotel', icon: Ticket, href: '/stay' },
 ];
 

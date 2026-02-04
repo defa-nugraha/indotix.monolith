@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned } from 'lucide-react';
+import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -69,6 +69,14 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
         isCurrentUrl('/admin/system/notifications');
+    const isSpecialProgramSectionActive =
+        isCurrentUrl('/admin/special-programs') ||
+        isCurrentUrl('/admin/special-programs/scope') ||
+        isCurrentUrl('/admin/special-programs/benefits') ||
+        isCurrentUrl('/admin/special-programs/visibility') ||
+        isCurrentUrl('/admin/special-programs/monitoring') ||
+        isCurrentUrl('/admin/special-programs/finance') ||
+        isCurrentUrl('/admin/special-programs/compliance');
     const isEventSectionActive =
         isCurrentUrl('/admin/events') ||
         isCurrentUrl('/admin/events/organizers') ||
@@ -396,6 +404,56 @@ export function AppSidebarAdmin() {
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/system/settings')}>
                                             <Link href="/admin/events/system/settings">Konfigurasi Event</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isSpecialProgramSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <Sparkles />
+                                    <span>Special Program</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs')}>
+                                            <Link href="/admin/special-programs">Manajemen Program</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/scope')}>
+                                            <Link href="/admin/special-programs/scope">Cakupan & Aturan</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/benefits')}>
+                                            <Link href="/admin/special-programs/benefits">Diskon & Benefit</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/visibility')}>
+                                            <Link href="/admin/special-programs/visibility">Visibilitas</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/monitoring')}>
+                                            <Link href="/admin/special-programs/monitoring">Monitoring</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/finance')}>
+                                            <Link href="/admin/special-programs/finance">Keuangan & Audit</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/compliance')}>
+                                            <Link href="/admin/special-programs/compliance">Komunikasi & Kepatuhan</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

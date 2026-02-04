@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\EventBooking;
+use App\Models\SpecialProgramBooking;
 use App\Models\WisataBooking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -121,9 +122,44 @@ class PublicHistoryController extends Controller
                 ];
             });
 
+        $specialProgramBookings = SpecialProgramBooking::query()
+            ->where('user_id', $request->user()->id)
+            ->latest()
+            ->get()
+            ->map(function (SpecialProgramBooking $booking) {
+                return [
+                    'id' => $booking->id,
+                    'encrypted_id' => Crypt::encryptString((string) $booking->id),
+                    'type' => 'special_program',
+                    'title' => $booking->item_name ?? 'Special Program',
+                    'city_name' => $booking->city_name,
+                    'address' => null,
+                    'check_in' => null,
+                    'check_out' => null,
+                    'nights' => null,
+                    'rooms_count' => null,
+                    'guests_count' => null,
+                    'visit_date' => $booking->visit_date?->toDateString(),
+                    'quantity' => $booking->quantity,
+                    'total' => $booking->total_price,
+                    'status' => $booking->status,
+                    'payment_status' => $booking->payment_status,
+                    'payment_deadline' => $booking->payment_deadline?->toIso8601String(),
+                    'guest_name' => $booking->guest_name,
+                    'guest_email' => $booking->guest_email,
+                    'guest_phone' => $booking->guest_phone,
+                    'created_at' => $booking->created_at?->toIso8601String(),
+                    'midtrans_order_id' => $booking->midtrans_order_id,
+                    'payment_url' => route('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'detail_url' => route('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'ticket_name' => $booking->ticket_name,
+                ];
+            });
+
         $bookings = $hotelBookings
             ->merge($wisataBookings)
             ->merge($eventBookings)
+            ->merge($specialProgramBookings)
             ->sortByDesc('created_at')
             ->values();
 

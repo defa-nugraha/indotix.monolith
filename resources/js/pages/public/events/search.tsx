@@ -38,7 +38,7 @@ export default function EventSearch({
         { label: 'Wisata', icon: MapPinned, href: '/wisata', active: false },
         { label: 'Event', icon: CalendarCheck, href: '/events', active: true },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir', active: false },
-        { label: 'Spesial Program', icon: Star, href: '/?tab=spesial', active: false },
+        { label: 'Spesial Program', icon: Star, href: '/special-programs', active: false },
         { label: 'Hotel', icon: Ticket, href: '/stay', active: false },
     ];
     const chips = ['Konser', 'Festival', 'Komunitas', 'Workshop', 'Olahraga', 'Keluarga', 'Kuliner', 'Seni', 'Budaya', 'Edukasi', 'Pameran'];
