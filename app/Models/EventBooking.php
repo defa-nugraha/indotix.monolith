@@ -52,4 +52,9 @@ class EventBooking extends Model
     {
         return $this->hasMany(EventScan::class);
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(EventPayment::class, 'event_booking_id');
+    }
 }

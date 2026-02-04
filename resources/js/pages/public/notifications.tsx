@@ -16,12 +16,12 @@ type NotificationItem = {
 export default function Notifications({ notifications = [] }: { notifications: NotificationItem[] }) {
     const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
-    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata'>('all');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata' | 'event'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
+        { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
@@ -35,12 +35,16 @@ export default function Notifications({ notifications = [] }: { notifications: N
         payment_paid: CheckCircle,
         booking_cancelled: Bell,
         booking_expired: Clock,
+        event_booking_created: Ticket,
+        event_payment_pending: CreditCard,
+        event_payment_paid: CheckCircle,
+        event_booking_expired: Clock,
     };
 
     const filteredNotifications = useMemo(() => {
         return notifications.filter((item) => {
             if (activeFilter === 'unread' && item.is_read) return false;
-            const category = item.data?.category ?? (item.type?.startsWith('wisata_') ? 'wisata' : 'hotel');
+            const category = item.data?.category ?? (item.type?.startsWith('wisata_') ? 'wisata' : item.type?.startsWith('event_') ? 'event' : 'hotel');
             if (categoryFilter !== 'all' && category !== categoryFilter) return false;
             const haystack = `${item.title} ${item.message}`.toLowerCase();
             return query.trim().length === 0 ? true : haystack.includes(query.toLowerCase());
@@ -160,6 +164,7 @@ export default function Notifications({ notifications = [] }: { notifications: N
                                 { id: 'all', label: 'Semua' },
                                 { id: 'hotel', label: 'Hotel' },
                                 { id: 'wisata', label: 'Wisata' },
+                                { id: 'event', label: 'Event' },
                             ].map((item) => (
                                 <button
                                     key={item.id}

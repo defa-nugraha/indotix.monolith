@@ -5,7 +5,7 @@ import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircl
 type Booking = {
     id: number;
     encrypted_id: string;
-    type?: 'hotel' | 'wisata';
+    type?: 'hotel' | 'wisata' | 'event';
     title?: string | null;
     city_name?: string | null;
     address?: string | null;
@@ -33,12 +33,12 @@ type Booking = {
 export default function History({ bookings = [] }: { bookings: Booking[] }) {
     const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
     const [activeStatus, setActiveStatus] = useState<'all' | 'pending_payment' | 'paid' | 'expired' | 'cancelled'>('all');
-    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata'>('all');
+    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
+        { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
@@ -85,6 +85,12 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
             return statusMatch && typeMatch && queryMatch;
         });
     }, [bookings, activeStatus, activeType, query]);
+
+    const formatIdr = (value?: number | string | null) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return '-';
+        return `Rp ${numeric.toLocaleString('id-ID')}`;
+    };
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -174,6 +180,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                 { id: 'all', label: 'Semua' },
                                 { id: 'hotel', label: 'Hotel' },
                                 { id: 'wisata', label: 'Wisata' },
+                                { id: 'event', label: 'Event' },
                             ].map((item) => (
                                 <button
                                     key={item.id}
@@ -250,7 +257,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                 </span>
                                                 {booking.type && (
                                                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                                        {booking.type === 'hotel' ? 'Hotel' : 'Wisata'}
+                                                        {booking.type === 'hotel' ? 'Hotel' : booking.type === 'event' ? 'Event' : 'Wisata'}
                                                     </span>
                                                 )}
                                             </div>
@@ -311,7 +318,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                     <div>{booking.guest_name ?? '-'}</div>
                                                     <div>{booking.guest_email ?? '-'}</div>
                                                     <div>{booking.guest_phone ?? '-'}</div>
-                                                    {booking.type === 'wisata' && booking.ticket_name && (
+                                                    {(booking.type === 'wisata' || booking.type === 'event') && booking.ticket_name && (
                                                         <div className="text-slate-500">Tiket: {booking.ticket_name}</div>
                                                     )}
                                                 </div>
@@ -323,7 +330,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                         <div className="text-right">
                                             <div className="text-xs text-slate-500">Total Pembayaran</div>
                                             <div className="text-lg font-semibold text-sky-600">
-                                                {booking.total ? `Rp ${booking.total.toLocaleString('id-ID')}` : '-'}
+                                                {formatIdr(booking.total)}
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap gap-2">

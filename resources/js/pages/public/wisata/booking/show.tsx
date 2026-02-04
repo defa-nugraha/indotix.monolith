@@ -44,7 +44,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
+        { label: 'Event', icon: CalendarCheck, href: '/?/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },

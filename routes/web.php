@@ -67,6 +67,26 @@ Route::get('/', function () {
                 'type' => $destination->destination_type,
             ];
         });
+    $eventCards = \App\Models\Event::query()
+        ->where('status', 'published')
+        ->with(['tickets'])
+        ->latest('start_at')
+        ->take(3)
+        ->get()
+        ->map(function (\App\Models\Event $event) {
+            $minPrice = $event->tickets?->min('price');
+
+            return [
+                'id' => $event->id,
+                'encrypted_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $event->id),
+                'title' => $event->title,
+                'city_name' => \Illuminate\Support\Facades\DB::table('regencies')
+                    ->where('code', $event->city_code)
+                    ->value('name'),
+                'start_at' => $event->start_at?->toDateString(),
+                'min_price' => $minPrice ? (int) round($minPrice) : null,
+            ];
+        });
 
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
@@ -77,6 +97,7 @@ Route::get('/', function () {
         'partners' => $partners,
         'hotelCards' => $hotelCards,
         'wisataCards' => $wisataCards,
+        'eventCards' => $eventCards,
     ]);
 })->name('home');
 
@@ -590,10 +611,16 @@ Route::get('/stay', [\App\Http\Controllers\PublicHotelController::class, 'search
     ->name('public.hotels.search');
 Route::get('/stay/hotels/{hotel}', [\App\Http\Controllers\PublicHotelController::class, 'show'])
     ->name('public.hotels.show');
+Route::get('/events', [\App\Http\Controllers\PublicEventController::class, 'index'])
+    ->name('events.search');
+Route::get('/events/{event}', [\App\Http\Controllers\PublicEventController::class, 'show'])
+    ->name('events.show');
 Route::get('/wisata', [\App\Http\Controllers\PublicWisataController::class, 'index'])
     ->name('wisata.search');
 Route::get('/wisata/{destination}', [\App\Http\Controllers\PublicWisataController::class, 'show'])
     ->name('wisata.show');
+Route::post('/events/booking/prepare', [\App\Http\Controllers\EventPublicBookingController::class, 'prepare'])
+    ->name('events.booking.prepare');
 Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingController::class, 'prepare'])
     ->name('wisata.booking.prepare');
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
@@ -627,6 +654,17 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('booking.invoice');
     Route::get('/booking/{booking}', [\App\Http\Controllers\BookingController::class, 'show'])
         ->name('booking.show');
+
+    Route::get('/events/booking/review', [\App\Http\Controllers\EventPublicBookingController::class, 'review'])
+        ->name('events.booking.review');
+    Route::post('/events/booking/confirm', [\App\Http\Controllers\EventPublicBookingController::class, 'confirm'])
+        ->name('events.booking.confirm');
+    Route::get('/events/booking/{booking}/payment', [\App\Http\Controllers\EventPublicBookingController::class, 'payment'])
+        ->name('events.booking.payment');
+    Route::get('/events/booking/{booking}/ticket', [\App\Http\Controllers\EventPublicBookingController::class, 'ticket'])
+        ->name('events.booking.ticket');
+    Route::get('/events/booking/{booking}', [\App\Http\Controllers\EventPublicBookingController::class, 'show'])
+        ->name('events.booking.show');
 
     Route::get('/wisata/booking/review', [\App\Http\Controllers\WisataBookingController::class, 'review'])
         ->name('wisata.booking.review');

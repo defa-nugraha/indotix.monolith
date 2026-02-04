@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\EventBooking;
 use App\Models\WisataBooking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -83,8 +84,46 @@ class PublicHistoryController extends Controller
                 ];
             });
 
+        $eventBookings = EventBooking::query()
+            ->where('user_id', $request->user()->id)
+            ->with(['event', 'ticket'])
+            ->latest()
+            ->get()
+            ->map(function (EventBooking $booking) {
+                $event = $booking->event;
+
+                return [
+                    'id' => $booking->id,
+                    'encrypted_id' => Crypt::encryptString((string) $booking->id),
+                    'type' => 'event',
+                    'title' => $event?->title ?? 'Event',
+                    'city_name' => $this->resolveCityName($event?->city_code),
+                    'address' => $event?->address,
+                    'check_in' => null,
+                    'check_out' => null,
+                    'nights' => null,
+                    'rooms_count' => null,
+                    'guests_count' => null,
+                    'visit_date' => $event?->start_at?->toDateString(),
+                    'quantity' => $booking->quantity,
+                    'total' => $booking->total_price,
+                    'status' => $booking->status,
+                    'payment_status' => $booking->payment_status,
+                    'payment_deadline' => $booking->payment_deadline?->toIso8601String(),
+                    'guest_name' => $booking->guest_name,
+                    'guest_email' => $booking->guest_email,
+                    'guest_phone' => $booking->guest_phone,
+                    'created_at' => $booking->created_at?->toIso8601String(),
+                    'midtrans_order_id' => $booking->midtrans_order_id,
+                    'payment_url' => route('events.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'detail_url' => route('events.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'ticket_name' => $booking->ticket?->name,
+                ];
+            });
+
         $bookings = $hotelBookings
             ->merge($wisataBookings)
+            ->merge($eventBookings)
             ->sortByDesc('created_at')
             ->values();
 

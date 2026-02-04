@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Payment;
 use App\Models\UserNotification;
+use App\Models\EventBooking;
+use App\Models\EventPayment;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
 use App\Services\BookingService;
@@ -32,12 +34,18 @@ class MidtransCallbackController extends Controller
 
         $wisataPayment = null;
         $wisataBooking = null;
+        $eventPayment = null;
+        $eventBooking = null;
         if (! $booking) {
             $wisataPayment = WisataPayment::query()->where('order_id', $orderId)->latest()->first();
             $wisataBooking = $wisataPayment?->booking ?? WisataBooking::query()->where('midtrans_order_id', $orderId)->first();
         }
-
         if (! $booking && ! $wisataBooking) {
+            $eventPayment = EventPayment::query()->where('order_id', $orderId)->latest()->first();
+            $eventBooking = $eventPayment?->booking ?? EventBooking::query()->where('midtrans_order_id', $orderId)->first();
+        }
+
+        if (! $booking && ! $wisataBooking && ! $eventBooking) {
             return response('Booking not found', 404);
         }
 
@@ -57,6 +65,14 @@ class MidtransCallbackController extends Controller
                 'status' => $status ?? $wisataPayment->status,
                 'payment_type' => $payload['payment_type'] ?? $wisataPayment->payment_type,
                 'transaction_id' => $payload['transaction_id'] ?? $wisataPayment->transaction_id,
+                'payload' => $payload,
+            ]);
+        }
+        if ($eventPayment) {
+            $eventPayment->update([
+                'status' => $status ?? $eventPayment->status,
+                'payment_type' => $payload['payment_type'] ?? $eventPayment->payment_type,
+                'transaction_id' => $payload['transaction_id'] ?? $eventPayment->transaction_id,
                 'payload' => $payload,
             ]);
         }
@@ -94,6 +110,30 @@ class MidtransCallbackController extends Controller
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id),
                     'type' => 'wisata',
                     'category' => 'wisata',
+                ],
+            ]);
+        }
+
+        if ($eventBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $wasPaid = $eventBooking->status === 'paid';
+            $eventBooking->update([
+                'status' => 'paid',
+                'payment_status' => $status,
+            ]);
+            if (! $wasPaid) {
+                $eventBooking->ticket?->increment('sold_count', $eventBooking->quantity);
+                $eventBooking->event?->increment('capacity_sold', $eventBooking->quantity);
+            }
+
+            UserNotification::create([
+                'user_id' => $eventBooking->user_id,
+                'title' => 'Pembayaran event berhasil',
+                'message' => 'Pembayaran kamu sudah diterima. Tiket event aktif.',
+                'type' => 'event_payment_paid',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id),
+                    'type' => 'event',
+                    'category' => 'event',
                 ],
             ]);
         }
@@ -145,6 +185,27 @@ class MidtransCallbackController extends Controller
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id),
                     'type' => 'wisata',
                     'category' => 'wisata',
+                ],
+            ]);
+        }
+
+        if ($eventBooking && in_array($status, ['cancel', 'expire', 'deny'], true)) {
+            if ($eventBooking->status === 'pending_payment') {
+                $eventBooking->update([
+                    'status' => 'expired',
+                    'payment_status' => $status,
+                ]);
+            }
+
+            UserNotification::create([
+                'user_id' => $eventBooking->user_id,
+                'title' => 'Pembayaran event gagal',
+                'message' => 'Pembayaran event tidak berhasil atau kedaluwarsa.',
+                'type' => 'event_booking_expired',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id),
+                    'type' => 'event',
+                    'category' => 'event',
                 ],
             ]);
         }

@@ -42,6 +42,14 @@ type WisataCard = {
     image_url?: string | null;
     type?: string | null;
 };
+type EventCard = {
+    id: number;
+    encrypted_id?: string;
+    title: string;
+    city_name?: string | null;
+    start_at?: string | null;
+    min_price?: number | null;
+};
 type Contact = {
     company_name?: string | null;
     address?: string | null;
@@ -64,6 +72,7 @@ export default function Welcome({
     partners = [],
     hotelCards = [],
     wisataCards = [],
+    eventCards = [],
 }: {
     canRegister?: boolean;
     banners?: Banner[];
@@ -73,6 +82,7 @@ export default function Welcome({
     partners?: Partner[];
     hotelCards?: HotelCard[];
     wisataCards?: WisataCard[];
+    eventCards?: EventCard[];
 }) {
     const { auth, unread_notifications } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
@@ -121,7 +131,7 @@ export default function Welcome({
     }, [bannerSlides.length, isBannerTransitioning]);
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
+        { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
@@ -158,6 +168,11 @@ export default function Welcome({
         { id: 0, encrypted_id: undefined, name: 'Wisata Pantai Ceria', city_name: 'Bali', min_price: 25000, type: 'alam' },
         { id: 1, encrypted_id: undefined, name: 'Desa Wisata Lestari', city_name: 'Yogyakarta', min_price: 15000, type: 'budaya' },
         { id: 2, encrypted_id: undefined, name: 'Taman Edukasi Indotix', city_name: 'Bogor', min_price: 20000, type: 'edukasi' },
+    ];
+    const eventProducts = eventCards.length > 0 ? eventCards : [
+        { id: 0, encrypted_id: undefined, title: 'Festival Musik Nusantara', city_name: 'Jakarta', start_at: '2026-03-01', min_price: 250000 },
+        { id: 1, encrypted_id: undefined, title: 'Indotix Creative Fair', city_name: 'Bandung', start_at: '2026-03-15', min_price: 150000 },
+        { id: 2, encrypted_id: undefined, title: 'Seminar Digital Tourism', city_name: 'Surabaya', start_at: '2026-04-05', min_price: 100000 },
     ];
 
     const mediaPartners = partners.length > 0
@@ -530,6 +545,54 @@ export default function Welcome({
                                         <Link
                                             href={`/stay/hotels/${hotel.encrypted_id}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`}
                                             className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                        >
+                                            Lihat Detail
+                                        </Link>
+                                    ) : (
+                                        <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
+                                            Lihat Detail
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold text-slate-900">Event Pilihan Minggu Ini</h2>
+                            <p className="text-sm text-slate-500">Temukan event seru yang siap kamu datangi.</p>
+                        </div>
+                        <Link href="/events" className="text-sm font-semibold text-sky-600">
+                            Lihat Semua Event →
+                        </Link>
+                    </div>
+                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                        {eventProducts.map((event) => (
+                            <div key={event.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                                <div className="h-40 overflow-hidden bg-gradient-to-br from-indigo-600 to-sky-500">
+                                    <img
+                                        src={`https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=${event.id}`}
+                                        alt={event.title}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                        {event.title}
+                                    </h3>
+                                    <p className="text-xs text-slate-500">
+                                        {event.city_name ?? 'Indonesia'} · {event.start_at ?? 'Jadwal segera'}
+                                    </p>
+                                    <div className="text-sm font-semibold text-indigo-600">
+                                        {event.min_price ? `Mulai Rp ${event.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                    </div>
+                                    {event.encrypted_id ? (
+                                        <Link
+                                            href={`/events/${event.encrypted_id}`}
+                                            className="mt-4 inline-block w-full rounded-lg bg-indigo-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
                                         </Link>

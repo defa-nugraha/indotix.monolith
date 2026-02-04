@@ -74,7 +74,7 @@ export default function WisataShow({
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata', active: true },
-        { label: 'Event', icon: CalendarCheck, href: '/?tab=event' },
+        { label: 'Event', icon: CalendarCheck, href: '/?/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/?tab=spesial' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
@@ -250,14 +250,28 @@ export default function WisataShow({
                                     </div>
                                     <div className="grid gap-2">
                                         <label className="text-xs font-semibold uppercase text-slate-500">Jumlah tiket</label>
-                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                        <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                            <button
+                                                type="button"
+                                                className="h-8 w-8 rounded-full bg-slate-100 text-slate-600"
+                                                onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                                            >
+                                                −
+                                            </button>
                                             <input
                                                 type="number"
                                                 min={1}
                                                 value={quantity}
                                                 onChange={(event) => setQuantity(Number(event.target.value))}
-                                                className="w-20 bg-transparent outline-none"
+                                                className="w-16 bg-transparent text-center outline-none"
                                             />
+                                            <button
+                                                type="button"
+                                                className="h-8 w-8 rounded-full bg-sky-100 text-sky-700"
+                                                onClick={() => setQuantity((prev) => prev + 1)}
+                                            >
+                                                +
+                                            </button>
                                             <span className="text-slate-500">tiket</span>
                                         </div>
                                     </div>
