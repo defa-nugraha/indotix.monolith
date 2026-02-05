@@ -92,7 +92,7 @@ export default function EventShow({ event }: { event: EventDetail }) {
                         {event.tickets?.map((ticket) => (
                             <div key={ticket.id} className="rounded-2xl border border-slate-100 p-4">
                                 <div className="font-semibold text-slate-900">{ticket.name}</div>
-                                <div className="text-xs text-slate-500">Rp {ticket.price}</div>
+                                                <div className="text-xs text-slate-500">Rp {ticket.price.toLocaleString('id-ID')}</div>
                                 <Badge className={ticket.is_active ? 'mt-2 bg-emerald-50 text-emerald-700' : 'mt-2 bg-rose-50 text-rose-700'}>
                                     {ticket.is_active ? 'Aktif' : 'Nonaktif'}
                                 </Badge>

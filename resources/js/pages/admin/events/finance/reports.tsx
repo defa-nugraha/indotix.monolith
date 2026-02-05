@@ -26,19 +26,19 @@ export default function EventReports({ summary }: Props) {
                     <div className="mt-6 grid gap-4 md:grid-cols-4">
                         <div className="rounded-2xl border border-slate-100 p-4">
                             <div className="text-xs text-slate-500">GMV Tiket</div>
-                            <div className="text-lg font-semibold text-slate-900">Rp {summary.gmv}</div>
+                            <div className="text-lg font-semibold text-slate-900">Rp {summary.gmv.toLocaleString('id-ID')}</div>
                         </div>
                         <div className="rounded-2xl border border-slate-100 p-4">
                             <div className="text-xs text-slate-500">Revenue Platform</div>
-                            <div className="text-lg font-semibold text-slate-900">Rp {summary.revenue}</div>
+                            <div className="text-lg font-semibold text-slate-900">Rp {summary.revenue.toLocaleString('id-ID')}</div>
                         </div>
                         <div className="rounded-2xl border border-slate-100 p-4">
                             <div className="text-xs text-slate-500">Refund Total</div>
-                            <div className="text-lg font-semibold text-slate-900">Rp {summary.refund_total}</div>
+                            <div className="text-lg font-semibold text-slate-900">Rp {summary.refund_total.toLocaleString('id-ID')}</div>
                         </div>
                         <div className="rounded-2xl border border-slate-100 p-4">
                             <div className="text-xs text-slate-500">Outstanding Payout</div>
-                            <div className="text-lg font-semibold text-slate-900">Rp {summary.outstanding}</div>
+                            <div className="text-lg font-semibold text-slate-900">Rp {summary.outstanding.toLocaleString('id-ID')}</div>
                         </div>
                     </div>
                 </section>

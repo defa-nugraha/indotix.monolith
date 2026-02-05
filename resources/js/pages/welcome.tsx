@@ -243,7 +243,7 @@ export default function Welcome({
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
                     </div>
                     <div className="flex flex-1 items-center">
                         <input
@@ -536,7 +536,7 @@ export default function Welcome({
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900">
-                                Special program pilihan, lebih hemat <span className="text-sky-600">#IndotixStyle</span>
+                            Special program pilihan, lebih hemat <span className="text-sky-600">#SpecialDeal</span>
                             </h2>
                             <p className="text-sm text-slate-500">Diskon, subsidi, dan highlight terbaik untuk kamu.</p>
                         </div>
@@ -571,7 +571,9 @@ export default function Welcome({
                                         <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
                                         <p className="text-xs text-slate-500">{item.city_name ?? 'Indonesia'}</p>
                                         <div className="text-sm font-semibold text-sky-600">
-                                            {item.price ? `Mulai Rp ${item.price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                            {Number.isFinite(Number(item.price))
+                                                ? `Mulai Rp ${Number(item.price).toLocaleString('id-ID')}`
+                                                : 'Harga tersedia'}
                                         </div>
                                         {item.encrypted_id ? (
                                             <Link
@@ -595,7 +597,7 @@ export default function Welcome({
                 <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-semibold text-slate-900">
-                            Staycation nyaman, recharge maksimal <span className="text-sky-600">#IndotixStyle</span>
+                            Staycation nyaman, recharge maksimal <span className="text-sky-600">#StaycationGoals</span>
                         </h2>
                         <Link href="/stay" className="text-sm font-semibold text-sky-600">
                             Lihat Semua Hotel →
@@ -654,7 +656,7 @@ export default function Welcome({
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900">
-                                Event seru, momen tak terlupa <span className="text-sky-600">#IndotixStyle</span>
+                                Event seru, momen tak terlupa <span className="text-sky-600">#EventWeekend</span>
                             </h2>
                             <p className="text-sm text-slate-500">Temukan event seru yang siap kamu datangi.</p>
                         </div>
@@ -704,7 +706,7 @@ export default function Welcome({
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900">
-                                Piknik asyik, cerita baru <span className="text-sky-600">#IndotixStyle</span>
+                                Piknik asyik, cerita baru <span className="text-sky-600">#HealingTrip</span>
                             </h2>
                             <p className="text-sm text-slate-500">Cari tiket wisata dengan suasana yang paling kamu suka.</p>
                         </div>
@@ -757,7 +759,7 @@ export default function Welcome({
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900">
-                                Oleh-oleh khas, kirim ke rumah <span className="text-sky-600">#IndotixStyle</span>
+                                Oleh-oleh khas, kirim ke rumah <span className="text-sky-600">#OlehOlehVibes</span>
                             </h2>
                             <p className="text-sm text-slate-500">Bawa pulang kenangan terbaik dari perjalananmu.</p>
                         </div>
@@ -837,7 +839,7 @@ export default function Welcome({
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>
-                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
                         <p className="mt-3 text-sm text-slate-600">
                             {addressLines.map((line, index) => (
                                 <span key={line}>

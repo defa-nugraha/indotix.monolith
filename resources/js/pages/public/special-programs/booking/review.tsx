@@ -39,7 +39,7 @@ export default function SpecialProgramBookingReview({
     snapScriptUrl,
     snapToken: initialSnapToken,
 }: Props) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: { role?: string; name?: string; email?: string } }; unread_notifications?: number };
     const isUser = Boolean(auth?.user?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -49,6 +49,15 @@ export default function SpecialProgramBookingReview({
     const [loading, setLoading] = useState(false);
     const [snapToken, setSnapToken] = useState<string | null>(initialSnapToken ?? null);
     const snapOpened = useRef(false);
+
+    useEffect(() => {
+        if (auth?.user?.name && !form.data.guest_name) {
+            form.setData('guest_name', auth.user.name);
+        }
+        if (auth?.user?.email && !form.data.guest_email) {
+            form.setData('guest_email', auth.user.email);
+        }
+    }, [auth?.user?.name, auth?.user?.email]);
 
     useEffect(() => {
         if (initialSnapToken) {
@@ -85,7 +94,7 @@ export default function SpecialProgramBookingReview({
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
                     </div>
                     <div className="flex flex-1 items-center">
                         <input

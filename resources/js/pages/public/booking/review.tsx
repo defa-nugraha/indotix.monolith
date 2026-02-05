@@ -1,10 +1,10 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import Swal from 'sweetalert2';
 import { Bell, CalendarCheck, ClipboardCheck, Mail, Phone, Star, Ticket, User, Users, MapPinned, ShoppingBag, UserCircle, History, MessageCircle } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function BookingReview({ draft, hotel, roomType, pricing, voucher }: any) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number };
+    const { auth, unread_notifications } = usePage().props as { auth?: { user?: { name?: string; email?: string; role?: string } }; unread_notifications?: number };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -17,6 +17,15 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
     });
     const [showPrice, setShowPrice] = useState(true);
 
+    useEffect(() => {
+        if (auth?.user?.name && !form.data.guest_name) {
+            form.setData('guest_name', auth.user.name);
+        }
+        if (auth?.user?.email && !form.data.guest_email) {
+            form.setData('guest_email', auth.user.email);
+        }
+    }, [auth?.user?.name, auth?.user?.email]);
+
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
             <Head title="Review Booking">
@@ -28,7 +37,7 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
                     </div>
                     <div className="flex flex-1 items-center">
                         <input
@@ -307,7 +316,7 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>
-                        <img src="/logo.png" alt="Indotix" className="h-8" />
+                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
                         <p className="mt-3 text-sm text-slate-600">
                             Neo Soho Capital 40th Floor<br />
                             Jl. Tanjung Duren Raya No 1<br />

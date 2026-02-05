@@ -72,7 +72,7 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                                     <tr key={ticket.id} className="border-t border-slate-100">
                                         <td className="px-4 py-3 font-semibold text-slate-900">{ticket.name}</td>
                                         <td className="px-4 py-3">{ticket.event?.title ?? '-'}</td>
-                                        <td className="px-4 py-3">Rp {ticket.price}</td>
+                                        <td className="px-4 py-3">Rp {ticket.price.toLocaleString('id-ID')}</td>
                                         <td className="px-4 py-3">
                                             <form
                                                 onSubmit={(e) => {

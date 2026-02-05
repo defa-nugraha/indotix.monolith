@@ -52,7 +52,7 @@ export default function EventBookingShow({ booking }: { booking: BookingDetail }
                         <div className="mt-3 space-y-2 text-sm text-slate-600">
                             <div>Tiket: {booking.ticket?.name ?? '-'}</div>
                             <div>Qty: {booking.quantity}</div>
-                            <div>Total: Rp {booking.total_price}</div>
+                                <div>Total: Rp {booking.total_price.toLocaleString('id-ID')}</div>
                         </div>
                     </div>
                 </section>
