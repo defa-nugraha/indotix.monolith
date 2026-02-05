@@ -296,7 +296,7 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                             <h3 className="text-sm font-semibold text-slate-900">Aksi Verifikasi</h3>
                             <div className="mt-4 flex flex-col gap-3">
-                                <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => handleVerify('approve')}>
+                                <Button className="bg-sky-600 text-white hover:bg-sky-700" onClick={() => handleVerify('approve')}>
                                     Setujui
                                 </Button>
                                 <Button variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => handleVerify('reject')}>
@@ -313,7 +313,7 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                                 <div>{onboarding.bank_account_name ?? '-'}</div>
                             </div>
                             <div className="mt-4 flex flex-col gap-3">
-                                <Button className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => handlePayout('approve')}>
+                                <Button className="bg-sky-600 text-white hover:bg-sky-700" onClick={() => handlePayout('approve')}>
                                     Setujui Payout
                                 </Button>
                                 <Button variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => handlePayout('reject')}>
@@ -340,7 +340,7 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                             <Button
                                 type="button"
                                 onClick={handleSuspend}
-                                className={`mt-4 w-full ${mitra.is_suspended ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'} text-white`}
+                                className={`mt-4 w-full ${mitra.is_suspended ? 'bg-sky-600 hover:bg-sky-700' : 'bg-rose-600 hover:bg-rose-700'} text-white`}
                             >
                                 {mitra.is_suspended ? 'Aktifkan Akun' : 'Suspend Akun'}
                             </Button>

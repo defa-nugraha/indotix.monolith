@@ -88,6 +88,124 @@ Route::get('/', function () {
             ];
         });
 
+    $specialPrograms = \App\Models\SpecialProgram::query()
+        ->where('is_active', true)
+        ->whereIn('status', ['active', 'scheduled'])
+        ->orderByDesc('priority')
+        ->get();
+
+    $specialProgramItems = \App\Models\SpecialProgramItem::query()
+        ->whereIn('special_program_id', $specialPrograms->pluck('id'))
+        ->where('is_active', true)
+        ->orderBy('sort_order')
+        ->take(6)
+        ->get();
+
+    $specialProgramItemsMapped = (function () use ($specialProgramItems) {
+        $items = collect($specialProgramItems);
+        $hotelIds = $items->where('item_type', 'hotel')->pluck('item_id');
+        $wisataIds = $items->where('item_type', 'wisata')->pluck('item_id');
+        $eventIds = $items->where('item_type', 'event')->pluck('item_id');
+
+        $hotels = $hotelIds->isEmpty()
+            ? collect()
+            : \App\Models\Hotel::query()
+                ->whereIn('id', $hotelIds)
+                ->with('images', 'city', 'roomTypes')
+                ->get()
+                ->keyBy('id');
+
+        $destinations = $wisataIds->isEmpty()
+            ? collect()
+            : \App\Models\MitraWisataOnboarding::query()
+                ->whereIn('id', $wisataIds)
+                ->get()
+                ->keyBy('id');
+
+        $events = $eventIds->isEmpty()
+            ? collect()
+            : \App\Models\Event::query()
+                ->whereIn('id', $eventIds)
+                ->get()
+                ->keyBy('id');
+
+        $wisataMinPrices = $wisataIds->isEmpty()
+            ? collect()
+            : \App\Models\WisataTicket::query()
+                ->whereIn('mitra_wisata_onboarding_id', $wisataIds)
+                ->select('mitra_wisata_onboarding_id', \Illuminate\Support\Facades\DB::raw('MIN(price) as min_price'))
+                ->groupBy('mitra_wisata_onboarding_id')
+                ->pluck('min_price', 'mitra_wisata_onboarding_id');
+
+        $eventMinPrices = $eventIds->isEmpty()
+            ? collect()
+            : \App\Models\EventTicket::query()
+                ->whereIn('event_id', $eventIds)
+                ->select('event_id', \Illuminate\Support\Facades\DB::raw('MIN(price) as min_price'))
+                ->groupBy('event_id')
+                ->pluck('min_price', 'event_id');
+
+        $results = [];
+        foreach ($items as $item) {
+            if ($item->item_type === 'hotel') {
+                $hotel = $hotels->get($item->item_id);
+                if (! $hotel) {
+                    continue;
+                }
+                $minPrice = $hotel->roomTypes->min('base_price');
+                $results[] = [
+                    'type' => 'hotel',
+                    'id' => $hotel->id,
+                    'encrypted_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $hotel->id),
+                    'title' => $hotel->name,
+                    'city_name' => $hotel->city?->name,
+                    'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
+                    'price' => $minPrice ? (int) $minPrice : null,
+                ];
+                continue;
+            }
+
+            if ($item->item_type === 'wisata') {
+                $destination = $destinations->get($item->item_id);
+                if (! $destination) {
+                    continue;
+                }
+                $results[] = [
+                    'type' => 'wisata',
+                    'id' => $destination->id,
+                    'encrypted_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $destination->id),
+                    'title' => $destination->destination_name,
+                    'city_name' => \Illuminate\Support\Facades\DB::table('regencies')
+                        ->where('code', $destination->city_code)
+                        ->value('name'),
+                    'image_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
+                    'price' => $wisataMinPrices[$destination->id] ?? null,
+                ];
+                continue;
+            }
+
+            if ($item->item_type === 'event') {
+                $event = $events->get($item->item_id);
+                if (! $event) {
+                    continue;
+                }
+                $results[] = [
+                    'type' => 'event',
+                    'id' => $event->id,
+                    'encrypted_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $event->id),
+                    'title' => $event->title,
+                    'city_name' => \Illuminate\Support\Facades\DB::table('regencies')
+                        ->where('code', $event->city_code)
+                        ->value('name'),
+                    'image_url' => null,
+                    'price' => $eventMinPrices[$event->id] ?? null,
+                ];
+            }
+        }
+
+        return $results;
+    })();
+
     $souvenirCards = \App\Models\SouvenirProduct::query()
         ->where('status', 'active')
         ->where('is_active', true)
@@ -115,6 +233,7 @@ Route::get('/', function () {
         'contact' => $contact,
         'partners' => $partners,
         'hotelCards' => $hotelCards,
+        'specialProgramItems' => $specialProgramItemsMapped,
         'wisataCards' => $wisataCards,
         'eventCards' => $eventCards,
         'souvenirCards' => $souvenirCards,

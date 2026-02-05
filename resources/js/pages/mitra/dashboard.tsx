@@ -236,7 +236,7 @@ export default function MitraDashboard({
                                 </p>
                                 <Button
                                     type="button"
-                                    className="mt-4 bg-emerald-600 text-white hover:bg-emerald-700"
+                                    className="mt-4 bg-sky-600 text-white hover:bg-sky-700"
                                     onClick={() => router.post('/mitra/onboarding/type', { type: 'wisata' })}
                                 >
                                     Daftar Wisata
@@ -249,7 +249,7 @@ export default function MitraDashboard({
                                 </p>
                                 <Button
                                     type="button"
-                                    className="mt-4 bg-indigo-600 text-white hover:bg-indigo-700"
+                                    className="mt-4 bg-sky-600 text-white hover:bg-sky-700"
                                     onClick={() => router.post('/mitra/onboarding/type', { type: 'event' })}
                                 >
                                     Daftar Event

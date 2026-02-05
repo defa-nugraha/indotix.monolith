@@ -50,6 +50,15 @@ type EventCard = {
     start_at?: string | null;
     min_price?: number | null;
 };
+type SpecialProgramItem = {
+    type: 'hotel' | 'wisata' | 'event';
+    id: number;
+    encrypted_id?: string;
+    title: string;
+    city_name?: string | null;
+    image_url?: string | null;
+    price?: number | null;
+};
 type SouvenirCard = {
     id: number;
     encrypted_id?: string;
@@ -78,6 +87,7 @@ export default function Welcome({
     contact,
     partners = [],
     hotelCards = [],
+    specialProgramItems = [],
     wisataCards = [],
     eventCards = [],
     souvenirCards = [],
@@ -89,6 +99,7 @@ export default function Welcome({
     contact?: Contact | null;
     partners?: Partner[];
     hotelCards?: HotelCard[];
+    specialProgramItems?: SpecialProgramItem[];
     wisataCards?: WisataCard[];
     eventCards?: EventCard[];
     souvenirCards?: SouvenirCard[];
@@ -183,6 +194,11 @@ export default function Welcome({
         { id: 1, encrypted_id: undefined, title: 'Indotix Creative Fair', city_name: 'Bandung', start_at: '2026-03-15', min_price: 150000 },
         { id: 2, encrypted_id: undefined, title: 'Seminar Digital Tourism', city_name: 'Surabaya', start_at: '2026-04-05', min_price: 100000 },
     ];
+    const specialProgramProducts = specialProgramItems.length > 0 ? specialProgramItems : [
+        { id: 0, encrypted_id: undefined, title: 'Promo Liburan Sekolah', city_name: 'Indonesia', price: 120000, type: 'wisata' },
+        { id: 1, encrypted_id: undefined, title: 'Flash Sale Event Musik', city_name: 'Jakarta', price: 180000, type: 'event' },
+        { id: 2, encrypted_id: undefined, title: 'Staycation Hemat', city_name: 'Bandung', price: 350000, type: 'hotel' },
+    ];
     const souvenirProducts = souvenirCards.length > 0 ? souvenirCards : [
         { id: 0, encrypted_id: undefined, name: 'Gantungan Kunci Nusantara', price: 25000 },
         { id: 1, encrypted_id: undefined, name: 'Tas Anyaman Bali', price: 175000 },
@@ -240,7 +256,7 @@ export default function Welcome({
                         <div className="flex items-center gap-2">
                             <Link
                                 href={canRegister ? '/register' : '#'}
-                                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+                                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
                             >
                                 Register
                             </Link>
@@ -518,8 +534,68 @@ export default function Welcome({
 
                 <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
                     <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold text-slate-900">
+                                Special program pilihan, lebih hemat <span className="text-sky-600">#IndotixStyle</span>
+                            </h2>
+                            <p className="text-sm text-slate-500">Diskon, subsidi, dan highlight terbaik untuk kamu.</p>
+                        </div>
+                        <Link href="/special-programs" className="text-sm font-semibold text-sky-600">
+                            Lihat Semua Special Program →
+                        </Link>
+                    </div>
+                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                        {specialProgramProducts.map((item) => {
+                            const link =
+                                item.type === 'hotel'
+                                    ? `/stay/hotels/${item.encrypted_id}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`
+                                    : item.type === 'event'
+                                      ? `/events/${item.encrypted_id}`
+                                      : `/wisata/${item.encrypted_id}`;
+                            return (
+                                <div key={`${item.type}-${item.id}`} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                                    <div className="h-40 overflow-hidden bg-gradient-to-br from-sky-600 to-blue-400">
+                                        <img
+                                            src={
+                                                item.image_url ??
+                                                `https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=${item.id}`
+                                            }
+                                            alt={item.title}
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                    <div className="p-4">
+                                        <div className="mb-2 inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                                            Special Program
+                                        </div>
+                                        <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
+                                        <p className="text-xs text-slate-500">{item.city_name ?? 'Indonesia'}</p>
+                                        <div className="text-sm font-semibold text-sky-600">
+                                            {item.price ? `Mulai Rp ${item.price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                        </div>
+                                        {item.encrypted_id ? (
+                                            <Link
+                                                href={link}
+                                                className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                            >
+                                                Lihat Detail
+                                            </Link>
+                                        ) : (
+                                            <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
+                                                Lihat Detail
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
                         <h2 className="text-xl font-semibold text-slate-900">
-                            Produk Hotel
+                            Staycation nyaman, recharge maksimal <span className="text-sky-600">#IndotixStyle</span>
                         </h2>
                         <Link href="/stay" className="text-sm font-semibold text-sky-600">
                             Lihat Semua Hotel →
@@ -577,7 +653,9 @@ export default function Welcome({
                 <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-xl font-semibold text-slate-900">Event Pilihan Minggu Ini</h2>
+                            <h2 className="text-xl font-semibold text-slate-900">
+                                Event seru, momen tak terlupa <span className="text-sky-600">#IndotixStyle</span>
+                            </h2>
                             <p className="text-sm text-slate-500">Temukan event seru yang siap kamu datangi.</p>
                         </div>
                         <Link href="/events" className="text-sm font-semibold text-sky-600">
@@ -607,7 +685,7 @@ export default function Welcome({
                                     {event.encrypted_id ? (
                                         <Link
                                             href={`/events/${event.encrypted_id}`}
-                                            className="mt-4 inline-block w-full rounded-lg bg-indigo-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                            className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
                                         </Link>
@@ -625,7 +703,9 @@ export default function Welcome({
                 <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-xl font-semibold text-slate-900">Wisata Seru buat Kamu</h2>
+                            <h2 className="text-xl font-semibold text-slate-900">
+                                Piknik asyik, cerita baru <span className="text-sky-600">#IndotixStyle</span>
+                            </h2>
                             <p className="text-sm text-slate-500">Cari tiket wisata dengan suasana yang paling kamu suka.</p>
                         </div>
                         <Link href="/wisata" className="text-sm font-semibold text-sky-600">
@@ -658,7 +738,7 @@ export default function Welcome({
                                     {item.encrypted_id ? (
                                         <Link
                                             href={`/wisata/${item.encrypted_id}`}
-                                            className="mt-4 inline-block w-full rounded-lg bg-emerald-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                            className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
                                         </Link>
@@ -676,7 +756,9 @@ export default function Welcome({
                 <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h2 className="text-xl font-semibold text-slate-900">Souvenir Pilihan buat Kamu</h2>
+                            <h2 className="text-xl font-semibold text-slate-900">
+                                Oleh-oleh khas, kirim ke rumah <span className="text-sky-600">#IndotixStyle</span>
+                            </h2>
                             <p className="text-sm text-slate-500">Bawa pulang kenangan terbaik dari perjalananmu.</p>
                         </div>
                         <Link href="/souvenir" className="text-sm font-semibold text-sky-600">
@@ -706,7 +788,7 @@ export default function Welcome({
                                     {item.encrypted_id ? (
                                         <Link
                                             href={`/souvenir/${item.encrypted_id}`}
-                                            className="mt-4 inline-block w-full rounded-lg bg-amber-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                            className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
                                         </Link>

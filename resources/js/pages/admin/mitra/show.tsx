@@ -377,7 +377,7 @@ export default function AdminMitraShow({
                         {onboarding.verification_status === 'pending' && (
                             <div className="flex flex-wrap gap-2">
                                 <Button
-                                    className="!bg-emerald-500 !text-white hover:!bg-emerald-600 shadow-sm !border-emerald-500"
+                                    className="!bg-emerald-500 !text-white hover:!bg-sky-600 shadow-sm !border-emerald-500"
                                     onClick={() => handleVerify('approve')}
                                 >
                                     Setujui
@@ -494,7 +494,7 @@ export default function AdminMitraShow({
                         {onboarding.payout_status === 'pending' && (
                             <div className="flex flex-wrap gap-2">
                                 <Button
-                                    className="!bg-emerald-500 !text-white hover:!bg-emerald-600 shadow-sm !border-emerald-500"
+                                    className="!bg-emerald-500 !text-white hover:!bg-sky-600 shadow-sm !border-emerald-500"
                                     onClick={() => handlePayout('approve')}
                                 >
                                     Setujui
