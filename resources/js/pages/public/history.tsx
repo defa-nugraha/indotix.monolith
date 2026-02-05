@@ -1,11 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, CreditCard, Filter } from 'lucide-react';
+import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, CreditCard, Filter, ShoppingCart } from 'lucide-react';
 
 type Booking = {
     id: number;
     encrypted_id: string;
-    type?: 'hotel' | 'wisata' | 'event' | 'special_program';
+    type?: 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir';
     title?: string | null;
     city_name?: string | null;
     address?: string | null;
@@ -31,15 +31,15 @@ type Booking = {
 };
 
 export default function History({ bookings = [] }: { bookings: Booking[] }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
     const [activeStatus, setActiveStatus] = useState<'all' | 'pending_payment' | 'paid' | 'expired' | 'cancelled'>('all');
-    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program'>('all');
+    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
@@ -110,6 +110,15 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
                         <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
                             <UserCircle className="h-4 w-4" />
@@ -181,6 +190,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                 { id: 'hotel', label: 'Hotel' },
                                 { id: 'wisata', label: 'Wisata' },
                                 { id: 'event', label: 'Event' },
+                                { id: 'souvenir', label: 'Souvenir' },
                                 { id: 'special_program', label: 'Special Program' },
                             ].map((item) => (
                                 <button
@@ -262,8 +272,10 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                             ? 'Hotel'
                                                             : booking.type === 'event'
                                                                 ? 'Event'
-                                                                : booking.type === 'special_program'
-                                                                    ? 'Special Program'
+                                                                : booking.type === 'souvenir'
+                                                                    ? 'Souvenir'
+                                                                    : booking.type === 'special_program'
+                                                                        ? 'Special Program'
                                                                     : 'Wisata'}
                                                     </span>
                                                 )}
@@ -282,6 +294,17 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                         <span className="flex items-center gap-1">
                                                             <Users className="h-4 w-4 text-sky-500" />
                                                             {booking.rooms_count} kamar · {booking.guests_count} tamu
+                                                        </span>
+                                                    </>
+                                                ) : booking.type === 'souvenir' ? (
+                                                    <>
+                                                        <span className="flex items-center gap-1">
+                                                            <CalendarCheck className="h-4 w-4 text-sky-500" />
+                                                            Souvenir
+                                                        </span>
+                                                        <span className="flex items-center gap-1">
+                                                            <Users className="h-4 w-4 text-sky-500" />
+                                                            {booking.quantity ?? 0} item
                                                         </span>
                                                     </>
                                                 ) : (

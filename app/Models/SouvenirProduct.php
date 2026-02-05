@@ -50,4 +50,9 @@ class SouvenirProduct extends Model
     {
         return $this->hasMany(SouvenirStockMovement::class, 'product_id');
     }
+
+    public function orderItems(): HasMany
+    {
+        return $this->hasMany(SouvenirOrderItem::class, 'product_id');
+    }
 }

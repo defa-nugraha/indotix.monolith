@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Bell, CalendarCheck, History as HistoryIcon, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle } from 'lucide-react';
+import { Bell, CalendarCheck, History as HistoryIcon, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, ShoppingCart } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -21,7 +21,7 @@ export default function EventSearch({
     events: EventCard[];
     filters: { q?: string | null };
 }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
@@ -37,7 +37,7 @@ export default function EventSearch({
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata', active: false },
         { label: 'Event', icon: CalendarCheck, href: '/events', active: true },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir', active: false },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir', active: false },
         { label: 'Spesial Program', icon: Star, href: '/special-programs', active: false },
         { label: 'Hotel', icon: Ticket, href: '/stay', active: false },
     ];
@@ -70,6 +70,15 @@ export default function EventSearch({
                             onChange={(event) => setForm((prev) => ({ ...prev, q: event.target.value }))}
                         />
                     </div>
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     {!auth?.user && (
                         <div className="flex items-center gap-2">
                             <Link

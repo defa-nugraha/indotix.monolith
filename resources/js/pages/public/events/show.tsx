@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users } from 'lucide-react';
+import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 type EventDetail = {
@@ -28,7 +28,7 @@ type TicketItem = {
 };
 
 export default function EventShow({ event, tickets }: { event: EventDetail; tickets: TicketItem[] }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
     const [selectedTicket, setSelectedTicket] = useState<string>(tickets[0]?.id?.toString() ?? '');
     const form = useForm({
         event_id: event.id,
@@ -39,7 +39,7 @@ export default function EventShow({ event, tickets }: { event: EventDetail; tick
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
@@ -75,6 +75,15 @@ export default function EventShow({ event, tickets }: { event: EventDetail; tick
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     {auth?.user ? (
                         <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
                             <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">

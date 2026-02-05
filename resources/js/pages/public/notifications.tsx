@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History as HistoryIcon, CheckCircle, CreditCard, Clock, Filter } from 'lucide-react';
+import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History as HistoryIcon, CheckCircle, CreditCard, Clock, Filter, ShoppingCart } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 type NotificationItem = {
@@ -14,15 +14,15 @@ type NotificationItem = {
 };
 
 export default function Notifications({ notifications = [] }: { notifications: NotificationItem[] }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
-    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program'>('all');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
@@ -39,6 +39,10 @@ export default function Notifications({ notifications = [] }: { notifications: N
         event_payment_pending: CreditCard,
         event_payment_paid: CheckCircle,
         event_booking_expired: Clock,
+        souvenir_booking_created: Ticket,
+        souvenir_payment_pending: CreditCard,
+        souvenir_payment_paid: CheckCircle,
+        souvenir_booking_expired: Clock,
         special_program_booking_created: Ticket,
         special_program_payment_pending: CreditCard,
         special_program_payment_paid: CheckCircle,
@@ -53,6 +57,8 @@ export default function Notifications({ notifications = [] }: { notifications: N
                     ? 'wisata'
                     : item.type?.startsWith('event_')
                         ? 'event'
+                        : item.type?.startsWith('souvenir_')
+                            ? 'souvenir'
                         : item.type?.startsWith('special_program_')
                             ? 'special_program'
                             : 'hotel');
@@ -80,6 +86,15 @@ export default function Notifications({ notifications = [] }: { notifications: N
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
                         <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
                             <UserCircle className="h-4 w-4" />
@@ -176,6 +191,7 @@ export default function Notifications({ notifications = [] }: { notifications: N
                                 { id: 'hotel', label: 'Hotel' },
                                 { id: 'wisata', label: 'Wisata' },
                                 { id: 'event', label: 'Event' },
+                                { id: 'souvenir', label: 'Souvenir' },
                                 { id: 'special_program', label: 'Special Program' },
                             ].map((item) => (
                                 <button
@@ -242,6 +258,8 @@ export default function Notifications({ notifications = [] }: { notifications: N
                                                             ? `/wisata/booking/${item.data.booking_id}`
                                                             : item.data?.category === 'event'
                                                                 ? `/events/booking/${item.data.booking_id}`
+                                                                : item.data?.category === 'souvenir'
+                                                                    ? `/souvenir/booking/${item.data.booking_id}`
                                                                 : item.data?.category === 'special_program'
                                                                     ? `/special-programs/booking/${item.data.booking_id}`
                                                                     : `/booking/${item.data.booking_id}`

@@ -88,6 +88,25 @@ Route::get('/', function () {
             ];
         });
 
+    $souvenirCards = \App\Models\SouvenirProduct::query()
+        ->where('status', 'active')
+        ->where('is_active', true)
+        ->with(['images'])
+        ->latest()
+        ->take(4)
+        ->get()
+        ->map(function (\App\Models\SouvenirProduct $product) {
+            $image = $product->images->first()?->image_url;
+
+            return [
+                'id' => $product->id,
+                'encrypted_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $product->id),
+                'name' => $product->name,
+                'price' => $product->price,
+                'image_url' => $image ? \Illuminate\Support\Facades\Storage::url($image) : null,
+            ];
+        });
+
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'banners' => $banners,
@@ -98,6 +117,7 @@ Route::get('/', function () {
         'hotelCards' => $hotelCards,
         'wisataCards' => $wisataCards,
         'eventCards' => $eventCards,
+        'souvenirCards' => $souvenirCards,
     ]);
 })->name('home');
 
@@ -130,6 +150,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.souvenir.products.duplicate');
     Route::delete('admin/souvenir/products/{product}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroy'])
         ->name('admin.souvenir.products.destroy');
+    Route::delete('admin/souvenir/products/{product}/force', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'forceDelete'])
+        ->name('admin.souvenir.products.force-delete');
     Route::delete('admin/souvenir/products/{product}/images/{image}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroyImage'])
         ->name('admin.souvenir.products.images.destroy');
 
@@ -706,6 +728,32 @@ Route::get('/special-programs', [\App\Http\Controllers\PublicSpecialProgramContr
     ->name('special-programs.search');
 Route::get('/special-programs/{program}', [\App\Http\Controllers\PublicSpecialProgramController::class, 'show'])
     ->name('special-programs.show');
+
+Route::get('/souvenir/cart', [\App\Http\Controllers\SouvenirCartController::class, 'index'])
+    ->name('souvenir.cart');
+Route::post('/souvenir/cart/add', [\App\Http\Controllers\SouvenirCartController::class, 'add'])
+    ->name('souvenir.cart.add');
+Route::post('/souvenir/cart/update', [\App\Http\Controllers\SouvenirCartController::class, 'update'])
+    ->name('souvenir.cart.update');
+Route::post('/souvenir/cart/remove', [\App\Http\Controllers\SouvenirCartController::class, 'remove'])
+    ->name('souvenir.cart.remove');
+Route::post('/souvenir/cart/clear', [\App\Http\Controllers\SouvenirCartController::class, 'clear'])
+    ->name('souvenir.cart.clear');
+Route::get('/souvenir', [\App\Http\Controllers\PublicSouvenirController::class, 'index'])
+    ->name('souvenir.search');
+
+Route::middleware(['auth', 'verified', 'user'])->group(function () {
+    Route::get('/souvenir/checkout', [\App\Http\Controllers\SouvenirBookingController::class, 'review'])
+        ->name('souvenir.checkout.review');
+    Route::post('/souvenir/checkout/confirm', [\App\Http\Controllers\SouvenirBookingController::class, 'confirm'])
+        ->name('souvenir.checkout.confirm');
+    Route::get('/souvenir/booking/{order}', [\App\Http\Controllers\SouvenirBookingController::class, 'show'])
+        ->name('souvenir.booking.show');
+    Route::get('/souvenir/booking/{order}/payment', [\App\Http\Controllers\SouvenirBookingController::class, 'payment'])
+        ->name('souvenir.booking.payment');
+});
+Route::get('/souvenir/{product}', [\App\Http\Controllers\PublicSouvenirController::class, 'show'])
+    ->name('souvenir.show');
 Route::get('/wisata', [\App\Http\Controllers\PublicWisataController::class, 'index'])
     ->name('wisata.search');
 Route::get('/wisata/{destination}', [\App\Http\Controllers\PublicWisataController::class, 'show'])

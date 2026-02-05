@@ -48,6 +48,8 @@ class HandleInertiaRequests extends Middleware
                     ->where('is_read', false)
                     ->count()
                 : 0,
+            'souvenir_cart_count' => collect($request->session()->get('souvenir_cart', []))
+                ->sum(fn ($item) => (int) ($item['quantity'] ?? 0)),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

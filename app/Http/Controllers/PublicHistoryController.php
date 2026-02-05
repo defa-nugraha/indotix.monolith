@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\EventBooking;
 use App\Models\SpecialProgramBooking;
 use App\Models\WisataBooking;
+use App\Models\SouvenirOrder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -156,10 +157,45 @@ class PublicHistoryController extends Controller
                 ];
             });
 
+        $souvenirOrders = SouvenirOrder::query()
+            ->where('user_id', $request->user()->id)
+            ->latest()
+            ->get()
+            ->map(function (SouvenirOrder $order) {
+                return [
+                    'id' => $order->id,
+                    'encrypted_id' => Crypt::encryptString((string) $order->id),
+                    'type' => 'souvenir',
+                    'title' => 'Souvenir',
+                    'city_name' => null,
+                    'address' => $order->shipping_address,
+                    'check_in' => null,
+                    'check_out' => null,
+                    'nights' => null,
+                    'rooms_count' => null,
+                    'guests_count' => null,
+                    'visit_date' => null,
+                    'quantity' => $order->items()->sum('quantity'),
+                    'total' => $order->total_price,
+                    'status' => $order->status,
+                    'payment_status' => $order->payment_status,
+                    'payment_deadline' => $order->payment_deadline?->toIso8601String(),
+                    'guest_name' => $order->user?->name,
+                    'guest_email' => $order->user?->email,
+                    'guest_phone' => null,
+                    'created_at' => $order->created_at?->toIso8601String(),
+                    'midtrans_order_id' => $order->midtrans_order_id,
+                    'payment_url' => route('souvenir.booking.payment', ['order' => Crypt::encryptString((string) $order->id)]),
+                    'detail_url' => route('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
+                    'ticket_name' => null,
+                ];
+            });
+
         $bookings = $hotelBookings
             ->merge($wisataBookings)
             ->merge($eventBookings)
             ->merge($specialProgramBookings)
+            ->merge($souvenirOrders)
             ->sortByDesc('created_at')
             ->values();
 

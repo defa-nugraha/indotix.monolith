@@ -1,11 +1,11 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, UserCircle, History as HistoryIcon, Sparkles } from 'lucide-react';
+import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, UserCircle, History as HistoryIcon, Sparkles, ShoppingCart } from 'lucide-react';
 
 const navItems = [
     { label: 'Wisata', icon: MapPinned, href: '/wisata' },
     { label: 'Event', icon: CalendarCheck, href: '/events' },
-    { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+    { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
     { label: 'Spesial Program', icon: Star, href: '/special-programs', active: true },
     { label: 'Hotel', icon: Ticket, href: '/stay' },
 ];
@@ -37,7 +37,7 @@ type Program = {
 };
 
 export default function SpecialProgramShow({ program, items }: { program: Program; items: ProgramItem[] }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const [selectedItem, setSelectedItem] = useState<ProgramItem | null>(
         items.find((item) => item.type !== 'hotel') ?? items[0] ?? null,
     );
@@ -74,6 +74,15 @@ export default function SpecialProgramShow({ program, items }: { program: Progra
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     {!auth?.user && (
                         <div className="flex items-center gap-2">
                             <Link href="/register" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">

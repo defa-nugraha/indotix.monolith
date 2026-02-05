@@ -4,7 +4,7 @@ import { DateRange, RangeKeyDict } from 'react-date-range';
 import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Coffee, Cigarette, CigaretteOff } from 'lucide-react';
+import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Coffee, Cigarette, CigaretteOff, ShoppingCart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Hotel = {
@@ -40,7 +40,7 @@ type Recommendation = {
 };
 
 export default function HotelSearch({ filters, hotels, recommendations }: { filters: Filters; hotels: Hotel[]; recommendations: Recommendation[] }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number; souvenir_cart_count?: number };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const [isReady, setIsReady] = useState(false);
     const today = new Date();
@@ -108,7 +108,7 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay', active: true },
     ];
@@ -149,6 +149,15 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                             onChange={(event) => setForm((prev) => ({ ...prev, q: event.target.value }))}
                         />
                     </div>
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     {!auth?.user && (
                         <div className="flex items-center gap-2">
                             <Link

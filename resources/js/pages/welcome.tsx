@@ -50,6 +50,13 @@ type EventCard = {
     start_at?: string | null;
     min_price?: number | null;
 };
+type SouvenirCard = {
+    id: number;
+    encrypted_id?: string;
+    name: string;
+    price?: number | null;
+    image_url?: string | null;
+};
 type Contact = {
     company_name?: string | null;
     address?: string | null;
@@ -73,6 +80,7 @@ export default function Welcome({
     hotelCards = [],
     wisataCards = [],
     eventCards = [],
+    souvenirCards = [],
 }: {
     canRegister?: boolean;
     banners?: Banner[];
@@ -83,6 +91,7 @@ export default function Welcome({
     hotelCards?: HotelCard[];
     wisataCards?: WisataCard[];
     eventCards?: EventCard[];
+    souvenirCards?: SouvenirCard[];
 }) {
     const { auth, unread_notifications } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
@@ -132,7 +141,7 @@ export default function Welcome({
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
+        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
@@ -173,6 +182,12 @@ export default function Welcome({
         { id: 0, encrypted_id: undefined, title: 'Festival Musik Nusantara', city_name: 'Jakarta', start_at: '2026-03-01', min_price: 250000 },
         { id: 1, encrypted_id: undefined, title: 'Indotix Creative Fair', city_name: 'Bandung', start_at: '2026-03-15', min_price: 150000 },
         { id: 2, encrypted_id: undefined, title: 'Seminar Digital Tourism', city_name: 'Surabaya', start_at: '2026-04-05', min_price: 100000 },
+    ];
+    const souvenirProducts = souvenirCards.length > 0 ? souvenirCards : [
+        { id: 0, encrypted_id: undefined, name: 'Gantungan Kunci Nusantara', price: 25000 },
+        { id: 1, encrypted_id: undefined, name: 'Tas Anyaman Bali', price: 175000 },
+        { id: 2, encrypted_id: undefined, name: 'Patung Kayu Mini', price: 90000 },
+        { id: 3, encrypted_id: undefined, name: 'Kopi Gayo Premium 250g', price: 78000 },
     ];
 
     const mediaPartners = partners.length > 0
@@ -644,6 +659,54 @@ export default function Welcome({
                                         <Link
                                             href={`/wisata/${item.encrypted_id}`}
                                             className="mt-4 inline-block w-full rounded-lg bg-emerald-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                        >
+                                            Lihat Detail
+                                        </Link>
+                                    ) : (
+                                        <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
+                                            Lihat Detail
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold text-slate-900">Souvenir Pilihan buat Kamu</h2>
+                            <p className="text-sm text-slate-500">Bawa pulang kenangan terbaik dari perjalananmu.</p>
+                        </div>
+                        <Link href="/souvenir" className="text-sm font-semibold text-sky-600">
+                            Lihat Semua Souvenir →
+                        </Link>
+                    </div>
+                    <div className="mt-6 grid gap-6 md:grid-cols-4">
+                        {souvenirProducts.map((item) => (
+                            <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                                <div className="h-40 overflow-hidden bg-gradient-to-br from-amber-500 to-orange-400">
+                                    <img
+                                        src={
+                                            item.image_url ??
+                                            `https://images.unsplash.com/photo-1459257831348-f0cdd359235f?q=80&w=1200&auto=format&fit=crop&sig=${item.id}`
+                                        }
+                                        alt={item.name}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                        {item.name}
+                                    </h3>
+                                    <div className="text-sm font-semibold text-amber-600">
+                                        {item.price ? `Rp ${item.price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                    </div>
+                                    {item.encrypted_id ? (
+                                        <Link
+                                            href={`/souvenir/${item.encrypted_id}`}
+                                            className="mt-4 inline-block w-full rounded-lg bg-amber-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
                                         </Link>

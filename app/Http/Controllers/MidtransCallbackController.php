@@ -11,6 +11,7 @@ use App\Models\SpecialProgramBooking;
 use App\Models\SpecialProgramPayment;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
+use App\Models\SouvenirOrder;
 use App\Services\BookingService;
 use App\Services\MidtransService;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class MidtransCallbackController extends Controller
         $eventBooking = null;
         $specialPayment = null;
         $specialBooking = null;
+        $souvenirOrder = null;
         if (! $booking) {
             $wisataPayment = WisataPayment::query()->where('order_id', $orderId)->latest()->first();
             $wisataBooking = $wisataPayment?->booking ?? WisataBooking::query()->where('midtrans_order_id', $orderId)->first();
@@ -52,8 +54,11 @@ class MidtransCallbackController extends Controller
             $specialPayment = SpecialProgramPayment::query()->where('order_id', $orderId)->latest()->first();
             $specialBooking = $specialPayment?->booking ?? SpecialProgramBooking::query()->where('midtrans_order_id', $orderId)->first();
         }
-
         if (! $booking && ! $wisataBooking && ! $eventBooking && ! $specialBooking) {
+            $souvenirOrder = SouvenirOrder::query()->where('midtrans_order_id', $orderId)->first();
+        }
+
+        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $specialBooking && ! $souvenirOrder) {
             return response('Booking not found', 404);
         }
 
@@ -90,6 +95,15 @@ class MidtransCallbackController extends Controller
                 'payment_type' => $payload['payment_type'] ?? $specialPayment->payment_type,
                 'transaction_id' => $payload['transaction_id'] ?? $specialPayment->transaction_id,
                 'payload' => $payload,
+            ]);
+        }
+
+        if ($souvenirOrder) {
+            $souvenirOrder->update([
+                'payment_status' => $status ?? $souvenirOrder->payment_status,
+                'payment_type' => $payload['payment_type'] ?? $souvenirOrder->payment_type,
+                'transaction_id' => $payload['transaction_id'] ?? $souvenirOrder->transaction_id,
+                'payment_payload' => $payload,
             ]);
         }
 
@@ -168,6 +182,24 @@ class MidtransCallbackController extends Controller
                 'data' => [
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id),
                     'category' => 'special_program',
+                ],
+            ]);
+        }
+
+        if ($souvenirOrder && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $souvenirOrder->update([
+                'status' => 'paid',
+                'payment_status' => $status,
+            ]);
+
+            UserNotification::create([
+                'user_id' => $souvenirOrder->user_id,
+                'title' => 'Pembayaran souvenir berhasil',
+                'message' => 'Pembayaran kamu sudah diterima. Pesanan souvenir diproses.',
+                'type' => 'souvenir_payment_paid',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $souvenirOrder->id),
+                    'category' => 'souvenir',
                 ],
             ]);
         }
@@ -260,6 +292,26 @@ class MidtransCallbackController extends Controller
                 'data' => [
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id),
                     'category' => 'special_program',
+                ],
+            ]);
+        }
+
+        if ($souvenirOrder && in_array($status, ['cancel', 'expire', 'deny'], true)) {
+            if ($souvenirOrder->status === 'pending_payment') {
+                $souvenirOrder->update([
+                    'status' => 'expired',
+                    'payment_status' => $status,
+                ]);
+            }
+
+            UserNotification::create([
+                'user_id' => $souvenirOrder->user_id,
+                'title' => 'Pembayaran souvenir gagal',
+                'message' => 'Pembayaran souvenir tidak berhasil atau kedaluwarsa.',
+                'type' => 'souvenir_booking_expired',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $souvenirOrder->id),
+                    'category' => 'souvenir',
                 ],
             ]);
         }

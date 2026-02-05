@@ -215,6 +215,32 @@ class SouvenirProductController extends Controller
         return back()->with('status', 'souvenir-product-deactivated');
     }
 
+    public function forceDelete(Request $request, SouvenirProduct $product): RedirectResponse
+    {
+        if ($product->orderItems()->exists()) {
+            return back()->withErrors([
+                'delete' => 'Produk sudah memiliki transaksi, tidak dapat dihapus permanen.',
+            ]);
+        }
+
+        $product->images->each(function (SouvenirProductImage $image): void {
+            if ($image->image_url) {
+                Storage::disk('public')->delete($image->image_url);
+            }
+        });
+
+        $product->images()->delete();
+        $product->variants()->delete();
+        $product->stockMovements()->delete();
+        $product->delete();
+
+        $this->logAudit($request, 'product_deleted', 'Produk souvenir dihapus permanen.', [
+            'product_id' => $product->id,
+        ]);
+
+        return back()->with('status', 'souvenir-product-deleted');
+    }
+
     public function duplicate(Request $request, SouvenirProduct $product): RedirectResponse
     {
         $duplicate = $product->replicate(['sku']);

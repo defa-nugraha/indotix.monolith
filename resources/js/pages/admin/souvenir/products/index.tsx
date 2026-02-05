@@ -164,6 +164,23 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
         });
     };
 
+    const deleteProduct = async (productId: number) => {
+        const result = await Swal.fire({
+            title: 'Hapus permanen?',
+            text: 'Produk akan dihapus permanen jika belum memiliki transaksi.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal',
+        });
+        if (!result.isConfirmed) return;
+        router.delete(`/admin/souvenir/products/${productId}/force`, {
+            preserveScroll: true,
+            onSuccess: () => Swal.fire({ icon: 'success', title: 'Terhapus', text: 'Produk dihapus permanen.' }),
+            onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Produk tidak dapat dihapus.' }),
+        });
+    };
+
     const duplicate = (productId: number) => {
         router.post(`/admin/souvenir/products/${productId}/duplicate`, {}, {
             preserveScroll: true,
@@ -279,6 +296,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                                 <Button size="sm" variant="outline" onClick={() => handleEdit(product)}>Edit</Button>
                                                 <Button size="sm" variant="outline" onClick={() => duplicate(product.id)}>Duplicate</Button>
                                                 <Button size="sm" variant="outline" onClick={() => deactivate(product.id)}>Nonaktifkan</Button>
+                                                <Button size="sm" variant="destructive" onClick={() => deleteProduct(product.id)}>Hapus</Button>
                                             </div>
                                         </td>
                                     </tr>

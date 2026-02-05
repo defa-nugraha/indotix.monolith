@@ -10,11 +10,20 @@ class SouvenirOrder extends Model
 {
     protected $fillable = [
         'user_id',
+        'guest_name',
+        'guest_email',
+        'guest_phone',
         'status',
         'payment_status',
+        'midtrans_order_id',
+        'snap_token',
+        'payment_type',
+        'transaction_id',
+        'payment_payload',
         'total_price',
         'shipping_method',
         'shipping_address',
+        'notes',
         'shipping_cost',
         'shipping_status',
         'tracking_number',
@@ -27,6 +36,7 @@ class SouvenirOrder extends Model
         'shipped_at' => 'datetime',
         'completed_at' => 'datetime',
         'payment_deadline' => 'datetime',
+        'payment_payload' => 'array',
     ];
 
     public function user(): BelongsTo
