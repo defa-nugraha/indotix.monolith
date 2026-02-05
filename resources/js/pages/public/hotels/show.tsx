@@ -149,7 +149,7 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
+                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
                     </div>
                     <div className="flex flex-1 items-center">
                         <input
@@ -619,7 +619,7 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>
-                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
+                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
                         <p className="mt-3 text-sm text-slate-600">
                             Neo Soho Capital 40th Floor<br />
                             Jl. Tanjung Duren Raya No 1<br />

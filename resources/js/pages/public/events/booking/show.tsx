@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CheckCircle, Clock, CreditCard, Loader2 } from 'lucide-react';
+import { CheckCircle, Clock, CreditCard, Loader2, ShoppingCart} from 'lucide-react';
 
 type Booking = {
     id: number;
@@ -19,13 +19,16 @@ type Booking = {
 };
 
 export default function EventBookingShow({ booking }: { booking: Booking }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
     const [isDownloading, setIsDownloading] = useState(false);
     const formatIdr = (value?: number | string | null) => {
         const numeric = Number(value);
         if (!Number.isFinite(numeric)) return '-';
         return `Rp ${numeric.toLocaleString('id-ID')}`;
     };
+
+    const isPaid = ['paid', 'completed'].includes(booking.status)
+        || ['settlement', 'capture', 'success', 'paid'].includes((booking.payment_status ?? '').toString());
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -38,7 +41,7 @@ export default function EventBookingShow({ booking }: { booking: Booking }) {
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
+                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
                     </div>
                     <div className="flex flex-1 items-center">
                         <input
@@ -47,6 +50,15 @@ export default function EventBookingShow({ booking }: { booking: Booking }) {
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     {auth?.user ? (
                         <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
                             <Link href="/settings/profile" className="hover:text-sky-600">Profile</Link>
@@ -135,7 +147,7 @@ export default function EventBookingShow({ booking }: { booking: Booking }) {
                                     Lanjutkan Pembayaran
                                 </Link>
                             )}
-                            {(booking.status === 'paid' || booking.status === 'completed') && (
+                            {isPaid && (
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -158,7 +170,7 @@ export default function EventBookingShow({ booking }: { booking: Booking }) {
                             )}
                         </div>
 
-                        {(booking.status === 'paid' || booking.status === 'completed') && booking.qr_url && (
+                        {isPaid && booking.qr_url && (
                             <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
                                 <div className="text-sm font-semibold text-slate-900">QR Validasi Tiket</div>
                                 <img src={booking.qr_url} alt="QR Tiket" className="mx-auto mt-3 h-44 w-44" />

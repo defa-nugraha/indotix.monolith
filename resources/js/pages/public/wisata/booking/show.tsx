@@ -91,7 +91,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
+                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
                     </div>
                     <div className="flex flex-1 items-center">
                         <input

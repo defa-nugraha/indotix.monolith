@@ -3,10 +3,10 @@ import { Form, Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import InputError from '@/components/input-error';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History, UserCircle, Mail, Phone } from 'lucide-react';
+import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History, UserCircle, Mail, Phone, ShoppingCart } from 'lucide-react';
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: any }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
     const [passwordOpen, setPasswordOpen] = useState(false);
     const passwordForm = useForm({
         current_password: '',
@@ -33,7 +33,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
+                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
                     </div>
                     <div className="flex flex-1 items-center">
                         <input
@@ -42,6 +42,15 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
                         <Link href="/settings/profile" className="flex items-center gap-2 text-sky-600">
                             <UserCircle className="h-4 w-4" />
@@ -323,7 +332,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>
-                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
+                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
                         <p className="mt-3 text-sm text-slate-600">
                             Neo Soho Capital 40th Floor<br />
                             Jl. Tanjung Duren Raya No 1<br />

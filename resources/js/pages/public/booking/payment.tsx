@@ -1,7 +1,7 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
-import { Bell, CalendarCheck, Ticket, Users, MapPinned, UserCircle, History, MessageCircle } from 'lucide-react';
+import { Bell, CalendarCheck, Ticket, Users, MapPinned, UserCircle, History, MessageCircle, ShoppingCart} from 'lucide-react';
 
 type Booking = {
     id: number;
@@ -39,7 +39,7 @@ export default function BookingPayment({
     snapClientKey: string;
     snapScriptUrl: string;
 }) {
-    const { auth, unread_notifications } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number; souvenir_cart_count?: number };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const form = useForm({});
     const [remaining, setRemaining] = useState<number | null>(null);
@@ -97,7 +97,7 @@ export default function BookingPayment({
             <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
                     <div className="flex items-center gap-2">
-                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
+                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
                     </div>
                     <div className="flex flex-1 items-center">
                         <input
@@ -106,6 +106,16 @@ export default function BookingPayment({
                             className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         />
                     </div>
+
+                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                        <ShoppingCart className="h-4 w-4" />
+                        Keranjang
+                        {Boolean(souvenir_cart_count) && (
+                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                {souvenir_cart_count}
+                            </span>
+                        )}
+                    </Link>
                     {!auth?.user && (
                         <div className="flex items-center gap-2">
                             <Link
@@ -241,7 +251,7 @@ export default function BookingPayment({
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>
-                        <img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" />
+                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
                         <p className="mt-3 text-sm text-slate-600">
                             Neo Soho Capital 40th Floor<br />
                             Jl. Tanjung Duren Raya No 1<br />
