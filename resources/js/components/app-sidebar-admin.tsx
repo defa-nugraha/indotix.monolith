@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles } from 'lucide-react';
+import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles, ShoppingBag } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -77,6 +77,18 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/special-programs/monitoring') ||
         isCurrentUrl('/admin/special-programs/finance') ||
         isCurrentUrl('/admin/special-programs/compliance');
+    const isSouvenirSectionActive =
+        isCurrentUrl('/admin/souvenir/products') ||
+        isCurrentUrl('/admin/souvenir/categories') ||
+        isCurrentUrl('/admin/souvenir/variants') ||
+        isCurrentUrl('/admin/souvenir/inventory') ||
+        isCurrentUrl('/admin/souvenir/orders') ||
+        isCurrentUrl('/admin/souvenir/fulfillment') ||
+        isCurrentUrl('/admin/souvenir/refunds') ||
+        isCurrentUrl('/admin/souvenir/promotions') ||
+        isCurrentUrl('/admin/souvenir/reports') ||
+        isCurrentUrl('/admin/souvenir/audit') ||
+        isCurrentUrl('/admin/souvenir/settings');
     const isEventSectionActive =
         isCurrentUrl('/admin/events') ||
         isCurrentUrl('/admin/events/organizers') ||
@@ -454,6 +466,76 @@ export function AppSidebarAdmin() {
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/compliance')}>
                                             <Link href="/admin/special-programs/compliance">Komunikasi & Kepatuhan</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isSouvenirSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <ShoppingBag />
+                                    <span>Souvenir</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/products')}>
+                                            <Link href="/admin/souvenir/products">Master Produk</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/categories')}>
+                                            <Link href="/admin/souvenir/categories">Kategori Produk</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/variants')}>
+                                            <Link href="/admin/souvenir/variants">Variasi Produk</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/inventory')}>
+                                            <Link href="/admin/souvenir/inventory">Inventory & Stok</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/orders')}>
+                                            <Link href="/admin/souvenir/orders">Order & Transaksi</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/fulfillment')}>
+                                            <Link href="/admin/souvenir/fulfillment">Fulfillment & Pengiriman</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/refunds')}>
+                                            <Link href="/admin/souvenir/refunds">Refund & Retur</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/promotions')}>
+                                            <Link href="/admin/souvenir/promotions">Promo Souvenir</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/reports')}>
+                                            <Link href="/admin/souvenir/reports">Laporan & Analitik</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/audit')}>
+                                            <Link href="/admin/souvenir/audit">Audit Log</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/settings')}>
+                                            <Link href="/admin/souvenir/settings">Konfigurasi Souvenir</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

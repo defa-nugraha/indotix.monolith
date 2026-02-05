@@ -120,6 +120,79 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::delete('admin/special-programs/{program}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'destroy'])
         ->name('admin.special-programs.destroy');
 
+    Route::get('admin/souvenir/products', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'index'])
+        ->name('admin.souvenir.products.index');
+    Route::post('admin/souvenir/products', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'store'])
+        ->name('admin.souvenir.products.store');
+    Route::put('admin/souvenir/products/{product}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'update'])
+        ->name('admin.souvenir.products.update');
+    Route::post('admin/souvenir/products/{product}/duplicate', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'duplicate'])
+        ->name('admin.souvenir.products.duplicate');
+    Route::delete('admin/souvenir/products/{product}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroy'])
+        ->name('admin.souvenir.products.destroy');
+    Route::delete('admin/souvenir/products/{product}/images/{image}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroyImage'])
+        ->name('admin.souvenir.products.images.destroy');
+
+    Route::get('admin/souvenir/categories', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'index'])
+        ->name('admin.souvenir.categories.index');
+    Route::post('admin/souvenir/categories', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'store'])
+        ->name('admin.souvenir.categories.store');
+    Route::put('admin/souvenir/categories/{category}', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'update'])
+        ->name('admin.souvenir.categories.update');
+    Route::delete('admin/souvenir/categories/{category}', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'destroy'])
+        ->name('admin.souvenir.categories.destroy');
+
+    Route::get('admin/souvenir/variants', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'index'])
+        ->name('admin.souvenir.variants.index');
+    Route::post('admin/souvenir/variants', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'store'])
+        ->name('admin.souvenir.variants.store');
+    Route::put('admin/souvenir/variants/{variant}', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'update'])
+        ->name('admin.souvenir.variants.update');
+    Route::delete('admin/souvenir/variants/{variant}', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'destroy'])
+        ->name('admin.souvenir.variants.destroy');
+
+    Route::get('admin/souvenir/inventory', [\App\Http\Controllers\Admin\SouvenirInventoryController::class, 'index'])
+        ->name('admin.souvenir.inventory.index');
+    Route::post('admin/souvenir/inventory', [\App\Http\Controllers\Admin\SouvenirInventoryController::class, 'store'])
+        ->name('admin.souvenir.inventory.store');
+
+    Route::get('admin/souvenir/orders', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'index'])
+        ->name('admin.souvenir.orders.index');
+    Route::get('admin/souvenir/orders/{order}', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'show'])
+        ->name('admin.souvenir.orders.show');
+    Route::post('admin/souvenir/orders/{order}/status', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'updateStatus'])
+        ->name('admin.souvenir.orders.status');
+    Route::post('admin/souvenir/orders/{order}/shipping', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'updateShipping'])
+        ->name('admin.souvenir.orders.shipping');
+    Route::get('admin/souvenir/fulfillment', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'fulfillment'])
+        ->name('admin.souvenir.fulfillment.index');
+
+    Route::get('admin/souvenir/refunds', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'index'])
+        ->name('admin.souvenir.refunds.index');
+    Route::post('admin/souvenir/refunds', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'store'])
+        ->name('admin.souvenir.refunds.store');
+    Route::put('admin/souvenir/refunds/{refund}', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'update'])
+        ->name('admin.souvenir.refunds.update');
+
+    Route::get('admin/souvenir/promotions', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'index'])
+        ->name('admin.souvenir.promotions.index');
+    Route::post('admin/souvenir/promotions', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'store'])
+        ->name('admin.souvenir.promotions.store');
+    Route::put('admin/souvenir/promotions/{promotion}', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'update'])
+        ->name('admin.souvenir.promotions.update');
+    Route::delete('admin/souvenir/promotions/{promotion}', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'destroy'])
+        ->name('admin.souvenir.promotions.destroy');
+
+    Route::get('admin/souvenir/reports', [\App\Http\Controllers\Admin\SouvenirReportController::class, 'index'])
+        ->name('admin.souvenir.reports.index');
+    Route::get('admin/souvenir/audit', [\App\Http\Controllers\Admin\SouvenirAuditController::class, 'index'])
+        ->name('admin.souvenir.audit.index');
+
+    Route::get('admin/souvenir/settings', [\App\Http\Controllers\Admin\SouvenirSettingController::class, 'index'])
+        ->name('admin.souvenir.settings.index');
+    Route::post('admin/souvenir/settings', [\App\Http\Controllers\Admin\SouvenirSettingController::class, 'update'])
+        ->name('admin.souvenir.settings.update');
+
     Route::get('admin/events/organizers', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'index'])
         ->name('admin.events.organizers.index');
     Route::get('admin/events/organizers/{organizer}', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'show'])
