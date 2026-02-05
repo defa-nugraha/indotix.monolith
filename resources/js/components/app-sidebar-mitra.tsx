@@ -32,6 +32,7 @@ export function AppSidebarMitra() {
     const onboardingType = auth?.user?.mitra_onboarding_type ?? null;
     const showHotelMenus = onboardingType === 'hotel';
     const showWisataMenus = onboardingType === 'wisata';
+    const showEventMenus = onboardingType === 'event';
     const isHotelSectionActive =
         isCurrentUrl('/mitra/hotels') ||
         isCurrentUrl('/mitra/room-types') ||
@@ -258,6 +259,93 @@ export function AppSidebarMitra() {
                             <SidebarMenuItem>
                                 <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/disputes')}>
                                     <Link href="/mitra/wisata/disputes">
+                                        <AlertCircle />
+                                        <span>Laporan Masalah</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        </>
+                    )}
+                    {showEventMenus && (
+                        <>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events')}>
+                                    <Link href="/mitra/events">
+                                        <CalendarDays />
+                                        <span>Event</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={isCurrentUrl('/mitra/events/tickets') || isCurrentUrl('/mitra/events/tickets/create')}
+                                >
+                                    <Link href="/mitra/events/tickets">
+                                        <Ticket />
+                                        <span>Produk Tiket</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/bookings')}>
+                                    <Link href="/mitra/events/bookings">
+                                        <CalendarDays />
+                                        <span>Booking</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/attendees')}>
+                                    <Link href="/mitra/events/attendees">
+                                        <Users />
+                                        <span>Peserta</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/scans')}>
+                                    <Link href="/mitra/events/scans">
+                                        <QrCode />
+                                        <span>Validasi QR</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/staff')}>
+                                    <Link href="/mitra/events/staff">
+                                        <Users />
+                                        <span>Staff & Role</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/finance/summary')}>
+                                    <Link href="/mitra/events/finance/summary">
+                                        <Banknote />
+                                        <span>Ringkasan Pendapatan</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/finance/payouts')}>
+                                    <Link href="/mitra/events/finance/payouts">
+                                        <Banknote />
+                                        <span>Riwayat Payout</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/notifications')}>
+                                    <Link href="/mitra/events/notifications">
+                                        <Bell />
+                                        <span>Notifikasi</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/disputes')}>
+                                    <Link href="/mitra/events/disputes">
                                         <AlertCircle />
                                         <span>Laporan Masalah</span>
                                     </Link>

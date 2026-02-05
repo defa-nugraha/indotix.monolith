@@ -398,6 +398,48 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::post('admin/events/{event}/capacity', [\App\Http\Controllers\Admin\EventController::class, 'updateCapacity'])
         ->whereNumber('event')
         ->name('admin.events.capacity');
+
+    Route::get('admin/academy/classes', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'index'])
+        ->name('admin.academy.classes.index');
+    Route::post('admin/academy/classes', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'store'])
+        ->name('admin.academy.classes.store');
+    Route::get('admin/academy/classes/{class}', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'show'])
+        ->name('admin.academy.classes.show');
+    Route::put('admin/academy/classes/{class}', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'update'])
+        ->name('admin.academy.classes.update');
+
+    Route::get('admin/academy/tickets', [\App\Http\Controllers\Admin\Academy\TicketController::class, 'index'])
+        ->name('admin.academy.tickets.index');
+    Route::post('admin/academy/tickets', [\App\Http\Controllers\Admin\Academy\TicketController::class, 'store'])
+        ->name('admin.academy.tickets.store');
+    Route::put('admin/academy/tickets/{ticket}', [\App\Http\Controllers\Admin\Academy\TicketController::class, 'update'])
+        ->name('admin.academy.tickets.update');
+
+    Route::get('admin/academy/bookings', [\App\Http\Controllers\Admin\Academy\BookingController::class, 'index'])
+        ->name('admin.academy.bookings.index');
+    Route::get('admin/academy/bookings/{booking}', [\App\Http\Controllers\Admin\Academy\BookingController::class, 'show'])
+        ->name('admin.academy.bookings.show');
+
+    Route::get('admin/academy/attendees', [\App\Http\Controllers\Admin\Academy\AttendeeController::class, 'index'])
+        ->name('admin.academy.attendees.index');
+
+    Route::get('admin/academy/scans', [\App\Http\Controllers\Admin\Academy\ScanController::class, 'index'])
+        ->name('admin.academy.scans.index');
+
+    Route::get('admin/academy/finance', [\App\Http\Controllers\Admin\Academy\FinanceController::class, 'index'])
+        ->name('admin.academy.finance.index');
+    Route::post('admin/academy/bookings/{booking}/refund', [\App\Http\Controllers\Admin\Academy\FinanceController::class, 'refund'])
+        ->name('admin.academy.bookings.refund');
+
+    Route::get('admin/academy/reports', [\App\Http\Controllers\Admin\Academy\ReportController::class, 'index'])
+        ->name('admin.academy.reports.index');
+
+    Route::get('admin/academy/system/audit', [\App\Http\Controllers\Admin\Academy\AuditController::class, 'index'])
+        ->name('admin.academy.audit.index');
+    Route::get('admin/academy/system/settings', [\App\Http\Controllers\Admin\Academy\SettingController::class, 'index'])
+        ->name('admin.academy.settings.index');
+    Route::post('admin/academy/system/settings', [\App\Http\Controllers\Admin\Academy\SettingController::class, 'update'])
+        ->name('admin.academy.settings.update');
     Route::get('admin/mitra', [\App\Http\Controllers\Admin\MitraController::class, 'index'])
         ->name('admin.mitra.index');
     Route::get('admin/mitra/{user}', [\App\Http\Controllers\Admin\MitraController::class, 'show'])
@@ -812,6 +854,73 @@ Route::prefix('mitra/wisata')
             ->name('disputes.index');
         Route::post('disputes', [\App\Http\Controllers\Mitra\Wisata\DisputeController::class, 'store'])
             ->name('disputes.store');
+    });
+
+Route::prefix('mitra/events')
+    ->name('mitra.events.')
+    ->middleware(['auth', 'verified', 'mitra', 'mitra.event'])
+    ->group(function () {
+        Route::get('/', [\App\Http\Controllers\Mitra\Event\EventController::class, 'index'])
+            ->name('index');
+        Route::get('create', [\App\Http\Controllers\Mitra\Event\EventController::class, 'create'])
+            ->name('create');
+        Route::post('/', [\App\Http\Controllers\Mitra\Event\EventController::class, 'store'])
+            ->name('store');
+
+        Route::get('tickets', [\App\Http\Controllers\Mitra\Event\TicketController::class, 'index'])
+            ->name('tickets.index');
+        Route::get('tickets/create', [\App\Http\Controllers\Mitra\Event\TicketController::class, 'create'])
+            ->name('tickets.create');
+        Route::post('tickets', [\App\Http\Controllers\Mitra\Event\TicketController::class, 'store'])
+            ->name('tickets.store');
+        Route::put('tickets/{ticket}', [\App\Http\Controllers\Mitra\Event\TicketController::class, 'update'])
+            ->name('tickets.update');
+        Route::delete('tickets/{ticket}', [\App\Http\Controllers\Mitra\Event\TicketController::class, 'destroy'])
+            ->name('tickets.destroy');
+
+        Route::get('bookings', [\App\Http\Controllers\Mitra\Event\BookingController::class, 'index'])
+            ->name('bookings.index');
+        Route::get('bookings/{booking}', [\App\Http\Controllers\Mitra\Event\BookingController::class, 'show'])
+            ->name('bookings.show');
+
+        Route::get('attendees', [\App\Http\Controllers\Mitra\Event\AttendeeController::class, 'index'])
+            ->name('attendees.index');
+
+        Route::get('scans', [\App\Http\Controllers\Mitra\Event\ScanController::class, 'index'])
+            ->name('scans.index');
+        Route::post('scans', [\App\Http\Controllers\Mitra\Event\ScanController::class, 'store'])
+            ->name('scans.store');
+
+        Route::get('finance/summary', [\App\Http\Controllers\Mitra\Event\FinanceController::class, 'summary'])
+            ->name('finance.summary');
+        Route::get('finance/payouts', [\App\Http\Controllers\Mitra\Event\FinanceController::class, 'payouts'])
+            ->name('finance.payouts');
+
+        Route::get('staff', [\App\Http\Controllers\Mitra\Event\StaffController::class, 'index'])
+            ->name('staff.index');
+        Route::post('staff', [\App\Http\Controllers\Mitra\Event\StaffController::class, 'store'])
+            ->name('staff.store');
+        Route::put('staff/{staff}', [\App\Http\Controllers\Mitra\Event\StaffController::class, 'update'])
+            ->name('staff.update');
+        Route::delete('staff/{staff}', [\App\Http\Controllers\Mitra\Event\StaffController::class, 'destroy'])
+            ->name('staff.destroy');
+
+        Route::get('notifications', [\App\Http\Controllers\Mitra\Event\NotificationController::class, 'index'])
+            ->name('notifications.index');
+
+        Route::get('disputes', [\App\Http\Controllers\Mitra\Event\DisputeController::class, 'index'])
+            ->name('disputes.index');
+        Route::post('disputes', [\App\Http\Controllers\Mitra\Event\DisputeController::class, 'store'])
+            ->name('disputes.store');
+
+        Route::get('{event}', [\App\Http\Controllers\Mitra\Event\EventController::class, 'show'])
+            ->name('show');
+        Route::get('{event}/edit', [\App\Http\Controllers\Mitra\Event\EventController::class, 'edit'])
+            ->name('edit');
+        Route::put('{event}', [\App\Http\Controllers\Mitra\Event\EventController::class, 'update'])
+            ->name('update');
+        Route::post('{event}/submit', [\App\Http\Controllers\Mitra\Event\EventController::class, 'submit'])
+            ->name('submit');
     });
 
 Route::middleware(['auth', 'verified'])->group(function () {

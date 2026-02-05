@@ -104,6 +104,16 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/events/finance/reports') ||
         isCurrentUrl('/admin/events/system/audit-logs') ||
         isCurrentUrl('/admin/events/system/settings');
+    const isAcademySectionActive =
+        isCurrentUrl('/admin/academy/classes') ||
+        isCurrentUrl('/admin/academy/tickets') ||
+        isCurrentUrl('/admin/academy/bookings') ||
+        isCurrentUrl('/admin/academy/attendees') ||
+        isCurrentUrl('/admin/academy/scans') ||
+        isCurrentUrl('/admin/academy/finance') ||
+        isCurrentUrl('/admin/academy/reports') ||
+        isCurrentUrl('/admin/academy/system/audit') ||
+        isCurrentUrl('/admin/academy/system/settings');
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -416,6 +426,66 @@ export function AppSidebarAdmin() {
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/system/settings')}>
                                             <Link href="/admin/events/system/settings">Konfigurasi Event</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isAcademySectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <CalendarCheck />
+                                    <span>Eljohn Academy</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/classes')}>
+                                            <Link href="/admin/academy/classes">Master Kelas</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/tickets')}>
+                                            <Link href="/admin/academy/tickets">Produk Tiket</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/bookings')}>
+                                            <Link href="/admin/academy/bookings">Booking</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/attendees')}>
+                                            <Link href="/admin/academy/attendees">Peserta</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/scans')}>
+                                            <Link href="/admin/academy/scans">Monitoring QR</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/finance')}>
+                                            <Link href="/admin/academy/finance">Keuangan & Refund</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/reports')}>
+                                            <Link href="/admin/academy/reports">Laporan</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/system/audit')}>
+                                            <Link href="/admin/academy/system/audit">Audit Log</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/academy/system/settings')}>
+                                            <Link href="/admin/academy/system/settings">Konfigurasi</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

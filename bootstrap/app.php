@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'mitra' => \App\Http\Middleware\EnsureMitra::class,
             'mitra.verified' => \App\Http\Middleware\EnsureMitraVerified::class,
             'mitra.wisata' => \App\Http\Middleware\EnsureMitraWisata::class,
+            'mitra.event' => \App\Http\Middleware\EnsureMitraEvent::class,
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'user' => \App\Http\Middleware\EnsureUser::class,
             'admin.log' => \App\Http\Middleware\LogAdminActivity::class,
