@@ -7,6 +7,8 @@ use App\Models\Payment;
 use App\Models\UserNotification;
 use App\Models\EventBooking;
 use App\Models\EventPayment;
+use App\Models\AcademyBooking;
+use App\Models\AcademyPayment;
 use App\Models\SpecialProgramBooking;
 use App\Models\SpecialProgramPayment;
 use App\Models\WisataBooking;
@@ -39,6 +41,8 @@ class MidtransCallbackController extends Controller
         $wisataBooking = null;
         $eventPayment = null;
         $eventBooking = null;
+        $academyPayment = null;
+        $academyBooking = null;
         $specialPayment = null;
         $specialBooking = null;
         $souvenirOrder = null;
@@ -51,14 +55,18 @@ class MidtransCallbackController extends Controller
             $eventBooking = $eventPayment?->booking ?? EventBooking::query()->where('midtrans_order_id', $orderId)->first();
         }
         if (! $booking && ! $wisataBooking && ! $eventBooking) {
+            $academyPayment = AcademyPayment::query()->where('order_id', $orderId)->latest()->first();
+            $academyBooking = $academyPayment?->booking ?? AcademyBooking::query()->where('midtrans_order_id', $orderId)->first();
+        }
+        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking) {
             $specialPayment = SpecialProgramPayment::query()->where('order_id', $orderId)->latest()->first();
             $specialBooking = $specialPayment?->booking ?? SpecialProgramBooking::query()->where('midtrans_order_id', $orderId)->first();
         }
-        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $specialBooking) {
+        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking && ! $specialBooking) {
             $souvenirOrder = SouvenirOrder::query()->where('midtrans_order_id', $orderId)->first();
         }
 
-        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $specialBooking && ! $souvenirOrder) {
+        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking && ! $specialBooking && ! $souvenirOrder) {
             return response('Booking not found', 404);
         }
 
@@ -86,6 +94,14 @@ class MidtransCallbackController extends Controller
                 'status' => $status ?? $eventPayment->status,
                 'payment_type' => $payload['payment_type'] ?? $eventPayment->payment_type,
                 'transaction_id' => $payload['transaction_id'] ?? $eventPayment->transaction_id,
+                'payload' => $payload,
+            ]);
+        }
+        if ($academyPayment) {
+            $academyPayment->update([
+                'status' => $status ?? $academyPayment->status,
+                'payment_type' => $payload['payment_type'] ?? $academyPayment->payment_type,
+                'transaction_id' => $payload['transaction_id'] ?? $academyPayment->transaction_id,
                 'payload' => $payload,
             ]);
         }
@@ -164,6 +180,30 @@ class MidtransCallbackController extends Controller
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id),
                     'type' => 'event',
                     'category' => 'event',
+                ],
+            ]);
+        }
+
+        if ($academyBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $wasPaid = $academyBooking->status === 'paid';
+            $academyBooking->update([
+                'status' => 'paid',
+                'payment_status' => $status,
+            ]);
+            if (! $wasPaid) {
+                $academyBooking->ticket?->increment('sold_count', $academyBooking->quantity);
+                $academyBooking->academyClass?->increment('capacity_sold', $academyBooking->quantity);
+            }
+
+            UserNotification::create([
+                'user_id' => $academyBooking->user_id,
+                'title' => 'Pembayaran kelas berhasil',
+                'message' => 'Pembayaran kamu sudah diterima. Tiket kelas aktif.',
+                'type' => 'academy_payment_paid',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $academyBooking->id),
+                    'type' => 'academy',
+                    'category' => 'academy',
                 ],
             ]);
         }
@@ -251,6 +291,27 @@ class MidtransCallbackController extends Controller
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id),
                     'type' => 'wisata',
                     'category' => 'wisata',
+                ],
+            ]);
+        }
+
+        if ($academyBooking && in_array($status, ['cancel', 'expire', 'deny'], true)) {
+            if ($academyBooking->status === 'pending_payment') {
+                $academyBooking->update([
+                    'status' => 'expired',
+                    'payment_status' => $status,
+                ]);
+            }
+
+            UserNotification::create([
+                'user_id' => $academyBooking->user_id,
+                'title' => 'Pembayaran kelas gagal',
+                'message' => 'Pembayaran tidak berhasil atau kedaluwarsa. Silakan buat pesanan baru.',
+                'type' => 'academy_booking_expired',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $academyBooking->id),
+                    'type' => 'academy',
+                    'category' => 'academy',
                 ],
             ]);
         }

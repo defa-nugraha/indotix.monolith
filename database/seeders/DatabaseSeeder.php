@@ -22,5 +22,6 @@ class DatabaseSeeder extends Seeder
         $this->call(EventSeeder::class);
         $this->call(SpecialProgramSeeder::class);
         $this->call(SouvenirSeeder::class);
+        $this->call(AcademySeeder::class);
     }
 }

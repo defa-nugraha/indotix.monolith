@@ -15,6 +15,11 @@ import { Badge } from '@/components/ui/badge';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
 
+type ClassImage = {
+    id: number;
+    image_path: string;
+};
+
 type AcademyClass = {
     id: number;
     title: string;
@@ -25,6 +30,7 @@ type AcademyClass = {
     capacity_sold: number;
     status: string;
     is_active: boolean;
+    images?: ClassImage[];
 };
 
 type Props = {
@@ -49,16 +55,21 @@ const emptyForm = {
     capacity_total: 0,
     status: 'draft',
     is_active: true,
+    images: [] as File[],
 };
 
 export default function AcademyClassesIndex({ classes, filters }: Props) {
     const [editing, setEditing] = useState<AcademyClass | null>(null);
     const form = useForm({ ...emptyForm });
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [existingImages, setExistingImages] = useState<ClassImage[]>([]);
+    const [previewImages, setPreviewImages] = useState<string[]>([]);
 
     const openCreate = () => {
         setEditing(null);
         form.setData({ ...emptyForm });
+        setExistingImages([]);
+        setPreviewImages([]);
         setIsFormOpen(true);
     };
 
@@ -73,20 +84,17 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
             capacity_total: item.capacity_total,
             status: item.status,
             is_active: item.is_active,
+            images: [],
         });
+        setExistingImages(item.images ?? []);
+        setPreviewImages([]);
         setIsFormOpen(true);
     };
 
     const submit = () => {
-        const payload = {
-            ...form.data,
-            duration_minutes: Number(form.data.duration_minutes || 0),
-            capacity_total: Number(form.data.capacity_total || 0),
-            is_active: Boolean(form.data.is_active),
-        };
-
         if (editing) {
-            router.put(`/admin/academy/classes/${editing.id}`, payload, {
+            form.put(`/admin/academy/classes/${editing.id}`, {
+                forceFormData: true,
                 onSuccess: () => {
                     Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Kelas diperbarui.' });
                     setIsFormOpen(false);
@@ -95,6 +103,7 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
             });
         } else {
             form.post('/admin/academy/classes', {
+                forceFormData: true,
                 onSuccess: () => {
                     Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Kelas dibuat.' });
                     setIsFormOpen(false);
@@ -195,7 +204,7 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                     </div>
                 </section>
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>{editing ? 'Edit Kelas' : 'Buat Kelas'}</DialogTitle>
                             <DialogDescription>Lengkapi data kelas sebelum disimpan.</DialogDescription>
@@ -290,6 +299,74 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                                 <option value="1">Aktif</option>
                                 <option value="0">Nonaktif</option>
                             </select>
+                            <div className="rounded-lg border border-dashed border-slate-200 p-4">
+                                <div className="text-xs font-semibold uppercase text-slate-500">Gambar Kelas</div>
+                                <p className="mt-1 text-xs text-slate-500">Maksimal 5 gambar (JPG/PNG/WEBP).</p>
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    className="mt-3 block w-full text-sm"
+                                    onChange={(event) => {
+                                        const files = Array.from(event.target.files ?? []);
+                                        form.setData('images', files);
+                                        setPreviewImages(files.map((file) => URL.createObjectURL(file)));
+                                    }}
+                                />
+                                <InputError message={form.errors.images} />
+                                {existingImages.length > 0 && (
+                                    <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+                                        {existingImages.map((image) => (
+                                            <div key={image.id} className="relative overflow-hidden rounded-xl border border-slate-100">
+                                                <img
+                                                    src={`/storage/${image.image_path}`}
+                                                    alt="Kelas"
+                                                    className="h-24 w-full object-cover"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-1 text-xs text-rose-600 shadow"
+                                                    onClick={() => {
+                                                        Swal.fire({
+                                                            icon: 'warning',
+                                                            title: 'Hapus gambar?',
+                                                            showCancelButton: true,
+                                                            confirmButtonText: 'Hapus',
+                                                            cancelButtonText: 'Batal',
+                                                        }).then((result) => {
+                                                            if (result.isConfirmed && editing) {
+                                                                router.delete(
+                                                                    `/admin/academy/classes/${editing.id}/images/${image.id}`,
+                                                                    {
+                                                                        onSuccess: () => {
+                                                                            Swal.fire({
+                                                                                icon: 'success',
+                                                                                title: 'Terhapus',
+                                                                                text: 'Gambar dihapus.',
+                                                                            });
+                                                                        },
+                                                                    },
+                                                                );
+                                                            }
+                                                        });
+                                                    }}
+                                                >
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {previewImages.length > 0 && (
+                                    <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+                                        {previewImages.map((preview, index) => (
+                                            <div key={preview} className="overflow-hidden rounded-xl border border-slate-100">
+                                                <img src={preview} alt={`Preview ${index + 1}`} className="h-24 w-full object-cover" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                             <DialogFooter className="gap-2">
                                 <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                                     Simpan

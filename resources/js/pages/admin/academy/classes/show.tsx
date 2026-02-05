@@ -4,6 +4,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
 
 type Ticket = { id: number; name: string; price: number; is_active: boolean };
+type ClassImage = { id: number; image_path: string };
 type AcademyClass = {
     id: number;
     title: string;
@@ -18,6 +19,7 @@ type AcademyClass = {
     capacity_sold: number;
     status: string;
     tickets?: Ticket[];
+    images?: ClassImage[];
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -40,6 +42,15 @@ export default function AcademyClassShow({ class: academyClass }: { class: Acade
                         </div>
                         <Badge className="bg-slate-100 text-slate-700">{academyClass.status}</Badge>
                     </div>
+                    {academyClass.images && academyClass.images.length > 0 && (
+                        <div className="mt-4 grid gap-3 md:grid-cols-3">
+                            {academyClass.images.map((image) => (
+                                <div key={image.id} className="overflow-hidden rounded-2xl border border-slate-100">
+                                    <img src={`/storage/${image.image_path}`} alt="Kelas" className="h-40 w-full object-cover" />
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     <div className="mt-4 grid gap-4 md:grid-cols-3">
                         <div className="rounded-2xl border border-slate-100 p-4">
                             <p className="text-xs uppercase text-slate-500">Jadwal</p>

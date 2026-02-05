@@ -52,4 +52,9 @@ class AcademyBooking extends Model
     {
         return $this->hasMany(AcademyScan::class, 'academy_booking_id');
     }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(AcademyPayment::class, 'academy_booking_id');
+    }
 }

@@ -33,6 +33,11 @@ class AcademyClass extends Model
         return $this->hasMany(AcademyTicket::class, 'academy_class_id');
     }
 
+    public function images(): HasMany
+    {
+        return $this->hasMany(AcademyClassImage::class, 'academy_class_id');
+    }
+
     public function bookings(): HasMany
     {
         return $this->hasMany(AcademyBooking::class, 'academy_class_id');

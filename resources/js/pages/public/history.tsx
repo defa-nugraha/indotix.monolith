@@ -1,11 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, CreditCard, Filter, ShoppingCart } from 'lucide-react';
+import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, CreditCard, Filter, ShoppingCart, BookOpen } from 'lucide-react';
 
 type Booking = {
     id: number;
     encrypted_id: string;
-    type?: 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir';
+    type?: 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir' | 'academy';
     title?: string | null;
     city_name?: string | null;
     address?: string | null;
@@ -33,7 +33,7 @@ type Booking = {
 export default function History({ bookings = [] }: { bookings: Booking[] }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
     const [activeStatus, setActiveStatus] = useState<'all' | 'pending_payment' | 'paid' | 'expired' | 'cancelled'>('all');
-    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir'>('all');
+    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir' | 'academy'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
@@ -41,6 +41,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
         { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
+        { label: 'Academy', icon: BookOpen, href: '/academy' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
@@ -192,6 +193,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                 { id: 'event', label: 'Event' },
                                 { id: 'souvenir', label: 'Souvenir' },
                                 { id: 'special_program', label: 'Special Program' },
+                                { id: 'academy', label: 'Academy' },
                             ].map((item) => (
                                 <button
                                     key={item.id}
@@ -276,7 +278,9 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                                     ? 'Souvenir'
                                                                     : booking.type === 'special_program'
                                                                         ? 'Special Program'
-                                                                    : 'Wisata'}
+                                                                        : booking.type === 'academy'
+                                                                            ? 'Academy'
+                                                                        : 'Wisata'}
                                                     </span>
                                                 )}
                                             </div>
@@ -348,7 +352,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                     <div>{booking.guest_name ?? '-'}</div>
                                                     <div>{booking.guest_email ?? '-'}</div>
                                                     <div>{booking.guest_phone ?? '-'}</div>
-                                                    {(booking.type === 'wisata' || booking.type === 'event' || booking.type === 'special_program') && booking.ticket_name && (
+                                                    {(booking.type === 'wisata' || booking.type === 'event' || booking.type === 'special_program' || booking.type === 'academy') && booking.ticket_name && (
                                                         <div className="text-slate-500">Tiket: {booking.ticket_name}</div>
                                                     )}
                                                 </div>

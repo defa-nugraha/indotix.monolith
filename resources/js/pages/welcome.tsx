@@ -12,6 +12,7 @@ import {
     UserCircle,
     History,
     ShoppingCart,
+    BookOpen,
 } from 'lucide-react';
 
 type Banner = { id: number; image_path: string; link_url?: string | null };
@@ -50,6 +51,15 @@ type EventCard = {
     city_name?: string | null;
     start_at?: string | null;
     min_price?: number | null;
+};
+type AcademyCard = {
+    id: number;
+    encrypted_id?: string;
+    title: string;
+    category?: string | null;
+    start_at?: string | null;
+    min_price?: number | null;
+    image_url?: string | null;
 };
 type SpecialProgramItem = {
     type: 'hotel' | 'wisata' | 'event';
@@ -91,6 +101,7 @@ export default function Welcome({
     specialProgramItems = [],
     wisataCards = [],
     eventCards = [],
+    academyCards = [],
     souvenirCards = [],
 }: {
     canRegister?: boolean;
@@ -103,6 +114,7 @@ export default function Welcome({
     specialProgramItems?: SpecialProgramItem[];
     wisataCards?: WisataCard[];
     eventCards?: EventCard[];
+    academyCards?: AcademyCard[];
     souvenirCards?: SouvenirCard[];
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number; souvenir_cart_count?: number };
@@ -155,6 +167,7 @@ export default function Welcome({
         { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
+        { label: 'Academy', icon: BookOpen, href: '/academy' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
@@ -194,6 +207,11 @@ export default function Welcome({
         { id: 0, encrypted_id: undefined, title: 'Festival Musik Nusantara', city_name: 'Jakarta', start_at: '2026-03-01', min_price: 250000 },
         { id: 1, encrypted_id: undefined, title: 'Indotix Creative Fair', city_name: 'Bandung', start_at: '2026-03-15', min_price: 150000 },
         { id: 2, encrypted_id: undefined, title: 'Seminar Digital Tourism', city_name: 'Surabaya', start_at: '2026-04-05', min_price: 100000 },
+    ];
+    const academyProducts = academyCards.length > 0 ? academyCards : [
+        { id: 0, encrypted_id: undefined, title: 'Hospitality Bootcamp', category: 'Hospitality', start_at: '2026-03-10', min_price: 350000 },
+        { id: 1, encrypted_id: undefined, title: 'Event Production Masterclass', category: 'Event', start_at: '2026-03-20', min_price: 400000 },
+        { id: 2, encrypted_id: undefined, title: 'Digital Marketing for Tourism', category: 'Marketing', start_at: '2026-04-02', min_price: 250000 },
     ];
     const specialProgramProducts = specialProgramItems.length > 0 ? specialProgramItems : [
         { id: 0, encrypted_id: undefined, title: 'Promo Liburan Sekolah', city_name: 'Indonesia', price: 120000, type: 'wisata' },
@@ -697,6 +715,59 @@ export default function Welcome({
                                     {event.encrypted_id ? (
                                         <Link
                                             href={`/events/${event.encrypted_id}`}
+                                            className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                        >
+                                            Lihat Detail
+                                        </Link>
+                                    ) : (
+                                        <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
+                                            Lihat Detail
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold text-slate-900">
+                                Upgrade skill bareng Academy <span className="text-sky-600">#LevelUp</span>
+                            </h2>
+                            <p className="text-sm text-slate-500">Kelas praktis untuk boost karier dan bisnis kamu.</p>
+                        </div>
+                        <Link href="/academy" className="text-sm font-semibold text-sky-600">
+                            Lihat Semua Academy →
+                        </Link>
+                    </div>
+                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                        {academyProducts.map((item) => (
+                            <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
+                                <div className="h-40 overflow-hidden bg-gradient-to-br from-sky-500 to-indigo-600">
+                                    <img
+                                        src={
+                                            item.image_url ??
+                                            `https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop&sig=${item.id}`
+                                        }
+                                        alt={item.title}
+                                        className="h-full w-full object-cover"
+                                    />
+                                </div>
+                                <div className="p-4">
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                        {item.title}
+                                    </h3>
+                                    <p className="text-xs text-slate-500">
+                                        {item.category ?? 'Academy'} · {item.start_at ?? 'Jadwal segera'}
+                                    </p>
+                                    <div className="text-sm font-semibold text-indigo-600">
+                                        {item.min_price ? `Mulai Rp ${item.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                    </div>
+                                    {item.encrypted_id ? (
+                                        <Link
+                                            href={`/academy/${item.encrypted_id}`}
                                             className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail

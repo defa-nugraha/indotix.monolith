@@ -225,6 +225,31 @@ Route::get('/', function () {
             ];
         });
 
+    $academyCards = \App\Models\AcademyClass::query()
+        ->where('is_active', true)
+        ->whereIn('status', ['scheduled', 'open_for_sale'])
+        ->with('images')
+        ->latest('start_at')
+        ->take(4)
+        ->get()
+        ->map(function (\App\Models\AcademyClass $class) {
+            $minPrice = \App\Models\AcademyTicket::query()
+                ->where('academy_class_id', $class->id)
+                ->where('is_active', true)
+                ->min('price');
+            $image = $class->images->first()?->image_path;
+
+            return [
+                'id' => $class->id,
+                'encrypted_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $class->id),
+                'title' => $class->title,
+                'category' => $class->category,
+                'start_at' => $class->start_at?->toDateString(),
+                'min_price' => $minPrice ? (int) $minPrice : null,
+                'image_url' => $image ? \Illuminate\Support\Facades\Storage::url($image) : null,
+            ];
+        });
+
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
         'banners' => $banners,
@@ -236,6 +261,7 @@ Route::get('/', function () {
         'specialProgramItems' => $specialProgramItemsMapped,
         'wisataCards' => $wisataCards,
         'eventCards' => $eventCards,
+        'academyCards' => $academyCards,
         'souvenirCards' => $souvenirCards,
     ]);
 })->name('home');
@@ -407,6 +433,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.academy.classes.show');
     Route::put('admin/academy/classes/{class}', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'update'])
         ->name('admin.academy.classes.update');
+    Route::delete('admin/academy/classes/{class}/images/{image}', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'destroyImage'])
+        ->name('admin.academy.classes.images.destroy');
 
     Route::get('admin/academy/tickets', [\App\Http\Controllers\Admin\Academy\TicketController::class, 'index'])
         ->name('admin.academy.tickets.index');
@@ -952,6 +980,10 @@ Route::get('/events', [\App\Http\Controllers\PublicEventController::class, 'inde
     ->name('events.search');
 Route::get('/events/{event}', [\App\Http\Controllers\PublicEventController::class, 'show'])
     ->name('events.show');
+Route::get('/academy', [\App\Http\Controllers\PublicAcademyController::class, 'index'])
+    ->name('academy.search');
+Route::get('/academy/{class}', [\App\Http\Controllers\PublicAcademyController::class, 'show'])
+    ->name('academy.show');
 Route::get('/special-programs', [\App\Http\Controllers\PublicSpecialProgramController::class, 'index'])
     ->name('special-programs.search');
 Route::get('/special-programs/{program}', [\App\Http\Controllers\PublicSpecialProgramController::class, 'show'])
@@ -988,6 +1020,8 @@ Route::get('/wisata/{destination}', [\App\Http\Controllers\PublicWisataControlle
     ->name('wisata.show');
 Route::post('/events/booking/prepare', [\App\Http\Controllers\EventPublicBookingController::class, 'prepare'])
     ->name('events.booking.prepare');
+Route::post('/academy/booking/prepare', [\App\Http\Controllers\AcademyPublicBookingController::class, 'prepare'])
+    ->name('academy.booking.prepare');
 Route::post('/special-programs/booking/prepare', [\App\Http\Controllers\SpecialProgramBookingController::class, 'prepare'])
     ->name('special-programs.booking.prepare');
 Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingController::class, 'prepare'])
@@ -1034,6 +1068,17 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('events.booking.ticket');
     Route::get('/events/booking/{booking}', [\App\Http\Controllers\EventPublicBookingController::class, 'show'])
         ->name('events.booking.show');
+
+    Route::get('/academy/booking/review', [\App\Http\Controllers\AcademyPublicBookingController::class, 'review'])
+        ->name('academy.booking.review');
+    Route::post('/academy/booking/confirm', [\App\Http\Controllers\AcademyPublicBookingController::class, 'confirm'])
+        ->name('academy.booking.confirm');
+    Route::get('/academy/booking/{booking}/payment', [\App\Http\Controllers\AcademyPublicBookingController::class, 'payment'])
+        ->name('academy.booking.payment');
+    Route::get('/academy/booking/{booking}/ticket', [\App\Http\Controllers\AcademyPublicBookingController::class, 'ticket'])
+        ->name('academy.booking.ticket');
+    Route::get('/academy/booking/{booking}', [\App\Http\Controllers\AcademyPublicBookingController::class, 'show'])
+        ->name('academy.booking.show');
 
     Route::get('/special-programs/booking/review', [\App\Http\Controllers\SpecialProgramBookingController::class, 'review'])
         ->name('special-programs.booking.review');

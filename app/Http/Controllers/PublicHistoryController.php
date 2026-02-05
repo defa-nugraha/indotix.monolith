@@ -7,6 +7,7 @@ use App\Models\EventBooking;
 use App\Models\SpecialProgramBooking;
 use App\Models\WisataBooking;
 use App\Models\SouvenirOrder;
+use App\Models\AcademyBooking;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -191,11 +192,49 @@ class PublicHistoryController extends Controller
                 ];
             });
 
+        $academyBookings = AcademyBooking::query()
+            ->where('user_id', $request->user()->id)
+            ->with(['academyClass', 'ticket'])
+            ->latest()
+            ->get()
+            ->map(function (AcademyBooking $booking) {
+                $class = $booking->academyClass;
+
+                return [
+                    'id' => $booking->id,
+                    'encrypted_id' => Crypt::encryptString((string) $booking->id),
+                    'type' => 'academy',
+                    'title' => $class?->title ?? 'Academy',
+                    'city_name' => null,
+                    'address' => $class?->location_detail,
+                    'check_in' => null,
+                    'check_out' => null,
+                    'nights' => null,
+                    'rooms_count' => null,
+                    'guests_count' => null,
+                    'visit_date' => $class?->start_at?->toDateString(),
+                    'quantity' => $booking->quantity,
+                    'total' => $booking->total_price,
+                    'status' => $booking->status,
+                    'payment_status' => $booking->payment_status,
+                    'payment_deadline' => $booking->payment_deadline?->toIso8601String(),
+                    'guest_name' => $booking->guest_name,
+                    'guest_email' => $booking->guest_email,
+                    'guest_phone' => $booking->guest_phone,
+                    'created_at' => $booking->created_at?->toIso8601String(),
+                    'midtrans_order_id' => $booking->midtrans_order_id,
+                    'payment_url' => route('academy.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'detail_url' => route('academy.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'ticket_name' => $booking->ticket?->name,
+                ];
+            });
+
         $bookings = $hotelBookings
             ->merge($wisataBookings)
             ->merge($eventBookings)
             ->merge($specialProgramBookings)
             ->merge($souvenirOrders)
+            ->merge($academyBookings)
             ->sortByDesc('created_at')
             ->values();
 

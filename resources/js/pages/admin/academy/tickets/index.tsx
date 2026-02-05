@@ -191,7 +191,7 @@ export default function AcademyTicketsIndex({ tickets, classes, filters }: Props
                     </div>
                 </section>
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>{editing ? 'Edit Tiket' : 'Buat Tiket'}</DialogTitle>
                             <DialogDescription>Lengkapi data tiket sebelum disimpan.</DialogDescription>

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin\Academy;
 use App\Http\Controllers\Controller;
 use App\Models\AcademyAuditLog;
 use App\Models\AcademyClass;
+use App\Models\AcademyClassImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,7 +17,7 @@ class ClassController extends Controller
     public function index(Request $request): Response
     {
         $status = $request->string('status')->toString();
-        $query = AcademyClass::query()->latest('id');
+        $query = AcademyClass::query()->with('images')->latest('id');
         if ($status) {
             $query->where('status', $status);
         }
@@ -28,7 +30,7 @@ class ClassController extends Controller
 
     public function show(AcademyClass $class): Response
     {
-        $class->load('tickets');
+        $class->load('tickets', 'images');
 
         return Inertia::render('admin/academy/classes/show', [
             'class' => $class,
@@ -49,9 +51,20 @@ class ClassController extends Controller
             'capacity_total' => ['required', 'integer', 'min:0'],
             'status' => ['required', 'in:draft,scheduled,open_for_sale,closed,completed,cancelled'],
             'is_active' => ['required', 'boolean'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
         $class = AcademyClass::create($data);
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store("academy/classes/{$class->id}", 'public');
+                AcademyClassImage::create([
+                    'academy_class_id' => $class->id,
+                    'image_path' => $path,
+                ]);
+            }
+        }
 
         AcademyAuditLog::create([
             'admin_id' => $request->user()->id,
@@ -78,9 +91,27 @@ class ClassController extends Controller
             'capacity_total' => ['required', 'integer', 'min:0'],
             'status' => ['required', 'in:draft,scheduled,open_for_sale,closed,completed,cancelled'],
             'is_active' => ['required', 'boolean'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
         ]);
 
         $class->update($data);
+        if ($request->hasFile('images')) {
+            $existingCount = $class->images()->count();
+            $incoming = count($request->file('images'));
+            if ($existingCount + $incoming > 5) {
+                return back()->withErrors([
+                    'images' => 'Maksimal 5 gambar per kelas.',
+                ]);
+            }
+            foreach ($request->file('images') as $image) {
+                $path = $image->store("academy/classes/{$class->id}", 'public');
+                AcademyClassImage::create([
+                    'academy_class_id' => $class->id,
+                    'image_path' => $path,
+                ]);
+            }
+        }
 
         AcademyAuditLog::create([
             'admin_id' => $request->user()->id,
@@ -91,5 +122,17 @@ class ClassController extends Controller
         ]);
 
         return back()->with('status', 'class-updated');
+    }
+
+    public function destroyImage(Request $request, AcademyClass $class, AcademyClassImage $image): RedirectResponse
+    {
+        if ($image->academy_class_id !== $class->id) {
+            abort(404);
+        }
+
+        Storage::disk('public')->delete($image->image_path);
+        $image->delete();
+
+        return back()->with('status', 'image-deleted');
     }
 }

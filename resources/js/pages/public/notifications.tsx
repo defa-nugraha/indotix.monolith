@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History as HistoryIcon, CheckCircle, CreditCard, Clock, Filter, ShoppingCart } from 'lucide-react';
+import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History as HistoryIcon, CheckCircle, CreditCard, Clock, Filter, ShoppingCart, BookOpen } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 type NotificationItem = {
@@ -16,7 +16,7 @@ type NotificationItem = {
 export default function Notifications({ notifications = [] }: { notifications: NotificationItem[] }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
-    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir'>('all');
+    const [categoryFilter, setCategoryFilter] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir' | 'academy'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
@@ -24,6 +24,7 @@ export default function Notifications({ notifications = [] }: { notifications: N
         { label: 'Event', icon: CalendarCheck, href: '/events' },
         { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
+        { label: 'Academy', icon: BookOpen, href: '/academy' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
@@ -39,6 +40,10 @@ export default function Notifications({ notifications = [] }: { notifications: N
         event_payment_pending: CreditCard,
         event_payment_paid: CheckCircle,
         event_booking_expired: Clock,
+        academy_booking_created: Ticket,
+        academy_payment_pending: CreditCard,
+        academy_payment_paid: CheckCircle,
+        academy_booking_expired: Clock,
         souvenir_booking_created: Ticket,
         souvenir_payment_pending: CreditCard,
         souvenir_payment_paid: CheckCircle,
@@ -59,6 +64,8 @@ export default function Notifications({ notifications = [] }: { notifications: N
                         ? 'event'
                         : item.type?.startsWith('souvenir_')
                             ? 'souvenir'
+                        : item.type?.startsWith('academy_')
+                            ? 'academy'
                         : item.type?.startsWith('special_program_')
                             ? 'special_program'
                             : 'hotel');
@@ -193,6 +200,7 @@ export default function Notifications({ notifications = [] }: { notifications: N
                                 { id: 'event', label: 'Event' },
                                 { id: 'souvenir', label: 'Souvenir' },
                                 { id: 'special_program', label: 'Special Program' },
+                                { id: 'academy', label: 'Academy' },
                             ].map((item) => (
                                 <button
                                     key={item.id}
