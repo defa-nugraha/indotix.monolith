@@ -103,22 +103,23 @@ export default function AcademyBookingReview({
         setLoading(true);
         form.post('/academy/booking/confirm', {
             preserveScroll: true,
+            onSuccess: (page: any) => {
+                const token = page?.props?.snapToken as string | undefined;
+                if (token) {
+                    setSnapToken(token);
+                    if (window.snap) {
+                        snapOpened.current = true;
+                        window.snap.pay(token);
+                    }
+                }
+                setLoading(false);
+            },
             onError: (errors) => {
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal',
                     text: errors.booking ?? errors.guest_name ?? 'Tidak dapat memproses pembayaran.',
                     confirmButtonText: 'OK',
-                });
-                setLoading(false);
-            },
-            onSuccess: () => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Pesanan dibuat',
-                    text: 'Silakan lanjutkan pembayaran.',
-                    timer: 1500,
-                    showConfirmButton: false,
                 });
                 setLoading(false);
             },
