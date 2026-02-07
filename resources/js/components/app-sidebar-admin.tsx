@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles, ShoppingBag } from 'lucide-react';
+import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles, ShoppingBag, Link2 } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -65,6 +65,17 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/wisata/finance/payouts') ||
         isCurrentUrl('/admin/wisata/finance/reports') ||
         isCurrentUrl('/admin/wisata/content');
+    const isAffiliateSectionActive =
+        isCurrentUrl('/admin/wisata/affiliates') ||
+        isCurrentUrl('/admin/wisata/affiliates/commissions') ||
+        isCurrentUrl('/admin/wisata/affiliates/links') ||
+        isCurrentUrl('/admin/wisata/affiliates/performance') ||
+        isCurrentUrl('/admin/wisata/affiliates/commission-items') ||
+        isCurrentUrl('/admin/wisata/affiliates/payouts') ||
+        isCurrentUrl('/admin/wisata/affiliates/campaigns') ||
+        isCurrentUrl('/admin/wisata/affiliates/exceptions') ||
+        isCurrentUrl('/admin/wisata/affiliates/system/audit') ||
+        isCurrentUrl('/admin/wisata/affiliates/system/settings');
     const isSystemSectionActive =
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
@@ -341,6 +352,71 @@ export function AppSidebarAdmin() {
                                             <Link href="/admin/system/settings">
                                                 Konfigurasi Sistem
                                             </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isAffiliateSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <Link2 />
+                                    <span>Afiliasi Wisata</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates')}>
+                                            <Link href="/admin/wisata/affiliates">Manajemen Afiliasi</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/commissions')}>
+                                            <Link href="/admin/wisata/affiliates/commissions">Skema Komisi</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/links')}>
+                                            <Link href="/admin/wisata/affiliates/links">Referral Link</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/performance')}>
+                                            <Link href="/admin/wisata/affiliates/performance">Monitoring Kinerja</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/commission-items')}>
+                                            <Link href="/admin/wisata/affiliates/commission-items">Rekap Komisi</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/payouts')}>
+                                            <Link href="/admin/wisata/affiliates/payouts">Payout Afiliasi</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/campaigns')}>
+                                            <Link href="/admin/wisata/affiliates/campaigns">Campaign Afiliasi</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/exceptions')}>
+                                            <Link href="/admin/wisata/affiliates/exceptions">Dispute & Penalti</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/system/audit')}>
+                                            <Link href="/admin/wisata/affiliates/system/audit">Audit Log</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/wisata/affiliates/system/settings')}>
+                                            <Link href="/admin/wisata/affiliates/system/settings">Konfigurasi</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

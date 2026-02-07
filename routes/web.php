@@ -546,6 +546,61 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::post('admin/wisata/reviews/{review}', [\App\Http\Controllers\Admin\WisataContentController::class, 'updateReview'])
         ->name('admin.wisata.reviews.update');
 
+    Route::get('admin/wisata/affiliates', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'index'])
+        ->name('admin.wisata.affiliates.index');
+    Route::post('admin/wisata/affiliates', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'store'])
+        ->name('admin.wisata.affiliates.store');
+    Route::get('admin/wisata/affiliates/{affiliate}', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'show'])
+        ->name('admin.wisata.affiliates.show');
+    Route::put('admin/wisata/affiliates/{affiliate}', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'update'])
+        ->name('admin.wisata.affiliates.update');
+    Route::post('admin/wisata/affiliates/{affiliate}/status', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'updateStatus'])
+        ->name('admin.wisata.affiliates.status');
+
+    Route::get('admin/wisata/affiliates/commissions', [\App\Http\Controllers\Admin\WisataAffiliate\CommissionController::class, 'index'])
+        ->name('admin.wisata.affiliates.commissions.index');
+    Route::post('admin/wisata/affiliates/commissions', [\App\Http\Controllers\Admin\WisataAffiliate\CommissionController::class, 'store'])
+        ->name('admin.wisata.affiliates.commissions.store');
+
+    Route::get('admin/wisata/affiliates/links', [\App\Http\Controllers\Admin\WisataAffiliate\LinkController::class, 'index'])
+        ->name('admin.wisata.affiliates.links.index');
+    Route::post('admin/wisata/affiliates/links', [\App\Http\Controllers\Admin\WisataAffiliate\LinkController::class, 'store'])
+        ->name('admin.wisata.affiliates.links.store');
+    Route::post('admin/wisata/affiliates/links/{link}/status', [\App\Http\Controllers\Admin\WisataAffiliate\LinkController::class, 'updateStatus'])
+        ->name('admin.wisata.affiliates.links.status');
+    Route::post('admin/wisata/affiliates/links/{link}/regenerate', [\App\Http\Controllers\Admin\WisataAffiliate\LinkController::class, 'regenerateToken'])
+        ->name('admin.wisata.affiliates.links.regenerate');
+
+    Route::get('admin/wisata/affiliates/performance', [\App\Http\Controllers\Admin\WisataAffiliate\PerformanceController::class, 'index'])
+        ->name('admin.wisata.affiliates.performance.index');
+    Route::get('admin/wisata/affiliates/commission-items', [\App\Http\Controllers\Admin\WisataAffiliate\CommissionLogController::class, 'index'])
+        ->name('admin.wisata.affiliates.commission-items.index');
+    Route::get('admin/wisata/affiliates/payouts', [\App\Http\Controllers\Admin\WisataAffiliate\PayoutController::class, 'index'])
+        ->name('admin.wisata.affiliates.payouts.index');
+    Route::post('admin/wisata/affiliates/payouts', [\App\Http\Controllers\Admin\WisataAffiliate\PayoutController::class, 'store'])
+        ->name('admin.wisata.affiliates.payouts.store');
+    Route::post('admin/wisata/affiliates/payouts/{payout}/status', [\App\Http\Controllers\Admin\WisataAffiliate\PayoutController::class, 'updateStatus'])
+        ->name('admin.wisata.affiliates.payouts.status');
+
+    Route::get('admin/wisata/affiliates/campaigns', [\App\Http\Controllers\Admin\WisataAffiliate\CampaignController::class, 'index'])
+        ->name('admin.wisata.affiliates.campaigns.index');
+    Route::post('admin/wisata/affiliates/campaigns', [\App\Http\Controllers\Admin\WisataAffiliate\CampaignController::class, 'store'])
+        ->name('admin.wisata.affiliates.campaigns.store');
+    Route::post('admin/wisata/affiliates/campaigns/{campaign}/status', [\App\Http\Controllers\Admin\WisataAffiliate\CampaignController::class, 'updateStatus'])
+        ->name('admin.wisata.affiliates.campaigns.status');
+
+    Route::get('admin/wisata/affiliates/exceptions', [\App\Http\Controllers\Admin\WisataAffiliate\ExceptionController::class, 'index'])
+        ->name('admin.wisata.affiliates.exceptions.index');
+    Route::post('admin/wisata/affiliates/exceptions', [\App\Http\Controllers\Admin\WisataAffiliate\ExceptionController::class, 'store'])
+        ->name('admin.wisata.affiliates.exceptions.store');
+
+    Route::get('admin/wisata/affiliates/system/audit', [\App\Http\Controllers\Admin\WisataAffiliate\AuditController::class, 'index'])
+        ->name('admin.wisata.affiliates.audit.index');
+    Route::get('admin/wisata/affiliates/system/settings', [\App\Http\Controllers\Admin\WisataAffiliate\SettingController::class, 'index'])
+        ->name('admin.wisata.affiliates.settings.index');
+    Route::post('admin/wisata/affiliates/system/settings', [\App\Http\Controllers\Admin\WisataAffiliate\SettingController::class, 'update'])
+        ->name('admin.wisata.affiliates.settings.update');
+
     Route::get('admin/bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])
         ->name('admin.bookings.index');
     Route::get('admin/bookings/{booking}', [\App\Http\Controllers\Admin\BookingController::class, 'show'])

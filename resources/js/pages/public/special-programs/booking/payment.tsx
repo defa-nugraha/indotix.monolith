@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
+import Swal from 'sweetalert2';
 import { ShoppingCart } from 'lucide-react';
 
 type Booking = {
@@ -17,6 +18,7 @@ type Props = {
     booking: Booking;
     snapClientKey: string;
     snapScriptUrl: string;
+    snapError?: string | null;
 };
 
 declare global {
@@ -25,26 +27,53 @@ declare global {
     }
 }
 
-export default function SpecialProgramPayment({ booking, snapClientKey, snapScriptUrl }: Props) {
+export default function SpecialProgramPayment({ booking, snapClientKey, snapScriptUrl, snapError }: Props) {
     const { auth, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; souvenir_cart_count?: number };
     const snapOpened = useRef(false);
+    const snapToken = booking.payment?.payload?.token as string | undefined;
 
     useEffect(() => {
-        if (!snapScriptUrl || !snapClientKey) return;
-        if (document.querySelector('script[data-midtrans-snap]')) return;
-        const script = document.createElement('script');
-        script.src = snapScriptUrl;
-        script.setAttribute('data-client-key', snapClientKey);
-        script.setAttribute('data-midtrans-snap', 'true');
-        script.async = true;
-        script.onload = () => {
-            if (!snapOpened.current && booking.payment?.payload?.token && window.snap) {
+        if (snapError) {
+            Swal.fire({ icon: 'error', title: 'Gagal', text: snapError });
+        }
+    }, [snapError]);
+
+    useEffect(() => {
+        if (!snapScriptUrl || !snapClientKey || !snapToken) return;
+        const launch = () => {
+            if (!snapOpened.current && window.snap) {
                 snapOpened.current = true;
-                window.snap.pay(booking.payment.payload.token as string);
+                window.snap.pay(snapToken);
             }
         };
-        document.body.appendChild(script);
-    }, [snapClientKey, snapScriptUrl, booking.payment?.payload]);
+
+        if (window.snap) {
+            launch();
+            return;
+        }
+
+        let script = document.querySelector('script[data-midtrans-snap]') as HTMLScriptElement | null;
+        if (!script) {
+            script = document.createElement('script');
+            script.src = snapScriptUrl;
+            script.setAttribute('data-client-key', snapClientKey);
+            script.setAttribute('data-midtrans-snap', 'true');
+            script.async = true;
+            script.onerror = () => {
+                Swal.fire({ icon: 'error', title: 'Gagal memuat pembayaran', text: 'Silakan coba lagi.' });
+            };
+            document.body.appendChild(script);
+        }
+
+        const timer = window.setInterval(() => {
+            if (window.snap) {
+                window.clearInterval(timer);
+                launch();
+            }
+        }, 500);
+
+        return () => window.clearInterval(timer);
+    }, [snapClientKey, snapScriptUrl, snapToken]);
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">

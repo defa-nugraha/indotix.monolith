@@ -21,7 +21,7 @@ use Inertia\Response;
 
 class SpecialProgramBookingController extends Controller
 {
-    private const PAYMENT_TTL_MINUTES = 15;
+    private const PAYMENT_TTL_MINUTES = 1440;
 
     public function prepare(Request $request): RedirectResponse
     {
@@ -225,7 +225,14 @@ class SpecialProgramBookingController extends Controller
                     $this->createSnapPayment($booking, $midtransService);
                     $booking->load('payments');
                 } catch (\Throwable $exception) {
-                    // ignore, user can retry later
+                    return Inertia::render('public/special-programs/booking/payment', [
+                        'booking' => $this->buildPayload($booking),
+                        'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+                        'snapScriptUrl' => config('services.midtrans.is_production')
+                            ? 'https://app.midtrans.com/snap/snap.js'
+                            : 'https://app.sandbox.midtrans.com/snap/snap.js',
+                        'snapError' => 'Gagal menyiapkan pembayaran. Silakan coba lagi.',
+                    ]);
                 }
             }
         }
@@ -236,6 +243,7 @@ class SpecialProgramBookingController extends Controller
             'snapScriptUrl' => config('services.midtrans.is_production')
                 ? 'https://app.midtrans.com/snap/snap.js'
                 : 'https://app.sandbox.midtrans.com/snap/snap.js',
+            'snapError' => null,
         ]);
     }
 
@@ -334,6 +342,11 @@ class SpecialProgramBookingController extends Controller
                 'order_id' => $orderId,
                 'gross_amount' => (int) $booking->total_price,
             ],
+            'expiry' => [
+                'start_time' => now()->format('Y-m-d H:i:s O'),
+                'unit' => 'hours',
+                'duration' => 24,
+            ],
             'item_details' => [
                 [
                     'id' => (string) $booking->id,
@@ -352,8 +365,12 @@ class SpecialProgramBookingController extends Controller
 
     private function createSnapPayment(SpecialProgramBooking $booking, MidtransService $midtransService): array
     {
-        if ($booking->payments()->where('status', 'pending')->exists()) {
-            return (array) ($booking->payments()->latest()->value('payload') ?? []);
+        $latestPayment = $booking->payments()->latest()->first();
+        if ($latestPayment && $latestPayment->status === 'pending') {
+            $existingPayload = (array) ($latestPayment->payload ?? []);
+            if (! empty($existingPayload['token'])) {
+                return $existingPayload;
+            }
         }
 
         $orderId = sprintf('SPP-%s-%s', $booking->id, now()->format('YmdHis'));

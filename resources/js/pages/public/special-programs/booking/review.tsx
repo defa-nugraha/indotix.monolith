@@ -66,27 +66,41 @@ export default function SpecialProgramBookingReview({
     }, [initialSnapToken]);
 
     useEffect(() => {
-        if (!snapScriptUrl || !snapClientKey) return;
-        if (document.querySelector('script[data-midtrans-snap]')) return;
-        const script = document.createElement('script');
-        script.src = snapScriptUrl;
-        script.setAttribute('data-client-key', snapClientKey);
-        script.setAttribute('data-midtrans-snap', 'true');
-        script.async = true;
-        script.onload = () => {
-            if (snapToken && !snapOpened.current && window.snap) {
+        if (!snapScriptUrl || !snapClientKey || !snapToken) return;
+        const launch = () => {
+            if (!snapOpened.current && window.snap) {
                 snapOpened.current = true;
                 window.snap.pay(snapToken);
             }
         };
-        document.body.appendChild(script);
-    }, [snapClientKey, snapScriptUrl, snapToken]);
 
-    useEffect(() => {
-        if (!snapToken || snapOpened.current || !window.snap) return;
-        snapOpened.current = true;
-        window.snap.pay(snapToken);
-    }, [snapToken]);
+        if (window.snap) {
+            launch();
+            return;
+        }
+
+        let script = document.querySelector('script[data-midtrans-snap]') as HTMLScriptElement | null;
+        if (!script) {
+            script = document.createElement('script');
+            script.src = snapScriptUrl;
+            script.setAttribute('data-client-key', snapClientKey);
+            script.setAttribute('data-midtrans-snap', 'true');
+            script.async = true;
+            script.onerror = () => {
+                Swal.fire({ icon: 'error', title: 'Gagal memuat pembayaran', text: 'Silakan coba lagi.' });
+            };
+            document.body.appendChild(script);
+        }
+
+        const timer = window.setInterval(() => {
+            if (window.snap) {
+                window.clearInterval(timer);
+                launch();
+            }
+        }, 500);
+
+        return () => window.clearInterval(timer);
+    }, [snapClientKey, snapScriptUrl, snapToken]);
 
     return (
         <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
@@ -174,6 +188,17 @@ export default function SpecialProgramBookingReview({
                                 setLoading(true);
                                 form.post('/special-programs/booking/confirm', {
                                     preserveScroll: true,
+                                    onSuccess: (page: any) => {
+                                        const token = page?.props?.snapToken as string | undefined;
+                                        if (token) {
+                                            setSnapToken(token);
+                                            if (window.snap) {
+                                                snapOpened.current = true;
+                                                window.snap.pay(token);
+                                            }
+                                        }
+                                        setLoading(false);
+                                    },
                                     onError: (errors) => {
                                         Swal.fire({
                                             icon: 'error',

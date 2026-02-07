@@ -1,0 +1,192 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { useState } from 'react';
+import Swal from 'sweetalert2';
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
+
+type Affiliate = {
+    id: number;
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    type: string;
+    platform?: string | null;
+    status: string;
+    notes?: string | null;
+    bank_name?: string | null;
+    bank_account_number?: string | null;
+    bank_account_name?: string | null;
+};
+
+type Props = {
+    affiliates: {
+        data: Affiliate[];
+        links: Array<{ url: string | null; label: string; active: boolean }>;
+    };
+    filters: {
+        status?: string;
+        q?: string;
+    };
+};
+
+const statusOptions = ['draft', 'pending_review', 'active', 'suspended', 'terminated'];
+
+export default function WisataAffiliateIndex({ affiliates, filters }: Props) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Wisata', href: '/admin/wisata/destinations' },
+        { title: 'Afiliasi Wisata', href: '/admin/wisata/affiliates' },
+    ];
+
+    const [form, setForm] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        type: 'individu',
+        platform: '',
+        status: 'pending_review',
+        notes: '',
+        bank_name: '',
+        bank_account_number: '',
+        bank_account_name: '',
+    });
+
+    const submit = (event: React.FormEvent) => {
+        event.preventDefault();
+        router.post('/admin/wisata/affiliates', form, {
+            onSuccess: () => {
+                Swal.fire({ icon: 'success', title: 'Tersimpan', timer: 1200, showConfirmButton: false });
+                setForm({
+                    name: '',
+                    email: '',
+                    phone: '',
+                    type: 'individu',
+                    platform: '',
+                    status: 'pending_review',
+                    notes: '',
+                    bank_name: '',
+                    bank_account_number: '',
+                    bank_account_name: '',
+                });
+            },
+            onError: () => {
+                Swal.fire({ icon: 'error', title: 'Gagal menyimpan' });
+            },
+        });
+    };
+
+    const updateStatus = (id: number, status: string) => {
+        router.post(`/admin/wisata/affiliates/${id}/status`, { status }, {
+            preserveScroll: true,
+            onSuccess: () => Swal.fire({ icon: 'success', title: 'Status diperbarui', timer: 1000, showConfirmButton: false }),
+        });
+    };
+
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Afiliasi Wisata" />
+            <div className="space-y-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold text-slate-900">Registrasi Afiliasi</h2>
+                    <p className="text-sm text-slate-500">Masukkan data afiliasi baru untuk diverifikasi.</p>
+                    <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-2">
+                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama lengkap / channel" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nomor HP" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                            <option value="individu">Individu</option>
+                            <option value="komunitas">Komunitas</option>
+                            <option value="media">Media</option>
+                        </select>
+                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Platform promosi" value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })} />
+                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                            {statusOptions.map((option) => (
+                                <option key={option} value={option}>{option}</option>
+                            ))}
+                        </select>
+                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama bank" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
+                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nomor rekening" value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
+                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama pemilik rekening" value={form.bank_account_name} onChange={(e) => setForm({ ...form, bank_account_name: e.target.value })} />
+                        <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-2" placeholder="Catatan internal" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                        <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-2">Simpan</button>
+                    </form>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-900">Daftar Afiliasi</h3>
+                            <p className="text-sm text-slate-500">Review, aktifkan, atau suspend afiliasi.</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <input
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                placeholder="Cari..."
+                                defaultValue={filters.q}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        router.get('/admin/wisata/affiliates', { q: (e.target as HTMLInputElement).value, status: filters.status }, { preserveState: true });
+                                    }
+                                }}
+                            />
+                            <select
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                defaultValue={filters.status ?? ''}
+                                onChange={(e) => router.get('/admin/wisata/affiliates', { status: e.target.value, q: filters.q }, { preserveState: true })}
+                            >
+                                <option value="">Semua Status</option>
+                                {statusOptions.map((option) => (
+                                    <option key={option} value={option}>{option}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    <div className="mt-4 overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead className="text-left text-xs uppercase text-slate-500">
+                                <tr>
+                                    <th className="py-2">Nama</th>
+                                    <th>Email</th>
+                                    <th>HP</th>
+                                    <th>Tipe</th>
+                                    <th>Status</th>
+                                    <th>Platform</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                                {affiliates.data.map((item) => (
+                                    <tr key={item.id} className="text-slate-700">
+                                        <td className="py-3">
+                                            <Link href={`/admin/wisata/affiliates/${item.id}`} className="font-semibold text-sky-600 hover:underline">
+                                                {item.name}
+                                            </Link>
+                                        </td>
+                                        <td>{item.email ?? '-'}</td>
+                                        <td>{item.phone ?? '-'}</td>
+                                        <td className="capitalize">{item.type}</td>
+                                        <td>{item.status}</td>
+                                        <td>{item.platform ?? '-'}</td>
+                                        <td>
+                                            <select
+                                                className="h-9 rounded-lg border border-slate-200 px-2 text-xs"
+                                                value={item.status}
+                                                onChange={(e) => updateStatus(item.id, e.target.value)}
+                                            >
+                                                {statusOptions.map((option) => (
+                                                    <option key={option} value={option}>{option}</option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {affiliates.data.length === 0 && (
+                            <div className="py-6 text-center text-sm text-slate-500">Belum ada afiliasi.</div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </AppLayout>
+    );
+}
