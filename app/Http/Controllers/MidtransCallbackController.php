@@ -13,6 +13,7 @@ use App\Models\SpecialProgramBooking;
 use App\Models\SpecialProgramPayment;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
+use App\Models\WisataAffiliateCommissionItem;
 use App\Models\SouvenirOrder;
 use App\Services\BookingService;
 use App\Services\MidtransService;
@@ -158,6 +159,28 @@ class MidtransCallbackController extends Controller
                     'category' => 'wisata',
                 ],
             ]);
+
+            $commissionItems = WisataAffiliateCommissionItem::query()
+                ->where('wisata_booking_id', $wisataBooking->id)
+                ->get();
+
+            foreach ($commissionItems as $item) {
+                if ($item->status !== 'approved') {
+                    $item->update(['status' => 'approved']);
+                    if ($item->affiliate?->user_id) {
+                        UserNotification::create([
+                            'user_id' => $item->affiliate->user_id,
+                            'title' => 'Komisi disetujui',
+                            'message' => 'Komisi afiliasi kamu sudah disetujui setelah pembayaran berhasil.',
+                            'type' => 'affiliate_commission_approved',
+                            'data' => [
+                                'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id),
+                                'category' => 'affiliate',
+                            ],
+                        ]);
+                    }
+                }
+            }
         }
 
         if ($eventBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
@@ -293,6 +316,31 @@ class MidtransCallbackController extends Controller
                     'category' => 'wisata',
                 ],
             ]);
+
+            $commissionItems = WisataAffiliateCommissionItem::query()
+                ->where('wisata_booking_id', $wisataBooking->id)
+                ->get();
+
+            foreach ($commissionItems as $item) {
+                if ($item->status !== 'cancelled') {
+                    $item->update([
+                        'status' => 'cancelled',
+                        'reason' => 'Pembayaran tidak berhasil atau kedaluwarsa.',
+                    ]);
+                    if ($item->affiliate?->user_id) {
+                        UserNotification::create([
+                            'user_id' => $item->affiliate->user_id,
+                            'title' => 'Komisi dibatalkan',
+                            'message' => 'Komisi afiliasi dibatalkan karena pembayaran tidak berhasil.',
+                            'type' => 'affiliate_commission_cancelled',
+                            'data' => [
+                                'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id),
+                                'category' => 'affiliate',
+                            ],
+                        ]);
+                    }
+                }
+            }
         }
 
         if ($academyBooking && in_array($status, ['cancel', 'expire', 'deny'], true)) {

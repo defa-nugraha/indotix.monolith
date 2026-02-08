@@ -16,6 +16,7 @@ import {
     Utensils,
     Users,
     Wifi,
+    BadgePercent,
 } from 'lucide-react';
 
 type TicketItem = {
@@ -61,7 +62,12 @@ export default function WisataShow({
     tickets: TicketItem[];
     filters: Filters;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
+        auth?: { user?: { role?: string } };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+        affiliate_menu?: boolean;
+    };
     const [visitDate, setVisitDate] = useState(filters.visit_date);
     const [quantity, setQuantity] = useState(filters.quantity ?? 1);
     const mapEmbedUrl = (() => {
@@ -156,6 +162,12 @@ export default function WisataShow({
                                 <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
+                            {affiliate_menu && (
+                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
+                                    <BadgePercent className="h-4 w-4" />
+                                    Afiliasi
+                                </Link>
+                            )}
                             <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
                                 <History className="h-4 w-4" />
                                 Riwayat

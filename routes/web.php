@@ -550,13 +550,6 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.wisata.affiliates.index');
     Route::post('admin/wisata/affiliates', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'store'])
         ->name('admin.wisata.affiliates.store');
-    Route::get('admin/wisata/affiliates/{affiliate}', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'show'])
-        ->name('admin.wisata.affiliates.show');
-    Route::put('admin/wisata/affiliates/{affiliate}', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'update'])
-        ->name('admin.wisata.affiliates.update');
-    Route::post('admin/wisata/affiliates/{affiliate}/status', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'updateStatus'])
-        ->name('admin.wisata.affiliates.status');
-
     Route::get('admin/wisata/affiliates/commissions', [\App\Http\Controllers\Admin\WisataAffiliate\CommissionController::class, 'index'])
         ->name('admin.wisata.affiliates.commissions.index');
     Route::post('admin/wisata/affiliates/commissions', [\App\Http\Controllers\Admin\WisataAffiliate\CommissionController::class, 'store'])
@@ -600,6 +593,13 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.wisata.affiliates.settings.index');
     Route::post('admin/wisata/affiliates/system/settings', [\App\Http\Controllers\Admin\WisataAffiliate\SettingController::class, 'update'])
         ->name('admin.wisata.affiliates.settings.update');
+
+    Route::get('admin/wisata/affiliates/{affiliate}', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'show'])
+        ->name('admin.wisata.affiliates.show');
+    Route::put('admin/wisata/affiliates/{affiliate}', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'update'])
+        ->name('admin.wisata.affiliates.update');
+    Route::post('admin/wisata/affiliates/{affiliate}/status', [\App\Http\Controllers\Admin\WisataAffiliate\AffiliateController::class, 'updateStatus'])
+        ->name('admin.wisata.affiliates.status');
 
     Route::get('admin/bookings', [\App\Http\Controllers\Admin\BookingController::class, 'index'])
         ->name('admin.bookings.index');
@@ -1083,6 +1083,40 @@ Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingContr
     ->name('wisata.booking.prepare');
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
     ->name('booking.prepare');
+
+Route::middleware(['auth', 'verified', 'user'])->prefix('affiliate')->name('affiliate.')->group(function () {
+    Route::get('register', [\App\Http\Controllers\Affiliate\RegisterController::class, 'create'])
+        ->name('register');
+    Route::post('register', [\App\Http\Controllers\Affiliate\RegisterController::class, 'store'])
+        ->name('register.store');
+});
+
+Route::middleware(['auth', 'verified', 'user', 'affiliate.user'])->prefix('affiliate')->name('affiliate.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Affiliate\DashboardController::class, 'index'])
+        ->name('dashboard');
+    Route::get('profile', [\App\Http\Controllers\Affiliate\ProfileController::class, 'show'])
+        ->name('profile');
+    Route::put('profile', [\App\Http\Controllers\Affiliate\ProfileController::class, 'update'])
+        ->name('profile.update');
+    Route::get('catalog', [\App\Http\Controllers\Affiliate\CatalogController::class, 'index'])
+        ->name('catalog');
+    Route::get('links', [\App\Http\Controllers\Affiliate\LinkController::class, 'index'])
+        ->name('links');
+    Route::post('links', [\App\Http\Controllers\Affiliate\LinkController::class, 'store'])
+        ->name('links.store');
+    Route::get('commissions', [\App\Http\Controllers\Affiliate\CommissionController::class, 'index'])
+        ->name('commissions');
+    Route::get('payouts', [\App\Http\Controllers\Affiliate\PayoutController::class, 'index'])
+        ->name('payouts');
+    Route::post('payouts', [\App\Http\Controllers\Affiliate\PayoutController::class, 'store'])
+        ->name('payouts.store');
+    Route::get('notifications', [\App\Http\Controllers\Affiliate\NotificationController::class, 'index'])
+        ->name('notifications');
+    Route::get('terms', [\App\Http\Controllers\Affiliate\TermsController::class, 'index'])
+        ->name('terms');
+    Route::get('support', [\App\Http\Controllers\Affiliate\SupportController::class, 'index'])
+        ->name('support');
+});
 Route::middleware(['auth', 'verified', 'user'])->group(function () {
     Route::get('/notifications', [\App\Http\Controllers\PublicNotificationController::class, 'index'])
         ->name('public.notifications');

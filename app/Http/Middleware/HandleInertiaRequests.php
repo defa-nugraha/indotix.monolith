@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Models\UserNotification;
+use App\Models\WisataAffiliate;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -42,6 +43,12 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'affiliate_menu' => $request->user()
+                ? (bool) WisataAffiliate::query()->where('user_id', $request->user()->id)->exists()
+                : false,
+            'affiliate_status' => $request->user()
+                ? WisataAffiliate::query()->where('user_id', $request->user()->id)->value('status')
+                : null,
             'unread_notifications' => $request->user()
                 ? UserNotification::query()
                     ->where('user_id', $request->user()->id)

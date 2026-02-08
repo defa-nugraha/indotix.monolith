@@ -23,11 +23,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'mitra.event' => \App\Http\Middleware\EnsureMitraEvent::class,
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'user' => \App\Http\Middleware\EnsureUser::class,
+            'affiliate.user' => \App\Http\Middleware\EnsureAffiliateUser::class,
             'admin.log' => \App\Http\Middleware\LogAdminActivity::class,
         ]);
 
         $middleware->web(append: [
             HandleAppearance::class,
+            \App\Http\Middleware\CaptureAffiliateReferral::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);

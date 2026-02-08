@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type Commission = {
     id: number;
@@ -16,7 +17,7 @@ type Commission = {
     end_date?: string | null;
 };
 
-type Option = { id: number; name: string };
+type Option = { id: number; destination_name: string };
 
 type Props = {
     commissions: Commission[];
@@ -31,6 +32,7 @@ export default function WisataAffiliateCommissions({ commissions, destinations, 
         { title: 'Skema Komisi', href: '/admin/wisata/affiliates/commissions' },
     ];
 
+    const [open, setOpen] = useState(false);
     const [form, setForm] = useState({
         scope_type: 'global',
         wisata_id: '',
@@ -50,47 +52,65 @@ export default function WisataAffiliateCommissions({ commissions, destinations, 
             campaign_id: form.campaign_id ? Number(form.campaign_id) : null,
             value: Number(form.value || 0),
         }, {
-            onSuccess: () => Swal.fire({ icon: 'success', title: 'Komisi tersimpan', timer: 1000, showConfirmButton: false }),
+            onSuccess: () => {
+                Swal.fire({ icon: 'success', title: 'Komisi tersimpan', timer: 1000, showConfirmButton: false });
+                setOpen(false);
+            },
         });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Skema Komisi Afiliasi" />
-            <div className="space-y-6">
+            <div className="space-y-6 px-4 md:px-8">
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-slate-900">Atur Skema Komisi</h2>
-                    <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.scope_type} onChange={(e) => setForm({ ...form, scope_type: e.target.value })}>
-                            <option value="global">Global</option>
-                            <option value="wisata">Per Wisata</option>
-                            <option value="campaign">Per Campaign</option>
-                        </select>
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.wisata_id} onChange={(e) => setForm({ ...form, wisata_id: e.target.value })}>
-                            <option value="">Pilih Wisata (opsional)</option>
-                            {destinations.map((item) => (
-                                <option key={item.id} value={item.id}>{item.name}</option>
-                            ))}
-                        </select>
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.campaign_id} onChange={(e) => setForm({ ...form, campaign_id: e.target.value })}>
-                            <option value="">Pilih Campaign (opsional)</option>
-                            {campaigns.map((item) => (
-                                <option key={item.id} value={item.id}>{item.name}</option>
-                            ))}
-                        </select>
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                            <option value="percentage">Persentase</option>
-                            <option value="nominal">Nominal</option>
-                        </select>
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nilai" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })}>
-                            <option value="platform">Platform</option>
-                            <option value="subsidi_promo">Subsidi Promo</option>
-                        </select>
-                        <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
-                        <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
-                        <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">Simpan Komisi</button>
-                    </form>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-lg font-semibold text-slate-900">Atur Skema Komisi</h2>
+                            <p className="text-sm text-slate-500">Buat komisi global atau per wisata/campaign.</p>
+                        </div>
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white">Tambah Komisi</button>
+                            </DialogTrigger>
+                            <DialogContent className="max-h-[90vh] w-[95vw] max-w-3xl overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>Buat Skema Komisi</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.scope_type} onChange={(e) => setForm({ ...form, scope_type: e.target.value })}>
+                                        <option value="global">Global</option>
+                                        <option value="wisata">Per Wisata</option>
+                                        <option value="campaign">Per Campaign</option>
+                                    </select>
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.wisata_id} onChange={(e) => setForm({ ...form, wisata_id: e.target.value })}>
+                                        <option value="">Pilih Wisata (opsional)</option>
+                                        {destinations.map((item) => (
+                                            <option key={item.id} value={item.id}>{item.destination_name}</option>
+                                        ))}
+                                    </select>
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.campaign_id} onChange={(e) => setForm({ ...form, campaign_id: e.target.value })}>
+                                        <option value="">Pilih Campaign (opsional)</option>
+                                        {campaigns.map((item) => (
+                                            <option key={item.id} value={item.id}>{item.name}</option>
+                                        ))}
+                                    </select>
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                                        <option value="percentage">Persentase</option>
+                                        <option value="nominal">Nominal</option>
+                                    </select>
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nilai" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} />
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })}>
+                                        <option value="platform">Platform</option>
+                                        <option value="subsidi_promo">Subsidi Promo</option>
+                                    </select>
+                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+                                    <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">Simpan Komisi</button>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

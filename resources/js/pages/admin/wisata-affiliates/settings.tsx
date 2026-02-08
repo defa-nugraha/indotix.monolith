@@ -39,18 +39,20 @@ export default function WisataAffiliateSettings({ setting }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Konfigurasi Afiliasi" />
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <h2 className="text-lg font-semibold text-slate-900">Konfigurasi Sistem Afiliasi</h2>
-                <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-2">
-                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.cookie_days} onChange={(e) => setForm({ ...form, cookie_days: Number(e.target.value) })} />
-                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.attribution_model} onChange={(e) => setForm({ ...form, attribution_model: e.target.value })}>
-                        <option value="last_click">Last Click</option>
-                        <option value="first_click">First Click</option>
-                    </select>
-                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.min_payout} onChange={(e) => setForm({ ...form, min_payout: Number(e.target.value) })} />
-                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.payout_cutoff_days} onChange={(e) => setForm({ ...form, payout_cutoff_days: Number(e.target.value) })} />
-                    <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-2">Simpan</button>
-                </form>
+            <div className="px-4 md:px-8">
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold text-slate-900">Konfigurasi Sistem Afiliasi</h2>
+                    <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-2">
+                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.cookie_days} onChange={(e) => setForm({ ...form, cookie_days: Number(e.target.value) })} />
+                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.attribution_model} onChange={(e) => setForm({ ...form, attribution_model: e.target.value })}>
+                            <option value="last_click">Last Click</option>
+                            <option value="first_click">First Click</option>
+                        </select>
+                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.min_payout} onChange={(e) => setForm({ ...form, min_payout: Number(e.target.value) })} />
+                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.payout_cutoff_days} onChange={(e) => setForm({ ...form, payout_cutoff_days: Number(e.target.value) })} />
+                        <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-2">Simpan</button>
+                    </form>
+                </div>
             </div>
         </AppLayout>
     );

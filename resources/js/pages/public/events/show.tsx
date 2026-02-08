@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart } from 'lucide-react';
+import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart, BadgePercent } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 type EventDetail = {
@@ -28,7 +28,12 @@ type TicketItem = {
 };
 
 export default function EventShow({ event, tickets }: { event: EventDetail; tickets: TicketItem[] }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
+        auth?: { user?: any };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+        affiliate_menu?: boolean;
+    };
     const [selectedTicket, setSelectedTicket] = useState<string>(tickets[0]?.id?.toString() ?? '');
     const form = useForm({
         event_id: event.id,
@@ -90,6 +95,12 @@ export default function EventShow({ event, tickets }: { event: EventDetail; tick
                                 <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
+                            {affiliate_menu && (
+                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
+                                    <BadgePercent className="h-4 w-4" />
+                                    Afiliasi
+                                </Link>
+                            )}
                             <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
                                 <HistoryIcon className="h-4 w-4" />
                                 Riwayat

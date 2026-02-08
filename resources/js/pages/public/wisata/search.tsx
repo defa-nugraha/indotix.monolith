@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, ShoppingCart } from 'lucide-react';
+import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, ShoppingCart, BadgePercent } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Destination = {
@@ -30,7 +30,12 @@ const navItems = [
 const chips = ['Alam', 'Budaya', 'Edukasi', 'Kuliner', 'Desa Wisata', 'Religi', 'Pantai', 'Gunung', 'Taman Nasional', 'Air Terjun', 'Danau'];
 
 export default function WisataSearch({ filters, destinations }: { filters: Filters; destinations: Destination[] }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
+        auth?: { user?: { role?: string } };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+        affiliate_menu?: boolean;
+    };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
@@ -98,6 +103,12 @@ export default function WisataSearch({ filters, destinations }: { filters: Filte
                                 <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
+                            {affiliate_menu && (
+                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
+                                    <BadgePercent className="h-4 w-4" />
+                                    Afiliasi
+                                </Link>
+                            )}
                             <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
                                 <History className="h-4 w-4" />
                                 Riwayat

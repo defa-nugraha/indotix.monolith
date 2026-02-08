@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { Bell, CalendarCheck, History as HistoryIcon, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, ShoppingCart } from 'lucide-react';
+import { Bell, CalendarCheck, History as HistoryIcon, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, ShoppingCart, BadgePercent } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -21,7 +21,12 @@ export default function EventSearch({
     events: EventCard[];
     filters: { q?: string | null };
 }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
+        auth?: { user?: { role?: string } };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+        affiliate_menu?: boolean;
+    };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
@@ -101,6 +106,12 @@ export default function EventSearch({
                                 <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
+                            {affiliate_menu && (
+                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
+                                    <BadgePercent className="h-4 w-4" />
+                                    Afiliasi
+                                </Link>
+                            )}
                             <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
                                 <HistoryIcon className="h-4 w-4" />
                                 Riwayat

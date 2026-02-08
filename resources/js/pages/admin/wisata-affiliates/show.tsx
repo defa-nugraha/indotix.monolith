@@ -19,7 +19,7 @@ type Affiliate = {
     payouts?: Array<{ id: number; total_commission: number; status: string }>;
 };
 
-export default function WisataAffiliateShow({ affiliate }: { affiliate: Affiliate }) {
+export default function WisataAffiliateShow({ affiliate, destination }: { affiliate: Affiliate; destination?: { id: number; destination_name: string } | null }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Wisata', href: '/admin/wisata/destinations' },
         { title: 'Afiliasi Wisata', href: '/admin/wisata/affiliates' },
@@ -29,7 +29,7 @@ export default function WisataAffiliateShow({ affiliate }: { affiliate: Affiliat
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Afiliasi - ${affiliate.name}`} />
-            <div className="space-y-6">
+            <div className="space-y-6 px-4 md:px-8">
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 className="text-lg font-semibold text-slate-900">Profil Afiliasi</h2>
                     <div className="mt-4 grid gap-4 md:grid-cols-3 text-sm text-slate-600">
@@ -52,6 +52,10 @@ export default function WisataAffiliateShow({ affiliate }: { affiliate: Affiliat
                         <div>
                             <div className="text-xs uppercase text-slate-400">Platform</div>
                             <div>{affiliate.platform ?? '-'}</div>
+                        </div>
+                        <div>
+                            <div className="text-xs uppercase text-slate-400">Wisata</div>
+                            <div>{destination?.destination_name ?? '-'}</div>
                         </div>
                         <div>
                             <div className="text-xs uppercase text-slate-400">Status</div>

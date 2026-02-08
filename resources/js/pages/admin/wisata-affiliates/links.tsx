@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type Affiliate = { id: number; name: string };
 
@@ -29,6 +30,7 @@ export default function WisataAffiliateLinks({ links, affiliates }: Props) {
         { title: 'Referral Link', href: '/admin/wisata/affiliates/links' },
     ];
 
+    const [open, setOpen] = useState(false);
     const [form, setForm] = useState({
         affiliate_id: '',
         landing_url: '',
@@ -43,7 +45,10 @@ export default function WisataAffiliateLinks({ links, affiliates }: Props) {
             affiliate_id: Number(form.affiliate_id),
             cookie_days: Number(form.cookie_days),
         }, {
-            onSuccess: () => Swal.fire({ icon: 'success', title: 'Link dibuat', timer: 1000, showConfirmButton: false }),
+            onSuccess: () => {
+                Swal.fire({ icon: 'success', title: 'Link dibuat', timer: 1000, showConfirmButton: false });
+                setOpen(false);
+            },
         });
     };
 
@@ -64,24 +69,39 @@ export default function WisataAffiliateLinks({ links, affiliates }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Referral Link Afiliasi" />
-            <div className="space-y-6">
+            <div className="space-y-6 px-4 md:px-8">
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-slate-900">Generate Referral Link</h2>
-                    <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-4">
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
-                            <option value="">Pilih Afiliasi</option>
-                            {affiliates.map((item) => (
-                                <option key={item.id} value={item.id}>{item.name}</option>
-                            ))}
-                        </select>
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Landing URL" value={form.landing_url} onChange={(e) => setForm({ ...form, landing_url: e.target.value })} />
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.attribution_model} onChange={(e) => setForm({ ...form, attribution_model: e.target.value })}>
-                            <option value="last_click">Last Click</option>
-                            <option value="first_click">First Click</option>
-                        </select>
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Cookie (hari)" value={form.cookie_days} onChange={(e) => setForm({ ...form, cookie_days: e.target.value })} />
-                        <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-4">Buat Link</button>
-                    </form>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-lg font-semibold text-slate-900">Generate Referral Link</h2>
+                            <p className="text-sm text-slate-500">Buat link tracking afiliasi.</p>
+                        </div>
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white">Tambah Link</button>
+                            </DialogTrigger>
+                            <DialogContent className="max-h-[90vh] w-[95vw] max-w-3xl overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>Buat Referral Link</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-4">
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
+                                        <option value="">Pilih Afiliasi</option>
+                                        {affiliates.map((item) => (
+                                            <option key={item.id} value={item.id}>{item.name}</option>
+                                        ))}
+                                    </select>
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Landing URL" value={form.landing_url} onChange={(e) => setForm({ ...form, landing_url: e.target.value })} />
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.attribution_model} onChange={(e) => setForm({ ...form, attribution_model: e.target.value })}>
+                                        <option value="last_click">Last Click</option>
+                                        <option value="first_click">First Click</option>
+                                    </select>
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Cookie (hari)" value={form.cookie_days} onChange={(e) => setForm({ ...form, cookie_days: e.target.value })} />
+                                    <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-4">Buat Link</button>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

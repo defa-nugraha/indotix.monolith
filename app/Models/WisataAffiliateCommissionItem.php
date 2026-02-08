@@ -19,4 +19,9 @@ class WisataAffiliateCommissionItem extends Model
     {
         return $this->belongsTo(WisataAffiliate::class, 'affiliate_id');
     }
+
+    public function booking(): BelongsTo
+    {
+        return $this->belongsTo(WisataBooking::class, 'wisata_booking_id');
+    }
 }

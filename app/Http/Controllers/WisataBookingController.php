@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\MitraWisataOnboarding;
 use App\Models\UserNotification;
 use App\Models\WisataBooking;
+use App\Models\WisataAffiliate;
+use App\Models\WisataAffiliateCommission;
+use App\Models\WisataAffiliateCommissionItem;
+use App\Models\WisataAffiliateLink;
 use App\Models\WisataPayment;
 use App\Models\WisataTicket;
 use App\Services\MidtransService;
@@ -191,6 +195,8 @@ class WisataBookingController extends Controller
                 'guest_phone' => $data['guest_phone'],
                 'special_request' => $data['special_request'] ?? null,
             ]);
+
+            $this->attachAffiliateCommission($order, $request);
 
             return $order;
         });
@@ -520,6 +526,114 @@ class WisataBookingController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function attachAffiliateCommission(WisataBooking $booking, Request $request): void
+    {
+        $link = $this->resolveAffiliateLink($request);
+        if (! $link) {
+            return;
+        }
+
+        $affiliate = WisataAffiliate::query()->find($link->affiliate_id);
+        if (! $affiliate || $affiliate->status !== 'active') {
+            return;
+        }
+
+        if ($affiliate->wisata_id && (int) $affiliate->wisata_id !== (int) $booking->mitra_wisata_onboarding_id) {
+            return;
+        }
+
+        $commission = $this->resolveCommissionRule((int) $booking->mitra_wisata_onboarding_id);
+        if (! $commission) {
+            return;
+        }
+
+        $amount = $this->calculateCommissionAmount($commission, $booking);
+        if ($amount <= 0) {
+            return;
+        }
+
+        WisataAffiliateCommissionItem::create([
+            'affiliate_id' => $affiliate->id,
+            'wisata_booking_id' => $booking->id,
+            'commission_amount' => $amount,
+            'status' => 'pending',
+        ]);
+
+        if ($affiliate->user_id) {
+            UserNotification::create([
+                'user_id' => $affiliate->user_id,
+                'title' => 'Komisi baru menunggu pembayaran',
+                'message' => 'Ada komisi baru dari tiket wisata yang menunggu pembayaran berhasil.',
+                'type' => 'affiliate_commission_pending',
+                'data' => [
+                    'booking_id' => $this->encryptId($booking->id),
+                    'category' => 'affiliate',
+                ],
+            ]);
+        }
+    }
+
+    private function resolveAffiliateLink(Request $request): ?WisataAffiliateLink
+    {
+        $payload = $request->session()->get('affiliate_ref');
+        if (! $payload) {
+            $cookie = $request->cookie('affiliate_ref');
+            if ($cookie) {
+                $payload = json_decode($cookie, true);
+            }
+        }
+
+        if (! is_array($payload) || empty($payload['link_id'])) {
+            return null;
+        }
+
+        return WisataAffiliateLink::query()
+            ->where('id', $payload['link_id'])
+            ->where('status', 'active')
+            ->first();
+    }
+
+    private function resolveCommissionRule(int $destinationId): ?WisataAffiliateCommission
+    {
+        $today = now()->toDateString();
+
+        $commission = WisataAffiliateCommission::query()
+            ->where('scope_type', 'wisata')
+            ->where('wisata_id', $destinationId)
+            ->where(function ($query) use ($today) {
+                $query->whereNull('start_date')->orWhere('start_date', '<=', $today);
+            })
+            ->where(function ($query) use ($today) {
+                $query->whereNull('end_date')->orWhere('end_date', '>=', $today);
+            })
+            ->latest('id')
+            ->first();
+
+        if ($commission) {
+            return $commission;
+        }
+
+        return WisataAffiliateCommission::query()
+            ->where('scope_type', 'global')
+            ->where(function ($query) use ($today) {
+                $query->whereNull('start_date')->orWhere('start_date', '<=', $today);
+            })
+            ->where(function ($query) use ($today) {
+                $query->whereNull('end_date')->orWhere('end_date', '>=', $today);
+            })
+            ->latest('id')
+            ->first();
+    }
+
+    private function calculateCommissionAmount(WisataAffiliateCommission $commission, WisataBooking $booking): int
+    {
+        if ($commission->type === 'percentage') {
+            return (int) round($booking->total_price * ($commission->value / 100));
+        }
+
+        return (int) $commission->value * max(1, (int) $booking->quantity);
     }
 
     private function buildQrData(string $type, string $code): string

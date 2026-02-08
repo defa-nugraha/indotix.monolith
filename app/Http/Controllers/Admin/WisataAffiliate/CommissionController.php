@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin\WisataAffiliate;
 use App\Http\Controllers\Controller;
 use App\Models\WisataAffiliateCommission;
 use App\Models\WisataAffiliateAuditLog;
-use App\Models\WisataDestination;
+use App\Models\MitraWisataOnboarding;
 use App\Models\WisataAffiliateCampaign;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +18,7 @@ class CommissionController extends Controller
     {
         return Inertia::render('admin/wisata-affiliates/commissions', [
             'commissions' => WisataAffiliateCommission::query()->latest('id')->get(),
-            'destinations' => WisataDestination::query()->select('id', 'name')->orderBy('name')->get(),
+            'destinations' => MitraWisataOnboarding::query()->select('id', 'destination_name')->orderBy('destination_name')->get(),
             'campaigns' => WisataAffiliateCampaign::query()->select('id', 'name')->orderBy('name')->get(),
         ]);
     }

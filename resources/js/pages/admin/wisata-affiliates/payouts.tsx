@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type Affiliate = { id: number; name: string };
 
@@ -28,6 +29,7 @@ export default function WisataAffiliatePayouts({ payouts, affiliates }: Props) {
         { title: 'Payout Afiliasi', href: '/admin/wisata/affiliates/payouts' },
     ];
 
+    const [open, setOpen] = useState(false);
     const [form, setForm] = useState({
         affiliate_id: '',
         period_start: '',
@@ -47,7 +49,10 @@ export default function WisataAffiliatePayouts({ payouts, affiliates }: Props) {
             affiliate_id: Number(form.affiliate_id),
             total_commission: Number(form.total_commission || 0),
         }, {
-            onSuccess: () => Swal.fire({ icon: 'success', title: 'Payout dibuat', timer: 1000, showConfirmButton: false }),
+            onSuccess: () => {
+                Swal.fire({ icon: 'success', title: 'Payout dibuat', timer: 1000, showConfirmButton: false });
+                setOpen(false);
+            },
         });
     };
 
@@ -61,31 +66,46 @@ export default function WisataAffiliatePayouts({ payouts, affiliates }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Payout Afiliasi" />
-            <div className="space-y-6">
+            <div className="space-y-6 px-4 md:px-8">
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-slate-900">Generate Payout</h2>
-                    <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
-                            <option value="">Pilih Afiliasi</option>
-                            {affiliates.map((item) => (
-                                <option key={item.id} value={item.id}>{item.name}</option>
-                            ))}
-                        </select>
-                        <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} />
-                        <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} />
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Total komisi" value={form.total_commission} onChange={(e) => setForm({ ...form, total_commission: e.target.value })} />
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                            <option value="pending">pending</option>
-                            <option value="approved">approved</option>
-                            <option value="rejected">rejected</option>
-                            <option value="paid">paid</option>
-                        </select>
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Bank" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nomor rekening" value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama pemilik" value={form.bank_account_name} onChange={(e) => setForm({ ...form, bank_account_name: e.target.value })} />
-                        <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3" placeholder="Catatan" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
-                        <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">Simpan Payout</button>
-                    </form>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-lg font-semibold text-slate-900">Generate Payout</h2>
+                            <p className="text-sm text-slate-500">Buat payout untuk afiliasi.</p>
+                        </div>
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white">Tambah Payout</button>
+                            </DialogTrigger>
+                            <DialogContent className="max-h-[90vh] w-[95vw] max-w-3xl overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>Buat Payout</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
+                                        <option value="">Pilih Afiliasi</option>
+                                        {affiliates.map((item) => (
+                                            <option key={item.id} value={item.id}>{item.name}</option>
+                                        ))}
+                                    </select>
+                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} />
+                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} />
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Total komisi" value={form.total_commission} onChange={(e) => setForm({ ...form, total_commission: e.target.value })} />
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                                        <option value="pending">pending</option>
+                                        <option value="approved">approved</option>
+                                        <option value="rejected">rejected</option>
+                                        <option value="paid">paid</option>
+                                    </select>
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Bank" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nomor rekening" value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama pemilik" value={form.bank_account_name} onChange={(e) => setForm({ ...form, bank_account_name: e.target.value })} />
+                                    <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3" placeholder="Catatan" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                                    <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">Simpan Payout</button>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

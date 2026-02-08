@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 type Campaign = {
     id: number;
@@ -27,6 +28,7 @@ export default function WisataAffiliateCampaigns({ campaigns }: Props) {
         { title: 'Campaign Afiliasi', href: '/admin/wisata/affiliates/campaigns' },
     ];
 
+    const [open, setOpen] = useState(false);
     const [form, setForm] = useState({
         name: '',
         description: '',
@@ -44,7 +46,10 @@ export default function WisataAffiliateCampaigns({ campaigns }: Props) {
             ...form,
             bonus_value: form.bonus_value ? Number(form.bonus_value) : null,
         }, {
-            onSuccess: () => Swal.fire({ icon: 'success', title: 'Campaign dibuat', timer: 1000, showConfirmButton: false }),
+            onSuccess: () => {
+                Swal.fire({ icon: 'success', title: 'Campaign dibuat', timer: 1000, showConfirmButton: false });
+                setOpen(false);
+            },
         });
     };
 
@@ -58,31 +63,46 @@ export default function WisataAffiliateCampaigns({ campaigns }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Campaign Afiliasi" />
-            <div className="space-y-6">
+            <div className="space-y-6 px-4 md:px-8">
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-slate-900">Buat Campaign</h2>
-                    <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama campaign" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-                        <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
-                        <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                            <option value="draft">draft</option>
-                            <option value="active">active</option>
-                            <option value="paused">paused</option>
-                            <option value="ended">ended</option>
-                        </select>
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.bonus_type} onChange={(e) => setForm({ ...form, bonus_type: e.target.value })}>
-                            <option value="percentage">Persentase</option>
-                            <option value="nominal">Nominal</option>
-                        </select>
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Bonus" value={form.bonus_value} onChange={(e) => setForm({ ...form, bonus_value: e.target.value })} />
-                        <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3" placeholder="Deskripsi" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-                        <label className="flex items-center gap-2 text-sm text-slate-600 md:col-span-3">
-                            <input type="checkbox" checked={form.leaderboard_enabled} onChange={(e) => setForm({ ...form, leaderboard_enabled: e.target.checked })} />
-                            Aktifkan leaderboard
-                        </label>
-                        <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">Simpan Campaign</button>
-                    </form>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-lg font-semibold text-slate-900">Buat Campaign</h2>
+                            <p className="text-sm text-slate-500">Campaign khusus untuk afiliasi wisata.</p>
+                        </div>
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white">Tambah Campaign</button>
+                            </DialogTrigger>
+                            <DialogContent className="max-h-[90vh] w-[95vw] max-w-3xl overflow-y-auto">
+                                <DialogHeader>
+                                    <DialogTitle>Buat Campaign</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama campaign" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                                        <option value="draft">draft</option>
+                                        <option value="active">active</option>
+                                        <option value="paused">paused</option>
+                                        <option value="ended">ended</option>
+                                    </select>
+                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.bonus_type} onChange={(e) => setForm({ ...form, bonus_type: e.target.value })}>
+                                        <option value="percentage">Persentase</option>
+                                        <option value="nominal">Nominal</option>
+                                    </select>
+                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Bonus" value={form.bonus_value} onChange={(e) => setForm({ ...form, bonus_value: e.target.value })} />
+                                    <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3" placeholder="Deskripsi" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                                    <label className="flex items-center gap-2 text-sm text-slate-600 md:col-span-3">
+                                        <input type="checkbox" checked={form.leaderboard_enabled} onChange={(e) => setForm({ ...form, leaderboard_enabled: e.target.checked })} />
+                                        Aktifkan leaderboard
+                                    </label>
+                                    <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">Simpan Campaign</button>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

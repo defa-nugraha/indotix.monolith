@@ -31,6 +31,15 @@ class AffiliateController extends Controller
 
         return Inertia::render('admin/wisata-affiliates/index', [
             'affiliates' => $query->paginate(20)->withQueryString(),
+            'users' => \App\Models\User::query()
+                ->where('role', 'user')
+                ->select('id', 'name', 'email')
+                ->orderBy('name')
+                ->get(),
+            'destinations' => \App\Models\MitraWisataOnboarding::query()
+                ->select('id', 'destination_name')
+                ->orderBy('destination_name')
+                ->get(),
             'filters' => [
                 'status' => $request->string('status')->toString(),
                 'q' => $request->string('q')->toString(),
@@ -41,17 +50,24 @@ class AffiliateController extends Controller
     public function show(WisataAffiliate $affiliate): Response
     {
         $affiliate->load('links', 'commissionItems', 'payouts');
+        $destination = null;
+        if ($affiliate->wisata_id) {
+            $destination = \App\Models\MitraWisataOnboarding::query()
+                ->select('id', 'destination_name')
+                ->find($affiliate->wisata_id);
+        }
 
         return Inertia::render('admin/wisata-affiliates/show', [
             'affiliate' => $affiliate,
+            'destination' => $destination,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'wisata_id' => ['required', 'integer', 'exists:mitra_wisata_onboardings,id'],
             'phone' => ['nullable', 'string', 'max:50'],
             'type' => ['required', 'in:individu,komunitas,media'],
             'platform' => ['nullable', 'string', 'max:255'],
@@ -62,7 +78,13 @@ class AffiliateController extends Controller
             'bank_account_name' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $affiliate = WisataAffiliate::create($data);
+        $user = \App\Models\User::query()->findOrFail($data['user_id']);
+
+        $affiliate = WisataAffiliate::create([
+            ...$data,
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
 
         WisataAffiliateAuditLog::create([
             'admin_id' => $request->user()?->id,
@@ -78,8 +100,8 @@ class AffiliateController extends Controller
     public function update(Request $request, WisataAffiliate $affiliate): RedirectResponse
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+            'wisata_id' => ['required', 'integer', 'exists:mitra_wisata_onboardings,id'],
             'phone' => ['nullable', 'string', 'max:50'],
             'type' => ['required', 'in:individu,komunitas,media'],
             'platform' => ['nullable', 'string', 'max:255'],
@@ -90,7 +112,13 @@ class AffiliateController extends Controller
             'bank_account_name' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $affiliate->update($data);
+        $user = \App\Models\User::query()->findOrFail($data['user_id']);
+
+        $affiliate->update([
+            ...$data,
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
 
         WisataAffiliateAuditLog::create([
             'admin_id' => $request->user()?->id,

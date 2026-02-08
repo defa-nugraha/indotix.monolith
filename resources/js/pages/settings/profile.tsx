@@ -6,7 +6,13 @@ import InputError from '@/components/input-error';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History, UserCircle, Mail, Phone, ShoppingCart } from 'lucide-react';
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu, affiliate_status } = usePage().props as {
+        auth?: { user?: any };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+        affiliate_menu?: boolean;
+        affiliate_status?: string | null;
+    };
     const [passwordOpen, setPasswordOpen] = useState(false);
     const passwordForm = useForm({
         current_password: '',
@@ -222,6 +228,32 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             </div>
                             <div className="mt-4 text-xs text-slate-500">Terakhir diperbarui otomatis setelah kamu menyimpan perubahan.</div>
                         </div>
+
+                        {affiliate_menu ? (
+                            <div className="rounded-2xl bg-white p-6 shadow-sm">
+                                <h3 className="text-sm font-semibold text-slate-900">Afiliasi Wisata</h3>
+                                <p className="mt-2 text-sm text-slate-600">
+                                    Status akun: <span className="font-semibold capitalize">{affiliate_status ?? 'pending'}</span>
+                                </p>
+                                <Link
+                                    href="/affiliate"
+                                    className="mt-4 inline-flex items-center justify-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                                >
+                                    Buka Dashboard Afiliasi
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="rounded-2xl bg-white p-6 shadow-sm">
+                                <h3 className="text-sm font-semibold text-slate-900">Program Afiliasi</h3>
+                                <p className="mt-2 text-sm text-slate-600">Daftarkan diri sebagai afiliator dan dapatkan komisi.</p>
+                                <Link
+                                    href="/affiliate/register"
+                                    className="mt-4 inline-flex items-center justify-center rounded-lg border border-sky-200 px-4 py-2 text-sm font-semibold text-sky-600 hover:bg-sky-50"
+                                >
+                                    Daftar Afiliasi
+                                </Link>
+                            </div>
+                        )}
 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <h3 className="text-sm font-semibold text-slate-900">Kontak Bantuan</h3>

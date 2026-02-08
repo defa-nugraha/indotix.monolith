@@ -1,6 +1,6 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart, BookOpen } from 'lucide-react';
+import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart, BookOpen, BadgePercent } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 type AcademyDetail = {
@@ -31,7 +31,12 @@ type TicketItem = {
 };
 
 export default function AcademyShow({ class: academyClass, tickets }: { class: AcademyDetail; tickets: TicketItem[] }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
+        auth?: { user?: any };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+        affiliate_menu?: boolean;
+    };
     const [selectedTicket, setSelectedTicket] = useState<string>(tickets[0]?.id?.toString() ?? '');
     const form = useForm({
         class_id: academyClass.id,
@@ -98,6 +103,12 @@ export default function AcademyShow({ class: academyClass, tickets }: { class: A
                                 <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
+                            {affiliate_menu && (
+                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
+                                    <BadgePercent className="h-4 w-4" />
+                                    Afiliasi
+                                </Link>
+                            )}
                             <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
                                 <HistoryIcon className="h-4 w-4" />
                                 Riwayat

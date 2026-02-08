@@ -22,7 +22,7 @@ export default function WisataAffiliatePerformance({ stats, affiliates }: Props)
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Monitoring Kinerja Afiliasi" />
-            <div className="space-y-6">
+            <div className="space-y-6 px-4 md:px-8">
                 <div className="grid gap-4 md:grid-cols-4">
                     {[
                         { label: 'Klik', value: stats.total_clicks },

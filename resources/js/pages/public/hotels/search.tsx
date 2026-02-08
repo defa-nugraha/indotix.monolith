@@ -4,7 +4,7 @@ import { DateRange, RangeKeyDict } from 'react-date-range';
 import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
-import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Coffee, Cigarette, CigaretteOff, ShoppingCart } from 'lucide-react';
+import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Coffee, Cigarette, CigaretteOff, ShoppingCart, BadgePercent } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type Hotel = {
@@ -40,7 +40,12 @@ type Recommendation = {
 };
 
 export default function HotelSearch({ filters, hotels, recommendations }: { filters: Filters; hotels: Hotel[]; recommendations: Recommendation[] }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
+        auth?: { user?: unknown };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+        affiliate_menu?: boolean;
+    };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const [isReady, setIsReady] = useState(false);
     const today = new Date();
@@ -180,6 +185,12 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                                 <UserCircle className="h-4 w-4" />
                                 Profile
                             </Link>
+                            {affiliate_menu && (
+                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
+                                    <BadgePercent className="h-4 w-4" />
+                                    Afiliasi
+                                </Link>
+                            )}
                             <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
                                 <History className="h-4 w-4" />
                                 Riwayat
