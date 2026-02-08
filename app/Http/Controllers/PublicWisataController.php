@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MitraWisataOnboarding;
+use App\Models\WisataAffiliateClick;
+use App\Models\WisataAffiliateLink;
 use App\Models\WisataBooking;
 use App\Models\WisataTicket;
 use Carbon\Carbon;
@@ -98,10 +100,18 @@ class PublicWisataController extends Controller
 
     public function show(Request $request, string $destination): Response
     {
-        try {
-            $destinationId = Crypt::decryptString($destination);
-        } catch (\Throwable $exception) {
-            abort(404);
+        $destinationId = null;
+
+        if (strlen($destination) <= 10) {
+            $destinationId = $this->resolveAffiliateDestination($request, $destination);
+        }
+
+        if (! $destinationId) {
+            try {
+                $destinationId = Crypt::decryptString($destination);
+            } catch (\Throwable $exception) {
+                abort(404);
+            }
         }
 
         $destination = MitraWisataOnboarding::query()
@@ -183,6 +193,36 @@ class PublicWisataController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function resolveAffiliateDestination(Request $request, string $code): ?int
+    {
+        $link = WisataAffiliateLink::query()
+            ->with('affiliate')
+            ->where('code', strtoupper($code))
+            ->where('status', 'active')
+            ->first();
+
+        if (! $link || ! $link->affiliate || ! $link->affiliate->wisata_id) {
+            return null;
+        }
+
+        $existing = $request->session()->get('affiliate_ref');
+        if (! $existing || $link->attribution_model === 'last_click') {
+            $request->session()->put('affiliate_ref', [
+                'link_id' => $link->id,
+                'set_at' => now()->timestamp,
+            ]);
+        }
+
+        WisataAffiliateClick::create([
+            'affiliate_link_id' => $link->id,
+            'user_id' => $request->user()?->id,
+            'ip' => $request->ip(),
+            'user_agent' => (string) $request->userAgent(),
+        ]);
+
+        return (int) $link->affiliate->wisata_id;
     }
 
     private function extractLatitude(?string $mapsUrl): ?string

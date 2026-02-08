@@ -42,7 +42,7 @@ class LinkController extends Controller
             'destination' => $destinationId ? [
                 'encrypted_id' => Crypt::encryptString((string) $destinationId),
             ] : null,
-            'app_url' => config('app.url'),
+            'app_url' => config('app.url') ?: $request->getSchemeAndHttpHost(),
         ]);
     }
 

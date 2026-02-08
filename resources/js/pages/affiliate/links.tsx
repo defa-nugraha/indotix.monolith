@@ -36,7 +36,7 @@ export default function AffiliateLinks({
     };
 
     const referralUrl = link && destination
-        ? `${app_url.replace(/\\/$/, '')}/wisata/${destination.encrypted_id}?ref=${link.token}`
+        ? `${app_url.replace(/\/$/, '')}/wisata/${link.code}`
         : '';
 
     const copyLink = async () => {
