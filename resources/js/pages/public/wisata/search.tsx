@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, ShoppingCart, BadgePercent } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,11 +30,12 @@ const navItems = [
 const chips = ['Alam', 'Budaya', 'Edukasi', 'Kuliner', 'Desa Wisata', 'Religi', 'Pantai', 'Gunung', 'Taman Nasional', 'Air Terjun', 'Danau'];
 
 export default function WisataSearch({ filters, destinations }: { filters: Filters; destinations: Destination[] }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu, affiliate_referral } = usePage().props as {
         auth?: { user?: { role?: string } };
         unread_notifications?: number;
         souvenir_cart_count?: number;
         affiliate_menu?: boolean;
+        affiliate_referral?: { code: string; destination_name?: string | null } | null;
     };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
@@ -42,6 +43,7 @@ export default function WisataSearch({ filters, destinations }: { filters: Filte
         visit_date: filters.visit_date ?? new Date().toISOString().slice(0, 10),
         quantity: filters.quantity ?? 1,
     });
+    const affiliateForm = useForm({ code: '' });
 
     useEffect(() => {
         const timer = setTimeout(() => setIsReady(true), 400);
@@ -170,6 +172,52 @@ export default function WisataSearch({ filters, destinations }: { filters: Filte
 
                 {isReady && (
                 <>
+                <section className="mb-6 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
+                    {affiliate_referral ? (
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div>
+                                <p className="text-sm font-semibold text-slate-900">
+                                    Kamu datang dari rekomendasi partner kami {affiliate_referral.destination_name ? `untuk ${affiliate_referral.destination_name}` : ''}.
+                                </p>
+                                <p className="mt-1 text-xs text-slate-500">Kode afiliasi aktif: {affiliate_referral.code}</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => router.post('/affiliate/referral/clear', {}, { preserveScroll: true })}
+                                className="h-10 rounded-xl border border-slate-200 px-4 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                            >
+                                Hapus kode
+                            </button>
+                        </div>
+                    ) : (
+                        <form
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                affiliateForm.post('/affiliate/referral/apply', { preserveScroll: true });
+                            }}
+                            className="flex flex-col gap-3 md:flex-row md:items-end"
+                        >
+                            <div className="flex-1 space-y-2">
+                                <label className="text-sm font-semibold text-slate-700">Punya kode afiliasi?</label>
+                                <input
+                                    value={affiliateForm.data.code}
+                                    onChange={(event) => affiliateForm.setData('code', event.target.value)}
+                                    className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm focus:border-sky-400 focus:outline-none"
+                                    placeholder="Masukkan kode afiliasi"
+                                />
+                                {affiliateForm.errors.code && <p className="text-xs text-rose-500">{affiliateForm.errors.code}</p>}
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={affiliateForm.processing}
+                                className="h-11 rounded-xl bg-sky-600 px-5 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
+                            >
+                                Terapkan
+                            </button>
+                        </form>
+                    )}
+                </section>
+
                 <section className="mb-6">
                     <div className="relative overflow-hidden rounded-[28px] shadow-lg">
                         <img

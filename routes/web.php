@@ -1084,6 +1084,11 @@ Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingContr
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
     ->name('booking.prepare');
 
+Route::post('/affiliate/referral/apply', [\App\Http\Controllers\Affiliate\ReferralController::class, 'apply'])
+    ->name('affiliate.referral.apply');
+Route::post('/affiliate/referral/clear', [\App\Http\Controllers\Affiliate\ReferralController::class, 'clear'])
+    ->name('affiliate.referral.clear');
+
 Route::middleware(['auth', 'verified', 'user'])->prefix('affiliate')->name('affiliate.')->group(function () {
     Route::get('register', [\App\Http\Controllers\Affiliate\RegisterController::class, 'create'])
         ->name('register');
