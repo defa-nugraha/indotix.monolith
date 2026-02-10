@@ -112,7 +112,7 @@ export default function AcademyBookingPayment({
                         <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
                             <Link href="/settings/profile" className="hover:text-sky-600">Profile</Link>
                             <Link href="/history" className="hover:text-sky-600">Riwayat</Link>
-                            <Link href="/?tab=chat" className="hover:text-sky-600">Chat</Link>
+                            <Link href="/chat" className="hover:text-sky-600">Chat</Link>
                             <Link href="/notifications" className="relative hover:text-sky-600">
                                 Notifikasi
                                 {Boolean(unread_notifications) && (

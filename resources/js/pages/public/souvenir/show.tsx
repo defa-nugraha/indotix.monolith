@@ -104,7 +104,7 @@ export default function SouvenirShow({ product }: { product: Product }) {
                                 <History className="h-4 w-4" />
                                 Riwayat
                             </Link>
-                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
@@ -226,6 +226,12 @@ export default function SouvenirShow({ product }: { product: Product }) {
                         >
                             Tambahkan ke Keranjang
                         </button>
+                        <Link
+                            href={`/chat/start/souvenir/${product.id}`}
+                            className="mt-3 block w-full rounded-xl border border-slate-200 py-3 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                        >
+                            Chat Admin
+                        </Link>
                         <p className="mt-3 text-xs text-slate-500">Kamu bisa membeli lebih dari satu souvenir melalui keranjang.</p>
                     </div>
                 </div>

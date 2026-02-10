@@ -113,7 +113,7 @@ export default function AcademyShow({ class: academyClass, tickets }: { class: A
                                 <HistoryIcon className="h-4 w-4" />
                                 Riwayat
                             </Link>
-                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
@@ -259,6 +259,12 @@ export default function AcademyShow({ class: academyClass, tickets }: { class: A
                             >
                                 Lanjutkan Pemesanan
                             </button>
+                            <Link
+                                href={`/chat/start/academy/${academy.id}`}
+                                className="mt-3 block w-full rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                            >
+                                Chat Admin
+                            </Link>
                         </div>
                     </section>
                 </div>

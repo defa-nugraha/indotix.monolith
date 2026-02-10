@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { AlertCircle, Banknote, Bell, Building2, CalendarDays, ChevronDown, LayoutGrid, MapPinned, QrCode, Ticket, Users } from 'lucide-react';
+import { AlertCircle, Banknote, Bell, Building2, CalendarDays, ChevronDown, LayoutGrid, MapPinned, QrCode, Ticket, Users, MessageCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import { useCurrentUrl } from '@/hooks/use-current-url';
@@ -23,6 +23,11 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard Mitra',
         href: '/mitra/dashboard',
         icon: LayoutGrid,
+    },
+    {
+        title: 'Live Chat',
+        href: '/mitra/chat',
+        icon: MessageCircle,
     },
 ];
 

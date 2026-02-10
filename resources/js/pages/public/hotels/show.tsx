@@ -204,7 +204,7 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
                                 <History className="h-4 w-4" />
                                 Riwayat
                             </Link>
-                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
@@ -422,6 +422,12 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
                             <div className="text-xs text-slate-500">Harga mulai dari</div>
                             <div className="text-lg font-semibold text-orange-500">Rp {roomTypes[0]?.total_price?.toLocaleString('id-ID') ?? '-'}</div>
                             <button className="mt-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-semibold text-white">Pilih Kamar</button>
+                            <Link
+                                href={`/chat/start/hotel/${hotel.id}`}
+                                className="mt-2 block rounded-lg border border-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-600 hover:bg-white"
+                            >
+                                Chat Mitra
+                            </Link>
                         </div>
                     </div>
                 </div>

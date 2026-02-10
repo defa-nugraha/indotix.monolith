@@ -36,9 +36,7 @@ export default function AffiliateLinks({
     };
 
     const baseUrl = app_url.endsWith('/') ? app_url.slice(0, -1) : app_url;
-    const referralUrl = link && destination
-        ? `${baseUrl}/wisata/${link.code}`
-        : '';
+    const referralUrl = link ? `${baseUrl}/wisata/${link.code}` : '';
 
     const copyLink = async () => {
         try {

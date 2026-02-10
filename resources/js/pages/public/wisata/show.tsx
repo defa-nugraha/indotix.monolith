@@ -174,7 +174,7 @@ export default function WisataShow({
                                 <History className="h-4 w-4" />
                                 Riwayat
                             </Link>
-                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
@@ -351,6 +351,12 @@ export default function WisataShow({
                                     >
                                         Perbarui
                                     </button>
+                                    <Link
+                                        href={`/chat/start/wisata/${destination.id}`}
+                                        className="h-11 rounded-full border border-slate-200 px-6 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                                    >
+                                        Chat Mitra
+                                    </Link>
                                 </div>
                             </div>
                         </div>

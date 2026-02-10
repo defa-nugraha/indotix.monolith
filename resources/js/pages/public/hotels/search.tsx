@@ -195,7 +195,7 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                                 <History className="h-4 w-4" />
                                 Riwayat
                             </Link>
-                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>

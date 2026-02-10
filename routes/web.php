@@ -271,6 +271,13 @@ Route::get('dashboard', function () {
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
 Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function () {
+    Route::get('admin/chat', [\App\Http\Controllers\Admin\ChatController::class, 'index'])
+        ->name('admin.chat.index');
+    Route::get('admin/chat/{conversation}', [\App\Http\Controllers\Admin\ChatController::class, 'show'])
+        ->name('admin.chat.show');
+    Route::post('admin/chat/{conversation}/messages', [\App\Http\Controllers\Admin\ChatController::class, 'store'])
+        ->name('admin.chat.messages.store');
+
     Route::get('admin/special-programs/{section?}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'index'])
         ->where('section', 'programs|scope|benefits|visibility|monitoring|finance|compliance')
         ->name('admin.special-programs.index');
@@ -789,6 +796,13 @@ Route::get('mitra/dashboard', function (\Illuminate\Http\Request $request) {
 })->middleware(['auth', 'verified', 'mitra'])->name('mitra.dashboard');
 
 Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
+    Route::get('mitra/chat', [\App\Http\Controllers\Mitra\ChatController::class, 'index'])
+        ->name('mitra.chat.index');
+    Route::get('mitra/chat/{conversation}', [\App\Http\Controllers\Mitra\ChatController::class, 'show'])
+        ->name('mitra.chat.show');
+    Route::post('mitra/chat/{conversation}/messages', [\App\Http\Controllers\Mitra\ChatController::class, 'store'])
+        ->name('mitra.chat.messages.store');
+
     Route::post('mitra/onboarding/type', [\App\Http\Controllers\MitraOnboardingController::class, 'selectType'])
         ->name('mitra.onboarding.type');
     Route::get('mitra/onboarding', [\App\Http\Controllers\MitraOnboardingController::class, 'show'])
@@ -1084,6 +1098,11 @@ Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingContr
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
     ->name('booking.prepare');
 
+Route::get('/auth/google/redirect', [\App\Http\Controllers\Auth\SocialAuthController::class, 'redirect'])
+    ->name('auth.google.redirect');
+Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\SocialAuthController::class, 'callback'])
+    ->name('auth.google.callback');
+
 Route::post('/affiliate/referral/apply', [\App\Http\Controllers\Affiliate\ReferralController::class, 'apply'])
     ->name('affiliate.referral.apply');
 Route::post('/affiliate/referral/clear', [\App\Http\Controllers\Affiliate\ReferralController::class, 'clear'])
@@ -1123,6 +1142,15 @@ Route::middleware(['auth', 'verified', 'user', 'affiliate.user'])->prefix('affil
         ->name('support');
 });
 Route::middleware(['auth', 'verified', 'user'])->group(function () {
+    Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])
+        ->name('chat.index');
+    Route::get('/chat/start/{type}/{id?}', [\App\Http\Controllers\ChatController::class, 'start'])
+        ->name('chat.start');
+    Route::get('/chat/{conversation}', [\App\Http\Controllers\ChatController::class, 'show'])
+        ->name('chat.show');
+    Route::post('/chat/{conversation}/messages', [\App\Http\Controllers\ChatController::class, 'store'])
+        ->name('chat.messages.store');
+
     Route::get('/notifications', [\App\Http\Controllers\PublicNotificationController::class, 'index'])
         ->name('public.notifications');
     Route::post('/notifications/read-all', [\App\Http\Controllers\PublicNotificationController::class, 'markAllRead'])

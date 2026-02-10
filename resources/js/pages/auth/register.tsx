@@ -151,6 +151,18 @@ export default function Register() {
                         >
                             {({ processing, errors }) => (
                                 <>
+                                    <a
+                                        href={`/auth/google/redirect?role=${mode}`}
+                                        className="flex h-11 items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm hover:border-sky-200"
+                                    >
+                                        <img src="/images/google.svg" alt="Google" className="h-5 w-5" />
+                                        Daftar dengan Google
+                                    </a>
+                                    <div className="flex items-center gap-3 text-xs text-slate-400">
+                                        <span className="h-px flex-1 bg-slate-200" />
+                                        atau daftar dengan email
+                                        <span className="h-px flex-1 bg-slate-200" />
+                                    </div>
                                     <input
                                         type="hidden"
                                         name="role"

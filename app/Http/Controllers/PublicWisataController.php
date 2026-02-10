@@ -157,7 +157,7 @@ class PublicWisataController extends Controller
                 ];
             });
 
-        return Inertia::render('public/wisata/show', [
+        $response = Inertia::render('public/wisata/show', [
             'filters' => [
                 'visit_date' => $data['visit_date'],
                 'quantity' => $data['quantity'],
@@ -184,6 +184,18 @@ class PublicWisataController extends Controller
             ],
             'tickets' => $tickets,
         ]);
+
+        $affiliateLink = $request->attributes->get('affiliate_link');
+        $shouldStoreCookie = (bool) $request->attributes->get('affiliate_link_store');
+        if ($affiliateLink && $shouldStoreCookie) {
+            $response->withCookie(cookie(
+                'affiliate_ref',
+                json_encode(['link_id' => $affiliateLink->id, 'set_at' => now()->timestamp]),
+                $affiliateLink->cookie_days * 1440
+            ));
+        }
+
+        return $response;
     }
 
     private function resolveCityName(?string $cityCode): ?string
@@ -207,12 +219,14 @@ class PublicWisataController extends Controller
             return null;
         }
 
+        $shouldStore = false;
         $existing = $request->session()->get('affiliate_ref');
         if (! $existing || $link->attribution_model === 'last_click') {
             $request->session()->put('affiliate_ref', [
                 'link_id' => $link->id,
                 'set_at' => now()->timestamp,
             ]);
+            $shouldStore = true;
         }
 
         WisataAffiliateClick::create([
@@ -221,6 +235,9 @@ class PublicWisataController extends Controller
             'ip' => $request->ip(),
             'user_agent' => (string) $request->userAgent(),
         ]);
+
+        $request->attributes->set('affiliate_link', $link);
+        $request->attributes->set('affiliate_link_store', $shouldStore);
 
         return (int) $link->affiliate->wisata_id;
     }

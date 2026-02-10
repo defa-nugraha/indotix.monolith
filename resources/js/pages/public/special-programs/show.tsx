@@ -103,7 +103,7 @@ export default function SpecialProgramShow({ program, items }: { program: Progra
                                 <HistoryIcon className="h-4 w-4" />
                                 Riwayat
                             </Link>
-                            <Link href="/?tab=chat" className="flex items-center gap-2 hover:text-sky-600">
+                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
                                 <MessageCircle className="h-4 w-4" />
                                 Chat
                             </Link>
@@ -205,6 +205,12 @@ export default function SpecialProgramShow({ program, items }: { program: Progra
                             <button className="mt-2 h-11 rounded-full bg-sky-600 px-6 text-sm font-semibold text-white" onClick={submitBooking}>
                                 {selectedItem?.type === 'hotel' ? 'Lihat Hotel' : 'Lanjutkan Pembayaran'}
                             </button>
+                            <Link
+                                href={`/chat/start/special_program/${program.id}`}
+                                className="mt-3 block h-11 rounded-full border border-slate-200 px-6 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                            >
+                                Chat Admin
+                            </Link>
                         </div>
                     </div>
                 </section>
