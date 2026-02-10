@@ -6,6 +6,7 @@ use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\UserNotification;
 use App\Services\ChatService;
+use App\Events\ChatMessageSent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -79,13 +80,15 @@ class ChatController extends Controller
             'message' => ['required', 'string', 'max:2000'],
         ]);
 
-        ChatMessage::create([
+        $message = ChatMessage::create([
             'conversation_id' => $conversation->id,
             'sender_id' => $user->id,
             'body' => $data['message'],
         ]);
 
         $conversation->forceFill(['last_message_at' => now()])->save();
+
+        broadcast(new ChatMessageSent($message))->toOthers();
 
         $recipientId = $conversation->user_id === $user->id ? $conversation->partner_id : $conversation->user_id;
         if ($recipientId) {

@@ -1,6 +1,6 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 type Conversation = {
@@ -25,16 +25,45 @@ type Props = {
 };
 
 export default function MitraChatIndex({ conversations, activeConversation, messages }: Props) {
+    const { auth } = usePage().props as { auth?: { user?: { id?: number } } };
     const form = useForm({ message: '' });
+    const [localMessages, setLocalMessages] = useState<Message[]>(messages);
     const listRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
         if (listRef.current) {
             listRef.current.scrollTop = listRef.current.scrollHeight;
         }
+    }, [localMessages]);
+
+    useEffect(() => {
+        setLocalMessages(messages);
     }, [messages]);
 
     const activeId = activeConversation?.id ?? conversations[0]?.id;
+
+    useEffect(() => {
+        const echo = (window as any).Echo;
+        if (!activeId || !echo) return;
+
+        const channel = echo.private(`chat.${activeId}`);
+        channel.listen('.chat.message', (event: any) => {
+            setLocalMessages((prev) => [
+                ...prev,
+                {
+                    id: event.id,
+                    sender_id: event.sender_id,
+                    body: event.body,
+                    created_at: event.created_at,
+                    is_me: event.sender_id === auth?.user?.id,
+                },
+            ]);
+        });
+
+        return () => {
+            echo.leave(`chat.${activeId}`);
+        };
+    }, [activeId, auth?.user?.id]);
     return (
         <>
             <Head title="Live Chat Mitra" />
@@ -88,7 +117,7 @@ export default function MitraChatIndex({ conversations, activeConversation, mess
                             </div>
 
                             <div ref={listRef} className="mt-4 h-[360px] overflow-y-auto pr-2">
-                                {messages.map((msg) => (
+                                {localMessages.map((msg) => (
                                     <div key={msg.id} className={`mb-3 flex ${msg.is_me ? 'justify-end' : 'justify-start'}`}>
                                         <div
                                             className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
@@ -102,7 +131,7 @@ export default function MitraChatIndex({ conversations, activeConversation, mess
                                         </div>
                                     </div>
                                 ))}
-                                {messages.length === 0 && (
+                                {localMessages.length === 0 && (
                                     <div className="text-center text-xs text-slate-400">Belum ada pesan.</div>
                                 )}
                             </div>
