@@ -1,5 +1,6 @@
 import { Head, useForm } from '@inertiajs/react';
 import Swal from 'sweetalert2';
+import PublicLayout from '@/layouts/public-layout';
 
 type Destination = {
     id: number;
@@ -28,14 +29,15 @@ export default function AffiliateRegister({ destinations }: { destinations: Dest
     };
 
     return (
-        <div className="min-h-screen bg-[#f4f6f8] px-4 py-10">
+        <PublicLayout showCategories={false} showChips={false} showSearch={false}>
             <Head title="Daftar Afiliasi Wisata" />
-            <div className="mx-auto w-full max-w-3xl rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-                <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Daftar Afiliasi</p>
-                    <h1 className="mt-2 text-2xl font-semibold text-slate-900">Mulai program afiliasi wisata</h1>
-                    <p className="mt-1 text-sm text-slate-500">Lengkapi data berikut agar admin bisa memverifikasi.</p>
-                </div>
+            <main className="mx-auto w-full max-w-3xl px-4 py-10">
+                <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Daftar Afiliasi</p>
+                        <h1 className="mt-2 text-2xl font-semibold text-slate-900">Mulai program afiliasi wisata</h1>
+                        <p className="mt-1 text-sm text-slate-500">Lengkapi data berikut agar admin bisa memverifikasi.</p>
+                    </div>
 
                 <form onSubmit={submit} className="mt-6 grid gap-4 md:grid-cols-2">
                     <label className="space-y-2 md:col-span-2">
@@ -123,7 +125,8 @@ export default function AffiliateRegister({ destinations }: { destinations: Dest
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+                </div>
+            </main>
+        </PublicLayout>
     );
 }

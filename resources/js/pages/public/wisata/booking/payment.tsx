@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
+import PublicLayout from '@/layouts/public-layout';
 
 type Booking = {
     id: number;
@@ -84,68 +85,14 @@ export default function WisataBookingPayment({
     }, [snapToken]);
 
     return (
-        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+        <PublicLayout>
             <Head title="Pembayaran Tiket Wisata">
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
                     rel="stylesheet"
                 />
             </Head>
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
-                    <div className="flex items-center gap-2">
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
-                    </div>
-                    <div className="flex flex-1 items-center">
-                        <input
-                            type="text"
-                            placeholder="Cari kota/hotel/wisata/event..."
-                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        />
-                    </div>
-                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                        <ShoppingCart className="h-4 w-4" />
-                        Keranjang
-                        {Boolean(souvenir_cart_count) && (
-                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                {souvenir_cart_count}
-                            </span>
-                        )}
-                    </Link>
-                    {auth?.user ? (
-                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="hover:text-sky-600">Profile</Link>
-                            <Link href="/history" className="hover:text-sky-600">Riwayat</Link>
-                            <Link href="/chat" className="hover:text-sky-600">Chat</Link>
-                            <Link href="/notifications" className="relative hover:text-sky-600">
-                                Notifikasi
-                                {Boolean(unread_notifications) && (
-                                    <span className="absolute -right-4 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                        {unread_notifications}
-                                    </span>
-                                )}
-                            </Link>
-                        </div>
-                    ) : (
-                        <>
-                            <Link
-                                href="/register"
-                                className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
-                            >
-                                Gabung Mitra
-                            </Link>
-                            <Link
-                                href="/login"
-                                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
-                            >
-                                Login
-                            </Link>
-                        </>
-                    )}
-                </div>
-            </header>
-
-            <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8">
+                        <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8">
                 <section className="grid gap-6 lg:grid-cols-[2fr,1fr]">
                     <div className="rounded-3xl bg-white p-6 shadow-sm">
                         <h1 className="text-xl font-semibold text-slate-900">Booking kamu sudah siap, lanjutkan pembayaran</h1>
@@ -201,6 +148,6 @@ export default function WisataBookingPayment({
                     </aside>
                 </section>
             </main>
-        </div>
+        </PublicLayout>
     );
 }

@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
+import PublicLayout from '@/layouts/public-layout';
 
 type Booking = {
     id: number;
@@ -80,53 +81,14 @@ export default function EventBookingPayment({
     }, [snapToken]);
 
     return (
-        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+        <PublicLayout>
             <Head title="Pembayaran Event">
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
                     rel="stylesheet"
                 />
             </Head>
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
-                    <div className="flex items-center gap-2">
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
-                    </div>
-                    <div className="flex flex-1 items-center">
-                        <input
-                            type="text"
-                            placeholder="Cari kota/hotel/wisata/event..."
-                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        />
-                    </div>
-                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                        <ShoppingCart className="h-4 w-4" />
-                        Keranjang
-                        {Boolean(souvenir_cart_count) && (
-                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                {souvenir_cart_count}
-                            </span>
-                        )}
-                    </Link>
-                    {auth?.user ? (
-                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="hover:text-sky-600">Profile</Link>
-                            <Link href="/history" className="hover:text-sky-600">Riwayat</Link>
-                            <Link href="/chat" className="hover:text-sky-600">Chat</Link>
-                            <Link href="/notifications" className="relative hover:text-sky-600">
-                                Notifikasi
-                                {Boolean(unread_notifications) && (
-                                    <span className="absolute -right-4 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                        {unread_notifications}
-                                    </span>
-                                )}
-                            </Link>
-                        </div>
-                    ) : null}
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-4xl px-4 py-10 md:px-8">
+                        <main className="mx-auto w-full max-w-4xl px-4 py-10 md:px-8">
                 <div className="rounded-3xl bg-white p-6 shadow-sm">
                     <h1 className="text-xl font-semibold text-slate-900">Booking kamu sudah siap</h1>
                     <p className="mt-2 text-sm text-slate-500">Selesaikan pembayaran sebelum waktu habis.</p>
@@ -213,6 +175,6 @@ export default function EventBookingPayment({
                     © 2025 Indotix. All rights reserved.
                 </div>
             </footer>
-        </div>
+        </PublicLayout>
     );
 }

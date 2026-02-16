@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import PublicLayout from '@/layouts/public-layout';
 import {
     Bell,
     CalendarCheck,
@@ -140,6 +141,16 @@ export default function Welcome({
                   { id: 1, gradient: 'linear-gradient(135deg, #0b7bb8 0%, #0d97c7 50%, #1c5cb6 100%)' },
                   { id: 2, gradient: 'linear-gradient(135deg, #0a4aa8 0%, #0f6edb 50%, #02b3e4 100%)' },
               ];
+    const totalBannerSlides = bannerSlides.length;
+    const hasMultipleBanners = totalBannerSlides > 1;
+    const currentBannerIndex = totalBannerSlides === 0 ? 0 : (bannerIndex + totalBannerSlides) % totalBannerSlides;
+    const bannerSlots = hasMultipleBanners
+        ? [
+              { index: (currentBannerIndex - 1 + totalBannerSlides) % totalBannerSlides, className: 'hidden md:block' },
+              { index: currentBannerIndex, className: '' },
+              { index: (currentBannerIndex + 1) % totalBannerSlides, className: 'hidden md:block' },
+          ]
+        : [{ index: currentBannerIndex, className: '' }];
 
     const advanceBanner = (delta: number) => {
         if (bannerSlides.length === 0 || isBannerTransitioning) {
@@ -251,7 +262,7 @@ export default function Welcome({
     const defaultCheckOut = formatDate(tomorrow);
 
     return (
-        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+        <PublicLayout categories={categories} chips={chips}>
             <Head title="Indotix">
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
@@ -265,111 +276,15 @@ export default function Welcome({
                 }
             `}</style>
 
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
-                    <div className="flex items-center gap-2">
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
-                    </div>
-                    <div className="flex flex-1 items-center">
-                        <input
-                            type="text"
-                            placeholder="Cari kota/hotel/wisata/event..."
-                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        />
-                    </div>
-                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                        <ShoppingCart className="h-4 w-4" />
-                        Keranjang
-                        {Boolean(souvenir_cart_count) && (
-                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                {souvenir_cart_count}
-                            </span>
-                        )}
-                    </Link>
-                    {!auth?.user && (
-                        <div className="flex items-center gap-2">
-                            <Link
-                                href={canRegister ? '/register' : '#'}
-                                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
-                            >
-                                Register
-                            </Link>
-                            <Link
-                                href="/login"
-                                className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
-                            >
-                                Login
-                            </Link>
-                        </div>
-                    )}
-                    {isUser && (
-                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
-                                <UserCircle className="h-4 w-4" />
-                                Profile
-                            </Link>
-                            {affiliate_menu && (
-                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
-                                    <BadgePercent className="h-4 w-4" />
-                                    Afiliasi
-                                </Link>
-                            )}
-                            <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
-                                <History className="h-4 w-4" />
-                                Riwayat
-                            </Link>
-                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
-                                <MessageCircle className="h-4 w-4" />
-                                Chat
-                            </Link>
-                            <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
-                                <Bell className="h-4 w-4" />
-                                Notifikasi
-                                {Boolean(unread_notifications) && (
-                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                        {unread_notifications}
-                                    </span>
-                                )}
-                            </Link>
-                        </div>
-                    )}
-                </div>
-                <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
-                        {categories.map((item) => (
-                            <Link
-                                key={item.label}
-                                href={item.href}
-                                className={`flex items-center gap-2 text-sm font-semibold ${
-                                    item.active ? 'text-slate-900' : 'text-slate-500'
-                                }`}
-                            >
-                                <item.icon className="h-4 w-4" />
-                                {item.label}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-                <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-4 py-3 md:px-8">
-                        {chips.map((chip) => (
-                            <span
-                                key={chip}
-                                className="rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600"
-                            >
-                                {chip}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+                        <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 {!isReady && (
                     <section className="space-y-8">
                         <div className="grid w-full gap-6 md:grid-cols-[1fr_2.4fr_1fr]">
                             {[0, 1, 2].map((idx) => (
-                                <Skeleton key={idx} className="h-56 w-full rounded-2xl" />
+                                <Skeleton
+                                    key={idx}
+                                    className={idx === 1 ? 'h-[150px] w-full rounded-2xl' : 'hidden h-[150px] w-full rounded-2xl md:block'}
+                                />
                             ))}
                         </div>
                         <div className="grid gap-8 md:grid-cols-[1.1fr_1fr]">
@@ -382,7 +297,7 @@ export default function Welcome({
                             </div>
                             <div className="rounded-2xl bg-white p-6 shadow-sm">
                                 <Skeleton className="h-6 w-40" />
-                                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                                <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2">
                                     {[0, 1].map((idx) => (
                                         <Skeleton key={idx} className="h-64 w-full rounded-2xl" />
                                     ))}
@@ -392,7 +307,7 @@ export default function Welcome({
                         </div>
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <Skeleton className="h-6 w-48" />
-                            <div className="mt-6 grid gap-6 md:grid-cols-3">
+                            <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
                                 {[0, 1, 2].map((idx) => (
                                     <Skeleton key={idx} className="h-56 w-full rounded-2xl" />
                                 ))}
@@ -413,23 +328,23 @@ export default function Welcome({
                 <>
                 <section className="relative left-1/2 right-1/2 mb-8 w-screen -translate-x-1/2 px-4 md:px-8">
                     <div className="relative flex items-center gap-6">
-                        <button
-                            type="button"
-                            onClick={() => advanceBanner(-1)}
-                            className="absolute left-2 z-10 h-10 w-10 -translate-x-1/2 rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm"
-                            aria-label="Banner sebelumnya"
-                        >
-                            ‹
-                        </button>
+                        {hasMultipleBanners && (
+                            <button
+                                type="button"
+                                onClick={() => advanceBanner(-1)}
+                                className="absolute left-2 z-10 h-10 w-10 -translate-x-1/2 rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm"
+                                aria-label="Banner sebelumnya"
+                            >
+                                ‹
+                            </button>
+                        )}
 
                         <div className="grid w-full gap-6 md:grid-cols-[1fr_2.4fr_1fr]">
-                            {[bannerIndex - 1, bannerIndex, bannerIndex + 1].map((offset, idx) => {
-                                const safeIndex =
-                                    (offset + bannerSlides.length) % bannerSlides.length;
-                                const slide = bannerSlides[safeIndex];
+                            {bannerSlots.map((slot, idx) => {
+                                const slide = bannerSlides[slot.index];
                                 const content = (
                                     <div
-                                        className={`h-44 w-full transition-opacity duration-300 md:h-56 ${
+                                        className={`h-[150px] w-full transition-opacity duration-300 ${
                                             isBannerTransitioning ? 'opacity-0' : 'opacity-100'
                                         }`}
                                         style={{
@@ -444,7 +359,7 @@ export default function Welcome({
                                 return (
                                     <div
                                         key={`${slide.id}-${idx}`}
-                                        className="overflow-hidden rounded-2xl bg-white shadow-sm"
+                                        className={`overflow-hidden rounded-2xl bg-white shadow-sm ${slot.className}`}
                                     >
                                         {slide.link ? (
                                             <a href={slide.link} className="block">
@@ -458,14 +373,16 @@ export default function Welcome({
                             })}
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => advanceBanner(1)}
-                            className="absolute right-2 z-10 h-10 w-10 translate-x-1/2 rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm"
-                            aria-label="Banner berikutnya"
-                        >
-                            ›
-                        </button>
+                        {hasMultipleBanners && (
+                            <button
+                                type="button"
+                                onClick={() => advanceBanner(1)}
+                                className="absolute right-2 z-10 h-10 w-10 translate-x-1/2 rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm"
+                                aria-label="Banner berikutnya"
+                            >
+                                ›
+                            </button>
+                        )}
                     </div>
                 </section>
 
@@ -523,7 +440,7 @@ export default function Welcome({
                                 <button className="h-9 w-9 rounded-full border border-slate-200">›</button>
                             </div>
                         </div>
-                        <div className="mt-6 grid gap-4 md:grid-cols-2">
+                        <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2">
                             {(promoItems[0] ? [promoItems[0]] : []).map((item) => (
                                 <div key={item.id} className="overflow-hidden rounded-2xl shadow-sm">
                                     <a href={item.link_url ?? '#'} className="block">
@@ -584,7 +501,7 @@ export default function Welcome({
                             Lihat Semua Special Program →
                         </Link>
                     </div>
-                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                    <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
                         {specialProgramProducts.map((item) => {
                             const link =
                                 item.type === 'hotel'
@@ -643,7 +560,7 @@ export default function Welcome({
                             Lihat Semua Hotel →
                         </Link>
                     </div>
-                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                    <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
                         {hotelProducts.map((hotel) => (
                             <div key={hotel.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="h-40 overflow-hidden bg-gradient-to-br from-blue-700 to-sky-400">
@@ -704,7 +621,7 @@ export default function Welcome({
                             Lihat Semua Event →
                         </Link>
                     </div>
-                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                    <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
                         {eventProducts.map((event) => (
                             <div key={event.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="h-40 overflow-hidden bg-gradient-to-br from-indigo-600 to-sky-500">
@@ -754,7 +671,7 @@ export default function Welcome({
                             Lihat Semua Academy →
                         </Link>
                     </div>
-                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                    <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
                         {academyProducts.map((item) => (
                             <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="h-40 overflow-hidden bg-gradient-to-br from-sky-500 to-indigo-600">
@@ -807,7 +724,7 @@ export default function Welcome({
                             Lihat Semua Wisata →
                         </Link>
                     </div>
-                    <div className="mt-6 grid gap-6 md:grid-cols-3">
+                    <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
                         {wisataProducts.map((item) => (
                             <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="h-40 overflow-hidden bg-gradient-to-br from-emerald-500 to-sky-400">
@@ -860,7 +777,7 @@ export default function Welcome({
                             Lihat Semua Souvenir →
                         </Link>
                     </div>
-                    <div className="mt-6 grid gap-6 md:grid-cols-4">
+                    <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
                         {souvenirProducts.map((item) => (
                             <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="h-40 overflow-hidden bg-gradient-to-br from-amber-500 to-orange-400">
@@ -987,6 +904,6 @@ export default function Welcome({
                     © 2025 Indotix. All rights reserved.
                 </div>
             </footer>
-        </div>
+        </PublicLayout>
     );
 }

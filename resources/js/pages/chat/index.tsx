@@ -1,6 +1,7 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { Bell, MessageCircle, ShoppingCart, UserCircle, History, BadgePercent } from 'lucide-react';
+import PublicLayout from '@/layouts/public-layout';
 
 type Conversation = {
     id: number;
@@ -137,65 +138,10 @@ export default function ChatIndex({ conversations, activeConversation, messages 
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+        <PublicLayout>
             <Head title="Live Chat" />
 
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
-                    <div className="flex items-center gap-2">
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
-                    </div>
-                    <div className="flex flex-1 items-center">
-                        <input
-                            type="text"
-                            placeholder="Cari kota/hotel/wisata/event..."
-                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        />
-                    </div>
-                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                        <ShoppingCart className="h-4 w-4" />
-                        Keranjang
-                        {Boolean(souvenir_cart_count) && (
-                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                {souvenir_cart_count}
-                            </span>
-                        )}
-                    </Link>
-                    {auth?.user?.role === 'user' && (
-                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
-                                <UserCircle className="h-4 w-4" />
-                                Profile
-                            </Link>
-                            {affiliate_menu && (
-                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
-                                    <BadgePercent className="h-4 w-4" />
-                                    Afiliasi
-                                </Link>
-                            )}
-                            <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
-                                <History className="h-4 w-4" />
-                                Riwayat
-                            </Link>
-                            <Link href="/chat" className="flex items-center gap-2 text-sky-600">
-                                <MessageCircle className="h-4 w-4" />
-                                Chat
-                            </Link>
-                            <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
-                                <Bell className="h-4 w-4" />
-                                Notifikasi
-                                {Boolean(unread_notifications) && (
-                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                        {unread_notifications}
-                                    </span>
-                                )}
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+                        <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
                     <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                         <div className="flex items-center justify-between">
@@ -321,6 +267,6 @@ export default function ChatIndex({ conversations, activeConversation, messages 
                     </section>
                 </div>
             </main>
-        </div>
+        </PublicLayout>
     );
 }

@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import { Bell, CalendarCheck, History as HistoryIcon, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, BookOpen, ShoppingCart, BadgePercent } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import PublicLayout from '@/layouts/public-layout';
 
 type AcademyCard = {
     id: number;
@@ -58,111 +59,15 @@ export default function AcademySearch({
     const fallbackImage = classes.find((item) => item.image_url)?.image_url;
 
     return (
-        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+        <PublicLayout categories={categories} chips={chips}>
             <Head title="Eljohn Academy">
                 <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
             </Head>
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
-                    <div className="flex items-center gap-2">
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
-                    </div>
-                    <div className="flex flex-1 items-center">
-                        <input
-                            type="text"
-                            placeholder="Cari kota/hotel/wisata/event..."
-                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                            value={form.q}
-                            onChange={(event) => setForm((prev) => ({ ...prev, q: event.target.value }))}
-                        />
-                    </div>
-                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                        <ShoppingCart className="h-4 w-4" />
-                        Keranjang
-                        {Boolean(souvenir_cart_count) && (
-                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                {souvenir_cart_count}
-                            </span>
-                        )}
-                    </Link>
-                    {!auth?.user && (
-                        <div className="flex items-center gap-2">
-                            <Link
-                                href="/register"
-                                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
-                            >
-                                Register
-                            </Link>
-                            <Link
-                                href="/login"
-                                className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
-                            >
-                                Login
-                            </Link>
-                        </div>
-                    )}
-                    {auth?.user?.role === 'user' && (
-                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
-                                <UserCircle className="h-4 w-4" />
-                                Profile
-                            </Link>
-                            {affiliate_menu && (
-                                <Link href="/affiliate" className="flex items-center gap-2 hover:text-sky-600">
-                                    <BadgePercent className="h-4 w-4" />
-                                    Afiliasi
-                                </Link>
-                            )}
-                            <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
-                                <HistoryIcon className="h-4 w-4" />
-                                Riwayat
-                            </Link>
-                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
-                                <MessageCircle className="h-4 w-4" />
-                                Chat
-                            </Link>
-                            <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
-                                <Bell className="h-4 w-4" />
-                                Notifikasi
-                                {Boolean(unread_notifications) && (
-                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                        {unread_notifications}
-                                    </span>
-                                )}
-                            </Link>
-                        </div>
-                    )}
-                </div>
-                <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
-                        {categories.map((item) => (
-                            <Link
-                                key={item.label}
-                                href={item.href}
-                                className={`flex items-center gap-2 text-sm font-semibold ${item.active ? 'text-slate-900' : 'text-slate-500'}`}
-                            >
-                                <item.icon className="h-4 w-4" />
-                                {item.label}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-                <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-4 py-3 md:px-8">
-                        {chips.map((chip) => (
-                            <span key={chip} className="rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600">
-                                {chip}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
+                        <main className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
                 {!isReady && (
                     <section className="space-y-8">
-                        <Skeleton className="h-72 w-full rounded-[28px]" />
-                        <div className="grid gap-6 md:grid-cols-2">
+                        <Skeleton className="h-44 w-full rounded-[28px] sm:h-56 md:h-72" />
+                        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2">
                             {[0, 1].map((idx) => (
                                 <Skeleton key={idx} className="h-32 w-full rounded-2xl" />
                             ))}
@@ -180,20 +85,20 @@ export default function AcademySearch({
                                         `https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1920&auto=format&fit=crop`
                                     }
                                     alt="Academy"
-                                    className="h-72 w-full object-cover md:h-88"
+                                    className="h-44 w-full object-cover sm:h-56 md:h-72"
                                 />
                                 <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-r from-black/60 via-black/45 to-transparent" />
-                                <div className="absolute left-8 right-8 top-1/2 -translate-y-1/2 text-center text-white">
-                                    <h1 className="text-2xl font-semibold md:text-3xl">
+                                <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 text-center text-white sm:left-8 sm:right-8">
+                                    <h1 className="text-lg font-semibold sm:text-xl md:text-3xl">
                                         Upgrade skill bareng Eljohn Academy di INDOTIX
                                     </h1>
-                                    <p className="mt-2 text-sm text-white/85">
+                                    <p className="mt-2 text-xs text-white/85 sm:text-sm">
                                         Pilih kelas favorit, amankan seat, dan belajar langsung dari mentor terbaik.
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="-mt-24 px-6">
+                            <div className="-mt-14 px-4 sm:-mt-20 sm:px-6 md:-mt-24">
                                 <div className="relative z-20 rounded-[24px] bg-white p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)]">
                                     <form className="grid gap-4 md:grid-cols-[2fr_1.5fr_1fr_auto]" onSubmit={submitSearch}>
                                         <div className="grid gap-2">
@@ -242,7 +147,7 @@ export default function AcademySearch({
                             </div>
                         </section>
 
-                        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                             {filtered.map((item) => (
                                 <div
                                     key={item.id}
@@ -298,6 +203,6 @@ export default function AcademySearch({
                     </>
                 )}
             </main>
-        </div>
+        </PublicLayout>
     );
 }

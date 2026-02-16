@@ -3,7 +3,8 @@ import { Form, Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import InputError from '@/components/input-error';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History, UserCircle, Mail, Phone, ShoppingCart } from 'lucide-react';
+import { UserCircle, Mail, Phone } from 'lucide-react';
+import PublicLayout from '@/layouts/public-layout';
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu, affiliate_status } = usePage().props as {
@@ -20,89 +21,13 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
         password_confirmation: '',
     });
 
-    const categories = [
-        { label: 'Wisata', icon: MapPinned, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/?tab=souvenir' },
-        { label: 'Spesial Program', icon: Star, href: '/special-programs' },
-        { label: 'Hotel', icon: Ticket, href: '/stay' },
-    ];
-
-    const chips = ['Alam', 'Budaya', 'Edukasi', 'Kuliner', 'Desa Wisata', 'Religi', 'Pantai', 'Gunung', 'Taman Nasional', 'Air Terjun', 'Danau'];
-
     return (
-        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+        <PublicLayout showCategories={false} showChips={false}>
             <Head title="Profil Saya">
                 <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
             </Head>
 
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
-                    <div className="flex items-center gap-2">
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
-                    </div>
-                    <div className="flex flex-1 items-center">
-                        <input
-                            type="text"
-                            placeholder="Cari kota/hotel/wisata/event..."
-                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        />
-                    </div>
-                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                        <ShoppingCart className="h-4 w-4" />
-                        Keranjang
-                        {Boolean(souvenir_cart_count) && (
-                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                {souvenir_cart_count}
-                            </span>
-                        )}
-                    </Link>
-                    <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                        <Link href="/settings/profile" className="flex items-center gap-2 text-sky-600">
-                            <UserCircle className="h-4 w-4" />
-                            Profile
-                        </Link>
-                        <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
-                            <History className="h-4 w-4" />
-                            Riwayat
-                        </Link>
-                        <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
-                            <MessageCircle className="h-4 w-4" />
-                            Chat
-                        </Link>
-                        <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
-                            <Bell className="h-4 w-4" />
-                            Notifikasi
-                            {Boolean(unread_notifications) && (
-                                <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                    {unread_notifications}
-                                </span>
-                            )}
-                        </Link>
-                    </div>
-                </div>
-                <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
-                        {categories.map((item) => (
-                            <Link key={item.label} href={item.href} className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900">
-                                <item.icon className="h-4 w-4" />
-                                {item.label}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-                <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-4 py-3 md:px-8">
-                        {chips.map((chip) => (
-                            <span key={chip} className="rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600">
-                                {chip}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+                        <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                     <div className="space-y-6">
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -409,6 +334,6 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                     © 2025 Indotix. All rights reserved.
                 </div>
             </footer>
-        </div>
+        </PublicLayout>
     );
 }

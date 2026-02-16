@@ -1,6 +1,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, UserCircle, History as HistoryIcon, Sparkles, ShoppingCart } from 'lucide-react';
+import PublicLayout from '@/layouts/public-layout';
 
 const navItems = [
     { label: 'Wisata', icon: MapPinned, href: '/wisata' },
@@ -60,78 +61,9 @@ export default function SpecialProgramShow({ program, items }: { program: Progra
     };
 
     return (
-        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+        <PublicLayout categories={navItems}>
             <Head title={program.name} />
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
-                    <div className="flex items-center gap-2">
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
-                    </div>
-                    <div className="flex flex-1 items-center">
-                        <input
-                            type="text"
-                            placeholder="Cari kota/hotel/wisata/event..."
-                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        />
-                    </div>
-                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                        <ShoppingCart className="h-4 w-4" />
-                        Keranjang
-                        {Boolean(souvenir_cart_count) && (
-                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                {souvenir_cart_count}
-                            </span>
-                        )}
-                    </Link>
-                    {!auth?.user && (
-                        <div className="flex items-center gap-2">
-                            <Link href="/register" className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700">
-                                Register
-                            </Link>
-                            <Link href="/login" className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50">
-                                Login
-                            </Link>
-                        </div>
-                    )}
-                    {auth?.user?.role === 'user' && (
-                        <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
-                            <Link href="/settings/profile" className="flex items-center gap-2 hover:text-sky-600">
-                                <UserCircle className="h-4 w-4" />
-                                Profile
-                            </Link>
-                            <Link href="/history" className="flex items-center gap-2 hover:text-sky-600">
-                                <HistoryIcon className="h-4 w-4" />
-                                Riwayat
-                            </Link>
-                            <Link href="/chat" className="flex items-center gap-2 hover:text-sky-600">
-                                <MessageCircle className="h-4 w-4" />
-                                Chat
-                            </Link>
-                            <Link href="/notifications" className="relative flex items-center gap-2 hover:text-sky-600">
-                                <Bell className="h-4 w-4" />
-                                Notifikasi
-                                {Boolean(unread_notifications) && (
-                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                        {unread_notifications}
-                                    </span>
-                                )}
-                            </Link>
-                        </div>
-                    )}
-                </div>
-                <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-3 md:px-8">
-                        {navItems.map((item) => (
-                            <Link key={item.label} href={item.href} className={`flex items-center gap-2 text-sm font-semibold ${item.active ? 'text-slate-900' : 'text-slate-500'}`}>
-                                <item.icon className="h-4 w-4" />
-                                {item.label}
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+                        <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <section className="rounded-3xl bg-white p-6 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
@@ -151,7 +83,7 @@ export default function SpecialProgramShow({ program, items }: { program: Progra
                 <section className="mt-6 grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
                     <div className="rounded-3xl bg-white p-6 shadow-sm">
                         <h2 className="text-lg font-semibold text-slate-900">Produk dalam program</h2>
-                        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                        <div className="mt-4 grid grid-cols-2 gap-4 sm:gap-6">
                             {items.map((item) => (
                                 <button
                                     key={`${item.type}-${item.id}`}
@@ -215,6 +147,6 @@ export default function SpecialProgramShow({ program, items }: { program: Progra
                     </div>
                 </section>
             </main>
-        </div>
+        </PublicLayout>
     );
 }

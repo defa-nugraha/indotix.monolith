@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { CheckCircle, Clock, CreditCard, Loader2, ShoppingCart } from 'lucide-react';
+import PublicLayout from '@/layouts/public-layout';
 
 type Booking = {
     encrypted_id: string;
@@ -25,40 +26,9 @@ export default function SpecialProgramBookingShow({ booking }: Props) {
     const [isDownloading, setIsDownloading] = useState(false);
 
     return (
-        <div className="min-h-screen bg-[#f4f6f8] text-slate-900">
+        <PublicLayout>
             <Head title="Detail Booking Special Program" />
-            <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center gap-6 px-4 py-4 md:px-8">
-                    <div className="flex items-center gap-2">
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
-                    </div>
-                    <div className="flex flex-1 items-center">
-                        <input
-                            type="text"
-                            placeholder="Cari kota/hotel/wisata/event..."
-                            className="h-11 w-full rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        />
-                    </div>
-
-                    <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                        <ShoppingCart className="h-4 w-4" />
-                        Keranjang
-                        {Boolean(souvenir_cart_count) && (
-                            <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                {souvenir_cart_count}
-                            </span>
-                        )}
-                    </Link>
-                    {!auth?.user && (
-                        <div className="flex items-center gap-2">
-                            <Link href="/register" className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700">Register</Link>
-                            <Link href="/login" className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50">Login</Link>
-                        </div>
-                    )}
-                </div>
-            </header>
-
-            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+                        <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1.25fr_0.9fr]">
                     <div className="space-y-6">
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -148,6 +118,6 @@ export default function SpecialProgramBookingShow({ booking }: Props) {
                     </aside>
                 </div>
             </main>
-        </div>
+        </PublicLayout>
     );
 }
