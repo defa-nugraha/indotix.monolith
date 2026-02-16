@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -28,11 +28,19 @@ export default function MitraChatIndex({ conversations, activeConversation, mess
     const { auth } = usePage().props as { auth?: { user?: { id?: number } } };
     const form = useForm({ message: '' });
     const [localMessages, setLocalMessages] = useState<Message[]>(messages);
+    const [isTyping, setIsTyping] = useState(false);
+    const typingTimerRef = useRef<number | null>(null);
+    const typingSentRef = useRef(0);
+    const channelRef = useRef<any>(null);
+    const pollingRef = useRef<number | null>(null);
+    const isAtBottomRef = useRef(true);
     const listRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        if (listRef.current) {
-            listRef.current.scrollTop = listRef.current.scrollHeight;
+        if (!listRef.current) return;
+        const node = listRef.current;
+        if (isAtBottomRef.current) {
+            node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
         }
     }, [localMessages]);
 
@@ -47,6 +55,7 @@ export default function MitraChatIndex({ conversations, activeConversation, mess
         if (!activeId || !echo) return;
 
         const channel = echo.private(`chat.${activeId}`);
+        channelRef.current = channel;
         channel.listen('.chat.message', (event: any) => {
             setLocalMessages((prev) => [
                 ...prev,
@@ -58,12 +67,69 @@ export default function MitraChatIndex({ conversations, activeConversation, mess
                     is_me: event.sender_id === auth?.user?.id,
                 },
             ]);
+            if (event.sender_id !== auth?.user?.id) {
+                setIsTyping(false);
+            }
+        });
+        channel.listenForWhisper('typing', (event: any) => {
+            if (event?.user_id && event.user_id === auth?.user?.id) return;
+            setIsTyping(true);
+            if (typingTimerRef.current) {
+                window.clearTimeout(typingTimerRef.current);
+            }
+            typingTimerRef.current = window.setTimeout(() => setIsTyping(false), 1500);
         });
 
         return () => {
             echo.leave(`chat.${activeId}`);
         };
     }, [activeId, auth?.user?.id]);
+
+    useEffect(() => {
+        const echo = (window as any).Echo;
+        const connection = echo?.connector?.pusher?.connection;
+
+        const startPolling = () => {
+            if (pollingRef.current) return;
+            pollingRef.current = window.setInterval(() => {
+                router.reload({ only: ['messages', 'conversations'], preserveState: true, preserveScroll: true });
+            }, 6000);
+        };
+
+        const stopPolling = () => {
+            if (pollingRef.current) {
+                window.clearInterval(pollingRef.current);
+                pollingRef.current = null;
+            }
+        };
+
+        if (!connection) {
+            startPolling();
+            return () => stopPolling();
+        }
+
+        const handleConnected = () => stopPolling();
+        const handleDisconnected = () => startPolling();
+
+        if (connection.state === 'connected') {
+            stopPolling();
+        } else {
+            startPolling();
+        }
+
+        connection.bind('connected', handleConnected);
+        connection.bind('disconnected', handleDisconnected);
+        connection.bind('unavailable', handleDisconnected);
+        connection.bind('failed', handleDisconnected);
+
+        return () => {
+            connection.unbind('connected', handleConnected);
+            connection.unbind('disconnected', handleDisconnected);
+            connection.unbind('unavailable', handleDisconnected);
+            connection.unbind('failed', handleDisconnected);
+            stopPolling();
+        };
+    }, []);
     return (
         <>
             <Head title="Live Chat Mitra" />
@@ -116,7 +182,15 @@ export default function MitraChatIndex({ conversations, activeConversation, mess
                                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Online</span>
                             </div>
 
-                            <div ref={listRef} className="mt-4 h-[360px] overflow-y-auto pr-2">
+                            <div
+                                ref={listRef}
+                                onScroll={(event) => {
+                                    const node = event.currentTarget;
+                                    const distance = node.scrollHeight - node.scrollTop - node.clientHeight;
+                                    isAtBottomRef.current = distance < 120;
+                                }}
+                                className="mt-4 h-[360px] overflow-y-auto pr-2"
+                            >
                                 {localMessages.map((msg) => (
                                     <div key={msg.id} className={`mb-3 flex ${msg.is_me ? 'justify-end' : 'justify-start'}`}>
                                         <div
@@ -131,6 +205,7 @@ export default function MitraChatIndex({ conversations, activeConversation, mess
                                         </div>
                                     </div>
                                 ))}
+                                {isTyping && <div className="text-xs text-slate-400">Sedang mengetik...</div>}
                                 {localMessages.length === 0 && (
                                     <div className="text-center text-xs text-slate-400">Belum ada pesan.</div>
                                 )}
@@ -149,7 +224,14 @@ export default function MitraChatIndex({ conversations, activeConversation, mess
                             >
                                 <input
                                     value={form.data.message}
-                                    onChange={(event) => form.setData('message', event.target.value)}
+                                    onChange={(event) => {
+                                        form.setData('message', event.target.value);
+                                        const now = Date.now();
+                                        if (channelRef.current && now - typingSentRef.current > 800) {
+                                            typingSentRef.current = now;
+                                            channelRef.current.whisper('typing', { user_id: auth?.user?.id });
+                                        }
+                                    }}
                                     className="h-11 flex-1 rounded-xl border border-slate-200 px-4 text-sm focus:border-sky-400 focus:outline-none"
                                     placeholder="Tulis balasan..."
                                 />

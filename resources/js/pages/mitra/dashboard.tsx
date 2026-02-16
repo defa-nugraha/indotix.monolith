@@ -24,7 +24,9 @@ export default function MitraDashboard({
     wisataOnboarding,
     eventOnboarding,
     onboardingType,
-    stats,
+    metrics,
+    activities,
+    statusCards,
 }: {
     onboarding: {
         verification_status: 'draft' | 'pending' | 'verified' | 'rejected';
@@ -39,11 +41,9 @@ export default function MitraDashboard({
         payout_reason?: string | null;
     } | null;
     onboardingType?: 'hotel' | 'wisata' | 'event' | null;
-    stats: {
-        reservations_today: number;
-        monthly_revenue: number;
-        available_rooms: number;
-    };
+    metrics: { title: string; value: string | number; detail: string; icon: string }[];
+    activities: { title: string; meta: string }[];
+    statusCards: { title: string; value: string | number; note: string; accent: string }[];
     eventOnboarding: {
         verification_status: 'draft' | 'pending' | 'verified' | 'rejected';
         verification_reason?: string | null;
@@ -61,6 +61,14 @@ export default function MitraDashboard({
         payout_status: 'draft',
         verification_reason: null,
         payout_reason: null,
+    };
+    const iconMap: Record<string, typeof Ticket> = {
+        ticket: Ticket,
+        credit: CreditCard,
+        map: MapPin,
+        users: Users,
+        calendar: CalendarCheck,
+        shield: ShieldCheck,
     };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -83,11 +91,18 @@ export default function MitraDashboard({
                                 Mitra Indotix
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl font-['Space_Grotesk']">
-                                Ringkasan performa properti Anda
+                                {onboardingType === 'wisata'
+                                    ? 'Ringkasan performa destinasi Anda'
+                                    : onboardingType === 'event'
+                                    ? 'Ringkasan performa event Anda'
+                                    : 'Ringkasan performa properti Anda'}
                             </h1>
                             <p className="text-sm text-slate-600">
-                                Pantau pemesanan, pendapatan, dan ketersediaan
-                                kamar dalam satu tempat.
+                                {onboardingType === 'wisata'
+                                    ? 'Pantau penjualan tiket, kuota, dan pendapatan wisata.'
+                                    : onboardingType === 'event'
+                                    ? 'Pantau penjualan tiket, booking, dan check-in event.'
+                                    : 'Pantau pemesanan, pendapatan, dan ketersediaan kamar.'}
                             </p>
                         </div>
                         {!isChoosingType && (
@@ -138,53 +153,27 @@ export default function MitraDashboard({
                     )}
 
                     <div className="mt-6 grid gap-4 lg:grid-cols-3">
-                        {[
-                            onboardingType === 'event'
-                                ? {
-                                      title: 'Event Aktif',
-                                      value: '0',
-                                      detail: 'Event yang sedang berjalan',
-                                      icon: Ticket,
-                                      accent: 'bg-sky-50 text-sky-600',
-                                  }
-                                : {
-                                title: 'Reservasi Hari Ini',
-                                value: stats.reservations_today.toString(),
-                                detail: 'Booking aktif hari ini',
-                                icon: Ticket,
-                                accent: 'bg-sky-50 text-sky-600',
-                            },
-                            {
-                                title: 'Pendapatan Bulan Ini',
-                                value: `Rp ${stats.monthly_revenue.toLocaleString('id-ID')}`,
-                                detail: 'Total booking selesai/paid',
-                                icon: CreditCard,
-                                accent: 'bg-amber-50 text-amber-600',
-                            },
-                            onboardingType === 'event'
-                                ? {
-                                      title: 'Tiket Terjual',
-                                      value: '0',
-                                      detail: 'Total tiket terjual bulan ini',
-                                      icon: Users,
-                                      accent: 'bg-emerald-50 text-emerald-600',
-                                  }
-                                : {
-                                title: 'Kamar Tersedia',
-                                value: stats.available_rooms.toString(),
-                                detail: 'Kamar siap dijual',
-                                icon: MapPin,
-                                accent: 'bg-emerald-50 text-emerald-600',
-                            },
-                        ].map((item) => (
+                        {(metrics ?? []).map((item) => {
+                            const Icon = iconMap[item.icon] ?? Ticket;
+                            return (
                             <div
                                 key={item.title}
                                 className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
                             >
                                 <div
-                                    className={`flex h-11 w-11 items-center justify-center rounded-2xl ${item.accent}`}
+                                    className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                                        item.icon === 'credit'
+                                            ? 'bg-amber-50 text-amber-600'
+                                            : item.icon === 'map'
+                                            ? 'bg-emerald-50 text-emerald-600'
+                                            : item.icon === 'calendar'
+                                            ? 'bg-sky-50 text-sky-600'
+                                            : item.icon === 'users'
+                                            ? 'bg-emerald-50 text-emerald-600'
+                                            : 'bg-sky-50 text-sky-600'
+                                    }`}
                                 >
-                                    <item.icon className="h-5 w-5" />
+                                    <Icon className="h-5 w-5" />
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -198,7 +187,8 @@ export default function MitraDashboard({
                                     </p>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </section>
 
@@ -343,10 +333,18 @@ export default function MitraDashboard({
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">
-                                    Aktivitas Properti
+                                    {onboardingType === 'wisata'
+                                        ? 'Aktivitas Destinasi'
+                                        : onboardingType === 'event'
+                                        ? 'Aktivitas Event'
+                                        : 'Aktivitas Properti'}
                                 </p>
                                 <h2 className="mt-2 text-lg font-semibold text-slate-900">
-                                    Aktivitas terbaru di properti Anda
+                                    {onboardingType === 'wisata'
+                                        ? 'Aktivitas terbaru di destinasi kamu'
+                                        : onboardingType === 'event'
+                                        ? 'Aktivitas terbaru di event kamu'
+                                        : 'Aktivitas terbaru di properti Anda'}
                                 </h2>
                             </div>
                             <Button
@@ -358,34 +356,21 @@ export default function MitraDashboard({
                         </div>
 
                         <div className="mt-6 space-y-4">
-                            {[
-                                {
-                                    title: 'Booking baru “Hotel Prisma”',
-                                    meta: '3 kamar • 15 menit lalu',
-                                    icon: Ticket,
-                                },
-                                {
-                                    title: 'Pembayaran masuk',
-                                    meta: 'Rp 4.500.000 • 1 jam lalu',
-                                    icon: CreditCard,
-                                },
-                                {
-                                    title: 'Update inventori berhasil',
-                                    meta: 'Tipe Kamar Deluxe • 2 jam lalu',
-                                    icon: CalendarCheck,
-                                },
-                                {
-                                    title: 'Review tamu terbaru',
-                                    meta: 'Rating 4.8 • 3 jam lalu',
-                                    icon: Users,
-                                },
-                            ].map((item) => (
+                            {(activities?.length
+                                ? activities
+                                : [
+                                      {
+                                          title: 'Belum ada aktivitas terbaru',
+                                          meta: 'Aktivitas terbaru akan muncul di sini.',
+                                      },
+                                  ]
+                            ).map((item) => (
                                 <div
                                     key={item.title}
                                     className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-xs"
                                 >
                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
-                                        <item.icon className="h-4 w-4" />
+                                        <Ticket className="h-4 w-4" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-semibold text-slate-900">
@@ -411,32 +396,7 @@ export default function MitraDashboard({
                         </div>
 
                         <div className="mt-6 space-y-4">
-                            {[
-                                {
-                                    title: 'Validasi Check-in',
-                                    value: 'Stabil',
-                                    note: 'Rata-rata 1.1 detik',
-                                    accent: 'bg-emerald-50 text-emerald-600',
-                                },
-                                {
-                                    title: 'Pembayaran',
-                                    value: 'Normal',
-                                    note: '97.9% sukses',
-                                    accent: 'bg-sky-50 text-sky-600',
-                                },
-                                {
-                                    title: 'Konten Properti',
-                                    value: 'Lengkap',
-                                    note: '9 properti siap jual',
-                                    accent: 'bg-amber-50 text-amber-600',
-                                },
-                                {
-                                    title: 'Akun Mitra',
-                                    value: 'Terverifikasi',
-                                    note: 'Dokumen valid',
-                                    accent: 'bg-emerald-50 text-emerald-600',
-                                },
-                            ].map((item) => (
+                            {(statusCards ?? []).map((item) => (
                                 <div
                                     key={item.title}
                                     className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-xs"
@@ -449,9 +409,7 @@ export default function MitraDashboard({
                                             {item.note}
                                         </p>
                                     </div>
-                                    <span
-                                        className={`rounded-full px-3 py-1 text-xs font-semibold ${item.accent}`}
-                                    >
+                                    <span className={`rounded-full px-3 py-1 text-xs font-semibold ${item.accent}`}>
                                         {item.value}
                                     </span>
                                 </div>

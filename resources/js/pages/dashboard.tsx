@@ -1,12 +1,5 @@
 import { Head } from '@inertiajs/react';
-import {
-    Activity,
-    CalendarCheck,
-    CreditCard,
-    ShieldCheck,
-    Ticket,
-    Users,
-} from 'lucide-react';
+import { Activity, CreditCard, ShieldCheck, Ticket, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -19,7 +12,26 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
-export default function Dashboard() {
+type ActivityItem = {
+    title: string;
+    meta: string;
+};
+
+type Props = {
+    summary: {
+        transactions_today: number;
+        tickets_sold: number;
+        active_partners: number;
+    };
+    system: {
+        pending_reviews: number;
+        pending_payouts: number;
+        pending_payments: number;
+    };
+    activities: ActivityItem[];
+};
+
+export default function Dashboard({ summary, system, activities }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Admin Dashboard">
@@ -65,22 +77,22 @@ export default function Dashboard() {
                         {[
                             {
                                 title: 'Transaksi Hari Ini',
-                                value: '1.248',
-                                detail: '+12% dari kemarin',
+                                value: summary.transactions_today.toLocaleString('id-ID'),
+                                detail: 'Total transaksi berhasil hari ini',
                                 icon: CreditCard,
                                 accent: 'bg-sky-50 text-sky-600',
                             },
                             {
                                 title: 'Tiket Terjual',
-                                value: '18.402',
-                                detail: '7 event aktif',
+                                value: summary.tickets_sold.toLocaleString('id-ID'),
+                                detail: 'Total tiket terjual hari ini',
                                 icon: Ticket,
                                 accent: 'bg-amber-50 text-amber-600',
                             },
                             {
                                 title: 'Mitra Aktif',
-                                value: '320',
-                                detail: '14 mitra baru minggu ini',
+                                value: summary.active_partners.toLocaleString('id-ID'),
+                                detail: 'Mitra terverifikasi saat ini',
                                 icon: Users,
                                 accent: 'bg-emerald-50 text-emerald-600',
                             },
@@ -130,34 +142,19 @@ export default function Dashboard() {
                         </div>
 
                         <div className="mt-6 space-y-4">
-                            {[
+                            {(activities?.length ? activities : [
                                 {
-                                    title: 'Validasi tiket “Konser Nusantara”',
-                                    meta: '37 tiket tervalidasi • 10 menit lalu',
+                                    title: 'Belum ada aktivitas terbaru',
+                                    meta: 'Aktivitas terbaru akan muncul di sini.',
                                     icon: ShieldCheck,
                                 },
-                                {
-                                    title: 'Pencairan dana Mitra Prisma',
-                                    meta: 'Rp 18.500.000 • 45 menit lalu',
-                                    icon: CreditCard,
-                                },
-                                {
-                                    title: 'Event baru “Festival Pantai” aktif',
-                                    meta: 'Mulai 3 Feb 2026 • 2 jam lalu',
-                                    icon: CalendarCheck,
-                                },
-                                {
-                                    title: 'Pengguna baru terdaftar',
-                                    meta: '124 akun baru hari ini',
-                                    icon: Users,
-                                },
-                            ].map((item) => (
+                            ]).map((item) => (
                                 <div
                                     key={item.title}
                                     className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-xs"
                                 >
                                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-600">
-                                        <item.icon className="h-4 w-4" />
+                                        <ShieldCheck className="h-4 w-4" />
                                     </div>
                                     <div>
                                         <p className="text-sm font-semibold text-slate-900">
@@ -185,22 +182,22 @@ export default function Dashboard() {
                         <div className="mt-6 space-y-4">
                             {[
                                 {
-                                    title: 'Validasi Gate',
-                                    value: 'Stabil',
-                                    note: 'Rata-rata 1.2 detik',
-                                    accent: 'bg-emerald-50 text-emerald-600',
+                                    title: 'Review Mitra',
+                                    value: `${system.pending_reviews} pending`,
+                                    note: 'Perlu verifikasi admin',
+                                    accent: system.pending_reviews > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
                                 },
                                 {
-                                    title: 'Pembayaran',
-                                    value: 'Normal',
-                                    note: '98.7% sukses',
-                                    accent: 'bg-sky-50 text-sky-600',
+                                    title: 'Pembayaran Pending',
+                                    value: `${system.pending_payments} transaksi`,
+                                    note: 'Menunggu pembayaran',
+                                    accent: system.pending_payments > 0 ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700',
                                 },
                                 {
-                                    title: 'Akun Mitra',
-                                    value: 'Terverifikasi',
-                                    note: '12 antrian review',
-                                    accent: 'bg-amber-50 text-amber-600',
+                                    title: 'Payout Pending',
+                                    value: `${system.pending_payouts} mitra`,
+                                    note: 'Perlu persetujuan',
+                                    accent: system.pending_payouts > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
                                 },
                             ].map((item) => (
                                 <div
@@ -230,10 +227,10 @@ export default function Dashboard() {
                                     </div>
                                     <div>
                                         <p className="text-sm font-semibold text-slate-900">
-                                            Trafik puncak
+                                            Pantau real-time
                                         </p>
                                         <p className="text-xs text-slate-500">
-                                            Diperkirakan pukul 19.00 - 21.00 WIB
+                                            Data disinkronkan dari transaksi terbaru.
                                         </p>
                                     </div>
                                 </div>
