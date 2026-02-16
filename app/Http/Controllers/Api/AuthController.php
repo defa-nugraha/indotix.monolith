@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\EmailOtpMail;
+use App\Models\EmailOtp;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -21,6 +26,29 @@ class AuthController extends Controller
             'device_name' => ['nullable', 'string', 'max:255'],
         ]);
 
+        $existingUser = User::query()->where('email', $data['email'])->first();
+
+        if ($existingUser) {
+            if ($existingUser->hasVerifiedEmail()) {
+                return response()->json(['message' => 'Email sudah terdaftar.'], 422);
+            }
+
+            $otp = $this->sendOtp($existingUser);
+            if (! $otp) {
+                return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
+            }
+
+            $token = $existingUser->createToken($data['device_name'] ?? 'mobile')->plainTextToken;
+
+            return response()->json([
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'user' => $existingUser,
+                'requires_otp' => true,
+                'otp_expires_at' => $otp->expires_at?->toIso8601String(),
+            ], 201);
+        }
+
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
@@ -28,12 +56,21 @@ class AuthController extends Controller
             'role' => $data['role'] ?? 'user',
         ]);
 
+        $otp = $this->sendOtp($user);
+        if (! $otp) {
+            $user->delete();
+
+            return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
+        }
+
         $token = $user->createToken($data['device_name'] ?? 'mobile')->plainTextToken;
 
         return response()->json([
             'token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
+            'requires_otp' => true,
+            'otp_expires_at' => $otp->expires_at?->toIso8601String(),
         ], 201);
     }
 
@@ -49,6 +86,25 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             return response()->json(['message' => 'Email atau password salah.'], 422);
+        }
+
+        if (! $user->hasVerifiedEmail()) {
+            $limitKey = sprintf('otp-login-resend:%s|%s', $user->id, $request->ip());
+            if (RateLimiter::tooManyAttempts($limitKey, 3)) {
+                return response()->json(['message' => 'Terlalu banyak permintaan OTP. Coba lagi nanti.'], 429);
+            }
+            RateLimiter::hit($limitKey, 300);
+
+            $otp = $this->sendOtp($user);
+            if (! $otp) {
+                return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
+            }
+
+            return response()->json([
+                'message' => 'Email belum terverifikasi. OTP baru telah dikirim.',
+                'requires_otp' => true,
+                'otp_expires_at' => $otp->expires_at?->toIso8601String(),
+            ], 403);
         }
 
         if ($user->is_suspended) {
@@ -78,5 +134,29 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logout berhasil.',
         ]);
+    }
+
+    private function sendOtp(User $user): ?EmailOtp
+    {
+        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        $otp = EmailOtp::create([
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'code_hash' => Hash::make($code),
+            'expires_at' => now()->addMinutes(10),
+            'attempts' => 0,
+        ]);
+
+        try {
+            Mail::to($user->email)->send(new EmailOtpMail($user->name, $code, 10));
+        } catch (Throwable $exception) {
+            report($exception);
+            $otp->delete();
+
+            return null;
+        }
+
+        return $otp;
     }
 }

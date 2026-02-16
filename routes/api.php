@@ -10,5 +10,7 @@ Route::prefix('auth')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [\App\Http\Controllers\Api\AuthController::class, 'me']);
         Route::post('logout', [\App\Http\Controllers\Api\AuthController::class, 'logout']);
+        Route::post('otp/verify', [\App\Http\Controllers\Api\OtpController::class, 'verify']);
+        Route::post('otp/resend', [\App\Http\Controllers\Api\OtpController::class, 'resend']);
     });
 });
