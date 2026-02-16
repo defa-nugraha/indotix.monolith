@@ -283,7 +283,11 @@ export default function Welcome({
                             {[0, 1, 2].map((idx) => (
                                 <Skeleton
                                     key={idx}
-                                    className={idx === 1 ? 'h-[150px] w-full rounded-2xl' : 'hidden h-[150px] w-full rounded-2xl md:block'}
+                                    className={
+                                        idx === 1
+                                            ? 'h-[150px] w-full rounded-2xl md:h-56'
+                                            : 'hidden h-56 w-full rounded-2xl md:block'
+                                    }
                                 />
                             ))}
                         </div>
@@ -344,7 +348,7 @@ export default function Welcome({
                                 const slide = bannerSlides[slot.index];
                                 const content = (
                                     <div
-                                        className={`h-[150px] w-full transition-opacity duration-300 ${
+                                        className={`h-[150px] w-full transition-opacity duration-300 md:h-56 ${
                                             isBannerTransitioning ? 'opacity-0' : 'opacity-100'
                                         }`}
                                         style={{
