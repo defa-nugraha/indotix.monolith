@@ -42,3 +42,6 @@ Route::middleware('auth:sanctum')->prefix('hotel/bookings')->group(function () {
     Route::get('{booking}', [\App\Http\Controllers\Api\HotelBookingController::class, 'show']);
     Route::post('{booking}/pay', [\App\Http\Controllers\Api\HotelBookingController::class, 'pay']);
 });
+
+Route::middleware('auth:sanctum')->get('history', [\App\Http\Controllers\Api\HistoryController::class, 'index']);
+Route::middleware('auth:sanctum')->get('history/{type}/{booking}', [\App\Http\Controllers\Api\HistoryDetailController::class, 'show']);
