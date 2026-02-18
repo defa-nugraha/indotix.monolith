@@ -99,3 +99,5 @@ Route::middleware('auth:sanctum')->prefix('academy/bookings')->group(function ()
     Route::get('{booking}/ticket', [\App\Http\Controllers\Api\AcademyBookingController::class, 'ticket']);
     Route::get('{booking}/qr', [\App\Http\Controllers\Api\AcademyBookingController::class, 'qr']);
 });
+
+Route::get('banners', [\App\Http\Controllers\Api\PublicBannerController::class, 'index']);
