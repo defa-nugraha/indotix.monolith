@@ -54,3 +54,12 @@ Route::middleware('auth:sanctum')->prefix('wisata/bookings')->group(function () 
     Route::post('{booking}/pay', [\App\Http\Controllers\Api\WisataBookingController::class, 'pay']);
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\WisataBookingController::class, 'cancel']);
 });
+
+Route::middleware('auth:sanctum')->prefix('events/bookings')->group(function () {
+    Route::post('quote', [\App\Http\Controllers\Api\EventBookingController::class, 'quote']);
+    Route::post('/', [\App\Http\Controllers\Api\EventBookingController::class, 'store']);
+    Route::get('/', [\App\Http\Controllers\Api\EventBookingController::class, 'index']);
+    Route::get('{booking}', [\App\Http\Controllers\Api\EventBookingController::class, 'show']);
+    Route::post('{booking}/pay', [\App\Http\Controllers\Api\EventBookingController::class, 'pay']);
+    Route::post('{booking}/cancel', [\App\Http\Controllers\Api\EventBookingController::class, 'cancel']);
+});
