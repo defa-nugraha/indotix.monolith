@@ -63,3 +63,12 @@ Route::middleware('auth:sanctum')->prefix('events/bookings')->group(function () 
     Route::post('{booking}/pay', [\App\Http\Controllers\Api\EventBookingController::class, 'pay']);
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\EventBookingController::class, 'cancel']);
 });
+
+Route::middleware('auth:sanctum')->prefix('special-programs/bookings')->group(function () {
+    Route::post('quote', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'quote']);
+    Route::post('/', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'store']);
+    Route::get('/', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'index']);
+    Route::get('{booking}', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'show']);
+    Route::post('{booking}/pay', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'pay']);
+    Route::post('{booking}/cancel', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'cancel']);
+});
