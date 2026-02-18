@@ -88,3 +88,14 @@ Route::middleware('auth:sanctum')->prefix('souvenir/cart')->group(function () {
     Route::post('remove', [\App\Http\Controllers\Api\SouvenirCartController::class, 'remove']);
     Route::post('clear', [\App\Http\Controllers\Api\SouvenirCartController::class, 'clear']);
 });
+
+Route::middleware('auth:sanctum')->prefix('academy/bookings')->group(function () {
+    Route::post('quote', [\App\Http\Controllers\Api\AcademyBookingController::class, 'quote']);
+    Route::post('/', [\App\Http\Controllers\Api\AcademyBookingController::class, 'store']);
+    Route::get('/', [\App\Http\Controllers\Api\AcademyBookingController::class, 'index']);
+    Route::get('{booking}', [\App\Http\Controllers\Api\AcademyBookingController::class, 'show']);
+    Route::post('{booking}/pay', [\App\Http\Controllers\Api\AcademyBookingController::class, 'pay']);
+    Route::post('{booking}/cancel', [\App\Http\Controllers\Api\AcademyBookingController::class, 'cancel']);
+    Route::get('{booking}/ticket', [\App\Http\Controllers\Api\AcademyBookingController::class, 'ticket']);
+    Route::get('{booking}/qr', [\App\Http\Controllers\Api\AcademyBookingController::class, 'qr']);
+});
