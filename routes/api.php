@@ -107,3 +107,12 @@ Route::middleware('auth:sanctum')->prefix('academy/bookings')->group(function ()
 });
 
 Route::get('banners', [\App\Http\Controllers\Api\PublicBannerController::class, 'index']);
+
+Route::middleware('auth:sanctum')->prefix('chat')->group(function () {
+    Route::get('conversations', [\App\Http\Controllers\Api\ChatController::class, 'index']);
+    Route::post('start', [\App\Http\Controllers\Api\ChatController::class, 'start']);
+    Route::get('conversations/{conversation}', [\App\Http\Controllers\Api\ChatController::class, 'show']);
+    Route::get('conversations/{conversation}/messages', [\App\Http\Controllers\Api\ChatController::class, 'messages']);
+    Route::post('conversations/{conversation}/messages', [\App\Http\Controllers\Api\ChatController::class, 'store']);
+    Route::post('conversations/{conversation}/read', [\App\Http\Controllers\Api\ChatController::class, 'markRead']);
+});
