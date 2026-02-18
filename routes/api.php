@@ -72,3 +72,19 @@ Route::middleware('auth:sanctum')->prefix('special-programs/bookings')->group(fu
     Route::post('{booking}/pay', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'pay']);
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'cancel']);
 });
+
+Route::middleware('auth:sanctum')->prefix('souvenir/orders')->group(function () {
+    Route::post('quote', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'quote']);
+    Route::post('/', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'store']);
+    Route::get('/', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'index']);
+    Route::get('{order}', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'show']);
+    Route::post('{order}/pay', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'pay']);
+});
+
+Route::middleware('auth:sanctum')->prefix('souvenir/cart')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\SouvenirCartController::class, 'index']);
+    Route::post('add', [\App\Http\Controllers\Api\SouvenirCartController::class, 'add']);
+    Route::post('update', [\App\Http\Controllers\Api\SouvenirCartController::class, 'update']);
+    Route::post('remove', [\App\Http\Controllers\Api\SouvenirCartController::class, 'remove']);
+    Route::post('clear', [\App\Http\Controllers\Api\SouvenirCartController::class, 'clear']);
+});
