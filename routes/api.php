@@ -45,6 +45,12 @@ Route::middleware('auth:sanctum')->prefix('hotel/bookings')->group(function () {
 
 Route::middleware('auth:sanctum')->get('history', [\App\Http\Controllers\Api\HistoryController::class, 'index']);
 Route::middleware('auth:sanctum')->get('history/{type}/{booking}', [\App\Http\Controllers\Api\HistoryDetailController::class, 'show']);
+Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
+    Route::get('unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
+    Route::post('read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllRead']);
+    Route::post('{notification}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markRead']);
+});
 
 Route::middleware('auth:sanctum')->prefix('wisata/bookings')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\WisataBookingController::class, 'quote']);
