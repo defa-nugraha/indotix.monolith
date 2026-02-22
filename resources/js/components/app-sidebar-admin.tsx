@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles, ShoppingBag, Link2, MessageCircle } from 'lucide-react';
+import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles, ShoppingBag, Link2, MessageCircle, Star } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -29,6 +29,11 @@ const mainNavItems: NavItem[] = [
         title: 'Live Chat',
         href: '/admin/chat',
         icon: MessageCircle,
+    },
+    {
+        title: 'Ulasan Produk',
+        href: '/admin/reviews',
+        icon: Star,
     },
     {
         title: 'Kelola Mitra',

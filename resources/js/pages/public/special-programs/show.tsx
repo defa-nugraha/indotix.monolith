@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, UserCircle, History as HistoryIcon, Sparkles, ShoppingCart } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+import ReviewSection from '@/components/reviews/review-section';
 
 const navItems = [
     { label: 'Wisata', icon: MapPinned, href: '/wisata' },
@@ -37,7 +38,35 @@ type Program = {
     rules?: Record<string, any> | null;
 };
 
-export default function SpecialProgramShow({ program, items }: { program: Program; items: ProgramItem[] }) {
+type ReviewItem = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    user_name: string;
+    created_at?: string | null;
+    reply?: string | null;
+    reply_by?: string | null;
+    reply_at?: string | null;
+};
+
+type UserReview = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    created_at?: string | null;
+};
+
+export default function SpecialProgramShow({
+    program,
+    items,
+    reviews,
+    userReview,
+}: {
+    program: Program;
+    items: ProgramItem[];
+    reviews: ReviewItem[];
+    userReview?: UserReview | null;
+}) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const [selectedItem, setSelectedItem] = useState<ProgramItem | null>(
         items.find((item) => item.type !== 'hotel') ?? items[0] ?? null,
@@ -146,6 +175,13 @@ export default function SpecialProgramShow({ program, items }: { program: Progra
                         </div>
                     </div>
                 </section>
+
+                <ReviewSection
+                    productType="special_program"
+                    productId={program.id}
+                    reviews={reviews}
+                    userReview={userReview}
+                />
             </main>
         </PublicLayout>
     );

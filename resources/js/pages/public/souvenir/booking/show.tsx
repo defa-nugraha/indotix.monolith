@@ -3,11 +3,14 @@ import { Bell, MessageCircle, UserCircle, History, ShoppingCart, ShoppingBag } f
 import PublicLayout from '@/layouts/public-layout';
 
 type OrderItem = {
+    product_id?: number | null;
+    product_encrypted_id?: string | null;
     name: string;
     sku?: string | null;
     quantity: number;
     unit_price: number;
     subtotal: number;
+    review?: { can_review?: boolean; url?: string | null } | null;
 };
 
 type Order = {
@@ -54,7 +57,17 @@ export default function SouvenirBookingShow({ order }: { order: Order }) {
                                             <div className="font-semibold text-slate-900">{item.name}</div>
                                             <div className="text-xs text-slate-500">{item.quantity} x Rp {item.unit_price.toLocaleString('id-ID')}</div>
                                         </div>
-                                        <div className="font-semibold text-slate-700">Rp {item.subtotal.toLocaleString('id-ID')}</div>
+                                        <div className="text-right">
+                                            <div className="font-semibold text-slate-700">Rp {item.subtotal.toLocaleString('id-ID')}</div>
+                                            {item.review?.can_review && item.review?.url && (
+                                                <Link
+                                                    href={item.review.url}
+                                                    className="mt-2 inline-flex rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
+                                                >
+                                                    Beri Ulasan
+                                                </Link>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>

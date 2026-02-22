@@ -51,6 +51,10 @@ Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
     Route::post('read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllRead']);
     Route::post('{notification}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markRead']);
 });
+Route::middleware('auth:sanctum')->prefix('push')->group(function () {
+    Route::post('tokens', [\App\Http\Controllers\Api\PushTokenController::class, 'store']);
+    Route::post('tokens/revoke', [\App\Http\Controllers\Api\PushTokenController::class, 'revoke']);
+});
 
 Route::middleware('auth:sanctum')->prefix('wisata/bookings')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\WisataBookingController::class, 'quote']);

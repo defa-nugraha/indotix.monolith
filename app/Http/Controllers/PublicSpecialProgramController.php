@@ -9,6 +9,7 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\SpecialProgram;
 use App\Models\SpecialProgramItem;
 use App\Models\WisataTicket;
+use App\Services\ProductReviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -93,6 +94,8 @@ class PublicSpecialProgramController extends Controller
                 'rules' => $program->rules,
             ],
             'items' => $mappedItems,
+            'reviews' => ProductReviewService::publicReviews('special_program', $program->id),
+            'userReview' => ProductReviewService::userReview($request->user()?->id, 'special_program', $program->id),
         ]);
     }
 

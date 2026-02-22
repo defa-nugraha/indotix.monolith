@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart, BookOpen, BadgePercent } from 'lucide-react';
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
+import ReviewSection from '@/components/reviews/review-section';
 
 type AcademyDetail = {
     id: number;
@@ -31,7 +32,35 @@ type TicketItem = {
     refundable?: boolean;
 };
 
-export default function AcademyShow({ class: academyClass, tickets }: { class: AcademyDetail; tickets: TicketItem[] }) {
+type ReviewItem = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    user_name: string;
+    created_at?: string | null;
+    reply?: string | null;
+    reply_by?: string | null;
+    reply_at?: string | null;
+};
+
+type UserReview = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    created_at?: string | null;
+};
+
+export default function AcademyShow({
+    class: academyClass,
+    tickets,
+    reviews,
+    userReview,
+}: {
+    class: AcademyDetail;
+    tickets: TicketItem[];
+    reviews: ReviewItem[];
+    userReview?: UserReview | null;
+}) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
         auth?: { user?: any };
         unread_notifications?: number;
@@ -195,6 +224,8 @@ export default function AcademyShow({ class: academyClass, tickets }: { class: A
                         </div>
                     </section>
                 </div>
+
+                <ReviewSection productType="academy" productId={academyClass.id} reviews={reviews} userReview={userReview} />
             </main>
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">

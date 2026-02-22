@@ -17,6 +17,7 @@ type Booking = {
     ticket: { id: number; name: string };
     class: { id: number; title: string; location?: string | null; start_at?: string | null };
     guest: { name: string; email: string; phone: string };
+    review?: { can_review?: boolean; url?: string | null } | null;
 };
 
 export default function AcademyBookingShow({ booking }: { booking: Booking }) {
@@ -129,6 +130,14 @@ export default function AcademyBookingShow({ booking }: { booking: Booking }) {
                                         'Download Tiket'
                                     )}
                                 </button>
+                            )}
+                            {booking.review?.can_review && booking.review?.url && (
+                                <Link
+                                    href={booking.review.url}
+                                    className="mt-3 block rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
+                                >
+                                    Beri Ulasan
+                                </Link>
                             )}
                         </div>
 

@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
+use App\Services\ProductReviewService;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -225,6 +226,8 @@ class PublicHotelController extends Controller
                 'rooms' => $data['rooms'],
                 'guests' => $data['guests'],
             ],
+            'reviews' => ProductReviewService::publicReviews('hotel', $hotel->id),
+            'userReview' => ProductReviewService::userReview($request->user()?->id, 'hotel', $hotel->id),
         ]);
     }
 

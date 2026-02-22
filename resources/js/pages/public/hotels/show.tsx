@@ -7,6 +7,7 @@ import 'react-date-range/dist/theme/default.css';
 import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Wifi, ParkingSquare, Waves, Dumbbell, Utensils, Coffee, Users, ShieldCheck, Cigarette, CigaretteOff, ShoppingCart, BadgePercent } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
+import ReviewSection from '@/components/reviews/review-section';
 
 type Hotel = {
     id: number;
@@ -45,7 +46,37 @@ type Filters = {
     guests: number;
 };
 
-export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel; roomTypes: RoomType[]; filters: Filters }) {
+type ReviewItem = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    user_name: string;
+    created_at?: string | null;
+    reply?: string | null;
+    reply_by?: string | null;
+    reply_at?: string | null;
+};
+
+type UserReview = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    created_at?: string | null;
+};
+
+export default function HotelShow({
+    hotel,
+    roomTypes,
+    filters,
+    reviews,
+    userReview,
+}: {
+    hotel: Hotel;
+    roomTypes: RoomType[];
+    filters: Filters;
+    reviews: ReviewItem[];
+    userReview?: UserReview | null;
+}) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
         auth?: { user?: unknown };
         unread_notifications?: number;
@@ -528,10 +559,7 @@ export default function HotelShow({ hotel, roomTypes, filters }: { hotel: Hotel;
                     </ul>
                 </section>
 
-                <section id="reviews" className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
-                    <h2 className="text-xl font-semibold text-slate-900">Ulasan</h2>
-                    <div className="mt-3 text-sm text-slate-600">Belum ada ulasan untuk hotel ini.</div>
-                </section>
+                <ReviewSection productType="hotel" productId={hotel.id} reviews={reviews} userReview={userReview} />
                 </>
                 )}
             </div>

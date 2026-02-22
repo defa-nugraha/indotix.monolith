@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { AlertCircle, Banknote, Bell, Building2, CalendarDays, ChevronDown, LayoutGrid, MapPinned, QrCode, Ticket, Users, MessageCircle } from 'lucide-react';
+import { AlertCircle, Banknote, Bell, Building2, CalendarDays, ChevronDown, LayoutGrid, MapPinned, QrCode, Ticket, Users, MessageCircle, Star } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import { useCurrentUrl } from '@/hooks/use-current-url';
@@ -42,7 +42,8 @@ export function AppSidebarMitra() {
         isCurrentUrl('/mitra/hotels') ||
         isCurrentUrl('/mitra/room-types') ||
         isCurrentUrl('/mitra/room-inventories') ||
-        isCurrentUrl('/mitra/bookings');
+        isCurrentUrl('/mitra/bookings') ||
+        isCurrentUrl('/mitra/reviews');
     const isOperationalActive = isCurrentUrl('/mitra/occupancy');
     const isFinanceActive =
         isCurrentUrl('/mitra/finance/summary') ||
@@ -113,6 +114,16 @@ export function AppSidebarMitra() {
                                             >
                                                 <Link href="/mitra/bookings">
                                                     Booking & Transaksi
+                                                </Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl('/mitra/reviews')}
+                                            >
+                                                <Link href="/mitra/reviews">
+                                                    Ulasan Hotel
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -262,6 +273,14 @@ export function AppSidebarMitra() {
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/reviews')}>
+                                    <Link href="/mitra/wisata/reviews">
+                                        <Star />
+                                        <span>Ulasan Wisata</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
                                 <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/disputes')}>
                                     <Link href="/mitra/wisata/disputes">
                                         <AlertCircle />
@@ -345,6 +364,14 @@ export function AppSidebarMitra() {
                                     <Link href="/mitra/events/notifications">
                                         <Bell />
                                         <span>Notifikasi</span>
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/reviews')}>
+                                    <Link href="/mitra/events/reviews">
+                                        <Star />
+                                        <span>Ulasan Event</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
+import ReviewSection from '@/components/reviews/review-section';
 import {
     Bell,
     CalendarCheck,
@@ -54,14 +55,36 @@ type Filters = {
     quantity: number;
 };
 
+type ReviewItem = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    user_name: string;
+    created_at?: string | null;
+    reply?: string | null;
+    reply_by?: string | null;
+    reply_at?: string | null;
+};
+
+type UserReview = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    created_at?: string | null;
+};
+
 export default function WisataShow({
     destination,
     tickets,
     filters,
+    reviews,
+    userReview,
 }: {
     destination: Destination;
     tickets: TicketItem[];
     filters: Filters;
+    reviews: ReviewItem[];
+    userReview?: UserReview | null;
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu, affiliate_referral } = usePage().props as {
         auth?: { user?: { role?: string } };
@@ -427,6 +450,13 @@ export default function WisataShow({
                         )}
                     </div>
                 </section>
+
+                <ReviewSection
+                    productType="wisata"
+                    productId={destination.id}
+                    reviews={reviews}
+                    userReview={userReview}
+                />
             </main>
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">

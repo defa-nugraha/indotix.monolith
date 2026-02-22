@@ -12,6 +12,7 @@ use App\Models\WisataAffiliateLink;
 use App\Models\WisataPayment;
 use App\Models\WisataTicket;
 use App\Services\MidtransService;
+use App\Services\ProductReviewService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -360,8 +361,17 @@ class WisataBookingController extends Controller
 
         $booking->load('ticket');
 
+        $reviewUrl = $booking->mitra_wisata_onboarding_id
+            ? '/wisata/'.Crypt::encryptString((string) $booking->mitra_wisata_onboarding_id)
+            : null;
+
         return Inertia::render('public/wisata/booking/show', [
-            'booking' => $this->bookingPayload($booking),
+            'booking' => array_merge($this->bookingPayload($booking), [
+                'review' => [
+                    'can_review' => ProductReviewService::hasUsedBooking($request->user()->id, 'wisata', (int) $booking->mitra_wisata_onboarding_id),
+                    'url' => $reviewUrl,
+                ],
+            ]),
         ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\EventTicket;
+use App\Services\ProductReviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -102,6 +103,8 @@ class PublicEventController extends Controller
                 'capacity_sold' => $event->capacity_sold,
             ],
             'tickets' => $tickets,
+            'reviews' => ProductReviewService::publicReviews('event', $event->id),
+            'userReview' => ProductReviewService::userReview($request->user()?->id, 'event', $event->id),
         ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademyClass;
 use App\Models\AcademyTicket;
+use App\Services\ProductReviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
@@ -115,6 +116,8 @@ class PublicAcademyController extends Controller
                 'images' => $class->images->map(fn ($image) => Storage::url($image->image_path)),
             ],
             'tickets' => $tickets,
+            'reviews' => ProductReviewService::publicReviews('academy', $class->id),
+            'userReview' => ProductReviewService::userReview($request->user()?->id, 'academy', $class->id),
         ]);
     }
 }

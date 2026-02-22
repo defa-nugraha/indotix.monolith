@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, ShoppingCart, Minus, Plus } from 'lucide-react';
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
+import ReviewSection from '@/components/reviews/review-section';
 
 type Variant = {
     id: number;
@@ -26,7 +27,33 @@ type Product = {
     variants: Variant[];
 };
 
-export default function SouvenirShow({ product }: { product: Product }) {
+type ReviewItem = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    user_name: string;
+    created_at?: string | null;
+    reply?: string | null;
+    reply_by?: string | null;
+    reply_at?: string | null;
+};
+
+type UserReview = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    created_at?: string | null;
+};
+
+export default function SouvenirShow({
+    product,
+    reviews,
+    userReview,
+}: {
+    product: Product;
+    reviews: ReviewItem[];
+    userReview?: UserReview | null;
+}) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as {
         auth?: { user?: { role?: string } };
         unread_notifications?: number;
@@ -161,6 +188,8 @@ export default function SouvenirShow({ product }: { product: Product }) {
                         <p className="mt-3 text-xs text-slate-500">Kamu bisa membeli lebih dari satu souvenir melalui keranjang.</p>
                     </div>
                 </div>
+
+                <ReviewSection productType="souvenir" productId={product.id} reviews={reviews} userReview={userReview} />
             </main>
         </PublicLayout>
     );

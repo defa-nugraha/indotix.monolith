@@ -8,6 +8,7 @@ use App\Models\AcademyPayment;
 use App\Models\AcademyTicket;
 use App\Models\UserNotification;
 use App\Services\MidtransService;
+use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -252,8 +253,17 @@ class AcademyPublicBookingController extends Controller
         $booking = $this->resolveBooking($booking);
         $booking->load(['academyClass', 'ticket', 'payments']);
 
+        $reviewUrl = $booking->academy_class_id
+            ? '/academy/'.Crypt::encryptString((string) $booking->academy_class_id)
+            : null;
+
         return Inertia::render('public/academy/booking/show', [
-            'booking' => $this->buildPaymentPayload($booking),
+            'booking' => array_merge($this->buildPaymentPayload($booking), [
+                'review' => [
+                    'can_review' => ProductReviewService::hasUsedBooking($request->user()->id, 'academy', (int) $booking->academy_class_id),
+                    'url' => $reviewUrl,
+                ],
+            ]),
         ]);
     }
 

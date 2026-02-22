@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\RoomType;
 use App\Services\BookingService;
 use App\Services\MidtransService;
+use App\Services\ProductReviewService;
 use App\Models\UserNotification;
 use App\Models\Voucher;
 use Illuminate\Http\RedirectResponse;
@@ -404,8 +405,17 @@ class BookingController extends Controller
 
         $booking->load('hotel', 'rooms.roomType', 'payments');
 
+        $reviewUrl = $booking->hotel_id
+            ? '/stay/hotels/'.Crypt::encryptString((string) $booking->hotel_id)
+            : null;
+
         return Inertia::render('public/booking/show', [
-            'booking' => $this->bookingPayload($booking),
+            'booking' => array_merge($this->bookingPayload($booking), [
+                'review' => [
+                    'can_review' => ProductReviewService::hasUsedBooking($request->user()->id, 'hotel', (int) $booking->hotel_id),
+                    'url' => $reviewUrl,
+                ],
+            ]),
         ]);
     }
 

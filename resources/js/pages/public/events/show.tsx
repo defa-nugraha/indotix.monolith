@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart, BadgePercent } from 'lucide-react';
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
+import ReviewSection from '@/components/reviews/review-section';
 
 type EventDetail = {
     id: number;
@@ -28,7 +29,35 @@ type TicketItem = {
     available: number;
 };
 
-export default function EventShow({ event, tickets }: { event: EventDetail; tickets: TicketItem[] }) {
+type ReviewItem = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    user_name: string;
+    created_at?: string | null;
+    reply?: string | null;
+    reply_by?: string | null;
+    reply_at?: string | null;
+};
+
+type UserReview = {
+    id: number;
+    rating: number;
+    comment?: string | null;
+    created_at?: string | null;
+};
+
+export default function EventShow({
+    event,
+    tickets,
+    reviews,
+    userReview,
+}: {
+    event: EventDetail;
+    tickets: TicketItem[];
+    reviews: ReviewItem[];
+    userReview?: UserReview | null;
+}) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
         auth?: { user?: any };
         unread_notifications?: number;
@@ -174,6 +203,8 @@ export default function EventShow({ event, tickets }: { event: EventDetail; tick
                         </div>
                     </section>
                 </div>
+
+                <ReviewSection productType="event" productId={event.id} reviews={reviews} userReview={userReview} />
             </main>
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">

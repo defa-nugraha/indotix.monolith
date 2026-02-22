@@ -8,6 +8,7 @@ use App\Models\SouvenirProduct;
 use App\Models\SouvenirVariant;
 use App\Models\UserNotification;
 use App\Services\MidtransService;
+use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -229,13 +230,15 @@ class SouvenirBookingController extends Controller
         ]);
     }
 
-    public function show(string $order): Response
+    public function show(Request $request, string $order): Response
     {
         $orderId = $this->decryptId($order);
 
         $order = SouvenirOrder::query()
             ->with(['items'])
             ->findOrFail($orderId);
+
+        $userId = $request->user()?->id;
 
         return Inertia::render('public/souvenir/booking/show', [
             'order' => [
@@ -247,11 +250,23 @@ class SouvenirBookingController extends Controller
                 'total_price' => $order->total_price,
                 'shipping_address' => $order->shipping_address,
                 'items' => $order->items->map(fn ($item) => [
+                    'product_id' => $item->product_id,
+                    'product_encrypted_id' => $item->product_id
+                        ? Crypt::encryptString((string) $item->product_id)
+                        : null,
                     'name' => $item->product_name,
                     'sku' => $item->sku,
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
                     'subtotal' => $item->subtotal,
+                    'review' => [
+                        'can_review' => $userId
+                            ? ProductReviewService::hasUsedBooking($userId, 'souvenir', (int) $item->product_id)
+                            : false,
+                        'url' => $item->product_id
+                            ? '/souvenir/'.Crypt::encryptString((string) $item->product_id)
+                            : null,
+                    ],
                 ]),
             ],
         ]);

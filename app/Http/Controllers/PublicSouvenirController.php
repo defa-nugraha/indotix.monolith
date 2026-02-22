@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\SouvenirCategory;
 use App\Models\SouvenirProduct;
+use App\Services\ProductReviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
@@ -55,7 +56,7 @@ class PublicSouvenirController extends Controller
         ]);
     }
 
-    public function show(string $product): Response
+    public function show(Request $request, string $product): Response
     {
         try {
             $productId = Crypt::decryptString($product);
@@ -92,6 +93,8 @@ class PublicSouvenirController extends Controller
                     'is_active' => $variant->is_active,
                 ]),
             ],
+            'reviews' => ProductReviewService::publicReviews('souvenir', $product->id),
+            'userReview' => ProductReviewService::userReview($request->user()?->id, 'souvenir', $product->id),
         ]);
     }
 }

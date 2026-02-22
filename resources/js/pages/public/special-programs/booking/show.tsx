@@ -15,6 +15,7 @@ type Booking = {
     program: { name?: string | null };
     item: { name: string; type: string; city_name?: string | null };
     guest: { name: string; email: string; phone: string };
+    review?: { can_review?: boolean; url?: string | null } | null;
 };
 
 type Props = {
@@ -113,6 +114,14 @@ export default function SpecialProgramBookingShow({ booking }: Props) {
                                         'Download Tiket'
                                     )}
                                 </button>
+                            )}
+                            {booking.review?.can_review && booking.review?.url && (
+                                <Link
+                                    href={booking.review.url}
+                                    className="mt-3 block rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
+                                >
+                                    Beri Ulasan
+                                </Link>
                             )}
                         </div>
                     </aside>

@@ -7,6 +7,7 @@ use App\Models\WisataAffiliateClick;
 use App\Models\WisataAffiliateLink;
 use App\Models\WisataBooking;
 use App\Models\WisataTicket;
+use App\Services\ProductReviewService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -183,6 +184,8 @@ class PublicWisataController extends Controller
                 'longitude' => $this->extractLongitude($destination->maps_pin_url),
             ],
             'tickets' => $tickets,
+            'reviews' => ProductReviewService::publicReviews('wisata', $destination->id),
+            'userReview' => ProductReviewService::userReview($request->user()?->id, 'wisata', $destination->id),
         ]);
 
         $affiliateLink = $request->attributes->get('affiliate_link');

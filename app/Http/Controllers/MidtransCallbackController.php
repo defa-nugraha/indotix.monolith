@@ -17,8 +17,10 @@ use App\Models\WisataAffiliateCommissionItem;
 use App\Models\SouvenirOrder;
 use App\Services\BookingService;
 use App\Services\MidtransService;
+use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 class MidtransCallbackController extends Controller
 {
@@ -130,16 +132,29 @@ class MidtransCallbackController extends Controller
                 'payment_status' => $status,
             ]);
 
+            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $booking->id);
             UserNotification::create([
                 'user_id' => $booking->user_id,
                 'title' => 'Pembayaran berhasil',
                 'message' => 'Pembayaran kamu sudah diterima. Booking sudah aktif.',
                 'type' => 'payment_paid',
                 'data' => [
-                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $booking->id),
+                    'booking_id' => $encryptedId,
                     'category' => 'hotel',
                 ],
             ]);
+
+            $this->sendPaymentPush(
+                $booking->user_id,
+                'Pembayaran berhasil',
+                'Pembayaran kamu sudah diterima. Booking sudah aktif.',
+                [
+                    'booking_id' => $encryptedId,
+                    'type' => 'hotel',
+                    'category' => 'hotel',
+                    'notification_type' => 'payment_paid',
+                ]
+            );
         }
 
         if ($wisataBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
@@ -148,17 +163,30 @@ class MidtransCallbackController extends Controller
                 'payment_status' => $status,
             ]);
 
+            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id);
             UserNotification::create([
                 'user_id' => $wisataBooking->user_id,
                 'title' => 'Pembayaran tiket berhasil',
                 'message' => 'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
                 'type' => 'wisata_payment_paid',
                 'data' => [
-                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id),
+                    'booking_id' => $encryptedId,
                     'type' => 'wisata',
                     'category' => 'wisata',
                 ],
             ]);
+
+            $this->sendPaymentPush(
+                $wisataBooking->user_id,
+                'Pembayaran tiket berhasil',
+                'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
+                [
+                    'booking_id' => $encryptedId,
+                    'type' => 'wisata',
+                    'category' => 'wisata',
+                    'notification_type' => 'wisata_payment_paid',
+                ]
+            );
 
             $commissionItems = WisataAffiliateCommissionItem::query()
                 ->where('wisata_booking_id', $wisataBooking->id)
@@ -194,17 +222,30 @@ class MidtransCallbackController extends Controller
                 $eventBooking->event?->increment('capacity_sold', $eventBooking->quantity);
             }
 
+            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id);
             UserNotification::create([
                 'user_id' => $eventBooking->user_id,
                 'title' => 'Pembayaran event berhasil',
                 'message' => 'Pembayaran kamu sudah diterima. Tiket event aktif.',
                 'type' => 'event_payment_paid',
                 'data' => [
-                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id),
+                    'booking_id' => $encryptedId,
                     'type' => 'event',
                     'category' => 'event',
                 ],
             ]);
+
+            $this->sendPaymentPush(
+                $eventBooking->user_id,
+                'Pembayaran event berhasil',
+                'Pembayaran kamu sudah diterima. Tiket event aktif.',
+                [
+                    'booking_id' => $encryptedId,
+                    'type' => 'event',
+                    'category' => 'event',
+                    'notification_type' => 'event_payment_paid',
+                ]
+            );
         }
 
         if ($academyBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
@@ -218,17 +259,30 @@ class MidtransCallbackController extends Controller
                 $academyBooking->academyClass?->increment('capacity_sold', $academyBooking->quantity);
             }
 
+            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $academyBooking->id);
             UserNotification::create([
                 'user_id' => $academyBooking->user_id,
                 'title' => 'Pembayaran kelas berhasil',
                 'message' => 'Pembayaran kamu sudah diterima. Tiket kelas aktif.',
                 'type' => 'academy_payment_paid',
                 'data' => [
-                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $academyBooking->id),
+                    'booking_id' => $encryptedId,
                     'type' => 'academy',
                     'category' => 'academy',
                 ],
             ]);
+
+            $this->sendPaymentPush(
+                $academyBooking->user_id,
+                'Pembayaran kelas berhasil',
+                'Pembayaran kamu sudah diterima. Tiket kelas aktif.',
+                [
+                    'booking_id' => $encryptedId,
+                    'type' => 'academy',
+                    'category' => 'academy',
+                    'notification_type' => 'academy_payment_paid',
+                ]
+            );
         }
 
         if ($specialBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
@@ -237,16 +291,29 @@ class MidtransCallbackController extends Controller
                 'payment_status' => $status,
             ]);
 
+            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id);
             UserNotification::create([
                 'user_id' => $specialBooking->user_id,
                 'title' => 'Pembayaran special program berhasil',
                 'message' => 'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
                 'type' => 'special_program_payment_paid',
                 'data' => [
-                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id),
+                    'booking_id' => $encryptedId,
                     'category' => 'special_program',
                 ],
             ]);
+
+            $this->sendPaymentPush(
+                $specialBooking->user_id,
+                'Pembayaran special program berhasil',
+                'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
+                [
+                    'booking_id' => $encryptedId,
+                    'type' => 'special_program',
+                    'category' => 'special_program',
+                    'notification_type' => 'special_program_payment_paid',
+                ]
+            );
         }
 
         if ($souvenirOrder && in_array($status, ['settlement', 'capture', 'success'], true)) {
@@ -255,16 +322,29 @@ class MidtransCallbackController extends Controller
                 'payment_status' => $status,
             ]);
 
+            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $souvenirOrder->id);
             UserNotification::create([
                 'user_id' => $souvenirOrder->user_id,
                 'title' => 'Pembayaran souvenir berhasil',
                 'message' => 'Pembayaran kamu sudah diterima. Pesanan souvenir diproses.',
                 'type' => 'souvenir_payment_paid',
                 'data' => [
-                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $souvenirOrder->id),
+                    'booking_id' => $encryptedId,
                     'category' => 'souvenir',
                 ],
             ]);
+
+            $this->sendPaymentPush(
+                $souvenirOrder->user_id,
+                'Pembayaran souvenir berhasil',
+                'Pembayaran kamu sudah diterima. Pesanan souvenir diproses.',
+                [
+                    'booking_id' => $encryptedId,
+                    'type' => 'souvenir',
+                    'category' => 'souvenir',
+                    'notification_type' => 'souvenir_payment_paid',
+                ]
+            );
         }
 
         if ($booking && in_array($status, ['cancel', 'expire', 'deny'], true)) {
@@ -426,5 +506,17 @@ class MidtransCallbackController extends Controller
         }
 
         return response('OK', 200);
+    }
+
+    private function sendPaymentPush(int $userId, string $title, string $message, array $data = []): void
+    {
+        try {
+            app(PushNotificationService::class)->sendToUser($userId, $title, $message, $data);
+        } catch (\Throwable $exception) {
+            Log::warning('Push notification failed', [
+                'user_id' => $userId,
+                'error' => $exception->getMessage(),
+            ]);
+        }
     }
 }

@@ -41,6 +41,7 @@ type Booking = {
     guest_phone?: string | null;
     rooms: { room_type?: string | null; rooms_count: number; price_per_night?: number | null; subtotal?: number | null }[];
     payment?: { status?: string | null; payment_type?: string | null } | null;
+    review?: { can_review?: boolean; url?: string | null } | null;
 };
 
 export default function BookingShow({ booking }: { booking: Booking }) {
@@ -205,6 +206,14 @@ export default function BookingShow({ booking }: { booking: Booking }) {
                             >
                                 Download Invoice
                             </a>
+                            {booking.review?.can_review && booking.review?.url && (
+                                <Link
+                                    href={booking.review.url}
+                                    className="mt-3 block rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
+                                >
+                                    Beri Ulasan
+                                </Link>
+                            )}
                             {booking.status === 'pending_payment' && (
                                 <button
                                     type="button"

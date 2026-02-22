@@ -136,6 +136,13 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::get('admin/events/reviews', [\App\Http\Controllers\Admin\EventReviewController::class, 'index'])
         ->name('admin.events.reviews.index');
 
+    Route::get('admin/reviews', [\App\Http\Controllers\Admin\ProductReviewController::class, 'index'])
+        ->name('admin.reviews.index');
+    Route::post('admin/reviews/{review}/reply', [\App\Http\Controllers\Admin\ProductReviewController::class, 'reply'])
+        ->name('admin.reviews.reply');
+    Route::delete('admin/reviews/{review}', [\App\Http\Controllers\Admin\ProductReviewController::class, 'destroy'])
+        ->name('admin.reviews.destroy');
+
     Route::get('admin/events/exceptions', [\App\Http\Controllers\Admin\EventExceptionController::class, 'index'])
         ->name('admin.events.exceptions.index');
     Route::post('admin/events/{event}/exception', [\App\Http\Controllers\Admin\EventExceptionController::class, 'updateEvent'])
@@ -571,6 +578,15 @@ Route::prefix('mitra')
             ->name('finance.bank.edit');
         Route::patch('finance/bank', [\App\Http\Controllers\Mitra\BankAccountController::class, 'update'])
             ->name('finance.bank.update');
+        Route::get('reviews', [\App\Http\Controllers\Mitra\ReviewController::class, 'index'])
+            ->defaults('type', 'hotel')
+            ->name('reviews.index');
+        Route::post('reviews/{review}/reply', [\App\Http\Controllers\Mitra\ReviewController::class, 'reply'])
+            ->defaults('type', 'hotel')
+            ->name('reviews.reply');
+        Route::delete('reviews/{review}', [\App\Http\Controllers\Mitra\ReviewController::class, 'destroy'])
+            ->defaults('type', 'hotel')
+            ->name('reviews.destroy');
     });
 
 Route::prefix('mitra/wisata')
@@ -619,6 +635,15 @@ Route::prefix('mitra/wisata')
 
         Route::get('notifications', [\App\Http\Controllers\Mitra\Wisata\NotificationController::class, 'index'])
             ->name('notifications.index');
+        Route::get('reviews', [\App\Http\Controllers\Mitra\ReviewController::class, 'index'])
+            ->defaults('type', 'wisata')
+            ->name('reviews.index');
+        Route::post('reviews/{review}/reply', [\App\Http\Controllers\Mitra\ReviewController::class, 'reply'])
+            ->defaults('type', 'wisata')
+            ->name('reviews.reply');
+        Route::delete('reviews/{review}', [\App\Http\Controllers\Mitra\ReviewController::class, 'destroy'])
+            ->defaults('type', 'wisata')
+            ->name('reviews.destroy');
 
         Route::get('disputes', [\App\Http\Controllers\Mitra\Wisata\DisputeController::class, 'index'])
             ->name('disputes.index');
@@ -677,6 +702,15 @@ Route::prefix('mitra/events')
 
         Route::get('notifications', [\App\Http\Controllers\Mitra\Event\NotificationController::class, 'index'])
             ->name('notifications.index');
+        Route::get('reviews', [\App\Http\Controllers\Mitra\ReviewController::class, 'index'])
+            ->defaults('type', 'event')
+            ->name('reviews.index');
+        Route::post('reviews/{review}/reply', [\App\Http\Controllers\Mitra\ReviewController::class, 'reply'])
+            ->defaults('type', 'event')
+            ->name('reviews.reply');
+        Route::delete('reviews/{review}', [\App\Http\Controllers\Mitra\ReviewController::class, 'destroy'])
+            ->defaults('type', 'event')
+            ->name('reviews.destroy');
 
         Route::get('disputes', [\App\Http\Controllers\Mitra\Event\DisputeController::class, 'index'])
             ->name('disputes.index');
@@ -703,6 +737,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('room-types.images.destroy');
     Route::delete('hotels/{hotel}/images/{hotelImage}', [\App\Http\Controllers\HotelController::class, 'destroyImage'])
         ->name('hotels.images.destroy');
+    Route::post('reviews', [\App\Http\Controllers\PublicReviewController::class, 'store'])
+        ->name('reviews.store');
 });
 
 Route::middleware(['auth'])->group(function () {

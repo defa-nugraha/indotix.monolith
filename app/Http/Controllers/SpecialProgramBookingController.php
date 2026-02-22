@@ -12,6 +12,7 @@ use App\Models\SpecialProgramPayment;
 use App\Models\WisataTicket;
 use App\Models\UserNotification;
 use App\Services\MidtransService;
+use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -255,8 +256,17 @@ class SpecialProgramBookingController extends Controller
         }
         $booking->load('payments');
 
+        $reviewUrl = $booking->special_program_id
+            ? '/special-programs/'.Crypt::encryptString((string) $booking->special_program_id)
+            : null;
+
         return Inertia::render('public/special-programs/booking/show', [
-            'booking' => $this->buildPayload($booking),
+            'booking' => array_merge($this->buildPayload($booking), [
+                'review' => [
+                    'can_review' => ProductReviewService::hasUsedBooking($request->user()->id, 'special_program', (int) $booking->special_program_id),
+                    'url' => $reviewUrl,
+                ],
+            ]),
         ]);
     }
 

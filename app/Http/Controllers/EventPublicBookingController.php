@@ -8,6 +8,7 @@ use App\Models\EventPayment;
 use App\Models\EventTicket;
 use App\Models\UserNotification;
 use App\Services\MidtransService;
+use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -253,8 +254,17 @@ class EventPublicBookingController extends Controller
         $booking = $this->resolveBooking($booking);
         $booking->load(['event', 'ticket', 'payments']);
 
+        $reviewUrl = $booking->event_id
+            ? '/events/'.Crypt::encryptString((string) $booking->event_id)
+            : null;
+
         return Inertia::render('public/events/booking/show', [
-            'booking' => $this->buildPaymentPayload($booking),
+            'booking' => array_merge($this->buildPaymentPayload($booking), [
+                'review' => [
+                    'can_review' => ProductReviewService::hasUsedBooking($request->user()->id, 'event', (int) $booking->event_id),
+                    'url' => $reviewUrl,
+                ],
+            ]),
         ]);
     }
 
