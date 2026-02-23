@@ -56,6 +56,11 @@ Route::middleware('auth:sanctum')->prefix('push')->group(function () {
     Route::post('tokens/revoke', [\App\Http\Controllers\Api\PushTokenController::class, 'revoke']);
 });
 
+Route::middleware('auth:sanctum')->prefix('reviews')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\ReviewController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\ReviewController::class, 'store']);
+});
+
 Route::middleware('auth:sanctum')->prefix('wisata/bookings')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\WisataBookingController::class, 'quote']);
     Route::post('/', [\App\Http\Controllers\Api\WisataBookingController::class, 'store']);
