@@ -35,6 +35,7 @@ class BlogPostController extends Controller
                 'label' => $post->label,
                 'category' => $post->category?->name,
                 'tags' => $post->tags->pluck('name'),
+                'cover_image_url' => $post->cover_image_path ? Storage::url($post->cover_image_path) : null,
                 'published_at' => $post->published_at?->toDateTimeString(),
                 'author' => $post->author?->name,
             ];

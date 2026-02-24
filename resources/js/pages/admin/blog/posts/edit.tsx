@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import { loadCkeditor } from '@/lib/ckeditor-loader';
 
 type Category = { id: number; name: string };
 type Tag = { id: number; name: string };
@@ -36,7 +37,9 @@ export default function BlogPostEdit({ post, categories = [], tags = [] }: { pos
     ];
 
     const editorRef = useRef<HTMLTextAreaElement | null>(null);
+    const editorInstanceRef = useRef<any>(null);
     const [isEditorReady, setIsEditorReady] = useState(false);
+    const [editorError, setEditorError] = useState<string | null>(null);
 
     const form = useForm({
         title: post.title ?? '',
@@ -52,33 +55,37 @@ export default function BlogPostEdit({ post, categories = [], tags = [] }: { pos
         meta_description: post.meta_description ?? '',
         meta_keywords: post.meta_keywords ?? '',
         cover_image: null as File | null,
+        _method: 'put',
     });
 
-    useEffect(() => {
-        let editorInstance: any;
-        let mounted = true;
-
-        const initEditor = async () => {
-            if (!editorRef.current || !window.ClassicEditor) return;
-            editorInstance = await window.ClassicEditor.create(editorRef.current, {
+    const initEditor = async () => {
+        if (editorInstanceRef.current) return;
+        setEditorError(null);
+        try {
+            await loadCkeditor();
+            if (!editorRef.current || !window.ClassicEditor) {
+                setEditorError('Editor belum tersedia.');
+                return;
+            }
+            editorInstanceRef.current = await window.ClassicEditor.create(editorRef.current, {
                 toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo'],
             });
-            editorInstance.setData(form.data.content ?? '');
-            editorInstance.model.document.on('change:data', () => {
-                form.setData('content', editorInstance.getData());
+            editorInstanceRef.current.setData(form.data.content ?? '');
+            editorInstanceRef.current.model.document.on('change:data', () => {
+                form.setData('content', editorInstanceRef.current.getData());
             });
-            if (mounted) {
-                setIsEditorReady(true);
-            }
-        };
+            setIsEditorReady(true);
+        } catch (error) {
+            setEditorError('Gagal memuat editor. Coba muat ulang.');
+        }
+    };
 
-        const timer = window.setTimeout(initEditor, 200);
-
+    useEffect(() => {
+        initEditor();
         return () => {
-            mounted = false;
-            window.clearTimeout(timer);
-            if (editorInstance) {
-                editorInstance.destroy();
+            if (editorInstanceRef.current) {
+                editorInstanceRef.current.destroy();
+                editorInstanceRef.current = null;
             }
         };
     }, []);
@@ -86,15 +93,12 @@ export default function BlogPostEdit({ post, categories = [], tags = [] }: { pos
     const submit = () => {
         form.post(`/admin/blog/posts/${post.id}`, {
             forceFormData: true,
-            _method: 'put',
         });
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Edit Artikel Jelajah Indotix">
-                <script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
-            </Head>
+            <Head title="Edit Artikel Jelajah Indotix" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex items-center justify-between">
@@ -160,7 +164,15 @@ export default function BlogPostEdit({ post, categories = [], tags = [] }: { pos
                     <div className="mt-6">
                         <label className="text-sm font-semibold text-slate-700">Konten</label>
                         <textarea ref={editorRef} className="mt-2 h-64 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        {!isEditorReady && <div className="mt-2 text-xs text-slate-400">Memuat editor...</div>}
+                        {!isEditorReady && !editorError && <div className="mt-2 text-xs text-slate-400">Memuat editor...</div>}
+                        {editorError && (
+                            <div className="mt-2 flex items-center gap-3 text-xs text-rose-500">
+                                <span>{editorError}</span>
+                                <button type="button" className="font-semibold text-sky-600" onClick={initEditor}>
+                                    Coba lagi
+                                </button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">

@@ -12,6 +12,7 @@ type Post = {
     label?: string | null;
     category?: string | null;
     tags?: string[];
+    cover_image_url?: string | null;
     published_at?: string | null;
     author?: string | null;
 };
@@ -92,6 +93,7 @@ export default function BlogPostsIndex() {
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                                 <tr>
+                                    <th className="px-4 py-3 text-left">Cover</th>
                                     <th className="px-4 py-3 text-left">Judul</th>
                                     <th className="px-4 py-3 text-left">Kategori</th>
                                     <th className="px-4 py-3 text-left">Label/Tags</th>
@@ -103,6 +105,17 @@ export default function BlogPostsIndex() {
                             <tbody>
                                 {posts.data.map((item) => (
                                     <tr key={item.id} className="border-t border-slate-100">
+                                        <td className="px-4 py-3">
+                                            {item.cover_image_url ? (
+                                                <img
+                                                    src={item.cover_image_url}
+                                                    alt={item.title}
+                                                    className="h-12 w-16 rounded-lg object-cover"
+                                                />
+                                            ) : (
+                                                <div className="h-12 w-16 rounded-lg bg-slate-100" />
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <div className="font-semibold text-slate-900">{item.title}</div>
                                             <div className="text-xs text-slate-500">{item.slug}</div>
@@ -135,7 +148,7 @@ export default function BlogPostsIndex() {
                                 ))}
                                 {posts.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-6 text-center text-sm text-slate-500">
+                                        <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-500">
                                             Belum ada artikel.
                                         </td>
                                     </tr>
