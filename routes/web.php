@@ -106,6 +106,37 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::post('admin/souvenir/settings', [\App\Http\Controllers\Admin\SouvenirSettingController::class, 'update'])
         ->name('admin.souvenir.settings.update');
 
+    Route::get('admin/blog/posts', [\App\Http\Controllers\Admin\BlogPostController::class, 'index'])
+        ->name('admin.blog.posts.index');
+    Route::get('admin/blog/posts/create', [\App\Http\Controllers\Admin\BlogPostController::class, 'create'])
+        ->name('admin.blog.posts.create');
+    Route::post('admin/blog/posts', [\App\Http\Controllers\Admin\BlogPostController::class, 'store'])
+        ->name('admin.blog.posts.store');
+    Route::get('admin/blog/posts/{post}/edit', [\App\Http\Controllers\Admin\BlogPostController::class, 'edit'])
+        ->name('admin.blog.posts.edit');
+    Route::put('admin/blog/posts/{post}', [\App\Http\Controllers\Admin\BlogPostController::class, 'update'])
+        ->name('admin.blog.posts.update');
+    Route::delete('admin/blog/posts/{post}', [\App\Http\Controllers\Admin\BlogPostController::class, 'destroy'])
+        ->name('admin.blog.posts.destroy');
+
+    Route::get('admin/blog/categories', [\App\Http\Controllers\Admin\BlogCategoryController::class, 'index'])
+        ->name('admin.blog.categories.index');
+    Route::post('admin/blog/categories', [\App\Http\Controllers\Admin\BlogCategoryController::class, 'store'])
+        ->name('admin.blog.categories.store');
+    Route::put('admin/blog/categories/{category}', [\App\Http\Controllers\Admin\BlogCategoryController::class, 'update'])
+        ->name('admin.blog.categories.update');
+    Route::delete('admin/blog/categories/{category}', [\App\Http\Controllers\Admin\BlogCategoryController::class, 'destroy'])
+        ->name('admin.blog.categories.destroy');
+
+    Route::get('admin/blog/tags', [\App\Http\Controllers\Admin\BlogTagController::class, 'index'])
+        ->name('admin.blog.tags.index');
+    Route::post('admin/blog/tags', [\App\Http\Controllers\Admin\BlogTagController::class, 'store'])
+        ->name('admin.blog.tags.store');
+    Route::put('admin/blog/tags/{tag}', [\App\Http\Controllers\Admin\BlogTagController::class, 'update'])
+        ->name('admin.blog.tags.update');
+    Route::delete('admin/blog/tags/{tag}', [\App\Http\Controllers\Admin\BlogTagController::class, 'destroy'])
+        ->name('admin.blog.tags.destroy');
+
     Route::get('admin/events/organizers', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'index'])
         ->name('admin.events.organizers.index');
     Route::get('admin/events/organizers/{organizer}', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'show'])
@@ -766,6 +797,10 @@ Route::get('/special-programs', [\App\Http\Controllers\PublicSpecialProgramContr
     ->name('special-programs.search');
 Route::get('/special-programs/{program}', [\App\Http\Controllers\PublicSpecialProgramController::class, 'show'])
     ->name('special-programs.show');
+Route::get('/jelajah', [\App\Http\Controllers\PublicBlogController::class, 'index'])
+    ->name('public.blog.index');
+Route::get('/jelajah/{slug}', [\App\Http\Controllers\PublicBlogController::class, 'show'])
+    ->name('public.blog.show');
 
 Route::get('/souvenir/cart', [\App\Http\Controllers\SouvenirCartController::class, 'index'])
     ->name('souvenir.cart');

@@ -79,6 +79,15 @@ type SouvenirCard = {
     price?: number | null;
     image_url?: string | null;
 };
+type BlogPost = {
+    id: number;
+    title: string;
+    slug: string;
+    excerpt?: string | null;
+    label?: string | null;
+    cover_image_url?: string | null;
+    published_at?: string | null;
+};
 type Contact = {
     company_name?: string | null;
     address?: string | null;
@@ -105,6 +114,7 @@ export default function Welcome({
     eventCards = [],
     academyCards = [],
     souvenirCards = [],
+    blogPosts = [],
 }: {
     canRegister?: boolean;
     banners?: Banner[];
@@ -118,6 +128,7 @@ export default function Welcome({
     eventCards?: EventCard[];
     academyCards?: AcademyCard[];
     souvenirCards?: SouvenirCard[];
+    blogPosts?: BlogPost[];
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
         auth?: { user?: unknown };
@@ -816,6 +827,47 @@ export default function Welcome({
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </section>
+
+                <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-semibold text-slate-900">Jelajah Indotix</h2>
+                            <p className="text-sm text-slate-500">Inspirasi perjalanan terbaru dari tim kami.</p>
+                        </div>
+                        <Link href="/jelajah" className="text-sm font-semibold text-sky-600">
+                            Lihat Semua →
+                        </Link>
+                    </div>
+                    <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        {blogPosts.map((post) => (
+                            <div key={post.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm">
+                                <div className="h-32 bg-slate-100">
+                                    {post.cover_image_url ? (
+                                        <img src={post.cover_image_url} alt={post.title} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <div className="h-full w-full bg-gradient-to-br from-sky-200 to-sky-50" />
+                                    )}
+                                </div>
+                                <div className="p-4">
+                                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                                        {post.label && <span className="rounded-full bg-sky-50 px-2 py-0.5 text-sky-600">{post.label}</span>}
+                                        {post.published_at && <span>{post.published_at}</span>}
+                                    </div>
+                                    <h3 className="mt-2 text-sm font-semibold text-slate-900">{post.title}</h3>
+                                    {post.excerpt && <p className="mt-2 text-xs text-slate-500 line-clamp-2">{post.excerpt}</p>}
+                                    <Link href={`/jelajah/${post.slug}`} className="mt-3 inline-flex text-xs font-semibold text-sky-600">
+                                        Baca Selengkapnya →
+                                    </Link>
+                                </div>
+                            </div>
+                        ))}
+                        {blogPosts.length === 0 && (
+                            <div className="col-span-full rounded-2xl border border-slate-100 p-6 text-center text-sm text-slate-500">
+                                Belum ada artikel terbaru.
+                            </div>
+                        )}
                     </div>
                 </section>
 

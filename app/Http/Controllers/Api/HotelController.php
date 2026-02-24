@@ -215,6 +215,7 @@ class HotelController extends Controller
                 'check_out_time' => $hotel->check_out_time,
                 'latitude' => $hotel->latitude,
                 'longitude' => $hotel->longitude,
+                'maps_url' => $this->buildMapsUrl($hotel->latitude, $hotel->longitude),
                 'facilities' => $hotel->facilities->pluck('facility_code'),
                 'images' => $hotel->images->map(fn ($image) => [
                     'id' => $image->id,
@@ -255,5 +256,14 @@ class HotelController extends Controller
 
         $period = CarbonPeriod::create($start, $end->copy()->subDay());
         return collect($period)->map(fn ($date) => $date->toDateString())->all();
+    }
+
+    private function buildMapsUrl(?float $latitude, ?float $longitude): ?string
+    {
+        if ($latitude === null || $longitude === null) {
+            return null;
+        }
+
+        return sprintf('https://www.google.com/maps?q=%s,%s', $latitude, $longitude);
     }
 }

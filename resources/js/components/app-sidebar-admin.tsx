@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles, ShoppingBag, Link2, MessageCircle, Star } from 'lucide-react';
+import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles, ShoppingBag, Link2, MessageCircle, Star, BookOpen } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -90,6 +90,11 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
         isCurrentUrl('/admin/system/notifications');
+    const isBlogSectionActive =
+        isCurrentUrl('/admin/blog/posts') ||
+        isCurrentUrl('/admin/blog/posts/create') ||
+        isCurrentUrl('/admin/blog/categories') ||
+        isCurrentUrl('/admin/blog/tags');
     const isSpecialProgramSectionActive =
         isCurrentUrl('/admin/special-programs') ||
         isCurrentUrl('/admin/special-programs/scope') ||
@@ -239,6 +244,36 @@ export function AppSidebarAdmin() {
                                             <Link href="/admin/marketing/vouchers">
                                                 Promo & Voucher
                                             </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isBlogSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <BookOpen />
+                                    <span>Jelajah Indotix</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/blog/posts')}>
+                                            <Link href="/admin/blog/posts">Artikel</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/blog/categories')}>
+                                            <Link href="/admin/blog/categories">Kategori</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/blog/tags')}>
+                                            <Link href="/admin/blog/tags">Tags</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademyClass;
 use App\Models\AcademyTicket;
+use App\Models\BlogPost;
 use App\Models\Event;
 use App\Models\EventTicket;
 use App\Models\Hotel;
@@ -272,6 +273,26 @@ class PublicHomeController extends Controller
                 ];
             });
 
+        $blogPosts = BlogPost::query()
+            ->where('status', 'published')
+            ->where(function ($query) {
+                $query->whereNull('published_at')
+                    ->orWhere('published_at', '<=', now());
+            })
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->take(4)
+            ->get()
+            ->map(fn (BlogPost $post) => [
+                'id' => $post->id,
+                'title' => $post->title,
+                'slug' => $post->slug,
+                'excerpt' => $post->excerpt,
+                'label' => $post->label,
+                'cover_image_url' => $post->cover_image_path ? Storage::url($post->cover_image_path) : null,
+                'published_at' => $post->published_at?->toDateString(),
+            ]);
+
         return Inertia::render('welcome', [
             'canRegister' => Features::enabled(Features::registration()),
             'banners' => $banners,
@@ -285,6 +306,7 @@ class PublicHomeController extends Controller
             'eventCards' => $eventCards,
             'academyCards' => $academyCards,
             'souvenirCards' => $souvenirCards,
+            'blogPosts' => $blogPosts,
         ]);
     }
 }

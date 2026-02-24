@@ -143,12 +143,18 @@ class WisataController extends Controller
                 ];
             });
 
+        $latitude = $this->extractLatitude($destination->maps_pin_url);
+        $longitude = $this->extractLongitude($destination->maps_pin_url);
+        $mapsUrl = $this->buildMapsUrl($latitude, $longitude);
+
         return response()->json([
             'filters' => [
                 'visit_date' => $data['visit_date'],
                 'quantity' => $data['quantity'],
             ],
             'destination' => [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
                 'id' => $destination->id,
                 'encrypted_id' => Crypt::encryptString((string) $destination->id),
                 'destination_name' => $destination->destination_name,
@@ -164,7 +170,8 @@ class WisataController extends Controller
                 'photo_gate_url' => $destination->photo_gate_path ? '/storage/'.$destination->photo_gate_path : null,
                 'photo_area_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
                 'photo_ticket_url' => $destination->photo_ticket_path ? '/storage/'.$destination->photo_ticket_path : null,
-                'maps_pin_url' => $destination->maps_pin_url,
+                'maps_pin_url' => $mapsUrl ?? $destination->maps_pin_url,
+                'maps_url' => $mapsUrl,
             ],
             'tickets' => $tickets,
         ]);
@@ -190,5 +197,48 @@ class WisataController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function extractLatitude(?string $mapsUrl): ?string
+    {
+        if (! $mapsUrl) {
+            return null;
+        }
+
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $mapsUrl, $matches)) {
+            return $matches[1];
+        }
+
+        if (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $mapsUrl, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    private function extractLongitude(?string $mapsUrl): ?string
+    {
+        if (! $mapsUrl) {
+            return null;
+        }
+
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $mapsUrl, $matches)) {
+            return $matches[2];
+        }
+
+        if (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $mapsUrl, $matches)) {
+            return $matches[2];
+        }
+
+        return null;
+    }
+
+    private function buildMapsUrl(?string $latitude, ?string $longitude): ?string
+    {
+        if (! $latitude || ! $longitude) {
+            return null;
+        }
+
+        return sprintf('https://www.google.com/maps?q=%s,%s', $latitude, $longitude);
     }
 }
