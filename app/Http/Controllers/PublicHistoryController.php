@@ -8,6 +8,7 @@ use App\Models\SpecialProgramBooking;
 use App\Models\WisataBooking;
 use App\Models\SouvenirOrder;
 use App\Models\AcademyBooking;
+use App\Services\ProductReviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,8 @@ class PublicHistoryController extends Controller
 {
     public function index(Request $request): Response
     {
+        $userId = (int) $request->user()->id;
+
         $hotelBookings = Booking::query()
             ->where('user_id', $request->user()->id)
             ->with(['hotel.city'])
@@ -48,6 +51,12 @@ class PublicHistoryController extends Controller
                 'midtrans_order_id' => $booking->midtrans_order_id,
                 'payment_url' => route('booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                 'detail_url' => route('booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                'review_url' => $booking->hotel_id
+                    ? '/stay/hotels/'.Crypt::encryptString((string) $booking->hotel_id)
+                    : null,
+                'can_review' => $booking->hotel_id
+                    ? ProductReviewService::hasUsedBooking($userId, 'hotel', (int) $booking->hotel_id)
+                    : false,
             ]);
 
         $wisataBookings = WisataBooking::query()
@@ -55,7 +64,7 @@ class PublicHistoryController extends Controller
             ->with(['destination', 'ticket'])
             ->latest()
             ->get()
-            ->map(function (WisataBooking $booking) {
+            ->map(function (WisataBooking $booking) use ($userId) {
                 $destination = $booking->destination;
 
                 return [
@@ -83,6 +92,12 @@ class PublicHistoryController extends Controller
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'payment_url' => route('wisata.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('wisata.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'review_url' => $booking->mitra_wisata_onboarding_id
+                        ? '/wisata/'.Crypt::encryptString((string) $booking->mitra_wisata_onboarding_id)
+                        : null,
+                    'can_review' => $booking->mitra_wisata_onboarding_id
+                        ? ProductReviewService::hasUsedBooking($userId, 'wisata', (int) $booking->mitra_wisata_onboarding_id)
+                        : false,
                     'ticket_name' => $booking->ticket?->name,
                 ];
             });
@@ -92,7 +107,7 @@ class PublicHistoryController extends Controller
             ->with(['event', 'ticket'])
             ->latest()
             ->get()
-            ->map(function (EventBooking $booking) {
+            ->map(function (EventBooking $booking) use ($userId) {
                 $event = $booking->event;
 
                 return [
@@ -120,6 +135,12 @@ class PublicHistoryController extends Controller
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'payment_url' => route('events.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('events.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'review_url' => $booking->event_id
+                        ? '/events/'.Crypt::encryptString((string) $booking->event_id)
+                        : null,
+                    'can_review' => $booking->event_id
+                        ? ProductReviewService::hasUsedBooking($userId, 'event', (int) $booking->event_id)
+                        : false,
                     'ticket_name' => $booking->ticket?->name,
                 ];
             });
@@ -128,7 +149,7 @@ class PublicHistoryController extends Controller
             ->where('user_id', $request->user()->id)
             ->latest()
             ->get()
-            ->map(function (SpecialProgramBooking $booking) {
+            ->map(function (SpecialProgramBooking $booking) use ($userId) {
                 return [
                     'id' => $booking->id,
                     'encrypted_id' => Crypt::encryptString((string) $booking->id),
@@ -154,6 +175,12 @@ class PublicHistoryController extends Controller
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'payment_url' => route('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'review_url' => $booking->special_program_id
+                        ? '/special-programs/'.Crypt::encryptString((string) $booking->special_program_id)
+                        : null,
+                    'can_review' => $booking->special_program_id
+                        ? ProductReviewService::hasUsedBooking($userId, 'special_program', (int) $booking->special_program_id)
+                        : false,
                     'ticket_name' => $booking->ticket_name,
                 ];
             });
@@ -163,6 +190,10 @@ class PublicHistoryController extends Controller
             ->latest()
             ->get()
             ->map(function (SouvenirOrder $order) {
+                $shippingStatus = strtolower((string) ($order->shipping_status ?? ''));
+                $arrivedStatuses = ['delivered', 'arrived', 'sampai', 'received', 'done'];
+                $canReview = $order->status === 'completed' || in_array($shippingStatus, $arrivedStatuses, true);
+
                 return [
                     'id' => $order->id,
                     'encrypted_id' => Crypt::encryptString((string) $order->id),
@@ -188,6 +219,8 @@ class PublicHistoryController extends Controller
                     'midtrans_order_id' => $order->midtrans_order_id,
                     'payment_url' => route('souvenir.booking.payment', ['order' => Crypt::encryptString((string) $order->id)]),
                     'detail_url' => route('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
+                    'review_url' => route('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
+                    'can_review' => $canReview,
                     'ticket_name' => null,
                 ];
             });
@@ -197,7 +230,7 @@ class PublicHistoryController extends Controller
             ->with(['academyClass', 'ticket'])
             ->latest()
             ->get()
-            ->map(function (AcademyBooking $booking) {
+            ->map(function (AcademyBooking $booking) use ($userId) {
                 $class = $booking->academyClass;
 
                 return [
@@ -225,6 +258,12 @@ class PublicHistoryController extends Controller
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'payment_url' => route('academy.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('academy.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'review_url' => $booking->academy_class_id
+                        ? '/academy/'.Crypt::encryptString((string) $booking->academy_class_id)
+                        : null,
+                    'can_review' => $booking->academy_class_id
+                        ? ProductReviewService::hasUsedBooking($userId, 'academy', (int) $booking->academy_class_id)
+                        : false,
                     'ticket_name' => $booking->ticket?->name,
                 ];
             });

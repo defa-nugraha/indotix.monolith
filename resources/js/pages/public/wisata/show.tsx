@@ -79,12 +79,14 @@ export default function WisataShow({
     filters,
     reviews,
     userReview,
+    canReview,
 }: {
     destination: Destination;
     tickets: TicketItem[];
     filters: Filters;
     reviews: ReviewItem[];
     userReview?: UserReview | null;
+    canReview?: boolean;
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu, affiliate_referral } = usePage().props as {
         auth?: { user?: { role?: string } };
@@ -456,6 +458,7 @@ export default function WisataShow({
                     productId={destination.id}
                     reviews={reviews}
                     userReview={userReview}
+                    canReview={canReview}
                 />
             </main>
             <footer className="mt-10 border-t border-slate-200 bg-white">

@@ -49,10 +49,12 @@ export default function SouvenirShow({
     product,
     reviews,
     userReview,
+    canReview,
 }: {
     product: Product;
     reviews: ReviewItem[];
     userReview?: UserReview | null;
+    canReview?: boolean;
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as {
         auth?: { user?: { role?: string } };
@@ -189,7 +191,7 @@ export default function SouvenirShow({
                     </div>
                 </div>
 
-                <ReviewSection productType="souvenir" productId={product.id} reviews={reviews} userReview={userReview} />
+                <ReviewSection productType="souvenir" productId={product.id} reviews={reviews} userReview={userReview} canReview={canReview} />
             </main>
         </PublicLayout>
     );

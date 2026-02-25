@@ -78,6 +78,12 @@ class PublicSpecialProgramController extends Controller
 
         $mappedItems = $this->mapItems($items);
 
+        $userId = $request->user()?->id;
+        $userReview = ProductReviewService::userReview($userId, 'special_program', $program->id);
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'special_program', $program->id) || (bool) $userReview)
+            : false;
+
         return Inertia::render('public/special-programs/show', [
             'program' => [
                 'id' => $program->id,
@@ -95,7 +101,8 @@ class PublicSpecialProgramController extends Controller
             ],
             'items' => $mappedItems,
             'reviews' => ProductReviewService::publicReviews('special_program', $program->id),
-            'userReview' => ProductReviewService::userReview($request->user()?->id, 'special_program', $program->id),
+            'userReview' => $userReview,
+            'canReview' => $canReview,
         ]);
     }
 

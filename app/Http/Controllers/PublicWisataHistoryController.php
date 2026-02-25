@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\WisataBooking;
+use App\Services\ProductReviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -13,12 +14,14 @@ class PublicWisataHistoryController extends Controller
 {
     public function index(Request $request): Response
     {
+        $userId = (int) $request->user()->id;
+
         $bookings = WisataBooking::query()
             ->where('user_id', $request->user()->id)
             ->with(['destination', 'ticket'])
             ->latest()
             ->get()
-            ->map(function (WisataBooking $booking) {
+            ->map(function (WisataBooking $booking) use ($userId) {
                 $destination = $booking->destination;
 
                 return [
@@ -40,6 +43,12 @@ class PublicWisataHistoryController extends Controller
                     'created_at' => $booking->created_at?->toIso8601String(),
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'ticket_name' => $booking->ticket?->name,
+                    'review_url' => $booking->mitra_wisata_onboarding_id
+                        ? '/wisata/'.Crypt::encryptString((string) $booking->mitra_wisata_onboarding_id)
+                        : null,
+                    'can_review' => $booking->mitra_wisata_onboarding_id
+                        ? ProductReviewService::hasUsedBooking($userId, 'wisata', (int) $booking->mitra_wisata_onboarding_id)
+                        : false,
                 ];
             });
 

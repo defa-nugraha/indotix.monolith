@@ -55,11 +55,13 @@ export default function AcademyShow({
     tickets,
     reviews,
     userReview,
+    canReview,
 }: {
     class: AcademyDetail;
     tickets: TicketItem[];
     reviews: ReviewItem[];
     userReview?: UserReview | null;
+    canReview?: boolean;
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
         auth?: { user?: any };
@@ -216,7 +218,7 @@ export default function AcademyShow({
                                 Lanjutkan Pemesanan
                             </button>
                             <Link
-                                href={`/chat/start/academy/${academy.id}`}
+                                href={`/chat/start/academy/${academyClass.id}`}
                                 className="mt-3 block w-full rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-600 hover:bg-slate-50"
                             >
                                 Chat Admin
@@ -225,7 +227,7 @@ export default function AcademyShow({
                     </section>
                 </div>
 
-                <ReviewSection productType="academy" productId={academyClass.id} reviews={reviews} userReview={userReview} />
+                <ReviewSection productType="academy" productId={academyClass.id} reviews={reviews} userReview={userReview} canReview={canReview} />
             </main>
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">

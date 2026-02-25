@@ -70,6 +70,12 @@ class PublicSouvenirController extends Controller
             ->where('is_active', true)
             ->findOrFail($productId);
 
+        $userId = $request->user()?->id;
+        $userReview = ProductReviewService::userReview($userId, 'souvenir', $product->id);
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'souvenir', $product->id) || (bool) $userReview)
+            : false;
+
         return Inertia::render('public/souvenir/show', [
             'product' => [
                 'id' => $product->id,
@@ -94,7 +100,8 @@ class PublicSouvenirController extends Controller
                 ]),
             ],
             'reviews' => ProductReviewService::publicReviews('souvenir', $product->id),
-            'userReview' => ProductReviewService::userReview($request->user()?->id, 'souvenir', $product->id),
+            'userReview' => $userReview,
+            'canReview' => $canReview,
         ]);
     }
 }

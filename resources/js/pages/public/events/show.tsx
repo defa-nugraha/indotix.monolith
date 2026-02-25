@@ -52,11 +52,13 @@ export default function EventShow({
     tickets,
     reviews,
     userReview,
+    canReview,
 }: {
     event: EventDetail;
     tickets: TicketItem[];
     reviews: ReviewItem[];
     userReview?: UserReview | null;
+    canReview?: boolean;
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
         auth?: { user?: any };
@@ -204,7 +206,7 @@ export default function EventShow({
                     </section>
                 </div>
 
-                <ReviewSection productType="event" productId={event.id} reviews={reviews} userReview={userReview} />
+                <ReviewSection productType="event" productId={event.id} reviews={reviews} userReview={userReview} canReview={canReview} />
             </main>
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">

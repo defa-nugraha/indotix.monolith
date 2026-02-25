@@ -174,9 +174,6 @@ class ProductReviewService
 
     public static function hasUsedBooking(int $userId, string $type, int $productId): bool
     {
-        $today = now()->toDateString();
-        $now = now();
-
         return match ($type) {
             'hotel' => Booking::query()
                 ->where('user_id', $userId)
@@ -190,93 +187,49 @@ class ProductReviewService
             'wisata' => WisataBooking::query()
                 ->where('user_id', $userId)
                 ->where('mitra_wisata_onboarding_id', $productId)
-                ->where(function ($query) use ($today) {
+                ->where(function ($query) {
                     $query
                         ->where('status', 'completed')
-                        ->orWhere(function ($paid) use ($today) {
-                            $paid->where('status', 'paid')
-                                ->where(function ($used) use ($today) {
-                                    $used
-                                        ->whereHas('scans')
-                                        ->orWhereDate('visit_date', '<=', $today);
-                                });
-                        });
+                        ->orWhereHas('scans');
                 })
                 ->exists(),
             'event' => EventBooking::query()
                 ->where('user_id', $userId)
                 ->where('event_id', $productId)
-                ->where(function ($query) use ($now) {
+                ->where(function ($query) {
                     $query
                         ->where('status', 'completed')
-                        ->orWhere(function ($paid) use ($now) {
-                            $paid->where('status', 'paid')
-                                ->where(function ($used) use ($now) {
-                                    $used
-                                        ->whereHas('scans')
-                                        ->orWhereHas('event', function ($event) use ($now) {
-                                            $event
-                                                ->whereNotNull('start_at')
-                                                ->where(function ($time) use ($now) {
-                                                    $time
-                                                        ->whereNotNull('end_at')
-                                                        ->where('end_at', '<=', $now)
-                                                        ->orWhere(function ($fallback) use ($now) {
-                                                            $fallback
-                                                                ->whereNull('end_at')
-                                                                ->where('start_at', '<=', $now);
-                                                        });
-                                                });
-                                        });
-                                });
-                        });
+                        ->orWhereHas('scans');
                 })
                 ->exists(),
             'academy' => AcademyBooking::query()
                 ->where('user_id', $userId)
                 ->where('academy_class_id', $productId)
-                ->where(function ($query) use ($now) {
+                ->where(function ($query) {
                     $query
                         ->where('status', 'completed')
-                        ->orWhere(function ($paid) use ($now) {
-                            $paid->where('status', 'paid')
-                                ->where(function ($used) use ($now) {
-                                    $used
-                                        ->whereHas('scans')
-                                        ->orWhereHas('academyClass', function ($class) use ($now) {
-                                            $class
-                                                ->whereNotNull('start_at')
-                                                ->where(function ($time) use ($now) {
-                                                    $time
-                                                        ->whereNotNull('end_at')
-                                                        ->where('end_at', '<=', $now)
-                                                        ->orWhere(function ($fallback) use ($now) {
-                                                            $fallback
-                                                                ->whereNull('end_at')
-                                                                ->where('start_at', '<=', $now);
-                                                        });
-                                                });
-                                        });
-                                });
-                        });
+                        ->orWhereHas('scans');
                 })
                 ->exists(),
             'special_program' => SpecialProgramBooking::query()
                 ->where('user_id', $userId)
                 ->where('special_program_id', $productId)
-                ->where(function ($query) use ($today) {
-                    $query
-                        ->where('status', 'completed')
-                        ->orWhere(function ($paid) use ($today) {
-                            $paid->where('status', 'paid')
-                                ->whereDate('visit_date', '<=', $today);
-                        });
-                })
+                ->where('status', 'completed')
                 ->exists(),
             'souvenir' => SouvenirOrder::query()
                 ->where('user_id', $userId)
                 ->whereHas('items', fn ($query) => $query->where('product_id', $productId))
-                ->where('status', 'completed')
+                ->where(function ($query) {
+                    $query
+                        ->where('status', 'completed')
+                        ->orWhereRaw('LOWER(COALESCE(shipping_status, \'\')) in (?, ?, ?, ?, ?)', [
+                            'delivered',
+                            'arrived',
+                            'sampai',
+                            'received',
+                            'done',
+                        ]);
+                })
                 ->exists(),
             default => false,
         };

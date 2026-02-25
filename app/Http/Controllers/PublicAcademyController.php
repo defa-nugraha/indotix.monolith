@@ -99,6 +99,12 @@ class PublicAcademyController extends Controller
                 ];
             });
 
+        $userId = $request->user()?->id;
+        $userReview = ProductReviewService::userReview($userId, 'academy', $class->id);
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'academy', $class->id) || (bool) $userReview)
+            : false;
+
         return Inertia::render('public/academy/show', [
             'class' => [
                 'id' => $class->id,
@@ -117,7 +123,8 @@ class PublicAcademyController extends Controller
             ],
             'tickets' => $tickets,
             'reviews' => ProductReviewService::publicReviews('academy', $class->id),
-            'userReview' => ProductReviewService::userReview($request->user()?->id, 'academy', $class->id),
+            'userReview' => $userReview,
+            'canReview' => $canReview,
         ]);
     }
 }

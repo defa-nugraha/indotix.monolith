@@ -70,12 +70,14 @@ export default function HotelShow({
     filters,
     reviews,
     userReview,
+    canReview,
 }: {
     hotel: Hotel;
     roomTypes: RoomType[];
     filters: Filters;
     reviews: ReviewItem[];
     userReview?: UserReview | null;
+    canReview?: boolean;
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
         auth?: { user?: unknown };
@@ -559,7 +561,7 @@ export default function HotelShow({
                     </ul>
                 </section>
 
-                <ReviewSection productType="hotel" productId={hotel.id} reviews={reviews} userReview={userReview} />
+                <ReviewSection productType="hotel" productId={hotel.id} reviews={reviews} userReview={userReview} canReview={canReview} />
                 </>
                 )}
             </div>

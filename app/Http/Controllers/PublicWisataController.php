@@ -158,6 +158,12 @@ class PublicWisataController extends Controller
                 ];
             });
 
+        $userId = $request->user()?->id;
+        $userReview = ProductReviewService::userReview($userId, 'wisata', $destination->id);
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'wisata', $destination->id) || (bool) $userReview)
+            : false;
+
         $response = Inertia::render('public/wisata/show', [
             'filters' => [
                 'visit_date' => $data['visit_date'],
@@ -185,7 +191,8 @@ class PublicWisataController extends Controller
             ],
             'tickets' => $tickets,
             'reviews' => ProductReviewService::publicReviews('wisata', $destination->id),
-            'userReview' => ProductReviewService::userReview($request->user()?->id, 'wisata', $destination->id),
+            'userReview' => $userReview,
+            'canReview' => $canReview,
         ]);
 
         $affiliateLink = $request->attributes->get('affiliate_link');

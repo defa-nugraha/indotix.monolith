@@ -38,6 +38,8 @@ type WisataBooking = {
     created_at?: string | null;
     midtrans_order_id?: string | null;
     ticket_name?: string | null;
+    review_url?: string | null;
+    can_review?: boolean;
 };
 
 export default function WisataHistory({ bookings = [] }: { bookings: WisataBooking[] }) {
@@ -241,6 +243,14 @@ export default function WisataHistory({ bookings = [] }: { bookings: WisataBooki
                                             >
                                                 Lihat Detail
                                             </Link>
+                                            {booking.can_review && booking.review_url && (
+                                                <Link
+                                                    href={booking.review_url}
+                                                    className="rounded-lg border border-emerald-200 px-4 py-2 text-xs font-semibold text-emerald-700"
+                                                >
+                                                    Beri Ulasan
+                                                </Link>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

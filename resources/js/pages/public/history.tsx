@@ -28,6 +28,8 @@ type Booking = {
     midtrans_order_id?: string | null;
     payment_url?: string | null;
     detail_url?: string | null;
+    review_url?: string | null;
+    can_review?: boolean;
     ticket_name?: string | null;
 };
 
@@ -317,6 +319,14 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                     className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
                                                 >
                                                     Lihat Detail
+                                                </Link>
+                                            )}
+                                            {booking.can_review && booking.review_url && (
+                                                <Link
+                                                    href={booking.review_url}
+                                                    className="rounded-lg border border-emerald-200 px-4 py-2 text-sm font-semibold text-emerald-700 hover:border-emerald-300 hover:text-emerald-800"
+                                                >
+                                                    Beri Ulasan
                                                 </Link>
                                             )}
                                         </div>

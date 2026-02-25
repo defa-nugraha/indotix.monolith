@@ -61,11 +61,13 @@ export default function SpecialProgramShow({
     items,
     reviews,
     userReview,
+    canReview,
 }: {
     program: Program;
     items: ProgramItem[];
     reviews: ReviewItem[];
     userReview?: UserReview | null;
+    canReview?: boolean;
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const [selectedItem, setSelectedItem] = useState<ProgramItem | null>(
@@ -181,6 +183,7 @@ export default function SpecialProgramShow({
                     productId={program.id}
                     reviews={reviews}
                     userReview={userReview}
+                    canReview={canReview}
                 />
             </main>
         </PublicLayout>

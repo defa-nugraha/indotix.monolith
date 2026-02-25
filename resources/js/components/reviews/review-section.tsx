@@ -27,11 +27,12 @@ type Props = {
     productId: number;
     reviews: ReviewItem[];
     userReview?: UserReview | null;
+    canReview?: boolean;
 };
 
-export default function ReviewSection({ productType, productId, reviews, userReview }: Props) {
+export default function ReviewSection({ productType, productId, reviews, userReview, canReview = false }: Props) {
     const { auth } = usePage<SharedData>().props;
-    const canReview = Boolean(auth?.user);
+    const canSubmitReview = Boolean(auth?.user) && (canReview || Boolean(userReview));
 
     const { data, setData, post, processing, errors, reset } = useForm({
         product_type: productType,
@@ -64,7 +65,7 @@ export default function ReviewSection({ productType, productId, reviews, userRev
     return (
         <section className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-slate-900">Ulasan</h2>
-            {canReview ? (
+            {canSubmitReview ? (
                 <form onSubmit={handleSubmit} className="mt-4 rounded-xl border border-slate-100 bg-slate-50/60 p-4">
                     <div className="grid gap-3 md:grid-cols-2">
                         <label className="text-sm font-semibold text-slate-700">
@@ -103,6 +104,10 @@ export default function ReviewSection({ productType, productId, reviews, userRev
                         {userReview ? 'Perbarui Ulasan' : 'Kirim Ulasan'}
                     </button>
                 </form>
+            ) : auth?.user ? (
+                <div className="mt-3 text-sm text-slate-600">
+                    Ulasan bisa dikirim setelah tiket digunakan atau pesanan selesai.
+                </div>
             ) : (
                 <div className="mt-3 text-sm text-slate-600">Silakan login untuk memberikan ulasan.</div>
             )}

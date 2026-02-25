@@ -88,6 +88,12 @@ class PublicEventController extends Controller
                 ];
             });
 
+        $userId = $request->user()?->id;
+        $userReview = ProductReviewService::userReview($userId, 'event', $event->id);
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'event', $event->id) || (bool) $userReview)
+            : false;
+
         return Inertia::render('public/events/show', [
             'event' => [
                 'id' => $event->id,
@@ -104,7 +110,8 @@ class PublicEventController extends Controller
             ],
             'tickets' => $tickets,
             'reviews' => ProductReviewService::publicReviews('event', $event->id),
-            'userReview' => ProductReviewService::userReview($request->user()?->id, 'event', $event->id),
+            'userReview' => $userReview,
+            'canReview' => $canReview,
         ]);
     }
 

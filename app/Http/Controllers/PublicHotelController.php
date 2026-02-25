@@ -200,6 +200,12 @@ class PublicHotelController extends Controller
             ->filter()
             ->values();
 
+        $userId = $request->user()?->id;
+        $userReview = ProductReviewService::userReview($userId, 'hotel', $hotel->id);
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'hotel', $hotel->id) || (bool) $userReview)
+            : false;
+
         return Inertia::render('public/hotels/show', [
             'hotel' => [
                 'id' => $hotel->id,
@@ -227,7 +233,8 @@ class PublicHotelController extends Controller
                 'guests' => $data['guests'],
             ],
             'reviews' => ProductReviewService::publicReviews('hotel', $hotel->id),
-            'userReview' => ProductReviewService::userReview($request->user()?->id, 'hotel', $hotel->id),
+            'userReview' => $userReview,
+            'canReview' => $canReview,
         ]);
     }
 
