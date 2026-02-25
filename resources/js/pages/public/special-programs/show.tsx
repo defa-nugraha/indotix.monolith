@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, UserCircle, History as HistoryIcon, Sparkles, ShoppingCart } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 import ReviewSection from '@/components/reviews/review-section';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 const navItems = [
     { label: 'Wisata', icon: MapPinned, href: '/wisata' },
@@ -70,6 +71,7 @@ export default function SpecialProgramShow({
     canReview?: boolean;
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = auth?.user?.role;
     const [selectedItem, setSelectedItem] = useState<ProgramItem | null>(
         items.find((item) => item.type !== 'hotel') ?? items[0] ?? null,
     );
@@ -80,6 +82,9 @@ export default function SpecialProgramShow({
         if (!selectedItem) return;
         if (selectedItem.type === 'hotel') {
             window.location.href = `/stay/hotels/${selectedItem.encrypted_id}`;
+            return;
+        }
+        if (guardPurchaseByRole(role)) {
             return;
         }
         router.post('/special-programs/booking/prepare', {

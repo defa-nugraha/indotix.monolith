@@ -4,6 +4,7 @@ import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircl
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
 import ReviewSection from '@/components/reviews/review-section';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type AcademyDetail = {
     id: number;
@@ -69,6 +70,7 @@ export default function AcademyShow({
         souvenir_cart_count?: number;
         affiliate_menu?: boolean;
     };
+    const role = (auth?.user as any)?.role as string | undefined;
     const [selectedTicket, setSelectedTicket] = useState<string>(tickets[0]?.id?.toString() ?? '');
     const form = useForm({
         class_id: academyClass.id,
@@ -86,6 +88,9 @@ export default function AcademyShow({
     ];
 
     const submitBooking = () => {
+        if (guardPurchaseByRole(role)) {
+            return;
+        }
         form.post('/academy/booking/prepare', {
             preserveScroll: true,
             onError: (errors) => {

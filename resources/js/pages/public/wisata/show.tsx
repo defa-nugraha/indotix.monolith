@@ -20,6 +20,7 @@ import {
     Wifi,
     BadgePercent,
 } from 'lucide-react';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type TicketItem = {
     id: number;
@@ -95,6 +96,7 @@ export default function WisataShow({
         affiliate_menu?: boolean;
         affiliate_referral?: { code: string; destination_name?: string | null } | null;
     };
+    const role = auth?.user?.role;
     const [visitDate, setVisitDate] = useState(filters.visit_date);
     const [quantity, setQuantity] = useState(filters.quantity ?? 1);
     const affiliateForm = useForm({ code: '' });
@@ -374,6 +376,9 @@ export default function WisataShow({
                                         ticket.available < quantity ? 'bg-slate-300' : 'bg-sky-600'
                                     }`}
                                     onClick={() => {
+                                        if (guardPurchaseByRole(role)) {
+                                            return;
+                                        }
                                         router.post('/wisata/booking/prepare', {
                                             destination_id: destination.id,
                                             ticket_id: ticket.id,

@@ -3,9 +3,11 @@ import Swal from 'sweetalert2';
 import { Bell, CalendarCheck, ClipboardCheck, Mail, Phone, Star, Ticket, User, Users, MapPinned, ShoppingBag, UserCircle, History, MessageCircle, ShoppingCart} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 export default function BookingReview({ draft, hotel, roomType, pricing, voucher }: any) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { name?: string; email?: string; role?: string; phone?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = auth?.user?.role;
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -77,6 +79,9 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
                                 className="mt-4 grid gap-4"
                                 onSubmit={(event) => {
                                     event.preventDefault();
+                                    if (guardPurchaseByRole(role)) {
+                                        return;
+                                    }
                                     form.post('/booking/confirm', {
                                         onSuccess: () =>
                                             Swal.fire({ title: 'Berhasil', text: 'Booking dibuat. Lanjutkan pembayaran.', icon: 'success' }),

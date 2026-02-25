@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, CreditCard, Filter, ShoppingCart, BookOpen } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Booking = {
     id: number;
@@ -35,6 +36,7 @@ type Booking = {
 
 export default function History({ bookings = [] }: { bookings: Booking[] }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = (auth?.user as any)?.role as string | undefined;
     const [activeStatus, setActiveStatus] = useState<'all' | 'pending_payment' | 'paid' | 'expired' | 'cancelled'>('all');
     const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir' | 'academy'>('all');
     const [query, setQuery] = useState('');
@@ -309,6 +311,11 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                 <Link
                                                     href={booking.payment_url}
                                                     className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
+                                                    onClick={(event) => {
+                                                        if (guardPurchaseByRole(role)) {
+                                                            event.preventDefault();
+                                                        }
+                                                    }}
                                                 >
                                                     Lanjutkan Pembayaran
                                                 </Link>

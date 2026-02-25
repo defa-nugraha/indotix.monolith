@@ -4,6 +4,7 @@ import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticke
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
 import ReviewSection from '@/components/reviews/review-section';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Variant = {
     id: number;
@@ -61,6 +62,7 @@ export default function SouvenirShow({
         unread_notifications?: number;
         souvenir_cart_count?: number;
     };
+    const role = auth?.user?.role;
     const [selectedVariant, setSelectedVariant] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(1);
 
@@ -70,6 +72,9 @@ export default function SouvenirShow({
     const maxQty = variant ? variant.stock : product.stock;
 
     const handleAddToCart = () => {
+        if (guardPurchaseByRole(role)) {
+            return;
+        }
         router.post('/souvenir/cart/add', {
             product_id: product.id,
             variant_id: selectedVariant,

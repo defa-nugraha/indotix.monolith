@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type CartItem = {
     key: string;
@@ -23,6 +24,7 @@ export default function SouvenirCart({ items, summary }: { items: CartItem[]; su
         unread_notifications?: number;
         souvenir_cart_count?: number;
     };
+    const role = auth?.user?.role;
 
     const navItems = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
@@ -128,6 +130,11 @@ export default function SouvenirCart({ items, summary }: { items: CartItem[]; su
                             className={`mt-6 flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold text-white ${
                                 items.length === 0 ? 'pointer-events-none bg-slate-300' : 'bg-sky-600 hover:bg-sky-700'
                             }`}
+                            onClick={(event) => {
+                                if (guardPurchaseByRole(role)) {
+                                    event.preventDefault();
+                                }
+                            }}
                         >
                             Lanjutkan Pembayaran
                         </Link>

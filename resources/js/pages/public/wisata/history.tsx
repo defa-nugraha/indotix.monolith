@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 import {
     Bell,
     CalendarCheck,
@@ -44,6 +45,7 @@ type WisataBooking = {
 
 export default function WisataHistory({ bookings = [] }: { bookings: WisataBooking[] }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = (auth?.user as any)?.role as string | undefined;
     const [activeStatus, setActiveStatus] = useState<'all' | 'pending_payment' | 'paid' | 'expired' | 'cancelled'>('all');
     const [query, setQuery] = useState('');
 
@@ -233,6 +235,11 @@ export default function WisataHistory({ bookings = [] }: { bookings: WisataBooki
                                                 <Link
                                                     href={`/wisata/booking/${booking.encrypted_id}/payment`}
                                                     className="rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-white"
+                                                    onClick={(event) => {
+                                                        if (guardPurchaseByRole(role)) {
+                                                            event.preventDefault();
+                                                        }
+                                                    }}
                                                 >
                                                     Bayar Sekarang
                                                 </Link>

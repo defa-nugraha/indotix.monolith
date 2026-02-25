@@ -3,6 +3,7 @@ import { ShoppingCart } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Booking = {
     id: number;
@@ -39,6 +40,7 @@ export default function WisataBookingPayment({
     snapScriptUrl: string;
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = auth?.user?.role;
     const [remaining, setRemaining] = useState<string | null>(null);
     const form = useForm({});
     const snapOpened = useRef(false);
@@ -107,6 +109,9 @@ export default function WisataBookingPayment({
                             <button
                                 type="button"
                                 onClick={() => {
+                                    if (guardPurchaseByRole(role)) {
+                                        return;
+                                    }
                                     if (snapToken && window.snap) {
                                         window.snap.pay(snapToken);
                                         return;

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Bell, CalendarCheck, ClipboardCheck, Mail, MessageCircle, Phone, Ticket, User, UserCircle, History, ShoppingCart, MapPinned, ShoppingBag, Star, BookOpen, MapPin, CreditCard } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Draft = {
     class_id: number;
@@ -50,6 +51,7 @@ export default function AcademyBookingReview({
     snapToken: initialSnapToken,
 }: Props) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string; name?: string; email?: string; phone?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = auth?.user?.role;
     const isUser = Boolean(auth?.user?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -106,6 +108,9 @@ export default function AcademyBookingReview({
     }, [snapToken]);
 
     const submitBooking = () => {
+        if (guardPurchaseByRole(role)) {
+            return;
+        }
         setLoading(true);
         form.post('/academy/booking/confirm', {
             preserveScroll: true,

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Bell, ClipboardCheck, Mail, MessageCircle, Phone, ShoppingBag, User, UserCircle, History, ShoppingCart } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Item = {
     key: string;
@@ -36,6 +37,7 @@ export default function SouvenirBookingReview({ items, summary, snapClientKey, s
         souvenir_cart_count?: number;
         default_address?: { label?: string | null; formatted?: string | null };
     };
+    const role = auth?.user?.role;
     const isUser = Boolean(auth?.user?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -113,6 +115,9 @@ export default function SouvenirBookingReview({ items, summary, snapClientKey, s
                             className="mt-6 space-y-4"
                             onSubmit={(event) => {
                                 event.preventDefault();
+                                if (guardPurchaseByRole(role)) {
+                                    return;
+                                }
                                 setLoading(true);
                                 form.post('/souvenir/checkout/confirm', {
                                     preserveScroll: true,

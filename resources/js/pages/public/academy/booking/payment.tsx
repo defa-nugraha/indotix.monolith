@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Booking = {
     id: number;
@@ -36,6 +37,7 @@ export default function AcademyBookingPayment({
     snapScriptUrl: string;
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = auth?.user?.role;
     const [remaining, setRemaining] = useState<string | null>(null);
     const snapOpened = useRef(false);
     const snapToken = booking.payment?.payload?.token;
@@ -117,6 +119,9 @@ export default function AcademyBookingPayment({
                     <button
                         type="button"
                         onClick={() => {
+                            if (guardPurchaseByRole(role)) {
+                                return;
+                            }
                             if (window.snap && snapToken) {
                                 window.snap.pay(snapToken);
                             }

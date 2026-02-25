@@ -6,6 +6,7 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, Wifi, ParkingSquare, Waves, Dumbbell, Utensils, Coffee, Users, ShieldCheck, Cigarette, CigaretteOff, ShoppingCart, BadgePercent } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 import PublicLayout from '@/layouts/public-layout';
 import ReviewSection from '@/components/reviews/review-section';
 
@@ -85,7 +86,8 @@ export default function HotelShow({
         souvenir_cart_count?: number;
         affiliate_menu?: boolean;
     };
-    const isUser = Boolean((auth?.user as any)?.role === 'user');
+    const role = (auth?.user as any)?.role as string | undefined;
+    const isUser = Boolean(role === 'user');
     const [isReady, setIsReady] = useState(false);
     const form = useForm({
         hotel_id: hotel.id,
@@ -466,6 +468,9 @@ export default function HotelShow({
                                     type="button"
                                     className="relative z-10 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
                                     onClick={() => {
+                                        if (guardPurchaseByRole(role)) {
+                                            return;
+                                        }
                                         router.post('/booking/prepare', {
                                             hotel_id: form.data.hotel_id,
                                             room_type_id: room.id,

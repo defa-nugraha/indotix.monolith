@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 import {
     Bell,
     CalendarCheck,
@@ -42,6 +43,7 @@ type Booking = {
 
 export default function WisataBookingShow({ booking }: { booking: Booking }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = auth?.user?.role;
     const isUser = Boolean(auth?.user?.role === 'user');
     const [isDownloading, setIsDownloading] = useState(false);
 
@@ -181,6 +183,11 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                 <Link
                                     href={`/wisata/booking/${booking.encrypted_id}/payment`}
                                     className="mt-4 block rounded-lg bg-sky-600 px-4 py-2 text-center text-sm font-semibold text-white"
+                                    onClick={(event) => {
+                                        if (guardPurchaseByRole(role)) {
+                                            event.preventDefault();
+                                        }
+                                    }}
                                 >
                                     Lanjutkan Pembayaran
                                 </Link>

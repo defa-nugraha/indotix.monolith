@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { CheckCircle, Clock, CreditCard, Loader2, ShoppingCart} from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Booking = {
     id: number;
@@ -22,6 +23,7 @@ type Booking = {
 
 export default function EventBookingShow({ booking }: { booking: Booking }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = (auth?.user as any)?.role as string | undefined;
     const [isDownloading, setIsDownloading] = useState(false);
     const formatIdr = (value?: number | string | null) => {
         const numeric = Number(value);
@@ -106,6 +108,11 @@ export default function EventBookingShow({ booking }: { booking: Booking }) {
                                 <Link
                                     href={`/events/booking/${booking.encrypted_id}/payment`}
                                     className="mt-4 block rounded-lg bg-sky-600 px-4 py-2 text-center text-sm font-semibold text-white"
+                                    onClick={(event) => {
+                                        if (guardPurchaseByRole(role)) {
+                                            event.preventDefault();
+                                        }
+                                    }}
                                 >
                                     Lanjutkan Pembayaran
                                 </Link>

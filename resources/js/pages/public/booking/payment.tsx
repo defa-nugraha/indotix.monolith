@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 import { Bell, CalendarCheck, Ticket, Users, MapPinned, UserCircle, History, MessageCircle, ShoppingCart} from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Booking = {
     id: number;
@@ -41,6 +42,7 @@ export default function BookingPayment({
     snapScriptUrl: string;
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: unknown }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = (auth?.user as any)?.role as string | undefined;
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const form = useForm({});
     const [remaining, setRemaining] = useState<number | null>(null);
@@ -141,6 +143,9 @@ export default function BookingPayment({
                                 className="mt-4 w-full rounded-full bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm disabled:opacity-70"
                                 disabled={form.processing}
                                 onClick={() => {
+                                    if (guardPurchaseByRole(role)) {
+                                        return;
+                                    }
                                     if (snapToken && window.snap) {
                                         window.snap.pay(snapToken);
                                         return;
