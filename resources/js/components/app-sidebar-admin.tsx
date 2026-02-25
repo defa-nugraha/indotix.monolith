@@ -35,16 +35,6 @@ const mainNavItems: NavItem[] = [
         href: '/admin/reviews',
         icon: Star,
     },
-    {
-        title: 'Kelola Mitra',
-        href: '/admin/mitra',
-        icon: Users,
-    },
-    {
-        title: 'Mitra Wisata',
-        href: '/admin/mitra-wisata',
-        icon: Users,
-    },
 ];
 
 export function AppSidebarAdmin() {
@@ -90,6 +80,10 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
         isCurrentUrl('/admin/system/notifications');
+    const isMitraSectionActive =
+        isCurrentUrl('/admin/mitra') ||
+        isCurrentUrl('/admin/mitra-wisata') ||
+        isCurrentUrl('/admin/events/organizers');
     const isBlogSectionActive =
         isCurrentUrl('/admin/blog/posts') ||
         isCurrentUrl('/admin/blog/posts/create') ||
@@ -157,6 +151,36 @@ export function AppSidebarAdmin() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
                 <SidebarMenu className="px-2">
+                    <SidebarMenuItem>
+                        <Collapsible defaultOpen={isMitraSectionActive}>
+                            <CollapsibleTrigger asChild>
+                                <SidebarMenuButton>
+                                    <Users />
+                                    <span>Kelola Mitra</span>
+                                    <ChevronDown className="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                                <SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mitra')}>
+                                            <Link href="/admin/mitra">Mitra Hotel</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mitra-wisata')}>
+                                            <Link href="/admin/mitra-wisata">Mitra Wisata</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/organizers')}>
+                                            <Link href="/admin/events/organizers">Mitra Event (EO)</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
+                            </CollapsibleContent>
+                        </Collapsible>
+                    </SidebarMenuItem>
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isHotelSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -479,11 +503,6 @@ export function AppSidebarAdmin() {
                             </CollapsibleTrigger>
                             <CollapsibleContent>
                                 <SidebarMenuSub>
-                                    <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/organizers')}>
-                                            <Link href="/admin/events/organizers">Mitra Event (EO)</Link>
-                                        </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events')}>
                                             <Link href="/admin/events">Manajemen Event</Link>

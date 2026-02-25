@@ -1,8 +1,11 @@
-import { Head, router, Link } from '@inertiajs/react';
+import { Head, router, Link, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import InputError from '@/components/input-error';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 
 type Organizer = {
     id: number;
@@ -24,13 +27,108 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EventOrganizersIndex({ organizers, filters }: Props) {
+    const [createOpen, setCreateOpen] = useState(false);
+    const createForm = useForm({
+        name: '',
+        email: '',
+        phone: '',
+        password: '',
+        eo_name: '',
+    });
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Mitra Event (EO)" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h1 className="text-2xl font-semibold text-slate-900">Mitra Event (EO)</h1>
-                    <p className="text-sm text-slate-500">Review dan approval mitra event.</p>
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h1 className="text-2xl font-semibold text-slate-900">Mitra Event (EO)</h1>
+                            <p className="text-sm text-slate-500">Review dan approval mitra event.</p>
+                        </div>
+                        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="bg-sky-600 text-white hover:bg-sky-700">Tambah Mitra Event</Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-xl">
+                                <DialogHeader>
+                                    <DialogTitle>Tambah Mitra Event</DialogTitle>
+                                </DialogHeader>
+                                <form
+                                    className="grid gap-4"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        createForm.post('/admin/events/organizers', {
+                                            preserveScroll: true,
+                                            onSuccess: () => {
+                                                createForm.reset();
+                                                setCreateOpen(false);
+                                            },
+                                        });
+                                    }}
+                                >
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Nama Penanggung Jawab</label>
+                                        <input
+                                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={createForm.data.name}
+                                            onChange={(event) => createForm.setData('name', event.target.value)}
+                                        />
+                                        <InputError message={createForm.errors.name} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Email</label>
+                                        <input
+                                            type="email"
+                                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={createForm.data.email}
+                                            onChange={(event) => createForm.setData('email', event.target.value)}
+                                        />
+                                        <InputError message={createForm.errors.email} />
+                                    </div>
+                                    <div className="grid gap-2 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                                            <input
+                                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                value={createForm.data.phone}
+                                                onChange={(event) => createForm.setData('phone', event.target.value)}
+                                            />
+                                            <InputError message={createForm.errors.phone} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">Password</label>
+                                            <input
+                                                type="password"
+                                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                value={createForm.data.password}
+                                                onChange={(event) => createForm.setData('password', event.target.value)}
+                                                placeholder="Kosongkan untuk auto"
+                                            />
+                                            <InputError message={createForm.errors.password} />
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Nama EO (opsional)</label>
+                                        <input
+                                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={createForm.data.eo_name}
+                                            onChange={(event) => createForm.setData('eo_name', event.target.value)}
+                                        />
+                                        <InputError message={createForm.errors.eo_name} />
+                                    </div>
+                                    <DialogFooter className="gap-2 sm:justify-end">
+                                        <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                                            Batal
+                                        </Button>
+                                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={createForm.processing}>
+                                            Simpan
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                     <form
                         className="mt-6 flex flex-wrap gap-3"
                         onSubmit={(event) => {

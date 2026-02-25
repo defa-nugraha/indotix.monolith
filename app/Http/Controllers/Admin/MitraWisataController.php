@@ -7,6 +7,7 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -92,6 +93,41 @@ class MitraWisataController extends Controller
             'payoutStatuses' => ['draft', 'pending', 'verified', 'rejected'],
             'suspensionStatuses' => ['active', 'suspended'],
         ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'password' => ['nullable', 'string', 'min:8', 'max:255'],
+            'destination_name' => ['nullable', 'string', 'max:255'],
+            'destination_type' => ['nullable', 'in:alam,edukasi,budaya,wahana,event'],
+        ]);
+
+        $password = $data['password'] ?? Str::random(12);
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'password' => $password,
+            'role' => 'mitra',
+            'mitra_onboarding_type' => 'wisata',
+        ]);
+
+        MitraWisataOnboarding::query()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'destination_name' => $data['destination_name'] ?? null,
+                'destination_type' => $data['destination_type'] ?? null,
+                'responsible_name' => $data['name'],
+                'responsible_phone' => $data['phone'] ?? null,
+            ]
+        );
+
+        return back()->with('status', 'mitra-wisata-created');
     }
 
     public function show(User $user): Response

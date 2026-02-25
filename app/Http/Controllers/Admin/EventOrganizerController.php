@@ -9,6 +9,7 @@ use App\Models\MitraEventOnboarding;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -93,6 +94,49 @@ class EventOrganizerController extends Controller
                 'status' => $status,
             ],
         ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'password' => ['nullable', 'string', 'min:8', 'max:255'],
+            'eo_name' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $password = $data['password'] ?? Str::random(12);
+
+        $user = User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'password' => $password,
+            'role' => 'mitra',
+            'mitra_onboarding_type' => 'event',
+        ]);
+
+        MitraEventOnboarding::query()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'eo_name' => $data['eo_name'] ?? null,
+                'responsible_name' => $data['name'],
+                'responsible_phone' => $data['phone'] ?? null,
+            ]
+        );
+
+        EventOrganizer::query()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'name' => $data['eo_name'] ?? $data['name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'] ?? null,
+                'status' => 'pending',
+            ]
+        );
+
+        return back()->with('status', 'mitra-event-created');
     }
 
     public function show(EventOrganizer $organizer): Response

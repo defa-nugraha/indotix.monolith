@@ -139,6 +139,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
 
     Route::get('admin/events/organizers', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'index'])
         ->name('admin.events.organizers.index');
+    Route::post('admin/events/organizers', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'store'])
+        ->name('admin.events.organizers.store');
     Route::get('admin/events/organizers/{organizer}', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'show'])
         ->name('admin.events.organizers.show');
     Route::post('admin/events/organizers/{organizer}/status', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'updateStatus'])
@@ -254,6 +256,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.academy.settings.update');
     Route::get('admin/mitra', [\App\Http\Controllers\Admin\MitraController::class, 'index'])
         ->name('admin.mitra.index');
+    Route::post('admin/mitra', [\App\Http\Controllers\Admin\MitraController::class, 'store'])
+        ->name('admin.mitra.store');
     Route::get('admin/mitra/{user}', [\App\Http\Controllers\Admin\MitraController::class, 'show'])
         ->name('admin.mitra.show');
     Route::post('admin/mitra/{user}/verify', [\App\Http\Controllers\Admin\MitraController::class, 'verify'])
@@ -264,6 +268,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra.suspend');
     Route::get('admin/mitra-wisata', [\App\Http\Controllers\Admin\MitraWisataController::class, 'index'])
         ->name('admin.mitra-wisata.index');
+    Route::post('admin/mitra-wisata', [\App\Http\Controllers\Admin\MitraWisataController::class, 'store'])
+        ->name('admin.mitra-wisata.store');
     Route::get('admin/mitra-wisata/{user}', [\App\Http\Controllers\Admin\MitraWisataController::class, 'show'])
         ->name('admin.mitra-wisata.show');
     Route::post('admin/mitra-wisata/{user}/verify', [\App\Http\Controllers\Admin\MitraWisataController::class, 'verify'])
