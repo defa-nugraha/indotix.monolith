@@ -232,7 +232,7 @@ export default function LocationPickerModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl">
+            <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Pilih lokasi hotel</DialogTitle>
                     <DialogDescription>
@@ -275,7 +275,7 @@ export default function LocationPickerModal({
                     </div>
                 )}
 
-                <div className="h-[360px] w-full overflow-hidden rounded-xl border border-slate-200">
+                <div className="h-[240px] w-full overflow-hidden rounded-xl border border-slate-200 sm:h-[320px] lg:h-[360px]">
                     <div ref={mapContainerRef} className="h-full w-full" />
                 </div>
 
