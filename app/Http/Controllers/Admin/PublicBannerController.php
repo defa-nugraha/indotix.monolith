@@ -36,7 +36,9 @@ class PublicBannerController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['required', 'image', 'max:5120'],
+            'image' => ['required', 'image', 'max:5120', 'dimensions:width=1200,height=450'],
+        ], [
+            'image.dimensions' => 'Ukuran banner harus 1200 x 450 px.',
         ]);
 
         $path = $request->file('image')->store('public-banners', 'public');
@@ -66,7 +68,9 @@ class PublicBannerController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'max:5120'],
+            'image' => ['nullable', 'image', 'max:5120', 'dimensions:width=1200,height=450'],
+        ], [
+            'image.dimensions' => 'Ukuran banner harus 1200 x 450 px.',
         ]);
 
         if ($request->hasFile('image')) {

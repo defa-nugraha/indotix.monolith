@@ -64,6 +64,9 @@ export default function PartnerIndex({ partners }: { partners: Partner[] }) {
                             <p className="text-sm text-slate-600">
                                 Update logo dan tautan partner.
                             </p>
+                            <p className="text-xs text-slate-500">
+                                Ukuran logo rekomendasi: 300 × 180 px (rasio 5:3).
+                            </p>
                         </div>
                         <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">
                             <Link href="/admin/public/partners/create">Tambah Partner</Link>

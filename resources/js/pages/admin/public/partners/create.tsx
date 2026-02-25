@@ -65,6 +65,7 @@ export default function PartnerCreate() {
                         <div className="grid gap-2">
                             <Label>Logo</Label>
                             <Input type="file" accept="image/*" onChange={(event) => form.setData('image', event.target.files?.[0] ?? null)} />
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 300 × 180 px (rasio 5:3).</p>
                             <InputError message={form.errors.image} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">

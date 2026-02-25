@@ -92,6 +92,7 @@ export default function BannerCreate() {
                                     form.setData('image', event.target.files?.[0] ?? null)
                                 }
                             />
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1200 × 450 px (rasio 8:3).</p>
                             <InputError message={form.errors.image} />
                         </div>
                         <div className="flex gap-2">

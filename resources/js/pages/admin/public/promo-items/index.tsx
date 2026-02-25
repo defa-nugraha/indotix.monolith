@@ -64,6 +64,9 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                             <p className="text-sm text-slate-600">
                                 Tambahkan promo yang tampil di halaman publik.
                             </p>
+                            <p className="text-xs text-slate-500">
+                                Ukuran rekomendasi gambar: 1200 × 600 px (rasio 2:1).
+                            </p>
                         </div>
                         <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">
                             <Link href="/admin/public/promo-items/create">Tambah Promo</Link>

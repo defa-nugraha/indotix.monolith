@@ -25,6 +25,50 @@ export default function PromoVideoCreate() {
         secondary_video: null as File | null,
     });
 
+    const validateVideoFile = (
+        file: File | null,
+        field: 'video' | 'secondary_video',
+        expected: { width: number; height: number },
+        input?: HTMLInputElement | null,
+    ) => {
+        if (!file) {
+            form.setData(field, null);
+            form.clearErrors(field);
+            return;
+        }
+
+        const url = URL.createObjectURL(file);
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.onloadedmetadata = () => {
+            URL.revokeObjectURL(url);
+            if (video.videoWidth !== expected.width || video.videoHeight !== expected.height) {
+                form.setError(field, `Ukuran video harus ${expected.width} x ${expected.height} px.`);
+                form.setData(field, null);
+                if (input) {
+                    input.value = '';
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Ukuran video tidak sesuai',
+                    text: `Video harus ${expected.width} x ${expected.height} px.`,
+                });
+                return;
+            }
+            form.clearErrors(field);
+            form.setData(field, file);
+        };
+        video.onerror = () => {
+            URL.revokeObjectURL(url);
+            form.setError(field, 'Video tidak dapat dibaca.');
+            form.setData(field, null);
+            if (input) {
+                input.value = '';
+            }
+        };
+        video.src = url;
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tambah Promo Video">
@@ -70,12 +114,26 @@ export default function PromoVideoCreate() {
                         </div>
                         <div className="grid gap-2">
                             <Label>Video Utama (besar)</Label>
-                            <Input type="file" accept="video/*" onChange={(event) => form.setData('video', event.target.files?.[0] ?? null)} />
+                            <Input
+                                type="file"
+                                accept="video/*"
+                                onChange={(event) =>
+                                    validateVideoFile(event.target.files?.[0] ?? null, 'video', { width: 1280, height: 720 }, event.currentTarget)
+                                }
+                            />
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9).</p>
                             <InputError message={form.errors.video} />
                         </div>
                         <div className="grid gap-2">
                             <Label>Video Bawah (kecil)</Label>
-                            <Input type="file" accept="video/*" onChange={(event) => form.setData('secondary_video', event.target.files?.[0] ?? null)} />
+                            <Input
+                                type="file"
+                                accept="video/*"
+                                onChange={(event) =>
+                                    validateVideoFile(event.target.files?.[0] ?? null, 'secondary_video', { width: 960, height: 540 }, event.currentTarget)
+                                }
+                            />
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 960 × 540 px (16:9).</p>
                             <InputError message={form.errors.secondary_video} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">
