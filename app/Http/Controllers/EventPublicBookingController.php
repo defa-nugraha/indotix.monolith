@@ -235,14 +235,49 @@ class EventPublicBookingController extends Controller
             ]);
         }
 
-        return redirect()->route('events.booking.payment', [
-            'booking' => $this->encryptId($booking->id),
+        $event = Event::query()->findOrFail($draft['event_id']);
+        $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
+        $total = (int) $ticket->price * (int) $draft['quantity'];
+        $snap = $this->createSnapPayment($booking, $midtransService);
+
+        return Inertia::render('public/events/booking/review', [
+            'draft' => $draft,
+            'event' => [
+                'id' => $event->id,
+                'title' => $event->title,
+                'city_name' => $this->resolveCityName($event->city_code),
+                'location' => $event->location,
+                'start_at' => $event->start_at?->toDateTimeString(),
+            ],
+            'ticket' => [
+                'id' => $ticket->id,
+                'name' => $ticket->name,
+                'price' => $ticket->price,
+            ],
+            'pricing' => [
+                'total' => $total,
+            ],
+            'snapToken' => $snap['token'] ?? null,
+            'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+            'snapScriptUrl' => config('services.midtrans.is_production')
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js',
         ]);
     }
 
-    public function payment(Request $request, string $booking): Response
+    public function payment(Request $request, string $booking): Response|RedirectResponse
     {
         $booking = $this->resolveBooking($booking);
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return redirect()->route('home');
+        }
+
+        if ($booking->isExpired()) {
+            $booking->update([
+                'status' => 'expired',
+                'payment_status' => 'expired',
+            ]);
+        }
         $booking->load(['event', 'ticket', 'payments']);
 
         return Inertia::render('public/events/booking/payment', [
@@ -254,9 +289,43 @@ class EventPublicBookingController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $booking): Response
+    public function pay(Request $request, string $booking, MidtransService $midtransService): RedirectResponse
     {
         $booking = $this->resolveBooking($booking);
+
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return redirect()->route('home');
+        }
+
+        if ($booking->isExpired()) {
+            $booking->update([
+                'status' => 'expired',
+                'payment_status' => 'expired',
+            ]);
+
+            return redirect()->route('events.booking.payment', ['booking' => $this->encryptId($booking->id)])
+                ->withErrors(['payment' => 'Booking sudah kedaluwarsa.']);
+        }
+
+        if ($booking->status !== 'pending_payment') {
+            return redirect()->route('events.booking.payment', ['booking' => $this->encryptId($booking->id)]);
+        }
+
+        if ($booking->payments()->where('status', 'pending')->exists()) {
+            return redirect()->route('events.booking.payment', ['booking' => $this->encryptId($booking->id)]);
+        }
+
+        $this->createSnapPayment($booking, $midtransService);
+
+        return redirect()->route('events.booking.payment', ['booking' => $this->encryptId($booking->id)]);
+    }
+
+    public function show(Request $request, string $booking): Response|RedirectResponse
+    {
+        $booking = $this->resolveBooking($booking);
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return redirect()->route('home');
+        }
         $booking->load(['event', 'ticket', 'payments']);
 
         $reviewUrl = $booking->event_id

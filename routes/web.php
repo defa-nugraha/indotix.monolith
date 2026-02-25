@@ -918,6 +918,8 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('events.booking.confirm');
     Route::get('/events/booking/{booking}/payment', [\App\Http\Controllers\EventPublicBookingController::class, 'payment'])
         ->name('events.booking.payment');
+    Route::post('/events/booking/{booking}/payment', [\App\Http\Controllers\EventPublicBookingController::class, 'pay'])
+        ->name('events.booking.pay');
     Route::get('/events/booking/{booking}/ticket', [\App\Http\Controllers\EventPublicBookingController::class, 'ticket'])
         ->name('events.booking.ticket');
     Route::get('/events/booking/{booking}', [\App\Http\Controllers\EventPublicBookingController::class, 'show'])

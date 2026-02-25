@@ -1,8 +1,9 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
+import Swal from 'sweetalert2';
 
 type Booking = {
     id: number;
@@ -38,6 +39,7 @@ export default function EventBookingPayment({
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const role = auth?.user?.role;
+    const form = useForm({});
     const [remaining, setRemaining] = useState<string | null>(null);
     const snapOpened = useRef(false);
     const snapToken = booking.payment?.payload?.token;
@@ -124,11 +126,22 @@ export default function EventBookingPayment({
                             }
                             if (window.snap && snapToken) {
                                 window.snap.pay(snapToken);
+                                return;
                             }
+                            form.post(`/events/booking/${booking.encrypted_id}/payment`, {
+                                preserveScroll: true,
+                                onError: (errors) =>
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Gagal',
+                                        text: errors.payment ?? 'Tidak dapat memproses pembayaran.',
+                                    }),
+                            });
                         }}
-                        className="mt-6 w-full rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
+                        className="mt-6 w-full rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-70"
+                        disabled={form.processing}
                     >
-                        Lanjutkan Pembayaran
+                        {form.processing ? 'Memproses...' : snapToken ? 'Buka Pembayaran' : 'Lanjutkan Pembayaran'}
                     </button>
                 </div>
             </main>

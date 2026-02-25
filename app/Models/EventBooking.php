@@ -57,4 +57,11 @@ class EventBooking extends Model
     {
         return $this->hasMany(EventPayment::class, 'event_booking_id');
     }
+
+    public function isExpired(): bool
+    {
+        return $this->status === 'pending_payment'
+            && $this->payment_deadline
+            && $this->payment_deadline->isPast();
+    }
 }
