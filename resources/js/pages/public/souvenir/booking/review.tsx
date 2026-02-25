@@ -30,10 +30,11 @@ declare global {
 }
 
 export default function SouvenirBookingReview({ items, summary, snapClientKey, snapScriptUrl, snapToken: initialSnapToken }: Props) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as {
-        auth?: { user?: { role?: string; name?: string; email?: string } };
+    const { auth, unread_notifications, souvenir_cart_count, default_address } = usePage().props as {
+        auth?: { user?: { role?: string; name?: string; email?: string; phone?: string } };
         unread_notifications?: number;
         souvenir_cart_count?: number;
+        default_address?: { label?: string | null; formatted?: string | null };
     };
     const isUser = Boolean(auth?.user?.role === 'user');
     const form = useForm({
@@ -54,7 +55,16 @@ export default function SouvenirBookingReview({ items, summary, snapClientKey, s
         if (auth?.user?.email && !form.data.guest_email) {
             form.setData('guest_email', auth.user.email);
         }
-    }, [auth?.user?.name, auth?.user?.email]);
+        if (auth?.user?.phone && !form.data.guest_phone) {
+            form.setData('guest_phone', auth.user.phone);
+        }
+        if (default_address?.formatted && !form.data.shipping_address) {
+            form.setData('shipping_address', default_address.formatted);
+        }
+    }, [auth?.user?.name, auth?.user?.email, auth?.user?.phone, default_address?.formatted]);
+
+    const hasPhone = Boolean(auth?.user?.phone);
+    const hasAddress = Boolean(default_address?.formatted);
 
     useEffect(() => {
         if (initialSnapToken) {
@@ -164,10 +174,18 @@ export default function SouvenirBookingReview({ items, summary, snapClientKey, s
                                         <input
                                             className="w-full text-sm focus:outline-none"
                                             value={form.data.guest_phone}
-                                            onChange={(event) => form.setData('guest_phone', event.target.value)}
-                                            required
+                                            readOnly
                                         />
                                     </div>
+                                    {!hasPhone && (
+                                        <div className="mt-1 text-xs text-rose-600">
+                                            Nomor HP belum diisi. Lengkapi di{' '}
+                                            <Link href="/settings/profile" className="font-semibold underline underline-offset-2">
+                                                halaman profil
+                                            </Link>{' '}
+                                            terlebih dahulu.
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-slate-700">Alamat Pengiriman</label>
@@ -176,10 +194,21 @@ export default function SouvenirBookingReview({ items, summary, snapClientKey, s
                                         <input
                                             className="w-full text-sm focus:outline-none"
                                             value={form.data.shipping_address}
-                                            onChange={(event) => form.setData('shipping_address', event.target.value)}
-                                            required
+                                            readOnly
                                         />
                                     </div>
+                                    {default_address?.label && (
+                                        <div className="mt-1 text-xs text-slate-500">Alamat: {default_address.label}</div>
+                                    )}
+                                    {!hasAddress && (
+                                        <div className="mt-1 text-xs text-rose-600">
+                                            Alamat utama belum diisi. Lengkapi di{' '}
+                                            <Link href="/settings/profile" className="font-semibold underline underline-offset-2">
+                                                halaman profil
+                                            </Link>{' '}
+                                            terlebih dahulu.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div>
@@ -193,7 +222,7 @@ export default function SouvenirBookingReview({ items, summary, snapClientKey, s
                             <button
                                 type="submit"
                                 className="mt-4 w-full rounded-xl bg-sky-600 py-3 text-sm font-semibold text-white hover:bg-sky-700"
-                                disabled={loading}
+                                disabled={loading || !hasPhone || !hasAddress}
                             >
                                 {loading ? 'Memproses...' : 'Lanjutkan Pembayaran'}
                             </button>

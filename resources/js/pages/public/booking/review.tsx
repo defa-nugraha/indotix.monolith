@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
 
 export default function BookingReview({ draft, hotel, roomType, pricing, voucher }: any) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { name?: string; email?: string; role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { name?: string; email?: string; role?: string; phone?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const isUser = Boolean((auth?.user as any)?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -25,7 +25,12 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
         if (auth?.user?.email && !form.data.guest_email) {
             form.setData('guest_email', auth.user.email);
         }
-    }, [auth?.user?.name, auth?.user?.email]);
+        if (auth?.user?.phone && !form.data.guest_phone) {
+            form.setData('guest_phone', auth.user.phone);
+        }
+    }, [auth?.user?.name, auth?.user?.email, auth?.user?.phone]);
+
+    const hasPhone = Boolean(auth?.user?.phone);
 
     return (
         <PublicLayout>
@@ -99,11 +104,20 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
                                             <Phone className="h-4 w-4 text-slate-400" />
                                             <input
                                                 className="h-10 w-full bg-transparent text-sm outline-none"
-                                                placeholder="Nomor telepon"
+                                                placeholder="Nomor telepon dari profil"
                                                 value={form.data.guest_phone}
-                                                onChange={(event) => form.setData('guest_phone', event.target.value)}
+                                                readOnly
                                             />
                                         </div>
+                                    {!hasPhone && (
+                                        <div className="text-xs text-rose-600">
+                                            Nomor HP belum diisi. Lengkapi di{' '}
+                                            <Link href="/settings/profile" className="font-semibold underline underline-offset-2">
+                                                halaman profil
+                                            </Link>{' '}
+                                            terlebih dahulu.
+                                        </div>
+                                    )}
                                     </div>
                                     <div className="grid gap-2">
                                         <label className="text-sm font-semibold text-slate-700">Email</label>
@@ -127,7 +141,10 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
                                         onChange={(event) => form.setData('special_request', event.target.value)}
                                     />
                                 </div>
-                                <button className="h-12 rounded-xl bg-sky-600 text-sm font-semibold text-white shadow-sm">
+                                <button
+                                    className="h-12 rounded-xl bg-sky-600 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+                                    disabled={!hasPhone || form.processing}
+                                >
                                     Konfirmasi Booking
                                 </button>
                             </form>

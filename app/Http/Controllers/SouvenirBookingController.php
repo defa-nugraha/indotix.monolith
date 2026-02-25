@@ -79,10 +79,21 @@ class SouvenirBookingController extends Controller
         $data = $request->validate([
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
-            'guest_phone' => ['required', 'string', 'max:30'],
-            'shipping_address' => ['required', 'string', 'max:500'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $profilePhone = $request->user()?->phone;
+        if (! $profilePhone) {
+            return back()->withErrors(['guest_phone' => 'Nomor HP belum diisi di profil.']);
+        }
+
+        $shippingAddress = $request->user()?->defaultAddressString();
+        if (! $shippingAddress) {
+            return back()->withErrors(['shipping_address' => 'Alamat utama belum diisi di profil.']);
+        }
+
+        $data['guest_phone'] = $profilePhone;
+        $data['shipping_address'] = $shippingAddress;
 
         $existingOrderId = $request->session()->get('souvenir_order_pending');
         if ($existingOrderId) {

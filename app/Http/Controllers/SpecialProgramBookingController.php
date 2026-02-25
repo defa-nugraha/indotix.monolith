@@ -119,8 +119,13 @@ class SpecialProgramBookingController extends Controller
         $data = $request->validate([
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email'],
-            'guest_phone' => ['required', 'string', 'max:30'],
         ]);
+
+        $profilePhone = $request->user()?->phone;
+        if (! $profilePhone) {
+            return back()->withErrors(['guest_phone' => 'Nomor HP belum diisi di profil.']);
+        }
+        $data['guest_phone'] = $profilePhone;
 
         $program = SpecialProgram::query()->findOrFail($draft['program_id']);
         $payload = $this->resolveTicketPayload($draft['item_type'], (int) $draft['item_id'], $draft['ticket_id'] ?? null);

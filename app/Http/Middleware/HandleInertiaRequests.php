@@ -40,6 +40,11 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $affiliateReferral = null;
+        $defaultAddress = null;
+
+        if ($request->user()) {
+            $defaultAddress = $request->user()->defaultAddressValue();
+        }
         if ($request->user() || $request->session()->has('affiliate_ref') || $request->cookie('affiliate_ref')) {
             $payload = $request->session()->get('affiliate_ref');
             if (! $payload && $request->cookie('affiliate_ref')) {
@@ -83,6 +88,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'default_address' => $defaultAddress,
             'affiliate_menu' => $request->user()
                 ? (bool) WisataAffiliate::query()->where('user_id', $request->user()->id)->exists()
                 : false,

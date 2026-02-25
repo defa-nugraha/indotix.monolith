@@ -49,7 +49,7 @@ export default function WisataBookingReview({
     snapScriptUrl,
     snapToken: initialSnapToken,
 }: Props) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string; name?: string; email?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string; name?: string; email?: string; phone?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const isUser = Boolean(auth?.user?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -68,7 +68,12 @@ export default function WisataBookingReview({
         if (auth?.user?.email && !form.data.guest_email) {
             form.setData('guest_email', auth.user.email);
         }
-    }, [auth?.user?.name, auth?.user?.email]);
+        if (auth?.user?.phone && !form.data.guest_phone) {
+            form.setData('guest_phone', auth.user.phone);
+        }
+    }, [auth?.user?.name, auth?.user?.email, auth?.user?.phone]);
+
+    const hasPhone = Boolean(auth?.user?.phone);
 
     useEffect(() => {
         if (initialSnapToken) {
@@ -181,10 +186,18 @@ export default function WisataBookingReview({
                                         <input
                                             className="w-full text-sm focus:outline-none"
                                             value={form.data.guest_phone}
-                                            onChange={(event) => form.setData('guest_phone', event.target.value)}
-                                            required
+                                            readOnly
                                         />
                                     </div>
+                                    {!hasPhone && (
+                                        <div className="mt-1 text-xs text-rose-600">
+                                            Nomor HP belum diisi. Lengkapi di{' '}
+                                            <Link href="/settings/profile" className="font-semibold underline underline-offset-2">
+                                                halaman profil
+                                            </Link>{' '}
+                                            terlebih dahulu.
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="md:col-span-2">
                                     <label className="text-sm font-medium text-slate-700">Permintaan Khusus</label>
@@ -199,7 +212,7 @@ export default function WisataBookingReview({
                                 <button
                                     type="submit"
                                     className="rounded-full bg-sky-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-70"
-                                    disabled={loading}
+                                    disabled={loading || !hasPhone}
                                 >
                                     {loading ? 'Memproses...' : 'Lanjutkan Pembayaran'}
                                 </button>

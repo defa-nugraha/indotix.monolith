@@ -1,10 +1,217 @@
 import { Transition } from '@headlessui/react';
-import { Form, Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Form, Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import InputError from '@/components/input-error';
-import { UserCircle, Mail, Phone } from 'lucide-react';
+import { CheckCircle2, Mail, MapPinned, Pencil, Phone, Trash2, UserCircle } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+
+type Address = {
+    id: number;
+    label: string;
+    recipient_name: string;
+    phone: string;
+    address_line: string;
+    city?: string | null;
+    province?: string | null;
+    postal_code?: string | null;
+    notes?: string | null;
+    is_default: boolean;
+};
+
+function AddressCard({ address }: { address: Address }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const form = useForm({
+        label: address.label ?? '',
+        recipient_name: address.recipient_name ?? '',
+        phone: address.phone ?? '',
+        address_line: address.address_line ?? '',
+        city: address.city ?? '',
+        province: address.province ?? '',
+        postal_code: address.postal_code ?? '',
+        notes: address.notes ?? '',
+        is_default: address.is_default ?? false,
+    });
+
+    const formattedAddress = useMemo(() => {
+        return [address.address_line, address.city, address.province, address.postal_code]
+            .filter((item) => Boolean(item && `${item}`.trim()))
+            .join(', ');
+    }, [address.address_line, address.city, address.province, address.postal_code]);
+
+    return (
+        <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <div className="text-sm font-semibold text-slate-900">{address.label}</div>
+                        {address.is_default && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Alamat utama
+                            </span>
+                        )}
+                    </div>
+                    <div className="mt-2 text-sm font-semibold text-slate-800">{address.recipient_name}</div>
+                    <div className="mt-1 text-sm text-slate-600">{address.phone}</div>
+                    <div className="mt-2 flex items-start gap-2 text-sm text-slate-600">
+                        <MapPinned className="mt-0.5 h-4 w-4 text-sky-500" />
+                        <span>{formattedAddress || '-'}</span>
+                    </div>
+                    {address.notes && <div className="mt-2 text-xs text-slate-500">Catatan: {address.notes}</div>}
+                </div>
+                <div className="flex shrink-0 flex-col gap-2">
+                    {!address.is_default && (
+                        <button
+                            type="button"
+                            onClick={() => router.patch(`/settings/addresses/${address.id}/default`, {}, { preserveScroll: true })}
+                            className="rounded-lg border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
+                        >
+                            Jadikan utama
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        onClick={() => setIsEditing((prev) => !prev)}
+                        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                        <span className="inline-flex items-center gap-1">
+                            <Pencil className="h-3 w-3" />
+                            {isEditing ? 'Tutup' : 'Edit'}
+                        </span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (confirm('Hapus alamat ini?')) {
+                                router.delete(`/settings/addresses/${address.id}`, { preserveScroll: true });
+                            }
+                        }}
+                        className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
+                    >
+                        <span className="inline-flex items-center gap-1">
+                            <Trash2 className="h-3 w-3" />
+                            Hapus
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            {isEditing && (
+                <form
+                    className="mt-5 grid gap-4 border-t border-slate-100 pt-5"
+                    onSubmit={(event) => {
+                        event.preventDefault();
+                        form.patch(`/settings/addresses/${address.id}`, {
+                            preserveScroll: true,
+                            onSuccess: () => setIsEditing(false),
+                        });
+                    }}
+                >
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">Label</label>
+                            <input
+                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.label}
+                                onChange={(event) => form.setData('label', event.target.value)}
+                                placeholder="Rumah, Kantor, dll"
+                            />
+                            <InputError message={form.errors.label} />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">Nama Penerima</label>
+                            <input
+                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.recipient_name}
+                                onChange={(event) => form.setData('recipient_name', event.target.value)}
+                            />
+                            <InputError message={form.errors.recipient_name} />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                            <input
+                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.phone}
+                                onChange={(event) => form.setData('phone', event.target.value)}
+                            />
+                            <InputError message={form.errors.phone} />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">Alamat Lengkap</label>
+                            <input
+                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.address_line}
+                                onChange={(event) => form.setData('address_line', event.target.value)}
+                            />
+                            <InputError message={form.errors.address_line} />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">Kota</label>
+                            <input
+                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.city}
+                                onChange={(event) => form.setData('city', event.target.value)}
+                            />
+                            <InputError message={form.errors.city} />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">Provinsi</label>
+                            <input
+                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.province}
+                                onChange={(event) => form.setData('province', event.target.value)}
+                            />
+                            <InputError message={form.errors.province} />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">Kode Pos</label>
+                            <input
+                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.postal_code}
+                                onChange={(event) => form.setData('postal_code', event.target.value)}
+                            />
+                            <InputError message={form.errors.postal_code} />
+                        </div>
+                    </div>
+                    <div className="grid gap-2">
+                        <label className="text-sm font-semibold text-slate-700">Catatan (opsional)</label>
+                        <textarea
+                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                            value={form.data.notes}
+                            onChange={(event) => form.setData('notes', event.target.value)}
+                        />
+                        <InputError message={form.errors.notes} />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-slate-600">
+                        <input
+                            type="checkbox"
+                            checked={Boolean(form.data.is_default)}
+                            onChange={(event) => form.setData('is_default', event.target.checked)}
+                        />
+                        Jadikan alamat utama
+                    </label>
+                    <div className="flex items-center gap-3">
+                        <button
+                            type="submit"
+                            className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                            disabled={form.processing}
+                        >
+                            {form.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                        </button>
+                        <button
+                            type="button"
+                            className="rounded-lg border border-slate-200 px-5 py-2 text-sm font-semibold text-slate-600"
+                            onClick={() => setIsEditing(false)}
+                        >
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            )}
+        </div>
+    );
+}
 
 export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu, affiliate_status } = usePage().props as {
@@ -14,11 +221,23 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
         affiliate_menu?: boolean;
         affiliate_status?: string | null;
     };
+    const { addresses = [] } = usePage().props as { addresses?: Address[] };
     const [passwordOpen, setPasswordOpen] = useState(false);
     const passwordForm = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
+    });
+    const addressForm = useForm({
+        label: '',
+        recipient_name: '',
+        phone: '',
+        address_line: '',
+        city: '',
+        province: '',
+        postal_code: '',
+        notes: '',
+        is_default: false,
     });
 
     return (
@@ -75,6 +294,36 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                             <InputError message={errors.email} />
                                         </div>
 
+                                        <div className="grid gap-2 md:grid-cols-2">
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                                                <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
+                                                    <Phone className="h-4 w-4 text-slate-400" />
+                                                    <input
+                                                        name="phone"
+                                                        defaultValue={auth?.user?.phone ?? ''}
+                                                        className="h-10 w-full bg-transparent text-sm outline-none"
+                                                        placeholder="0812xxxxxxx"
+                                                    />
+                                                </div>
+                                                <InputError message={errors.phone} />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">Jenis Kelamin</label>
+                                                <select
+                                                    name="gender"
+                                                    defaultValue={auth?.user?.gender ?? ''}
+                                                    className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700"
+                                                >
+                                                    <option value="">Pilih</option>
+                                                    <option value="male">Laki-laki</option>
+                                                    <option value="female">Perempuan</option>
+                                                    <option value="other">Lainnya</option>
+                                                </select>
+                                                <InputError message={errors.gender} />
+                                            </div>
+                                        </div>
+
                                         {mustVerifyEmail && auth?.user?.email_verified_at === null && (
                                             <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
                                                 Email kamu belum terverifikasi.{' '}
@@ -115,6 +364,128 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                     </>
                                 )}
                             </Form>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <div className="flex items-center justify-between gap-4">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-slate-900">Alamat Pengiriman</h2>
+                                    <p className="mt-2 text-sm text-slate-500">Kelola alamat utama untuk pengiriman pesanan.</p>
+                                </div>
+                            </div>
+
+                            <div className="mt-5 grid gap-4">
+                                {addresses.length > 0 ? (
+                                    addresses.map((address) => <AddressCard key={address.id} address={address} />)
+                                ) : (
+                                    <div className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
+                                        Belum ada alamat tersimpan. Tambahkan alamat utama agar checkout lebih cepat.
+                                    </div>
+                                )}
+                            </div>
+
+                            <form
+                                className="mt-6 grid gap-4 border-t border-slate-100 pt-6"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    addressForm.post('/settings/addresses', {
+                                        preserveScroll: true,
+                                        onSuccess: () => addressForm.reset(),
+                                    });
+                                }}
+                            >
+                                <h3 className="text-sm font-semibold text-slate-900">Tambah Alamat Baru</h3>
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Label</label>
+                                        <input
+                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            value={addressForm.data.label}
+                                            onChange={(event) => addressForm.setData('label', event.target.value)}
+                                            placeholder="Rumah, Kantor, dll"
+                                        />
+                                        <InputError message={addressForm.errors.label} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Nama Penerima</label>
+                                        <input
+                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            value={addressForm.data.recipient_name}
+                                            onChange={(event) => addressForm.setData('recipient_name', event.target.value)}
+                                        />
+                                        <InputError message={addressForm.errors.recipient_name} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                                        <input
+                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            value={addressForm.data.phone}
+                                            onChange={(event) => addressForm.setData('phone', event.target.value)}
+                                        />
+                                        <InputError message={addressForm.errors.phone} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Alamat Lengkap</label>
+                                        <input
+                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            value={addressForm.data.address_line}
+                                            onChange={(event) => addressForm.setData('address_line', event.target.value)}
+                                        />
+                                        <InputError message={addressForm.errors.address_line} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Kota</label>
+                                        <input
+                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            value={addressForm.data.city}
+                                            onChange={(event) => addressForm.setData('city', event.target.value)}
+                                        />
+                                        <InputError message={addressForm.errors.city} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Provinsi</label>
+                                        <input
+                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            value={addressForm.data.province}
+                                            onChange={(event) => addressForm.setData('province', event.target.value)}
+                                        />
+                                        <InputError message={addressForm.errors.province} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Kode Pos</label>
+                                        <input
+                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            value={addressForm.data.postal_code}
+                                            onChange={(event) => addressForm.setData('postal_code', event.target.value)}
+                                        />
+                                        <InputError message={addressForm.errors.postal_code} />
+                                    </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-semibold text-slate-700">Catatan (opsional)</label>
+                                    <textarea
+                                        className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                        value={addressForm.data.notes}
+                                        onChange={(event) => addressForm.setData('notes', event.target.value)}
+                                    />
+                                    <InputError message={addressForm.errors.notes} />
+                                </div>
+                                <label className="flex items-center gap-2 text-sm text-slate-600">
+                                    <input
+                                        type="checkbox"
+                                        checked={Boolean(addressForm.data.is_default)}
+                                        onChange={(event) => addressForm.setData('is_default', event.target.checked)}
+                                    />
+                                    Jadikan alamat utama
+                                </label>
+                                <button
+                                    type="submit"
+                                    className="w-fit rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                                    disabled={addressForm.processing}
+                                >
+                                    {addressForm.processing ? 'Menyimpan...' : 'Simpan Alamat'}
+                                </button>
+                            </form>
                         </div>
 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">

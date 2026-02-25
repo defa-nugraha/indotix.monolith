@@ -22,6 +22,8 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $fillable = [
         'name',
         'email',
+        'phone',
+        'gender',
         'password',
         'role',
         'mitra_onboarding_type',
@@ -55,6 +57,43 @@ class User extends Authenticatable implements MustVerifyEmail
     public function mitraEventOnboarding()
     {
         return $this->hasOne(\App\Models\MitraEventOnboarding::class);
+    }
+
+    public function addresses()
+    {
+        return $this->hasMany(\App\Models\UserAddress::class);
+    }
+
+    public function defaultAddress()
+    {
+        return $this->hasOne(\App\Models\UserAddress::class)->where('is_default', true);
+    }
+
+    public function defaultAddressString(): ?string
+    {
+        $address = $this->defaultAddress()->first()
+            ?? $this->addresses()->orderByDesc('is_default')->first();
+
+        return $address?->formatted_address;
+    }
+
+    public function defaultAddressValue(): ?array
+    {
+        $address = $this->defaultAddress()->first()
+            ?? $this->addresses()->orderByDesc('is_default')->first();
+
+        if (! $address) {
+            return null;
+        }
+
+        return [
+            'id' => $address->id,
+            'label' => $address->label,
+            'recipient_name' => $address->recipient_name,
+            'phone' => $address->phone,
+            'formatted' => $address->formatted_address,
+            'is_default' => $address->is_default,
+        ];
     }
 
     /**

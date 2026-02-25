@@ -202,9 +202,14 @@ class BookingController extends Controller
         $data = $request->validate([
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
-            'guest_phone' => ['required', 'string', 'max:30'],
             'special_request' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $profilePhone = $request->user()?->phone;
+        if (! $profilePhone) {
+            return back()->withErrors(['guest_phone' => 'Nomor HP belum diisi di profil.']);
+        }
+        $data['guest_phone'] = $profilePhone;
 
         $roomType = RoomType::query()->findOrFail($draft['room_type_id']);
 

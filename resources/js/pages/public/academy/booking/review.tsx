@@ -49,7 +49,7 @@ export default function AcademyBookingReview({
     snapScriptUrl,
     snapToken: initialSnapToken,
 }: Props) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string; name?: string; email?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string; name?: string; email?: string; phone?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const isUser = Boolean(auth?.user?.role === 'user');
     const form = useForm({
         guest_name: '',
@@ -69,7 +69,12 @@ export default function AcademyBookingReview({
         if (auth?.user?.email && !form.data.guest_email) {
             form.setData('guest_email', auth.user.email);
         }
-    }, [auth?.user?.name, auth?.user?.email]);
+        if (auth?.user?.phone && !form.data.guest_phone) {
+            form.setData('guest_phone', auth.user.phone);
+        }
+    }, [auth?.user?.name, auth?.user?.email, auth?.user?.phone]);
+
+    const hasPhone = Boolean(auth?.user?.phone);
 
     useEffect(() => {
         if (initialSnapToken) {
@@ -197,11 +202,20 @@ export default function AcademyBookingReview({
                                         <Phone className="h-4 w-4 text-slate-400" />
                                         <input
                                             value={form.data.guest_phone}
-                                            onChange={(event) => form.setData('guest_phone', event.target.value)}
-                                            placeholder="Nomor telepon"
+                                            readOnly
+                                            placeholder="Nomor telepon dari profil"
                                             className="w-full bg-transparent text-sm outline-none"
                                         />
                                     </div>
+                                    {!hasPhone && (
+                                        <div className="-mt-2 text-xs text-rose-600">
+                                            Nomor HP belum diisi. Lengkapi di{' '}
+                                            <Link href="/settings/profile" className="font-semibold underline underline-offset-2">
+                                                halaman profil
+                                            </Link>{' '}
+                                            terlebih dahulu.
+                                        </div>
+                                    )}
                                     <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 py-3">
                                         <Mail className="h-4 w-4 text-slate-400" />
                                         <input
@@ -250,7 +264,7 @@ export default function AcademyBookingReview({
                                 type="button"
                                 onClick={submitBooking}
                                 className="mt-4 w-full rounded-xl bg-sky-600 px-4 py-3 text-sm font-semibold text-white disabled:opacity-60"
-                                disabled={loading}
+                                disabled={loading || !hasPhone}
                             >
                                 {loading ? 'Memproses...' : 'Lanjutkan Pembayaran'}
                             </button>
