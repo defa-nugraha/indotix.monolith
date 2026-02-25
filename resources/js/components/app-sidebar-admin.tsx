@@ -668,7 +668,7 @@ export function AppSidebarAdmin() {
                             <CollapsibleTrigger asChild>
                                 <SidebarMenuButton>
                                     <ShoppingBag />
-                                    <span>Souvenir</span>
+                                    <span>Retail Shop</span>
                                     <ChevronDown className="ml-auto size-4" />
                                 </SidebarMenuButton>
                             </CollapsibleTrigger>
@@ -711,7 +711,7 @@ export function AppSidebarAdmin() {
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/promotions')}>
-                                            <Link href="/admin/souvenir/promotions">Promo Souvenir</Link>
+                                            <Link href="/admin/souvenir/promotions">Promo Retail Shop</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
@@ -726,7 +726,7 @@ export function AppSidebarAdmin() {
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/settings')}>
-                                            <Link href="/admin/souvenir/settings">Konfigurasi Souvenir</Link>
+                                            <Link href="/admin/souvenir/settings">Konfigurasi Retail Shop</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

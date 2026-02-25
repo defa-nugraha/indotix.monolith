@@ -87,13 +87,13 @@ export default function SouvenirBookingReview({ items, summary, snapClientKey, s
 
     return (
         <PublicLayout>
-            <Head title="Review Pemesanan Souvenir" />
+            <Head title="Review Pemesanan Retail Shop" />
                         <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8">
                 <section className="flex flex-col gap-6 lg:flex-row">
                     <div className="flex-1 rounded-3xl bg-white p-6 shadow-sm">
                         <div className="flex items-start justify-between">
                             <div>
-                                <h1 className="text-2xl font-semibold text-slate-900">Review Pemesanan Souvenir</h1>
+                                <h1 className="text-2xl font-semibold text-slate-900">Review Pemesanan Retail Shop</h1>
                                 <div className="mt-2 text-sm text-slate-500">Lengkapi data pengiriman sebelum bayar.</div>
                             </div>
                             <ClipboardCheck className="h-6 w-6 text-sky-500" />

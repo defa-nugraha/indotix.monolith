@@ -50,7 +50,7 @@ export default function BookingShow({ booking }: { booking: Booking }) {
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
@@ -278,7 +278,7 @@ export default function BookingShow({ booking }: { booking: Booking }) {
                             <li>Special Program</li>
                             <li>Event</li>
                             <li>Hotel</li>
-                            <li>Souvenir</li>
+                            <li>Retail Shop</li>
                         </ul>
                     </div>
                     <div>

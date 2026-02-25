@@ -82,14 +82,14 @@ export default function SouvenirShow({
     const navItems = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir', active: true },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir', active: true },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
     return (
         <PublicLayout categories={navItems}>
-            <Head title={`${product.name} - Souvenir`} />
+            <Head title={`${product.name} - Retail Shop`} />
 
                         <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
@@ -113,7 +113,7 @@ export default function SouvenirShow({
                             </div>
 
                             <div>
-                                <div className="text-xs text-slate-500">{product.category ?? 'Souvenir'}</div>
+                                <div className="text-xs text-slate-500">{product.category ?? 'Retail Shop'}</div>
                                 <h1 className="mt-2 text-2xl font-semibold text-slate-900">{product.name}</h1>
                                 <p className="mt-3 text-sm text-slate-600">{product.description ?? 'Produk souvenir pilihan dari INDOTIX.'}</p>
                             </div>

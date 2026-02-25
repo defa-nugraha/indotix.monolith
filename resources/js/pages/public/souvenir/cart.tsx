@@ -27,7 +27,7 @@ export default function SouvenirCart({ items, summary }: { items: CartItem[]; su
     const navItems = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir', active: true },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir', active: true },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
@@ -52,12 +52,12 @@ export default function SouvenirCart({ items, summary }: { items: CartItem[]; su
 
     return (
         <PublicLayout categories={navItems}>
-            <Head title="Keranjang Souvenir" />
+            <Head title="Keranjang Retail Shop" />
 
                         <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
                     <section className="rounded-2xl bg-white p-6 shadow-sm">
-                        <h1 className="text-2xl font-semibold text-slate-900">Keranjang Souvenir</h1>
+                        <h1 className="text-2xl font-semibold text-slate-900">Keranjang Retail Shop</h1>
                         <p className="mt-2 text-sm text-slate-500">Cek kembali produk sebelum melanjutkan pembayaran.</p>
 
                         {items.length === 0 && (

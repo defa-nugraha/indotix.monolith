@@ -43,7 +43,7 @@ export default function EventSearch({
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata', active: false },
         { label: 'Event', icon: CalendarCheck, href: '/events', active: true },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir', active: false },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir', active: false },
         { label: 'Spesial Program', icon: Star, href: '/special-programs', active: false },
         { label: 'Hotel', icon: Ticket, href: '/stay', active: false },
     ];
@@ -225,7 +225,7 @@ export default function EventSearch({
                             <li>Special Program</li>
                             <li>Event</li>
                             <li>Hotel</li>
-                            <li>Souvenir</li>
+                            <li>Retail Shop</li>
                         </ul>
                     </div>
                     <div>

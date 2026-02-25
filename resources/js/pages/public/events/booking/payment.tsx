@@ -146,7 +146,7 @@ export default function EventBookingPayment({
                             <li>Special Program</li>
                             <li>Event</li>
                             <li>Hotel</li>
-                            <li>Souvenir</li>
+                            <li>Retail Shop</li>
                         </ul>
                     </div>
                     <div>

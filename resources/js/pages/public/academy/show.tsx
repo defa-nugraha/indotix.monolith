@@ -77,7 +77,7 @@ export default function AcademyShow({
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Academy', icon: BookOpen, href: '/academy' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
@@ -247,7 +247,7 @@ export default function AcademyShow({
                             <li>Event</li>
                             <li>Academy</li>
                             <li>Hotel</li>
-                            <li>Souvenir</li>
+                            <li>Retail Shop</li>
                         </ul>
                     </div>
                     <div>

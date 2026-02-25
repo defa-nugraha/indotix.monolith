@@ -40,7 +40,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Academy', icon: BookOpen, href: '/academy' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
@@ -126,7 +126,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                 { id: 'hotel', label: 'Hotel' },
                                 { id: 'wisata', label: 'Wisata' },
                                 { id: 'event', label: 'Event' },
-                                { id: 'souvenir', label: 'Souvenir' },
+                                { id: 'souvenir', label: 'Retail Shop' },
                                 { id: 'special_program', label: 'Special Program' },
                                 { id: 'academy', label: 'Academy' },
                             ].map((item) => (
@@ -210,7 +210,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                             : booking.type === 'event'
                                                                 ? 'Event'
                                                                 : booking.type === 'souvenir'
-                                                                    ? 'Souvenir'
+                                                                    ? 'Retail Shop'
                                                                     : booking.type === 'special_program'
                                                                         ? 'Special Program'
                                                                         : booking.type === 'academy'
@@ -239,7 +239,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                     <>
                                                         <span className="flex items-center gap-1">
                                                             <CalendarCheck className="h-4 w-4 text-sky-500" />
-                                                            Souvenir
+                                                            Retail Shop
                                                         </span>
                                                         <span className="flex items-center gap-1">
                                                             <Users className="h-4 w-4 text-sky-500" />
@@ -347,7 +347,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                             <li>Special Program</li>
                             <li>Event</li>
                             <li>Hotel</li>
-                            <li>Souvenir</li>
+                            <li>Retail Shop</li>
                         </ul>
                     </div>
                     <div>

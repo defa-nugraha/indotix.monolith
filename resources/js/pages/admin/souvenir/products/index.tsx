@@ -36,7 +36,7 @@ type Props = {
 
 export default function SouvenirProductsIndex({ products, categories, filters }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Souvenir', href: '/admin/souvenir/products' },
+        { title: 'Retail Shop', href: '/admin/souvenir/products' },
         { title: 'Master Produk', href: '/admin/souvenir/products' },
     ];
 
@@ -211,12 +211,12 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Master Produk Souvenir" />
+            <Head title="Master Produk Retail Shop" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <h1 className="text-2xl font-semibold text-slate-900">Master Produk Souvenir</h1>
+                            <h1 className="text-2xl font-semibold text-slate-900">Master Produk Retail Shop</h1>
                             <p className="text-sm text-slate-500">Tambah dan kelola katalog produk souvenir.</p>
                         </div>
                         <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={() => setIsCreateOpen(true)}>
@@ -310,7 +310,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
                     <DialogContent className="max-w-3xl">
                         <DialogHeader>
-                            <DialogTitle>Tambah Produk Souvenir</DialogTitle>
+                            <DialogTitle>Tambah Produk Retail Shop</DialogTitle>
                             <DialogDescription>Lengkapi data produk sebelum disimpan.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-3 md:grid-cols-3">
@@ -458,7 +458,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                 }}>
                     <DialogContent className="max-w-3xl">
                         <DialogHeader>
-                            <DialogTitle>Edit Produk Souvenir</DialogTitle>
+                            <DialogTitle>Edit Produk Retail Shop</DialogTitle>
                             <DialogDescription>Perbarui detail produk dan simpan perubahan.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-3 md:grid-cols-3">

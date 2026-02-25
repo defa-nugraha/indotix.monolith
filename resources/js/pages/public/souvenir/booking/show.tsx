@@ -33,12 +33,12 @@ export default function SouvenirBookingShow({ order }: { order: Order }) {
 
     return (
         <PublicLayout>
-            <Head title="Detail Pesanan Souvenir" />
+            <Head title="Detail Pesanan Retail Shop" />
                         <main className="mx-auto w-full max-w-5xl px-4 py-8 md:px-8">
                 <div className="rounded-3xl bg-white p-6 shadow-sm">
                     <div className="flex items-start justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-slate-900">Detail Pesanan Souvenir</h1>
+                            <h1 className="text-2xl font-semibold text-slate-900">Detail Pesanan Retail Shop</h1>
                             <p className="mt-2 text-sm text-slate-500">Pesanan #{order.id} · Status: {order.status}</p>
                         </div>
                         <ShoppingBag className="h-8 w-8 text-sky-500" />

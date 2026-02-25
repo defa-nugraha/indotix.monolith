@@ -57,14 +57,14 @@ export default function SouvenirSearch({
     const navItems = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir', active: true },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir', active: true },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
     return (
         <PublicLayout categories={navItems}>
-            <Head title="Souvenir - INDOTIX" />
+            <Head title="Retail Shop - INDOTIX" />
 
                         <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 {!isReady && (
@@ -80,7 +80,7 @@ export default function SouvenirSearch({
                         <section className="rounded-2xl bg-white p-6 shadow-sm">
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
-                                    <h1 className="text-2xl font-semibold text-slate-900">Souvenir Pilihan</h1>
+                                    <h1 className="text-2xl font-semibold text-slate-900">Retail Shop Pilihan</h1>
                                     <p className="mt-2 text-sm text-slate-500">Temukan produk khas daerah untuk melengkapi perjalananmu.</p>
                                 </div>
                                 <form onSubmit={submitSearch} className="flex flex-wrap items-center gap-2">
@@ -122,7 +122,7 @@ export default function SouvenirSearch({
                                         )}
                                     </div>
                                     <div className="p-4">
-                                        <div className="text-xs text-slate-500">{product.category ?? 'Souvenir'}</div>
+                                        <div className="text-xs text-slate-500">{product.category ?? 'Retail Shop'}</div>
                                         <h3 className="mt-1 text-base font-semibold text-slate-900">{product.name}</h3>
                                         <div className="mt-2 flex items-center justify-between text-sm">
                                             <span className="font-semibold text-sky-600">Rp {product.price.toLocaleString('id-ID')}</span>

@@ -65,7 +65,7 @@ const typeLabel = (type: string) => {
         case 'academy':
             return 'Academy';
         case 'souvenir':
-            return 'Souvenir';
+            return 'Retail Shop';
         case 'special_program':
             return 'Special Program';
         default:

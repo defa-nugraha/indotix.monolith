@@ -5,7 +5,7 @@ import PublicLayout from '@/layouts/public-layout';
 const navItems = [
     { label: 'Wisata', icon: MapPinned, href: '/wisata' },
     { label: 'Event', icon: CalendarCheck, href: '/events' },
-    { label: 'Souvenir', icon: ShoppingBag, href: '/souvenir' },
+    { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir' },
     { label: 'Spesial Program', icon: Star, href: '/special-programs', active: true },
     { label: 'Hotel', icon: Ticket, href: '/stay' },
 ];

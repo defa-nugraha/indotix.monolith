@@ -18,16 +18,16 @@ type TopProduct = {
 
 export default function SouvenirReportsIndex({ stats, topProducts }: { stats: Stats; topProducts: TopProduct[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Souvenir', href: '/admin/souvenir/products' },
+        { title: 'Retail Shop', href: '/admin/souvenir/products' },
         { title: 'Laporan & Analitik', href: '/admin/souvenir/reports' },
     ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Laporan Souvenir" />
+            <Head title="Laporan Retail Shop" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h1 className="text-2xl font-semibold text-slate-900">Laporan Penjualan Souvenir</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900">Laporan Penjualan Retail Shop</h1>
                     <p className="text-sm text-slate-500">Pantau GMV, refund, dan produk terlaris.</p>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-4">

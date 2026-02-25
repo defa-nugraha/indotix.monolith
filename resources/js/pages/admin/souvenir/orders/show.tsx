@@ -37,7 +37,7 @@ type Order = {
 
 export default function SouvenirOrderShow({ order }: { order: Order }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Souvenir', href: '/admin/souvenir/products' },
+        { title: 'Retail Shop', href: '/admin/souvenir/products' },
         { title: 'Order & Transaksi', href: '/admin/souvenir/orders' },
         { title: `Order #${order.id}`, href: `/admin/souvenir/orders/${order.id}` },
     ];
@@ -52,7 +52,7 @@ export default function SouvenirOrderShow({ order }: { order: Order }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={`Order Souvenir #${order.id}`} />
+            <Head title={`Order Retail Shop #${order.id}`} />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">

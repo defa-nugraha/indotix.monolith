@@ -25,7 +25,7 @@ type Props = {
 
 export default function SouvenirOrdersIndex({ orders, filters, mode = 'orders' }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Souvenir', href: '/admin/souvenir/products' },
+        { title: 'Retail Shop', href: '/admin/souvenir/products' },
         { title: mode === 'fulfillment' ? 'Fulfillment & Pengiriman' : 'Order & Transaksi', href: mode === 'fulfillment' ? '/admin/souvenir/fulfillment' : '/admin/souvenir/orders' },
     ];
 
@@ -64,11 +64,11 @@ export default function SouvenirOrdersIndex({ orders, filters, mode = 'orders' }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={mode === 'fulfillment' ? 'Fulfillment Souvenir' : 'Order Souvenir'} />
+            <Head title={mode === 'fulfillment' ? 'Fulfillment Retail Shop' : 'Order Retail Shop'} />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <h1 className="text-2xl font-semibold text-slate-900">
-                        {mode === 'fulfillment' ? 'Fulfillment & Pengiriman' : 'Monitoring Order Souvenir'}
+                        {mode === 'fulfillment' ? 'Fulfillment & Pengiriman' : 'Monitoring Order Retail Shop'}
                     </h1>
                     <p className="text-sm text-slate-500">Pantau status order, pembayaran, dan pengiriman.</p>
                     <form

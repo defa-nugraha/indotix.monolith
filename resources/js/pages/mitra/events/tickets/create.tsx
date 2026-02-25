@@ -176,7 +176,7 @@ export default function MitraEventTicketCreate({ ticket, events }: Props) {
                                 value={form.data.benefits_text}
                                 onChange={(e) => form.setData('benefits_text', e.target.value)}
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Contoh: Souvenir, Free drink"
+                                placeholder="Contoh: Retail Shop, Free drink"
                             />
                         </div>
                         <div className="md:col-span-2 flex justify-end">
