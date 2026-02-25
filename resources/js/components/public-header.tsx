@@ -49,6 +49,7 @@ export default function PublicHeader({
     const isUser = role === 'user';
     const isLoggedIn = Boolean(auth?.user);
     const isNonUser = isLoggedIn && !isUser;
+    const showCart = !isNonUser;
 
     const isActivePath = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
@@ -107,16 +108,18 @@ export default function PublicHeader({
                             <img src="/logo.png" alt="Indotix" className="h-10 w-32 object-contain md:h-11 md:w-36" />
                         </Link>
                         <div className="flex items-center gap-2 md:hidden">
-                            <Link href="/souvenir/cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
-                                <ShoppingCart className="h-4 w-4" />
-                                <span className="hidden sm:inline">Keranjang</span>
-                                <span className="sr-only">Keranjang</span>
-                                {Boolean(souvenir_cart_count) && (
-                                    <span className="absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                        {souvenir_cart_count}
-                                    </span>
-                                )}
-                            </Link>
+                            {showCart && (
+                                <Link href="/souvenir/cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
+                                    <ShoppingCart className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Keranjang</span>
+                                    <span className="sr-only">Keranjang</span>
+                                    {Boolean(souvenir_cart_count) && (
+                                        <span className="absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                            {souvenir_cart_count}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
                             <Sheet>
                                 <SheetTrigger className="inline-flex shrink-0 items-center justify-center rounded-full border border-slate-200 p-2 text-slate-600">
                                     <Menu className="h-5 w-5" />
@@ -218,15 +221,17 @@ export default function PublicHeader({
                     {showSearch && renderSearch('md:flex-1 md:min-w-0')}
 
                     <div className="hidden items-center gap-4 md:flex">
-                        <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                            <ShoppingCart className="h-4 w-4" />
-                            Keranjang
-                            {Boolean(souvenir_cart_count) && (
-                                <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                    {souvenir_cart_count}
-                                </span>
-                            )}
-                        </Link>
+                        {showCart && (
+                            <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                                <ShoppingCart className="h-4 w-4" />
+                                Keranjang
+                                {Boolean(souvenir_cart_count) && (
+                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                        {souvenir_cart_count}
+                                    </span>
+                                )}
+                            </Link>
+                        )}
                         {!auth?.user && (
                             <div className="flex items-center gap-2">
                                 <Link
