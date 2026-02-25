@@ -241,14 +241,6 @@ export function AppSidebarMitra() {
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/staff')}>
-                                    <Link href="/mitra/wisata/staff">
-                                        <Users />
-                                        <span>Staff & Role</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
                                 <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/finance/summary')}>
                                     <Link href="/mitra/wisata/finance/summary">
                                         <Banknote />
@@ -332,14 +324,6 @@ export function AppSidebarMitra() {
                                     <Link href="/mitra/events/scans">
                                         <QrCode />
                                         <span>Validasi QR</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/staff')}>
-                                    <Link href="/mitra/events/staff">
-                                        <Users />
-                                        <span>Staff & Role</span>
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>

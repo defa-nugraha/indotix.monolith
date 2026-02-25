@@ -655,15 +655,6 @@ Route::prefix('mitra/wisata')
         Route::get('finance/payouts', [\App\Http\Controllers\Mitra\Wisata\FinanceController::class, 'payouts'])
             ->name('finance.payouts');
 
-        Route::get('staff', [\App\Http\Controllers\Mitra\Wisata\StaffController::class, 'index'])
-            ->name('staff.index');
-        Route::post('staff', [\App\Http\Controllers\Mitra\Wisata\StaffController::class, 'store'])
-            ->name('staff.store');
-        Route::put('staff/{staff}', [\App\Http\Controllers\Mitra\Wisata\StaffController::class, 'update'])
-            ->name('staff.update');
-        Route::delete('staff/{staff}', [\App\Http\Controllers\Mitra\Wisata\StaffController::class, 'destroy'])
-            ->name('staff.destroy');
-
         Route::get('notifications', [\App\Http\Controllers\Mitra\Wisata\NotificationController::class, 'index'])
             ->name('notifications.index');
         Route::get('reviews', [\App\Http\Controllers\Mitra\ReviewController::class, 'index'])
@@ -721,15 +712,6 @@ Route::prefix('mitra/events')
             ->name('finance.summary');
         Route::get('finance/payouts', [\App\Http\Controllers\Mitra\Event\FinanceController::class, 'payouts'])
             ->name('finance.payouts');
-
-        Route::get('staff', [\App\Http\Controllers\Mitra\Event\StaffController::class, 'index'])
-            ->name('staff.index');
-        Route::post('staff', [\App\Http\Controllers\Mitra\Event\StaffController::class, 'store'])
-            ->name('staff.store');
-        Route::put('staff/{staff}', [\App\Http\Controllers\Mitra\Event\StaffController::class, 'update'])
-            ->name('staff.update');
-        Route::delete('staff/{staff}', [\App\Http\Controllers\Mitra\Event\StaffController::class, 'destroy'])
-            ->name('staff.destroy');
 
         Route::get('notifications', [\App\Http\Controllers\Mitra\Event\NotificationController::class, 'index'])
             ->name('notifications.index');
