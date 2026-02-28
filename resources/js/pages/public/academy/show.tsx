@@ -2,6 +2,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart, BookOpen, BadgePercent } from 'lucide-react';
 import Swal from 'sweetalert2';
+import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
 import ReviewSection from '@/components/reviews/review-section';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
@@ -266,10 +267,7 @@ export default function AcademyShow({
                             <li>Kebijakan Privasi</li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Download Indotix</h4>
-                        <img src="/images/google-play.png" alt="Google Play" className="mt-3 h-10" />
-                    </div>
+                    <FooterDownloadSocial />
                 </div>
                 <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
                     © 2025 Indotix. All rights reserved.

@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { FooterDownloadSocial } from '@/components/footer-download-social';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
 import {
@@ -940,21 +941,14 @@ export default function Welcome({
                             <li>Kebijakan Privasi</li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Download Indotix</h4>
-                        <a
-                            href={contact?.download_url ?? '#'}
-                            className="mt-3 inline-block h-12 w-40 rounded-lg bg-slate-900"
-                        />
-                        <h4 className="mt-6 text-sm font-semibold text-slate-900">Ikuti Kami</h4>
-                        <div className="mt-3 flex gap-2">
-                            <a href={contact?.facebook_url ?? '#'} className="h-9 w-9 rounded-full bg-slate-200" />
-                            <a href={contact?.instagram_url ?? '#'} className="h-9 w-9 rounded-full bg-slate-200" />
-                            <a href={contact?.twitter_url ?? '#'} className="h-9 w-9 rounded-full bg-slate-200" />
-                            <a href={contact?.tiktok_url ?? '#'} className="h-9 w-9 rounded-full bg-slate-200" />
-                            <a href={contact?.youtube_url ?? '#'} className="h-9 w-9 rounded-full bg-slate-200" />
-                        </div>
-                    </div>
+                    <FooterDownloadSocial
+                        downloadUrl={contact?.download_url}
+                        facebookUrl={contact?.facebook_url}
+                        instagramUrl={contact?.instagram_url}
+                        twitterUrl={contact?.twitter_url}
+                        tiktokUrl={contact?.tiktok_url}
+                        youtubeUrl={contact?.youtube_url}
+                    />
                 </div>
                 <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
                     © 2025 Indotix. All rights reserved.

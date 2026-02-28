@@ -1,5 +1,6 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
+import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
 import ReviewSection from '@/components/reviews/review-section';
 import {
@@ -497,18 +498,7 @@ export default function WisataShow({
                             <li>Kebijakan Privasi</li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Download Indotix</h4>
-                        <div className="mt-3 h-12 w-40 rounded-lg bg-slate-900" />
-                        <h4 className="mt-6 text-sm font-semibold text-slate-900">Ikuti Kami</h4>
-                        <div className="mt-3 flex gap-2">
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                        </div>
-                    </div>
+                    <FooterDownloadSocial />
                 </div>
                 <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
                     © 2025 Indotix. All rights reserved.

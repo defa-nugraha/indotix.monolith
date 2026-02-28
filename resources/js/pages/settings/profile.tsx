@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import InputError from '@/components/input-error';
 import { CheckCircle2, Mail, MapPinned, Pencil, Phone, Trash2, UserCircle } from 'lucide-react';
+import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
 
 type Address = {
@@ -677,18 +678,7 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                             <li>Kebijakan Privasi</li>
                         </ul>
                     </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Download Indotix</h4>
-                        <div className="mt-3 h-12 w-40 rounded-lg bg-slate-900" />
-                        <h4 className="mt-6 text-sm font-semibold text-slate-900">Ikuti Kami</h4>
-                        <div className="mt-3 flex gap-2">
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                            <div className="h-9 w-9 rounded-full bg-slate-200" />
-                        </div>
-                    </div>
+                    <FooterDownloadSocial />
                 </div>
                 <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
                     © 2025 Indotix. All rights reserved.
