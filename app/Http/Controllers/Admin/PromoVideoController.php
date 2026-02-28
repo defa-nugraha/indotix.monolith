@@ -45,8 +45,11 @@ class PromoVideoController extends Controller
             'cta_label' => ['nullable', 'string', 'max:255'],
             'cta_url' => ['nullable', 'string', 'max:500'],
             'is_active' => ['nullable', 'boolean'],
-            'video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:51200'],
-            'secondary_video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:51200'],
+            'video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:5120'],
+            'secondary_video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:5120'],
+        ], [
+            'video.max' => 'Ukuran video utama maksimal 5 MB.',
+            'secondary_video.max' => 'Ukuran video bawah maksimal 5 MB.',
         ]);
 
         $path = $request->file('video')->store('promo-videos', 'public');
@@ -80,8 +83,11 @@ class PromoVideoController extends Controller
             'cta_label' => ['nullable', 'string', 'max:255'],
             'cta_url' => ['nullable', 'string', 'max:500'],
             'is_active' => ['nullable', 'boolean'],
-            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:51200'],
-            'secondary_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:51200'],
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:5120'],
+            'secondary_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:5120'],
+        ], [
+            'video.max' => 'Ukuran video utama maksimal 5 MB.',
+            'secondary_video.max' => 'Ukuran video bawah maksimal 5 MB.',
         ]);
 
         if ($request->hasFile('video')) {

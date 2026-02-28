@@ -34,6 +34,7 @@ export default function PromoItemCreate() {
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <h1 className="text-2xl font-semibold text-slate-900">Tambah Promo Terkini</h1>
+                    <p className="mt-2 text-sm text-slate-600">Maksimal 3 promo aktif.</p>
                     <form
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
@@ -65,7 +66,9 @@ export default function PromoItemCreate() {
                         <div className="grid gap-2">
                             <Label>Gambar promo</Label>
                             <Input type="file" accept="image/*" onChange={(event) => form.setData('image', event.target.files?.[0] ?? null)} />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1200 × 600 px (rasio 2:1).</p>
+                            <p className="text-xs text-slate-500">
+                                Ukuran rekomendasi: Urutan 1-2 → 600 × 800 px (rasio 3:4), Urutan 3 → 1200 × 400 px (rasio 3:1).
+                            </p>
                             <InputError message={form.errors.image} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">

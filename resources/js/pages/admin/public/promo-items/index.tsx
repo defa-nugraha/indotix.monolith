@@ -21,6 +21,7 @@ type PromoItem = {
 };
 
 export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
+    const reachedMax = items.filter((item) => item.is_active).length >= 3;
     const handleDelete = async (id: number) => {
         const result = await Swal.fire({
             title: 'Hapus promo?',
@@ -62,15 +63,21 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                                 Kelola promo terkini
                             </h1>
                             <p className="text-sm text-slate-600">
-                                Tambahkan promo yang tampil di halaman publik.
+                                Tambahkan promo yang tampil di halaman publik. Maksimal 3 promo.
                             </p>
                             <p className="text-xs text-slate-500">
-                                Ukuran rekomendasi gambar: 1200 × 600 px (rasio 2:1).
+                                Ukuran rekomendasi: Urutan 1-2 → 600 × 800 px (rasio 3:4), Urutan 3 → 1200 × 400 px (rasio 3:1).
                             </p>
                         </div>
-                        <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">
-                            <Link href="/admin/public/promo-items/create">Tambah Promo</Link>
-                        </Button>
+                        {reachedMax ? (
+                            <Button disabled className="bg-slate-200 text-slate-500">
+                                Maksimal 3 Promo
+                            </Button>
+                        ) : (
+                            <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">
+                                <Link href="/admin/public/promo-items/create">Tambah Promo</Link>
+                            </Button>
+                        )}
                     </div>
                 </section>
 

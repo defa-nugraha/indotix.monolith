@@ -26,6 +26,7 @@ type PromoVideo = {
 };
 
 export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo }) {
+    const maxVideoSizeBytes = 5 * 1024 * 1024;
     const form = useForm({
         title: promoVideo.title ?? '',
         description: promoVideo.description ?? '',
@@ -45,6 +46,20 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
         if (!file) {
             form.setData(field, null);
             form.clearErrors(field);
+            return;
+        }
+
+        if (file.size > maxVideoSizeBytes) {
+            form.setError(field, 'Ukuran video maksimal 5 MB.');
+            form.setData(field, null);
+            if (input) {
+                input.value = '';
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'Ukuran video terlalu besar',
+                text: 'Maksimal ukuran video 5 MB.',
+            });
             return;
         }
 
@@ -142,7 +157,7 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
                                     validateVideoFile(event.target.files?.[0] ?? null, 'video', { width: 1280, height: 720 }, event.currentTarget)
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9).</p>
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9). Maks 5 MB.</p>
                             <InputError message={form.errors.video} />
                         </div>
                         {promoVideo.secondary_video_path && (
@@ -164,7 +179,7 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
                                     validateVideoFile(event.target.files?.[0] ?? null, 'secondary_video', { width: 960, height: 540 }, event.currentTarget)
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 960 × 540 px (16:9).</p>
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 960 × 540 px (16:9). Maks 5 MB.</p>
                             <InputError message={form.errors.secondary_video} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">

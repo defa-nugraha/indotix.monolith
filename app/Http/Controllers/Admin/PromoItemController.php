@@ -7,6 +7,7 @@ use App\Models\PromoItem;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,14 +32,28 @@ class PromoItemController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $activeCount = PromoItem::query()->where('is_active', true)->count();
+        $isActive = (bool) $request->boolean('is_active', true);
+        if ($isActive && $activeCount >= 3) {
+            throw ValidationException::withMessages([
+                'is_active' => 'Maksimal 3 promo aktif. Nonaktifkan salah satu promo terlebih dahulu.',
+            ]);
+        }
+
+        $sortOrder = (int) $request->input('sort_order', 0);
+        $dimensionRule = $sortOrder >= 3 ? 'dimensions:width=1200,height=400' : 'dimensions:width=600,height=800';
+        $dimensionMessage = $sortOrder >= 3
+            ? 'Ukuran gambar promo urutan 3 harus 1200 x 400 px.'
+            : 'Ukuran gambar promo urutan 1-2 harus 600 x 800 px.';
+
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['required', 'image', 'max:5120', 'dimensions:width=1200,height=600'],
+            'image' => ['required', 'image', 'max:5120', $dimensionRule],
         ], [
-            'image.dimensions' => 'Ukuran gambar promo harus 1200 x 600 px.',
+            'image.dimensions' => $dimensionMessage,
         ]);
 
         $path = $request->file('image')->store('promo-items', 'public');
@@ -63,14 +78,31 @@ class PromoItemController extends Controller
 
     public function update(Request $request, PromoItem $promoItem): RedirectResponse
     {
+        $activeCount = PromoItem::query()
+            ->where('is_active', true)
+            ->where('id', '!=', $promoItem->id)
+            ->count();
+        $isActive = (bool) $request->boolean('is_active', $promoItem->is_active);
+        if ($isActive && $activeCount >= 3) {
+            throw ValidationException::withMessages([
+                'is_active' => 'Maksimal 3 promo aktif. Nonaktifkan salah satu promo terlebih dahulu.',
+            ]);
+        }
+
+        $sortOrder = (int) $request->input('sort_order', $promoItem->sort_order ?? 0);
+        $dimensionRule = $sortOrder >= 3 ? 'dimensions:width=1200,height=400' : 'dimensions:width=600,height=800';
+        $dimensionMessage = $sortOrder >= 3
+            ? 'Ukuran gambar promo urutan 3 harus 1200 x 400 px.'
+            : 'Ukuran gambar promo urutan 1-2 harus 600 x 800 px.';
+
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'max:5120', 'dimensions:width=1200,height=600'],
+            'image' => ['nullable', 'image', 'max:5120', $dimensionRule],
         ], [
-            'image.dimensions' => 'Ukuran gambar promo harus 1200 x 600 px.',
+            'image.dimensions' => $dimensionMessage,
         ]);
 
         if ($request->hasFile('image')) {

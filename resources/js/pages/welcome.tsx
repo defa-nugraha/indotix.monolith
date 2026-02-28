@@ -404,43 +404,33 @@ export default function Welcome({
 
                 <section className="mt-8 grid gap-8 md:grid-cols-[1.1fr_1fr]">
                     <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-                        {promoVideoData.image_path ? (
-                            <video
-                                src={`/storage/${promoVideoData.image_path}`}
-                                className="h-64 w-full rounded-t-2xl bg-[#0b3b8f] object-cover"
-                                autoPlay
-                                muted
-                                loop
-                                playsInline
-                            />
-                        ) : (
-                            <div className="h-64 w-full rounded-t-2xl bg-[#0b3b8f]" />
-                        )}
-                        <div className="p-6">
-                            <h3 className="text-lg font-semibold text-slate-900">
-                                {promoVideoData.title}
-                            </h3>
-                            <p className="mt-2 text-sm text-slate-600">
-                                {promoVideoData.description}
-                            </p>
-                            <a
-                                href={promoVideoData.cta_url ?? '#'}
-                                className="mt-4 inline-block rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
-                            >
-                                {promoVideoData.cta_label ?? 'Lihat Selengkapnya'}
-                            </a>
-                            <div className="mt-6 overflow-hidden rounded-2xl bg-white shadow-sm">
-                                {promoVideoData.secondary_video_path ? (
+                        <div className="grid gap-4 p-4">
+                            <div className="overflow-hidden rounded-2xl bg-slate-100">
+                                {promoVideoData.image_path ? (
                                     <video
-                                        src={`/storage/${promoVideoData.secondary_video_path}`}
-                                        className="h-32 w-full bg-slate-100 object-cover"
+                                        src={`/storage/${promoVideoData.image_path}`}
+                                        className="aspect-[19/9] w-full object-cover"
                                         autoPlay
                                         muted
                                         loop
                                         playsInline
                                     />
                                 ) : (
-                                    <div className="h-32 w-full bg-slate-100" />
+                                    <div className="aspect-[19/9] w-full bg-slate-100" />
+                                )}
+                            </div>
+                            <div className="overflow-hidden rounded-2xl bg-slate-100">
+                                {promoVideoData.secondary_video_path ? (
+                                    <video
+                                        src={`/storage/${promoVideoData.secondary_video_path}`}
+                                        className="aspect-[19/9] w-full object-cover"
+                                        autoPlay
+                                        muted
+                                        loop
+                                        playsInline
+                                    />
+                                ) : (
+                                    <div className="aspect-[19/9] w-full bg-slate-100" />
                                 )}
                             </div>
                         </div>
@@ -451,17 +441,13 @@ export default function Welcome({
                             <h2 className="text-xl font-semibold text-slate-900">
                                 Promo Terkini
                             </h2>
-                            <div className="flex gap-2">
-                                <button className="h-9 w-9 rounded-full border border-slate-200">‹</button>
-                                <button className="h-9 w-9 rounded-full border border-slate-200">›</button>
-                            </div>
                         </div>
                         <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2">
                             {(promoItems[0] ? [promoItems[0]] : []).map((item) => (
                                 <div key={item.id} className="overflow-hidden rounded-2xl shadow-sm">
                                     <a href={item.link_url ?? '#'} className="block">
                                         <div
-                                            className="h-64 w-full"
+                                            className="aspect-[3/4] w-full"
                                             style={{
                                                 backgroundImage: `url(/storage/${item.image_path})`,
                                                 backgroundSize: 'cover',
@@ -475,7 +461,7 @@ export default function Welcome({
                                 <div key={item.id} className="overflow-hidden rounded-2xl shadow-sm">
                                     <a href={item.link_url ?? '#'} className="block">
                                         <div
-                                            className="h-64 w-full"
+                                            className="aspect-[3/4] w-full"
                                             style={{
                                                 backgroundImage: `url(/storage/${item.image_path})`,
                                                 backgroundSize: 'cover',
@@ -491,7 +477,7 @@ export default function Welcome({
                                 <div key={item.id} className="overflow-hidden rounded-2xl shadow-sm">
                                     <a href={item.link_url ?? '#'} className="block">
                                         <div
-                                            className="h-48 w-full"
+                                            className="aspect-[3/1] w-full"
                                             style={{
                                                 backgroundImage: `url(/storage/${item.image_path})`,
                                                 backgroundSize: 'cover',

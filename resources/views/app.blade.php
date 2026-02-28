@@ -30,10 +30,20 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'Indotix') }}</title>
+
+        <meta name="description" content="Indotix — Tiket digital Indonesia untuk wisata, event, hotel, dan retail." />
+        <meta property="og:title" content="{{ config('app.name', 'Indotix') }}" />
+        <meta property="og:description" content="Indotix — Tiket digital Indonesia untuk wisata, event, hotel, dan retail." />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="{{ url('/logo.png') }}" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="{{ config('app.name', 'Indotix') }}" />
+        <meta name="twitter:description" content="Indotix — Tiket digital Indonesia untuk wisata, event, hotel, dan retail." />
+        <meta name="twitter:image" content="{{ url('/logo.png') }}" />
 
         <link rel="icon" href="/logo.png" type="image/png">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="apple-touch-icon" href="/logo.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />

@@ -6,7 +6,7 @@ import '../css/app.css';
 import { initializeTheme } from './hooks/use-appearance';
 import './lib/echo';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Indotix';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

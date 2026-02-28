@@ -82,7 +82,9 @@ export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
                         <div className="grid gap-2">
                             <Label>Ganti gambar (opsional)</Label>
                             <Input type="file" accept="image/*" onChange={(event) => form.setData('image', event.target.files?.[0] ?? null)} />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1200 × 600 px (rasio 2:1).</p>
+                            <p className="text-xs text-slate-500">
+                                Ukuran rekomendasi: Urutan 1-2 → 600 × 800 px (rasio 3:4), Urutan 3 → 1200 × 400 px (rasio 3:1).
+                            </p>
                             <InputError message={form.errors.image} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">
