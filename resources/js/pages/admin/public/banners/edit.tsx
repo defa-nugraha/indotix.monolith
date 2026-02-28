@@ -48,8 +48,7 @@ export default function BannerEdit({ banner }: { banner: Banner }) {
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
                             event.preventDefault();
-                            form.post(`/admin/public/banners/${banner.id}`, {
-                                method: 'put',
+                            form.put(`/admin/public/banners/${banner.id}`, {
                                 forceFormData: true,
                                 onSuccess: () =>
                                     Swal.fire({

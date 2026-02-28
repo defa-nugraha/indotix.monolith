@@ -96,8 +96,7 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
                             event.preventDefault();
-                            form.transform((data) => ({ ...data, _method: 'put' }));
-                            form.post(`/admin/public/promo-videos/${promoVideo.id}`, {
+                            form.put(`/admin/public/promo-videos/${promoVideo.id}`, {
                                 forceFormData: true,
                                 onSuccess: () =>
                                     Swal.fire({ title: 'Berhasil', text: 'Promo video diperbarui.', icon: 'success' }),

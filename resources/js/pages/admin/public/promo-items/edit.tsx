@@ -47,8 +47,7 @@ export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
                             event.preventDefault();
-                            form.post(`/admin/public/promo-items/${promoItem.id}`, {
-                                method: 'put',
+                            form.put(`/admin/public/promo-items/${promoItem.id}`, {
                                 forceFormData: true,
                                 onSuccess: () =>
                                     Swal.fire({ title: 'Berhasil', text: 'Promo diperbarui.', icon: 'success' }),

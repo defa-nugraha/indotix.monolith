@@ -48,8 +48,7 @@ export default function PartnerEdit({ partner }: { partner: Partner }) {
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
                             event.preventDefault();
-                            form.transform((data) => ({ ...data, _method: 'put' }));
-                            form.post(`/admin/public/partners/${partner.id}`, {
+                            form.put(`/admin/public/partners/${partner.id}`, {
                                 forceFormData: true,
                                 onSuccess: () =>
                                     Swal.fire({ title: 'Berhasil', text: 'Partner diperbarui.', icon: 'success' }),
