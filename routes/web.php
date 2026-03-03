@@ -450,6 +450,18 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.system.notifications.templates.destroy');
     Route::put('admin/system/notifications/triggers/{trigger}', [\App\Http\Controllers\Admin\NotificationControlController::class, 'updateTrigger'])
         ->name('admin.system.notifications.triggers.update');
+    Route::get('admin/system/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'index'])
+        ->name('admin.system.roles.index');
+    Route::put('admin/system/roles/{user}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'update'])
+        ->name('admin.system.roles.update');
+    Route::get('admin/system/special-admins', [\App\Http\Controllers\Admin\SpecialAdminController::class, 'index'])
+        ->name('admin.system.special-admins.index');
+    Route::post('admin/system/special-admins', [\App\Http\Controllers\Admin\SpecialAdminController::class, 'store'])
+        ->name('admin.system.special-admins.store');
+    Route::put('admin/system/special-admins/{user}', [\App\Http\Controllers\Admin\SpecialAdminController::class, 'update'])
+        ->name('admin.system.special-admins.update');
+    Route::delete('admin/system/special-admins/{user}', [\App\Http\Controllers\Admin\SpecialAdminController::class, 'destroy'])
+        ->name('admin.system.special-admins.destroy');
 
     Route::get('admin/public/banners', [\App\Http\Controllers\Admin\PublicBannerController::class, 'index'])
         ->name('admin.public.banners.index');

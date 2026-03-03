@@ -12,10 +12,31 @@ class EnsureAdmin
     {
         $user = $request->user();
 
-        if (! $user || $user->role !== 'admin') {
+        if (! $user) {
             return redirect()->route('home');
         }
 
-        return $next($request);
+        $role = $user->role;
+        if ($role === 'admin') {
+            return $next($request);
+        }
+
+        $path = $request->path();
+        $isDashboard = $request->is('dashboard');
+
+        if ($role === 'admin_academy' && ($isDashboard || $request->is('admin/academy*'))) {
+            return $next($request);
+        }
+
+        if ($role === 'admin_retail' && ($isDashboard || $request->is('admin/souvenir*'))) {
+            return $next($request);
+        }
+
+        if ($role === 'admin_special_program' && ($isDashboard || $request->is('admin/special-programs*'))) {
+            return $next($request);
+        }
+
+        return redirect()->route('dashboard');
+
     }
 }

@@ -83,7 +83,7 @@ class SocialAuthController extends Controller
             return redirect()->route('mitra.dashboard');
         }
 
-        if ($user->role === 'admin') {
+        if (str_starts_with((string) $user->role, 'admin')) {
             return redirect()->route('dashboard');
         }
 

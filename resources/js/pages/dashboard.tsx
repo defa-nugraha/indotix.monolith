@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { Activity, CreditCard, ShieldCheck, Ticket, Users } from 'lucide-react';
+import { Activity, CreditCard, ShieldCheck, Ticket, Users, ShoppingBag, BookOpen, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -18,6 +18,7 @@ type ActivityItem = {
 };
 
 type Props = {
+    scope?: 'admin' | 'academy' | 'retail' | 'special';
     summary: {
         transactions_today: number;
         tickets_sold: number;
@@ -31,10 +32,171 @@ type Props = {
     activities: ActivityItem[];
 };
 
-export default function Dashboard({ summary, system, activities }: Props) {
+export default function Dashboard({ summary, system, activities, scope = 'admin' }: Props) {
+    const isAdmin = scope === 'admin';
+    const isAcademy = scope === 'academy';
+    const isRetail = scope === 'retail';
+    const isSpecial = scope === 'special';
+
+    const headerBadge = isAcademy
+        ? 'Admin Academy'
+        : isRetail
+            ? 'Admin Retail Shop'
+            : isSpecial
+                ? 'Admin Special Program'
+                : 'Admin Indotix';
+
+    const headline = isAcademy
+        ? 'Ringkasan Academy hari ini'
+        : isRetail
+            ? 'Ringkasan Retail Shop hari ini'
+            : isSpecial
+                ? 'Ringkasan Special Program hari ini'
+                : 'Ringkasan operasional hari ini';
+
+    const description = isAcademy
+        ? 'Pantau booking kelas, tiket terjual, dan kelas aktif.'
+        : isRetail
+            ? 'Pantau order retail, item terjual, dan produk aktif.'
+            : isSpecial
+                ? 'Pantau booking special program, tiket terjual, dan program aktif.'
+                : 'Pantau performa tiket, aktivitas pengguna, dan transaksi terbaru dalam satu tempat.';
+
+    const summaryCards = isAcademy
+        ? [
+            {
+                title: 'Booking Hari Ini',
+                value: summary.transactions_today.toLocaleString('id-ID'),
+                detail: 'Total booking kelas berhasil hari ini',
+                icon: CreditCard,
+                accent: 'bg-sky-50 text-sky-600',
+            },
+            {
+                title: 'Tiket Terjual',
+                value: summary.tickets_sold.toLocaleString('id-ID'),
+                detail: 'Total tiket kelas terjual hari ini',
+                icon: Ticket,
+                accent: 'bg-amber-50 text-amber-600',
+            },
+            {
+                title: 'Kelas Aktif',
+                value: summary.active_partners.toLocaleString('id-ID'),
+                detail: 'Jumlah kelas aktif saat ini',
+                icon: BookOpen,
+                accent: 'bg-emerald-50 text-emerald-600',
+            },
+        ]
+        : isRetail
+            ? [
+                {
+                    title: 'Order Hari Ini',
+                    value: summary.transactions_today.toLocaleString('id-ID'),
+                    detail: 'Total order retail berhasil hari ini',
+                    icon: CreditCard,
+                    accent: 'bg-sky-50 text-sky-600',
+                },
+                {
+                    title: 'Item Terjual',
+                    value: summary.tickets_sold.toLocaleString('id-ID'),
+                    detail: 'Total item retail terjual hari ini',
+                    icon: ShoppingBag,
+                    accent: 'bg-amber-50 text-amber-600',
+                },
+                {
+                    title: 'Produk Aktif',
+                    value: summary.active_partners.toLocaleString('id-ID'),
+                    detail: 'Jumlah produk retail aktif',
+                    icon: Users,
+                    accent: 'bg-emerald-50 text-emerald-600',
+                },
+            ]
+            : isSpecial
+                ? [
+                    {
+                        title: 'Booking Hari Ini',
+                        value: summary.transactions_today.toLocaleString('id-ID'),
+                        detail: 'Total booking special program hari ini',
+                        icon: CreditCard,
+                        accent: 'bg-sky-50 text-sky-600',
+                    },
+                    {
+                        title: 'Tiket Terjual',
+                        value: summary.tickets_sold.toLocaleString('id-ID'),
+                        detail: 'Total tiket special program terjual hari ini',
+                        icon: Ticket,
+                        accent: 'bg-amber-50 text-amber-600',
+                    },
+                    {
+                        title: 'Program Aktif',
+                        value: summary.active_partners.toLocaleString('id-ID'),
+                        detail: 'Jumlah special program aktif',
+                        icon: Sparkles,
+                        accent: 'bg-emerald-50 text-emerald-600',
+                    },
+                ]
+                : [
+                    {
+                        title: 'Transaksi Hari Ini',
+                        value: summary.transactions_today.toLocaleString('id-ID'),
+                        detail: 'Total transaksi berhasil hari ini',
+                        icon: CreditCard,
+                        accent: 'bg-sky-50 text-sky-600',
+                    },
+                    {
+                        title: 'Tiket Terjual',
+                        value: summary.tickets_sold.toLocaleString('id-ID'),
+                        detail: 'Total tiket terjual hari ini',
+                        icon: Ticket,
+                        accent: 'bg-amber-50 text-amber-600',
+                    },
+                    {
+                        title: 'Mitra Aktif',
+                        value: summary.active_partners.toLocaleString('id-ID'),
+                        detail: 'Mitra terverifikasi saat ini',
+                        icon: Users,
+                        accent: 'bg-emerald-50 text-emerald-600',
+                    },
+                ];
+
+    const systemCards = isAdmin
+        ? [
+            {
+                title: 'Review Mitra',
+                value: `${system.pending_reviews} pending`,
+                note: 'Perlu verifikasi admin',
+                accent: system.pending_reviews > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
+            },
+            {
+                title: 'Pembayaran Pending',
+                value: `${system.pending_payments} transaksi`,
+                note: 'Menunggu pembayaran',
+                accent: system.pending_payments > 0 ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700',
+            },
+            {
+                title: 'Payout Pending',
+                value: `${system.pending_payouts} mitra`,
+                note: 'Perlu persetujuan',
+                accent: system.pending_payouts > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
+            },
+        ]
+        : [
+            {
+                title: 'Pembayaran Pending',
+                value: `${system.pending_payments} transaksi`,
+                note: 'Menunggu pembayaran',
+                accent: system.pending_payments > 0 ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700',
+            },
+            {
+                title: isRetail ? 'Refund Pending' : 'Review/Refund Pending',
+                value: `${system.pending_reviews} pending`,
+                note: 'Butuh tindak lanjut',
+                accent: system.pending_reviews > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
+            },
+        ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Admin Dashboard">
+            <Head title={isAdmin ? 'Admin Dashboard' : 'Dashboard'}>
                 <link
                     href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
                     rel="stylesheet"
@@ -50,53 +212,32 @@ export default function Dashboard({ summary, system, activities }: Props) {
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-3">
                             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
-                                Admin Indotix
+                                {headerBadge}
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl font-['Space_Grotesk']">
-                                Ringkasan operasional hari ini
+                                {headline}
                             </h1>
                             <p className="text-sm text-slate-600">
-                                Pantau performa tiket, aktivitas pengguna, dan
-                                transaksi terbaru dalam satu tempat.
+                                {description}
                             </p>
                         </div>
-                        <div className="flex flex-wrap gap-3">
-                            <Button className="bg-sky-600 text-white hover:bg-sky-700">
-                                Buat event baru
-                            </Button>
-                            <Button
-                                variant="outline"
-                                className="border-sky-200 text-slate-700 hover:bg-sky-50"
-                            >
-                                Lihat laporan
-                            </Button>
-                        </div>
+                        {isAdmin && (
+                            <div className="flex flex-wrap gap-3">
+                                <Button className="bg-sky-600 text-white hover:bg-sky-700">
+                                    Buat event baru
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="border-sky-200 text-slate-700 hover:bg-sky-50"
+                                >
+                                    Lihat laporan
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="mt-6 grid gap-4 lg:grid-cols-3">
-                        {[
-                            {
-                                title: 'Transaksi Hari Ini',
-                                value: summary.transactions_today.toLocaleString('id-ID'),
-                                detail: 'Total transaksi berhasil hari ini',
-                                icon: CreditCard,
-                                accent: 'bg-sky-50 text-sky-600',
-                            },
-                            {
-                                title: 'Tiket Terjual',
-                                value: summary.tickets_sold.toLocaleString('id-ID'),
-                                detail: 'Total tiket terjual hari ini',
-                                icon: Ticket,
-                                accent: 'bg-amber-50 text-amber-600',
-                            },
-                            {
-                                title: 'Mitra Aktif',
-                                value: summary.active_partners.toLocaleString('id-ID'),
-                                detail: 'Mitra terverifikasi saat ini',
-                                icon: Users,
-                                accent: 'bg-emerald-50 text-emerald-600',
-                            },
-                        ].map((item) => (
+                        {summaryCards.map((item) => (
                             <div
                                 key={item.title}
                                 className="flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
@@ -180,26 +321,7 @@ export default function Dashboard({ summary, system, activities }: Props) {
                         </div>
 
                         <div className="mt-6 space-y-4">
-                            {[
-                                {
-                                    title: 'Review Mitra',
-                                    value: `${system.pending_reviews} pending`,
-                                    note: 'Perlu verifikasi admin',
-                                    accent: system.pending_reviews > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
-                                },
-                                {
-                                    title: 'Pembayaran Pending',
-                                    value: `${system.pending_payments} transaksi`,
-                                    note: 'Menunggu pembayaran',
-                                    accent: system.pending_payments > 0 ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700',
-                                },
-                                {
-                                    title: 'Payout Pending',
-                                    value: `${system.pending_payouts} mitra`,
-                                    note: 'Perlu persetujuan',
-                                    accent: system.pending_payouts > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
-                                },
-                            ].map((item) => (
+                            {systemCards.map((item) => (
                                 <div
                                     key={item.title}
                                     className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3"

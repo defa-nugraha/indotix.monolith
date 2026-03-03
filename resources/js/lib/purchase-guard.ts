@@ -1,10 +1,14 @@
 import Swal from 'sweetalert2';
 
 export const isPurchaseBlockedRole = (role?: string | null) =>
-    role === 'admin' || role === 'mitra';
+    role === 'admin' ||
+    role === 'mitra' ||
+    role === 'admin_academy' ||
+    role === 'admin_retail' ||
+    role === 'admin_special_program';
 
 export const purchaseRoleLabel = (role?: string | null) =>
-    role === 'admin' ? 'Admin' : 'Mitra';
+    role === 'mitra' ? 'Mitra' : 'Admin';
 
 export const guardPurchaseByRole = (role?: string | null) => {
     if (!isPurchaseBlockedRole(role)) return false;

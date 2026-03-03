@@ -21,6 +21,24 @@ class UserRoleSeeder extends Seeder
                 'role' => 'admin',
             ],
             [
+                'name' => 'Admin Academy',
+                'email' => 'admin.academy@indotix.id',
+                'password' => 'password',
+                'role' => 'admin_academy',
+            ],
+            [
+                'name' => 'Admin Retail Shop',
+                'email' => 'admin.retail@indotix.id',
+                'password' => 'password',
+                'role' => 'admin_retail',
+            ],
+            [
+                'name' => 'Admin Special Program',
+                'email' => 'admin.special@indotix.id',
+                'password' => 'password',
+                'role' => 'admin_special_program',
+            ],
+            [
                 'name' => 'Mitra Indotix',
                 'email' => 'mitra@indotix.id',
                 'password' => 'password',
@@ -39,6 +57,7 @@ class UserRoleSeeder extends Seeder
                 'name' => $user['name'],
                 'email' => $user['email'],
                 'password' => $user['password'],
+                'email_verified_at' => now(),
             ];
 
             if ($canSetRole) {

@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { Building2, CalendarCheck, ChevronDown, LayoutGrid, LineChart, MonitorPlay, Users, MapPinned, Sparkles, ShoppingBag, Link2, MessageCircle, Star, BookOpen } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
@@ -19,7 +19,7 @@ import type { NavItem } from '@/types';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import AppLogo from './app-logo';
 
-const mainNavItems: NavItem[] = [
+const baseMainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
@@ -38,6 +38,15 @@ const mainNavItems: NavItem[] = [
 ];
 
 export function AppSidebarAdmin() {
+    const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
+    const role = auth?.user?.role;
+    const isFullAdmin = role === 'admin';
+    const isAcademyAdmin = role === 'admin_academy';
+    const isRetailAdmin = role === 'admin_retail';
+    const isSpecialAdmin = role === 'admin_special_program';
+    const mainNavItems = isFullAdmin
+        ? baseMainNavItems
+        : baseMainNavItems.filter((item) => item.title === 'Dashboard');
     const { isCurrentUrl } = useCurrentUrl();
     const isHotelSectionActive =
         isCurrentUrl('/hotels') ||
@@ -79,7 +88,9 @@ export function AppSidebarAdmin() {
     const isSystemSectionActive =
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
-        isCurrentUrl('/admin/system/notifications');
+        isCurrentUrl('/admin/system/notifications') ||
+        isCurrentUrl('/admin/system/roles') ||
+        isCurrentUrl('/admin/system/special-admins');
     const isMitraSectionActive =
         isCurrentUrl('/admin/mitra') ||
         isCurrentUrl('/admin/mitra-wisata') ||
@@ -134,6 +145,17 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/academy/reports') ||
         isCurrentUrl('/admin/academy/system/audit') ||
         isCurrentUrl('/admin/academy/system/settings');
+    const showMitraSection = isFullAdmin;
+    const showHotelSection = isFullAdmin;
+    const showBlogSection = isFullAdmin;
+    const showWisataSection = isFullAdmin;
+    const showAffiliateSection = isFullAdmin;
+    const showEventSection = isFullAdmin;
+    const showPublicSection = isFullAdmin;
+    const showSystemSection = isFullAdmin;
+    const showSpecialProgramSection = isFullAdmin || isSpecialAdmin;
+    const showSouvenirSection = isFullAdmin || isRetailAdmin;
+    const showAcademySection = isFullAdmin || isAcademyAdmin;
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -151,38 +173,41 @@ export function AppSidebarAdmin() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
                 <SidebarMenu className="px-2">
-                    <SidebarMenuItem>
-                        <Collapsible defaultOpen={isMitraSectionActive}>
-                            <CollapsibleTrigger asChild>
-                                <SidebarMenuButton>
-                                    <Users />
-                                    <span>Kelola Mitra</span>
-                                    <ChevronDown className="ml-auto size-4" />
-                                </SidebarMenuButton>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                                <SidebarMenuSub>
-                                    <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mitra')}>
-                                            <Link href="/admin/mitra">Mitra Hotel</Link>
-                                        </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                    <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mitra-wisata')}>
-                                            <Link href="/admin/mitra-wisata">Mitra Wisata</Link>
-                                        </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                    <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/organizers')}>
-                                            <Link href="/admin/events/organizers">Mitra Event (EO)</Link>
-                                        </SidebarMenuSubButton>
-                                    </SidebarMenuSubItem>
-                                </SidebarMenuSub>
-                            </CollapsibleContent>
-                        </Collapsible>
-                    </SidebarMenuItem>
-                    <SidebarMenuItem>
-                        <Collapsible defaultOpen={isHotelSectionActive}>
+                    {showMitraSection && (
+                        <SidebarMenuItem>
+                            <Collapsible defaultOpen={isMitraSectionActive}>
+                                <CollapsibleTrigger asChild>
+                                    <SidebarMenuButton>
+                                        <Users />
+                                        <span>Kelola Mitra</span>
+                                        <ChevronDown className="ml-auto size-4" />
+                                    </SidebarMenuButton>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                    <SidebarMenuSub>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mitra')}>
+                                                <Link href="/admin/mitra">Mitra Hotel</Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mitra-wisata')}>
+                                                <Link href="/admin/mitra-wisata">Mitra Wisata</Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/events/organizers')}>
+                                                <Link href="/admin/events/organizers">Mitra Event (EO)</Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                    </SidebarMenuSub>
+                                </CollapsibleContent>
+                            </Collapsible>
+                        </SidebarMenuItem>
+                    )}
+                    {showHotelSection && (
+                        <SidebarMenuItem>
+                            <Collapsible defaultOpen={isHotelSectionActive}>
                             <CollapsibleTrigger asChild>
                                 <SidebarMenuButton>
                                     <Building2 />
@@ -274,6 +299,8 @@ export function AppSidebarAdmin() {
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showBlogSection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isBlogSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -304,6 +331,8 @@ export function AppSidebarAdmin() {
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showWisataSection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isWisataSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -427,6 +456,8 @@ export function AppSidebarAdmin() {
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showAffiliateSection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isAffiliateSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -492,6 +523,8 @@ export function AppSidebarAdmin() {
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showEventSection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isEventSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -572,6 +605,8 @@ export function AppSidebarAdmin() {
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showAcademySection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isAcademySectionActive}>
                             <CollapsibleTrigger asChild>
@@ -632,6 +667,8 @@ export function AppSidebarAdmin() {
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showSpecialProgramSection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isSpecialProgramSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -682,6 +719,8 @@ export function AppSidebarAdmin() {
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showSouvenirSection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isSouvenirSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -752,6 +791,8 @@ export function AppSidebarAdmin() {
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showPublicSection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isPublicSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -807,6 +848,8 @@ export function AppSidebarAdmin() {
                         </CollapsibleContent>
                     </Collapsible>
                     </SidebarMenuItem>
+                    )}
+                    {showSystemSection && (
                     <SidebarMenuItem>
                         <Collapsible defaultOpen={isSystemSectionActive}>
                             <CollapsibleTrigger asChild>
@@ -848,10 +891,31 @@ export function AppSidebarAdmin() {
                                             </Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/system/roles')}
+                                        >
+                                            <Link href="/admin/system/roles">
+                                                Manajemen Role
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/system/special-admins')}
+                                        >
+                                            <Link href="/admin/system/special-admins">
+                                                Admin Spesialis
+                                            </Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
                                 </SidebarMenuSub>
                             </CollapsibleContent>
                         </Collapsible>
                     </SidebarMenuItem>
+                    )}
                 </SidebarMenu>
             </SidebarContent>
 
