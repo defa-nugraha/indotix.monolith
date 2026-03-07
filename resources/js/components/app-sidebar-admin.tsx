@@ -153,9 +153,45 @@ export function AppSidebarAdmin() {
     const showEventSection = isFullAdmin;
     const showPublicSection = isFullAdmin;
     const showSystemSection = isFullAdmin;
-    const showSpecialProgramSection = isFullAdmin || isSpecialAdmin;
-    const showSouvenirSection = isFullAdmin || isRetailAdmin;
-    const showAcademySection = isFullAdmin || isAcademyAdmin;
+    const showSpecialProgramSection = isFullAdmin;
+    const showSouvenirSection = isFullAdmin;
+    const showAcademySection = isFullAdmin;
+    const showAcademyFlatMenu = isAcademyAdmin && !isFullAdmin;
+    const showRetailFlatMenu = isRetailAdmin && !isFullAdmin;
+    const showSpecialFlatMenu = isSpecialAdmin && !isFullAdmin;
+    const academyFlatItems = [
+        { title: 'Master Kelas', href: '/admin/academy/classes', icon: CalendarCheck },
+        { title: 'Produk Tiket', href: '/admin/academy/tickets', icon: CalendarCheck },
+        { title: 'Booking', href: '/admin/academy/bookings', icon: CalendarCheck },
+        { title: 'Peserta', href: '/admin/academy/attendees', icon: CalendarCheck },
+        { title: 'Monitoring QR', href: '/admin/academy/scans', icon: CalendarCheck },
+        { title: 'Keuangan & Refund', href: '/admin/academy/finance', icon: CalendarCheck },
+        { title: 'Laporan', href: '/admin/academy/reports', icon: CalendarCheck },
+        { title: 'Audit Log', href: '/admin/academy/system/audit', icon: CalendarCheck },
+        { title: 'Konfigurasi', href: '/admin/academy/system/settings', icon: CalendarCheck },
+    ];
+    const retailFlatItems = [
+        { title: 'Master Produk', href: '/admin/souvenir/products', icon: ShoppingBag },
+        { title: 'Kategori Produk', href: '/admin/souvenir/categories', icon: ShoppingBag },
+        { title: 'Variasi Produk', href: '/admin/souvenir/variants', icon: ShoppingBag },
+        { title: 'Inventory & Stok', href: '/admin/souvenir/inventory', icon: ShoppingBag },
+        { title: 'Order & Transaksi', href: '/admin/souvenir/orders', icon: ShoppingBag },
+        { title: 'Fulfillment & Pengiriman', href: '/admin/souvenir/fulfillment', icon: ShoppingBag },
+        { title: 'Refund & Retur', href: '/admin/souvenir/refunds', icon: ShoppingBag },
+        { title: 'Promo Retail Shop', href: '/admin/souvenir/promotions', icon: ShoppingBag },
+        { title: 'Laporan & Analitik', href: '/admin/souvenir/reports', icon: ShoppingBag },
+        { title: 'Audit Log', href: '/admin/souvenir/audit', icon: ShoppingBag },
+        { title: 'Konfigurasi Retail Shop', href: '/admin/souvenir/settings', icon: ShoppingBag },
+    ];
+    const specialFlatItems = [
+        { title: 'Manajemen Program', href: '/admin/special-programs', icon: Sparkles },
+        { title: 'Cakupan & Aturan', href: '/admin/special-programs/scope', icon: Sparkles },
+        { title: 'Diskon & Benefit', href: '/admin/special-programs/benefits', icon: Sparkles },
+        { title: 'Visibilitas', href: '/admin/special-programs/visibility', icon: Sparkles },
+        { title: 'Monitoring', href: '/admin/special-programs/monitoring', icon: Sparkles },
+        { title: 'Keuangan & Audit', href: '/admin/special-programs/finance', icon: Sparkles },
+        { title: 'Komunikasi & Kepatuhan', href: '/admin/special-programs/compliance', icon: Sparkles },
+    ];
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -173,6 +209,36 @@ export function AppSidebarAdmin() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
                 <SidebarMenu className="px-2">
+                    {showAcademyFlatMenu && academyFlatItems.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                            <SidebarMenuButton asChild isActive={isCurrentUrl(item.href)}>
+                                <Link href={item.href}>
+                                    <item.icon />
+                                    <span>{item.title}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                    {showRetailFlatMenu && retailFlatItems.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                            <SidebarMenuButton asChild isActive={isCurrentUrl(item.href)}>
+                                <Link href={item.href}>
+                                    <item.icon />
+                                    <span>{item.title}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
+                    {showSpecialFlatMenu && specialFlatItems.map((item) => (
+                        <SidebarMenuItem key={item.href}>
+                            <SidebarMenuButton asChild isActive={isCurrentUrl(item.href)}>
+                                <Link href={item.href}>
+                                    <item.icon />
+                                    <span>{item.title}</span>
+                                </Link>
+                            </SidebarMenuButton>
+                        </SidebarMenuItem>
+                    ))}
                     {showMitraSection && (
                         <SidebarMenuItem>
                             <Collapsible defaultOpen={isMitraSectionActive}>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Mitra\Wisata;
 
 use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -39,7 +40,7 @@ class DestinationController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
         $destination = MitraWisataOnboarding::query()
@@ -66,9 +67,9 @@ class DestinationController extends Controller
             'contact_hours' => ['nullable', 'string', 'max:100'],
             'is_temporarily_closed' => ['nullable', 'boolean'],
             'closure_note' => ['nullable', 'string', 'max:255'],
-            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
         ]);
 
         $destination->fill([
@@ -101,7 +102,7 @@ class DestinationController extends Controller
         foreach ($uploads as $input => $column) {
             if ($request->hasFile($input)) {
                 $old = $destination->{$column};
-                $path = $request->file($input)->store($folder, 'public');
+                $path = $mediaCompression->store($request->file($input), $folder, 'public');
                 $destination->{$column} = $path;
                 if ($old) {
                     Storage::disk('public')->delete($old);

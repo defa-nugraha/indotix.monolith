@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MitraWisataOnboarding;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -76,7 +77,7 @@ class MitraWisataOnboardingController extends Controller
         return back()->with('status', 'onboarding-saved');
     }
 
-    public function updateStepTwo(Request $request): RedirectResponse
+    public function updateStepTwo(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
         $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
@@ -99,9 +100,9 @@ class MitraWisataOnboardingController extends Controller
             'holiday_notes' => ['nullable', 'string', 'max:255'],
             'facilities' => ['nullable', 'array'],
             'facilities.*' => ['string'],
-            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
             'contact_phone' => ['nullable', 'string', 'max:50'],
             'contact_hours' => ['nullable', 'string', 'max:100'],
         ]);
@@ -134,7 +135,7 @@ class MitraWisataOnboardingController extends Controller
         foreach ($uploads as $input => $column) {
             if ($request->hasFile($input)) {
                 $old = $onboarding->{$column};
-                $path = $request->file($input)->store($folder, 'public');
+                $path = $mediaCompression->store($request->file($input), $folder, 'public');
                 $onboarding->{$column} = $path;
                 if ($old) {
                     Storage::disk('public')->delete($old);
@@ -148,7 +149,7 @@ class MitraWisataOnboardingController extends Controller
         return back()->with('status', 'onboarding-saved');
     }
 
-    public function updateStepThree(Request $request): RedirectResponse
+    public function updateStepThree(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
         $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
@@ -156,11 +157,11 @@ class MitraWisataOnboardingController extends Controller
         ]);
 
         $data = $request->validate([
-            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
-            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:4096'],
+            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
+            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
             'legal_doc_type' => ['nullable', 'in:nib,sk_desa,surat_pokdarwis,izin_wisata,dokumen_kawasan'],
             'legal_doc_number' => ['nullable', 'string', 'max:255'],
-            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account_number' => ['nullable', 'string', 'max:100'],
             'bank_account_name' => ['nullable', 'string', 'max:255'],
@@ -184,7 +185,7 @@ class MitraWisataOnboardingController extends Controller
         foreach ($uploads as $input => $column) {
             if ($request->hasFile($input)) {
                 $old = $onboarding->{$column};
-                $path = $request->file($input)->store($folder, 'public');
+                $path = $mediaCompression->store($request->file($input), $folder, 'public');
                 $onboarding->{$column} = $path;
                 if ($old) {
                     Storage::disk('public')->delete($old);

@@ -7,6 +7,7 @@ use App\Models\SouvenirAuditLog;
 use App\Models\SouvenirCategory;
 use App\Models\SouvenirProduct;
 use App\Models\SouvenirProductImage;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -74,7 +75,7 @@ class SouvenirProductController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -83,7 +84,7 @@ class SouvenirProductController extends Controller
             'price' => ['required', 'integer', 'min:0'],
             'cost_price' => ['nullable', 'integer', 'min:0'],
             'sku' => ['required', 'string', 'max:50', 'unique:souvenir_products,sku'],
-            'weight' => ['required', 'integer', 'min:0'],
+            'weight' => ['nullable', 'integer', 'min:0'],
             'length' => ['nullable', 'integer', 'min:0'],
             'width' => ['nullable', 'integer', 'min:0'],
             'height' => ['nullable', 'integer', 'min:0'],
@@ -91,7 +92,7 @@ class SouvenirProductController extends Controller
             'min_stock' => ['nullable', 'integer', 'min:0'],
             'stock' => ['nullable', 'integer'],
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['file', 'image', 'max:4096'],
+            'images.*' => ['file', 'image'],
         ]);
 
         $product = SouvenirProduct::create([
@@ -101,7 +102,7 @@ class SouvenirProductController extends Controller
             'price' => $data['price'],
             'cost_price' => $data['cost_price'] ?? null,
             'sku' => $data['sku'],
-            'weight' => $data['weight'],
+            'weight' => $data['weight'] ?? 0,
             'length' => $data['length'] ?? null,
             'width' => $data['width'] ?? null,
             'height' => $data['height'] ?? null,
@@ -114,7 +115,7 @@ class SouvenirProductController extends Controller
         ]);
 
         $images = $data['images'] ?? [];
-        $this->attachImages($product, $images);
+        $this->attachImages($product, $images, $mediaCompression);
 
         $this->logAudit($request, 'product_created', 'Produk souvenir dibuat.', [
             'product_id' => $product->id,
@@ -124,7 +125,7 @@ class SouvenirProductController extends Controller
         return back()->with('status', 'souvenir-product-created');
     }
 
-    public function update(Request $request, SouvenirProduct $product): RedirectResponse
+    public function update(Request $request, SouvenirProduct $product, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -133,7 +134,7 @@ class SouvenirProductController extends Controller
             'price' => ['required', 'integer', 'min:0'],
             'cost_price' => ['nullable', 'integer', 'min:0'],
             'sku' => ['required', 'string', 'max:50', 'unique:souvenir_products,sku,'.$product->id],
-            'weight' => ['required', 'integer', 'min:0'],
+            'weight' => ['nullable', 'integer', 'min:0'],
             'length' => ['nullable', 'integer', 'min:0'],
             'width' => ['nullable', 'integer', 'min:0'],
             'height' => ['nullable', 'integer', 'min:0'],
@@ -141,7 +142,7 @@ class SouvenirProductController extends Controller
             'min_stock' => ['nullable', 'integer', 'min:0'],
             'stock' => ['nullable', 'integer'],
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['file', 'image', 'max:4096'],
+            'images.*' => ['file', 'image'],
         ]);
 
         $images = $data['images'] ?? [];
@@ -161,7 +162,7 @@ class SouvenirProductController extends Controller
             'price' => $data['price'],
             'cost_price' => $data['cost_price'] ?? null,
             'sku' => $data['sku'],
-            'weight' => $data['weight'],
+            'weight' => $data['weight'] ?? 0,
             'length' => $data['length'] ?? null,
             'width' => $data['width'] ?? null,
             'height' => $data['height'] ?? null,
@@ -172,7 +173,7 @@ class SouvenirProductController extends Controller
             'updated_by' => $request->user()->id,
         ]);
 
-        $this->attachImages($product, $images);
+        $this->attachImages($product, $images, $mediaCompression);
 
         $this->logAudit($request, 'product_updated', 'Produk souvenir diperbarui.', [
             'product_id' => $product->id,
@@ -217,12 +218,6 @@ class SouvenirProductController extends Controller
 
     public function forceDelete(Request $request, SouvenirProduct $product): RedirectResponse
     {
-        if ($product->orderItems()->exists()) {
-            return back()->withErrors([
-                'delete' => 'Produk sudah memiliki transaksi, tidak dapat dihapus permanen.',
-            ]);
-        }
-
         $product->images->each(function (SouvenirProductImage $image): void {
             if ($image->image_url) {
                 Storage::disk('public')->delete($image->image_url);
@@ -269,14 +264,14 @@ class SouvenirProductController extends Controller
         ]);
     }
 
-    private function attachImages(SouvenirProduct $product, array $images): void
+    private function attachImages(SouvenirProduct $product, array $images, MediaCompressionService $mediaCompression): void
     {
         if (empty($images)) {
             return;
         }
 
         $paths = collect($images)
-            ->map(fn ($file) => $file->store('souvenir-products', 'public'))
+            ->map(fn ($file) => $mediaCompression->store($file, 'souvenir-products', 'public'))
             ->filter();
 
         $product->images()->createMany(

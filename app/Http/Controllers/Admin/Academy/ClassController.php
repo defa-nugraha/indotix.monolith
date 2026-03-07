@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademyAuditLog;
 use App\Models\AcademyClass;
 use App\Models\AcademyClassImage;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -37,7 +38,7 @@ class ClassController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -52,13 +53,13 @@ class ClassController extends Controller
             'status' => ['required', 'in:draft,scheduled,open_for_sale,closed,completed,cancelled'],
             'is_active' => ['required', 'boolean'],
             'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp'],
         ]);
 
         $class = AcademyClass::create($data);
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
-                $path = $image->store("academy/classes/{$class->id}", 'public');
+                $path = $mediaCompression->store($image, "academy/classes/{$class->id}", 'public');
                 AcademyClassImage::create([
                     'academy_class_id' => $class->id,
                     'image_path' => $path,
@@ -77,7 +78,7 @@ class ClassController extends Controller
         return back()->with('status', 'class-created');
     }
 
-    public function update(Request $request, AcademyClass $class): RedirectResponse
+    public function update(Request $request, AcademyClass $class, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -92,7 +93,7 @@ class ClassController extends Controller
             'status' => ['required', 'in:draft,scheduled,open_for_sale,closed,completed,cancelled'],
             'is_active' => ['required', 'boolean'],
             'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp'],
         ]);
 
         $class->update($data);
@@ -105,7 +106,7 @@ class ClassController extends Controller
                 ]);
             }
             foreach ($request->file('images') as $image) {
-                $path = $image->store("academy/classes/{$class->id}", 'public');
+                $path = $mediaCompression->store($image, "academy/classes/{$class->id}", 'public');
                 AcademyClassImage::create([
                     'academy_class_id' => $class->id,
                     'image_path' => $path,

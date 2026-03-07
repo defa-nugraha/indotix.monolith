@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PromoVideo;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -31,7 +32,7 @@ class PromoVideoController extends Controller
         return Inertia::render('admin/public/promo-videos/create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         if (PromoVideo::query()->exists()) {
             return redirect()
@@ -45,15 +46,12 @@ class PromoVideoController extends Controller
             'cta_label' => ['nullable', 'string', 'max:255'],
             'cta_url' => ['nullable', 'string', 'max:500'],
             'is_active' => ['nullable', 'boolean'],
-            'video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:5120'],
-            'secondary_video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:5120'],
-        ], [
-            'video.max' => 'Ukuran video utama maksimal 5 MB.',
-            'secondary_video.max' => 'Ukuran video bawah maksimal 5 MB.',
+            'video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg'],
+            'secondary_video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg'],
         ]);
 
-        $path = $request->file('video')->store('promo-videos', 'public');
-        $secondaryPath = $request->file('secondary_video')->store('promo-videos', 'public');
+        $path = $mediaCompression->store($request->file('video'), 'promo-videos', 'public');
+        $secondaryPath = $mediaCompression->store($request->file('secondary_video'), 'promo-videos', 'public');
 
         PromoVideo::create([
             'title' => $data['title'],
@@ -75,7 +73,7 @@ class PromoVideoController extends Controller
         ]);
     }
 
-    public function update(Request $request, PromoVideo $promoVideo): RedirectResponse
+    public function update(Request $request, PromoVideo $promoVideo, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -83,24 +81,21 @@ class PromoVideoController extends Controller
             'cta_label' => ['nullable', 'string', 'max:255'],
             'cta_url' => ['nullable', 'string', 'max:500'],
             'is_active' => ['nullable', 'boolean'],
-            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:5120'],
-            'secondary_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:5120'],
-        ], [
-            'video.max' => 'Ukuran video utama maksimal 5 MB.',
-            'secondary_video.max' => 'Ukuran video bawah maksimal 5 MB.',
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg'],
+            'secondary_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg'],
         ]);
 
         if ($request->hasFile('video')) {
             if ($promoVideo->image_path) {
                 Storage::disk('public')->delete($promoVideo->image_path);
             }
-            $promoVideo->image_path = $request->file('video')->store('promo-videos', 'public');
+            $promoVideo->image_path = $mediaCompression->store($request->file('video'), 'promo-videos', 'public');
         }
         if ($request->hasFile('secondary_video')) {
             if ($promoVideo->secondary_video_path) {
                 Storage::disk('public')->delete($promoVideo->secondary_video_path);
             }
-            $promoVideo->secondary_video_path = $request->file('secondary_video')->store('promo-videos', 'public');
+            $promoVideo->secondary_video_path = $mediaCompression->store($request->file('secondary_video'), 'promo-videos', 'public');
         }
 
         $promoVideo->fill([

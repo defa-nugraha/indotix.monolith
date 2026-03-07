@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Hotel;
 use App\Models\RoomImage;
 use App\Models\RoomType;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -66,14 +67,14 @@ class RoomTypeController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $validated = $this->validateRoomType($request);
         $images = $validated['images'] ?? [];
         unset($validated['images']);
 
         $roomType = RoomType::create($validated);
-        $this->syncImages($roomType, $images);
+        $this->syncImages($roomType, $images, $mediaCompression);
 
         return redirect()->route('room-types.index');
     }
@@ -98,14 +99,14 @@ class RoomTypeController extends Controller
         ]);
     }
 
-    public function update(Request $request, RoomType $roomType): RedirectResponse
+    public function update(Request $request, RoomType $roomType, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $validated = $this->validateRoomType($request);
         $images = $validated['images'] ?? [];
         unset($validated['images']);
 
         $roomType->update($validated);
-        $this->syncImages($roomType, $images);
+        $this->syncImages($roomType, $images, $mediaCompression);
 
         return redirect()->route('room-types.index');
     }
@@ -145,11 +146,11 @@ class RoomTypeController extends Controller
             'total_rooms' => ['required', 'integer', 'min:0'],
             'status' => ['required', Rule::in(self::STATUSES)],
             'images' => ['nullable', 'array'],
-            'images.*' => ['file', 'image', 'max:4096'],
+            'images.*' => ['file', 'image'],
         ]);
     }
 
-    private function syncImages(RoomType $roomType, array $images): void
+    private function syncImages(RoomType $roomType, array $images, MediaCompressionService $mediaCompression): void
     {
         if (empty($images)) {
             return;
@@ -163,7 +164,7 @@ class RoomTypeController extends Controller
         }
 
         $paths = collect($images)
-            ->map(fn ($file) => $file->store('room-images', 'public'))
+            ->map(fn ($file) => $mediaCompression->store($file, 'room-images', 'public'))
             ->filter()
             ->unique()
             ->values();

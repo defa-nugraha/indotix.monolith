@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MitraOnboarding;
 use App\Models\Regency;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -95,7 +96,7 @@ class MitraOnboardingController extends Controller
         return back()->with('status', 'onboarding-saved');
     }
 
-    public function updateStepTwo(Request $request): RedirectResponse
+    public function updateStepTwo(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
         $onboarding = MitraOnboarding::query()->firstOrCreate([
@@ -106,14 +107,14 @@ class MitraOnboardingController extends Controller
             'responsible_name' => ['nullable', 'string', 'max:255'],
             'responsible_nik' => ['nullable', 'string', 'max:32'],
             'responsible_role' => ['nullable', 'in:owner,manager,admin'],
-            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
-            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:4096'],
+            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
+            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
             'legal_doc_type' => ['nullable', 'in:nib,siup,tdp,surat_izin_daerah,surat_rt_rw,akta_pendirian'],
             'legal_doc_number' => ['nullable', 'string', 'max:255'],
-            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-            'photo_front_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'photo_lobby_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
-            'photo_room_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:5120'],
+            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
+            'photo_front_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_lobby_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_room_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
             'address_full' => ['nullable', 'string', 'max:500'],
             'maps_pin_url' => ['nullable', 'string', 'max:500'],
             'reception_phone' => ['nullable', 'string', 'max:50'],
@@ -153,7 +154,7 @@ class MitraOnboardingController extends Controller
         foreach ($uploads as $input => $column) {
             if ($request->hasFile($input)) {
                 $old = $onboarding->{$column};
-                $path = $request->file($input)->store($folder, 'public');
+                $path = $mediaCompression->store($request->file($input), $folder, 'public');
                 $onboarding->{$column} = $path;
                 if ($old) {
                     Storage::disk('public')->delete($old);

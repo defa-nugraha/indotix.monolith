@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MitraEventOnboarding;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -56,7 +57,7 @@ class MitraEventOnboardingController extends Controller
         return back()->with('status', 'onboarding-saved');
     }
 
-    public function updateStepTwo(Request $request): RedirectResponse
+    public function updateStepTwo(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
         $onboarding = MitraEventOnboarding::query()->firstOrCreate([
@@ -70,7 +71,7 @@ class MitraEventOnboardingController extends Controller
             'eo_description' => ['nullable', 'string', 'max:1000'],
             'legal_doc_type' => ['nullable', 'in:nib_siup_akta,surat_eo_komunitas,surat_kampus_ukm,surat_pernyataan'],
             'legal_doc_number' => ['nullable', 'string', 'max:255'],
-            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
             'operational_phone' => ['nullable', 'string', 'max:50'],
             'operational_email' => ['nullable', 'email', 'max:255'],
             'operational_hours' => ['nullable', 'string', 'max:255'],
@@ -91,7 +92,7 @@ class MitraEventOnboardingController extends Controller
         if ($request->hasFile('legal_doc_file')) {
             $folder = "mitra-event/{$user->id}";
             $old = $onboarding->legal_doc_path;
-            $path = $request->file('legal_doc_file')->store($folder, 'public');
+            $path = $mediaCompression->store($request->file('legal_doc_file'), $folder, 'public');
             $onboarding->legal_doc_path = $path;
             if ($old) {
                 Storage::disk('public')->delete($old);
@@ -104,7 +105,7 @@ class MitraEventOnboardingController extends Controller
         return back()->with('status', 'onboarding-saved');
     }
 
-    public function updateStepThree(Request $request): RedirectResponse
+    public function updateStepThree(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
         $onboarding = MitraEventOnboarding::query()->firstOrCreate([
@@ -112,8 +113,8 @@ class MitraEventOnboardingController extends Controller
         ]);
 
         $data = $request->validate([
-            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
-            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png', 'max:4096'],
+            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
+            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
         ]);
 
         $folder = "mitra-event/{$user->id}";
@@ -125,7 +126,7 @@ class MitraEventOnboardingController extends Controller
         foreach ($uploads as $input => $column) {
             if ($request->hasFile($input)) {
                 $old = $onboarding->{$column};
-                $path = $request->file($input)->store($folder, 'public');
+                $path = $mediaCompression->store($request->file($input), $folder, 'public');
                 $onboarding->{$column} = $path;
                 if ($old) {
                     Storage::disk('public')->delete($old);

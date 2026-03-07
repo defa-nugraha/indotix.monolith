@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\EventBooking;
 use App\Models\EventDispute;
 use App\Models\EventOrganizer;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -51,7 +52,7 @@ class DisputeController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $organizer = EventOrganizer::query()
             ->where('user_id', $request->user()->id)
@@ -61,7 +62,7 @@ class DisputeController extends Controller
             'event_booking_id' => ['required', 'exists:event_bookings,id'],
             'subject' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
-            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:4096'],
+            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
         ]);
 
         $booking = EventBooking::query()
@@ -71,8 +72,11 @@ class DisputeController extends Controller
 
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
-            $attachmentPath = $request->file('attachment')
-                ->store("mitra-event/{$organizer->id}/disputes", 'public');
+            $attachmentPath = $mediaCompression->store(
+                $request->file('attachment'),
+                "mitra-event/{$organizer->id}/disputes",
+                'public'
+            );
         }
 
         EventDispute::create([

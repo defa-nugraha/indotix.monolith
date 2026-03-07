@@ -265,13 +265,13 @@ class SouvenirBookingController extends Controller
                     'product_encrypted_id' => $item->product_id
                         ? Crypt::encryptString((string) $item->product_id)
                         : null,
-                    'name' => $item->product_name,
+                    'name' => $item->product_id ? $item->product_name : 'Produk tidak tersedia',
                     'sku' => $item->sku,
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,
                     'subtotal' => $item->subtotal,
                     'review' => [
-                        'can_review' => $userId
+                        'can_review' => $item->product_id && $userId
                             ? ProductReviewService::hasUsedBooking($userId, 'souvenir', (int) $item->product_id)
                             : false,
                         'url' => $item->product_id
@@ -301,7 +301,7 @@ class SouvenirBookingController extends Controller
                     'total_price' => $order->total_price,
                     'shipping_address' => $order->shipping_address,
                     'items' => $order->items->map(fn ($item) => [
-                        'name' => $item->product_name,
+                        'name' => $item->product_id ? $item->product_name : 'Produk tidak tersedia',
                         'sku' => $item->sku,
                         'quantity' => $item->quantity,
                         'unit_price' => $item->unit_price,
@@ -372,7 +372,7 @@ class SouvenirBookingController extends Controller
     {
         $items = $order->items->map(fn ($item) => [
             'key' => $item->id,
-            'name' => $item->product_name,
+            'name' => $item->product_id ? $item->product_name : 'Produk tidak tersedia',
             'variant_name' => null,
             'quantity' => $item->quantity,
             'price' => $item->unit_price,

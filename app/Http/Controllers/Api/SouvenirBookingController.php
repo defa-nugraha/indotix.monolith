@@ -309,7 +309,7 @@ class SouvenirBookingController extends Controller
             'shipping_status' => $order->shipping_status,
             'tracking_number' => $order->tracking_number,
             'items' => $order->items->map(fn ($item) => [
-                'name' => $item->product_name,
+                'name' => $item->product_id ? $item->product_name : 'Produk tidak tersedia',
                 'sku' => $item->sku,
                 'quantity' => $item->quantity,
                 'unit_price' => $item->unit_price,

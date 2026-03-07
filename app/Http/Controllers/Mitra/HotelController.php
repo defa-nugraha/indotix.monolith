@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Mitra;
 use App\Http\Controllers\Controller;
 use App\Models\Hotel;
 use App\Models\HotelImage;
+use App\Services\MediaCompressionService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -100,7 +101,7 @@ class HotelController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
 
@@ -119,7 +120,7 @@ class HotelController extends Controller
         $hotel = Hotel::create($validated);
 
         $this->syncFacilities($hotel, $facilityCodes);
-        $this->attachImages($hotel, $images);
+        $this->attachImages($hotel, $images, $mediaCompression);
 
         return redirect()->route('mitra.hotels.index');
     }
@@ -145,7 +146,7 @@ class HotelController extends Controller
         ]);
     }
 
-    public function update(Request $request, Hotel $hotel): RedirectResponse
+    public function update(Request $request, Hotel $hotel, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
         if ((int) $hotel->vendor_id !== (int) $user->id) {
@@ -162,7 +163,7 @@ class HotelController extends Controller
 
         $hotel->update($validated);
         $this->syncFacilities($hotel, $facilityCodes);
-        $this->attachImages($hotel, $images);
+        $this->attachImages($hotel, $images, $mediaCompression);
 
         return redirect()->route('mitra.hotels.index');
     }
@@ -216,7 +217,7 @@ class HotelController extends Controller
             'facility_codes' => ['nullable', 'array'],
             'facility_codes.*' => ['string', Rule::in(self::FACILITY_CODES)],
             'images' => ['nullable', 'array'],
-            'images.*' => ['file', 'image', 'max:4096'],
+            'images.*' => ['file', 'image'],
         ]);
     }
 
@@ -238,14 +239,14 @@ class HotelController extends Controller
         );
     }
 
-    private function attachImages(Hotel $hotel, array $images): void
+    private function attachImages(Hotel $hotel, array $images, MediaCompressionService $mediaCompression): void
     {
         if (empty($images)) {
             return;
         }
 
         $paths = collect($images)
-            ->map(fn ($file) => $file->store('hotel-images', 'public'))
+            ->map(fn ($file) => $mediaCompression->store($file, 'hotel-images', 'public'))
             ->filter()
             ->values();
 

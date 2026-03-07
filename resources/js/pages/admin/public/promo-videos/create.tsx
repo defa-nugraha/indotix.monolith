@@ -15,7 +15,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function PromoVideoCreate() {
-    const maxVideoSizeBytes = 5 * 1024 * 1024;
     const form = useForm({
         title: '',
         description: '',
@@ -35,20 +34,6 @@ export default function PromoVideoCreate() {
         if (!file) {
             form.setData(field, null);
             form.clearErrors(field);
-            return;
-        }
-
-        if (file.size > maxVideoSizeBytes) {
-            form.setError(field, 'Ukuran video maksimal 5 MB.');
-            form.setData(field, null);
-            if (input) {
-                input.value = '';
-            }
-            Swal.fire({
-                icon: 'error',
-                title: 'Ukuran video terlalu besar',
-                text: 'Maksimal ukuran video 5 MB.',
-            });
             return;
         }
 
@@ -136,19 +121,19 @@ export default function PromoVideoCreate() {
                                     validateVideoFile(event.target.files?.[0] ?? null, 'video', { width: 1280, height: 720 }, event.currentTarget)
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9). Maks 5 MB.</p>
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9).</p>
                             <InputError message={form.errors.video} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Video Bawah (kecil)</Label>
+                            <Label>Video Bawah</Label>
                             <Input
                                 type="file"
                                 accept="video/*"
                                 onChange={(event) =>
-                                    validateVideoFile(event.target.files?.[0] ?? null, 'secondary_video', { width: 960, height: 540 }, event.currentTarget)
+                                    validateVideoFile(event.target.files?.[0] ?? null, 'secondary_video', { width: 1280, height: 720 }, event.currentTarget)
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 960 × 540 px (16:9). Maks 5 MB.</p>
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9).</p>
                             <InputError message={form.errors.secondary_video} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">

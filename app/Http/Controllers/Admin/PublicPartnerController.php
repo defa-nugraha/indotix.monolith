@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PublicPartner;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -29,19 +30,19 @@ class PublicPartnerController extends Controller
         return Inertia::render('admin/public/partners/create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['required', 'image', 'max:5120', 'dimensions:width=300,height=180'],
+            'image' => ['required', 'image', 'dimensions:width=300,height=180'],
         ], [
             'image.dimensions' => 'Ukuran logo partner harus 300 x 180 px.',
         ]);
 
-        $path = $request->file('image')->store('public-partners', 'public');
+        $path = $mediaCompression->store($request->file('image'), 'public-partners', 'public');
 
         PublicPartner::create([
             'name' => $data['name'] ?? null,
@@ -61,14 +62,14 @@ class PublicPartnerController extends Controller
         ]);
     }
 
-    public function update(Request $request, PublicPartner $partner): RedirectResponse
+    public function update(Request $request, PublicPartner $partner, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'name' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'max:5120', 'dimensions:width=300,height=180'],
+            'image' => ['nullable', 'image', 'dimensions:width=300,height=180'],
         ], [
             'image.dimensions' => 'Ukuran logo partner harus 300 x 180 px.',
         ]);
@@ -77,7 +78,7 @@ class PublicPartnerController extends Controller
             if ($partner->image_path) {
                 Storage::disk('public')->delete($partner->image_path);
             }
-            $partner->image_path = $request->file('image')->store('public-partners', 'public');
+            $partner->image_path = $mediaCompression->store($request->file('image'), 'public-partners', 'public');
         }
 
         $partner->fill([

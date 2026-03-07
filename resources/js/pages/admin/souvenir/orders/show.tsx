@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 
 type OrderItem = {
     id: number;
+    product_id?: number | null;
     product_name: string;
     quantity: number;
     unit_price: number;
@@ -88,7 +89,12 @@ export default function SouvenirOrderShow({ order }: { order: Order }) {
                             <tbody>
                                 {order.items.map((item) => (
                                     <tr key={item.id} className="border-t border-slate-100">
-                                        <td className="px-4 py-3">{item.product_name} {item.variant ? `(${item.variant.name})` : ''}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={item.product_id ? '' : 'font-semibold text-rose-600'}>
+                                                {item.product_id ? item.product_name : 'Produk tidak tersedia'}
+                                            </span>
+                                            {item.variant ? ` (${item.variant.name})` : ''}
+                                        </td>
                                         <td className="px-4 py-3">{item.quantity}</td>
                                         <td className="px-4 py-3">Rp {item.unit_price.toLocaleString('id-ID')}</td>
                                         <td className="px-4 py-3">Rp {item.subtotal.toLocaleString('id-ID')}</td>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PromoItem;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -30,7 +31,7 @@ class PromoItemController extends Controller
         return Inertia::render('admin/public/promo-items/create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $activeCount = PromoItem::query()->where('is_active', true)->count();
         $isActive = (bool) $request->boolean('is_active', true);
@@ -51,12 +52,12 @@ class PromoItemController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['required', 'image', 'max:5120', $dimensionRule],
+            'image' => ['required', 'image', $dimensionRule],
         ], [
             'image.dimensions' => $dimensionMessage,
         ]);
 
-        $path = $request->file('image')->store('promo-items', 'public');
+        $path = $mediaCompression->store($request->file('image'), 'promo-items', 'public');
 
         PromoItem::create([
             'title' => $data['title'] ?? null,
@@ -76,7 +77,7 @@ class PromoItemController extends Controller
         ]);
     }
 
-    public function update(Request $request, PromoItem $promoItem): RedirectResponse
+    public function update(Request $request, PromoItem $promoItem, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $activeCount = PromoItem::query()
             ->where('is_active', true)
@@ -100,7 +101,7 @@ class PromoItemController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'max:5120', $dimensionRule],
+            'image' => ['nullable', 'image', $dimensionRule],
         ], [
             'image.dimensions' => $dimensionMessage,
         ]);
@@ -109,7 +110,7 @@ class PromoItemController extends Controller
             if ($promoItem->image_path) {
                 Storage::disk('public')->delete($promoItem->image_path);
             }
-            $promoItem->image_path = $request->file('image')->store('promo-items', 'public');
+            $promoItem->image_path = $mediaCompression->store($request->file('image'), 'promo-items', 'public');
         }
 
         $promoItem->fill([

@@ -51,9 +51,9 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
         length: '',
         width: '',
         height: '',
-        status: 'draft',
-        min_stock: 0,
-        stock: 0,
+        status: 'active',
+        min_stock: '',
+        stock: '',
         images: [] as File[],
     });
 
@@ -68,6 +68,19 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
     const maxImages = 10;
     const canAddCreateImages = maxImages - form.data.images.length;
     const canAddEditImages = maxImages - (existingImages.length + editPreviews.length);
+    const generateSku = () => {
+        const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
+        const random = Math.random().toString(36).slice(2, 6).toUpperCase();
+        return `SOUV-${timestamp}-${random}`;
+    };
+
+    const openCreateModal = () => {
+        form.reset();
+        form.setData('sku', generateSku());
+        form.setData('status', 'active');
+        setCreatePreviews([]);
+        setIsCreateOpen(true);
+    };
 
     useEffect(() => {
         if (form.data.images.length === 0) {
@@ -167,7 +180,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
     const deleteProduct = async (productId: number) => {
         const result = await Swal.fire({
             title: 'Hapus permanen?',
-            text: 'Produk akan dihapus permanen jika belum memiliki transaksi.',
+            text: 'Produk akan dihapus permanen. Riwayat transaksi akan menampilkan "Produk tidak tersedia".',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Hapus',
@@ -219,7 +232,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                             <h1 className="text-2xl font-semibold text-slate-900">Master Produk Retail Shop</h1>
                             <p className="text-sm text-slate-500">Tambah dan kelola katalog produk souvenir.</p>
                         </div>
-                        <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={() => setIsCreateOpen(true)}>
+                        <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={openCreateModal}>
                             Tambah Produk
                         </Button>
                     </div>
@@ -394,14 +407,20 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 placeholder="Min stok"
                                 value={form.data.min_stock}
-                                onChange={(event) => form.setData('min_stock', Number(event.target.value))}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    form.setData('min_stock', value === '' ? '' : Number(value));
+                                }}
                             />
                             <input
                                 type="number"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 placeholder="Stok awal"
                                 value={form.data.stock}
-                                onChange={(event) => form.setData('stock', Number(event.target.value))}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    form.setData('stock', value === '' ? '' : Number(value));
+                                }}
                             />
                             <textarea
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3"
@@ -513,28 +532,40 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                 type="number"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 value={editData.weight ?? ''}
-                                onChange={(event) => setEditData({ ...editData, weight: Number(event.target.value) })}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    setEditData({ ...editData, weight: value === '' ? '' : Number(value) });
+                                }}
                                 placeholder="Berat (gram)"
                             />
                             <input
                                 type="number"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 value={editData.length ?? ''}
-                                onChange={(event) => setEditData({ ...editData, length: Number(event.target.value) })}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    setEditData({ ...editData, length: value === '' ? '' : Number(value) });
+                                }}
                                 placeholder="Panjang"
                             />
                             <input
                                 type="number"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 value={editData.width ?? ''}
-                                onChange={(event) => setEditData({ ...editData, width: Number(event.target.value) })}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    setEditData({ ...editData, width: value === '' ? '' : Number(value) });
+                                }}
                                 placeholder="Lebar"
                             />
                             <input
                                 type="number"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 value={editData.height ?? ''}
-                                onChange={(event) => setEditData({ ...editData, height: Number(event.target.value) })}
+                                onChange={(event) => {
+                                    const value = event.target.value;
+                                    setEditData({ ...editData, height: value === '' ? '' : Number(value) });
+                                }}
                                 placeholder="Tinggi"
                             />
                             <input

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\BlogTag;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -57,7 +58,7 @@ class BlogPostController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $this->validatePost($request);
 
@@ -66,7 +67,7 @@ class BlogPostController extends Controller
 
         $coverPath = null;
         if ($request->hasFile('cover_image')) {
-            $coverPath = $request->file('cover_image')->store('blog', 'public');
+            $coverPath = $mediaCompression->store($request->file('cover_image'), 'blog', 'public');
         }
 
         $post = BlogPost::create([
@@ -116,7 +117,7 @@ class BlogPostController extends Controller
         ]);
     }
 
-    public function update(Request $request, BlogPost $post): RedirectResponse
+    public function update(Request $request, BlogPost $post, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $this->validatePost($request, $post->id);
 
@@ -127,7 +128,7 @@ class BlogPostController extends Controller
             if ($post->cover_image_path) {
                 Storage::disk('public')->delete($post->cover_image_path);
             }
-            $post->cover_image_path = $request->file('cover_image')->store('blog', 'public');
+            $post->cover_image_path = $mediaCompression->store($request->file('cover_image'), 'blog', 'public');
         }
 
         $post->fill([
@@ -177,7 +178,7 @@ class BlogPostController extends Controller
             'meta_title' => ['nullable', 'string', 'max:180'],
             'meta_description' => ['nullable', 'string', 'max:255'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],
-            'cover_image' => ['nullable', 'image', 'max:3072'],
+            'cover_image' => ['nullable', 'image'],
         ]);
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PublicBanner;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -29,19 +30,19 @@ class PublicBannerController extends Controller
         return Inertia::render('admin/public/banners/create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['required', 'image', 'max:5120', 'dimensions:width=1200,height=450'],
+            'image' => ['required', 'image', 'dimensions:width=1200,height=450'],
         ], [
             'image.dimensions' => 'Ukuran banner harus 1200 x 450 px.',
         ]);
 
-        $path = $request->file('image')->store('public-banners', 'public');
+        $path = $mediaCompression->store($request->file('image'), 'public-banners', 'public');
 
         PublicBanner::create([
             'title' => $data['title'] ?? null,
@@ -61,14 +62,14 @@ class PublicBannerController extends Controller
         ]);
     }
 
-    public function update(Request $request, PublicBanner $banner): RedirectResponse
+    public function update(Request $request, PublicBanner $banner, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'max:5120', 'dimensions:width=1200,height=450'],
+            'image' => ['nullable', 'image', 'dimensions:width=1200,height=450'],
         ], [
             'image.dimensions' => 'Ukuran banner harus 1200 x 450 px.',
         ]);
@@ -77,7 +78,7 @@ class PublicBannerController extends Controller
             if ($banner->image_path) {
                 Storage::disk('public')->delete($banner->image_path);
             }
-            $banner->image_path = $request->file('image')->store('public-banners', 'public');
+            $banner->image_path = $mediaCompression->store($request->file('image'), 'public-banners', 'public');
         }
 
         $banner->fill([
