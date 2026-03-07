@@ -40,6 +40,13 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
         { title: 'Master Produk', href: '/admin/souvenir/products' },
     ];
 
+    const formatNumber = (value: number | string | null | undefined) => {
+        const digits = String(value ?? '').replace(/\D/g, '');
+        return digits ? Number(digits).toLocaleString('id-ID') : '';
+    };
+
+    const parseNumber = (value: string) => value.replace(/\D/g, '');
+
     const form = useForm({
         name: '',
         category_id: '',
@@ -129,8 +136,8 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
             name: product.name,
             category_id: product.category?.id ?? '',
             description: product.description ?? '',
-            price: product.price,
-            cost_price: product.cost_price ?? '',
+            price: String(product.price ?? ''),
+            cost_price: product.cost_price ? String(product.cost_price) : '',
             sku: product.sku,
             weight: product.weight,
             length: product.length ?? '',
@@ -361,18 +368,20 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                 <option value="inactive">Inactive</option>
                             </select>
                             <input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 placeholder="Harga jual"
-                                value={form.data.price}
-                                onChange={(event) => form.setData('price', event.target.value)}
+                                value={formatNumber(form.data.price)}
+                                onChange={(event) => form.setData('price', parseNumber(event.target.value))}
                             />
                             <input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 placeholder="Harga modal"
-                                value={form.data.cost_price}
-                                onChange={(event) => form.setData('cost_price', event.target.value)}
+                                value={formatNumber(form.data.cost_price)}
+                                onChange={(event) => form.setData('cost_price', parseNumber(event.target.value))}
                             />
                             <input
                                 type="number"
@@ -515,17 +524,19 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                 <option value="inactive">Inactive</option>
                             </select>
                             <input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.price ?? ''}
-                                onChange={(event) => setEditData({ ...editData, price: Number(event.target.value) })}
+                                value={formatNumber(editData.price ?? '')}
+                                onChange={(event) => setEditData({ ...editData, price: parseNumber(event.target.value) })}
                                 placeholder="Harga jual"
                             />
                             <input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.cost_price ?? ''}
-                                onChange={(event) => setEditData({ ...editData, cost_price: Number(event.target.value) })}
+                                value={formatNumber(editData.cost_price ?? '')}
+                                onChange={(event) => setEditData({ ...editData, cost_price: parseNumber(event.target.value) })}
                                 placeholder="Harga modal"
                             />
                             <input
