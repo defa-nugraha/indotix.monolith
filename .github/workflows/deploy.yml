@@ -17,6 +17,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -35,6 +41,9 @@ jobs:
           else
             npm install
           fi
+
+      - name: Install Composer Dependencies
+        run: composer install --no-dev --prefer-dist --optimize-autoloader
 
       - name: Build Assets
         run: npm run build
@@ -88,3 +97,31 @@ jobs:
             php artisan storage:link || true
             php artisan queue:restart || true
           EOF
+
+      - name: WhatsApp notify success
+        if: success()
+        env:
+          WA_API_KEY: ${{ secrets.WA_API_KEY }}
+          WA_SENDER: ${{ secrets.WA_SENDER }}
+          WA_NUMBER: ${{ secrets.WA_NUMBER }}
+        run: |
+          message="✅ Deploy sukses: ${{ github.repository }} (${{
+            github.ref_name
+          }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -sS -X POST "http://wa.digitalpelajar.id/send-message" \
+            -H "Content-Type: application/json" \
+            -d "{\"api_key\":\"${WA_API_KEY}\",\"sender\":\"${WA_SENDER}\",\"number\":\"${WA_NUMBER}\",\"message\":\"${message}\"}"
+
+      - name: WhatsApp notify failure
+        if: failure()
+        env:
+          WA_API_KEY: ${{ secrets.WA_API_KEY }}
+          WA_SENDER: ${{ secrets.WA_SENDER }}
+          WA_NUMBER: ${{ secrets.WA_NUMBER }}
+        run: |
+          message="❌ Deploy gagal: ${{ github.repository }} (${{
+            github.ref_name
+          }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -sS -X POST "http://wa.digitalpelajar.id/send-message" \
+            -H "Content-Type: application/json" \
+            -d "{\"api_key\":\"${WA_API_KEY}\",\"sender\":\"${WA_SENDER}\",\"number\":\"${WA_NUMBER}\",\"message\":\"${message}\"}"
