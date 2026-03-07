@@ -105,6 +105,7 @@ jobs:
 
       - name: WhatsApp notify success
         if: success()
+        continue-on-error: true
         env:
           WA_API_KEY: ${{ secrets.WA_API_KEY }}
           WA_SENDER: ${{ secrets.WA_SENDER }}
@@ -113,12 +114,13 @@ jobs:
           message="✅ Deploy sukses: ${{ github.repository }} (${{
             github.ref_name
           }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -sS -X POST "http://wa.digitalpelajar.id/send-message" \
+          curl -sS --connect-timeout 10 --max-time 20 -X POST "http://wa.digitalpelajar.id/send-message" \
             -H "Content-Type: application/json" \
             -d "{\"api_key\":\"${WA_API_KEY}\",\"sender\":\"${WA_SENDER}\",\"number\":\"${WA_NUMBER}\",\"message\":\"${message}\"}"
 
       - name: WhatsApp notify failure
         if: failure()
+        continue-on-error: true
         env:
           WA_API_KEY: ${{ secrets.WA_API_KEY }}
           WA_SENDER: ${{ secrets.WA_SENDER }}
@@ -127,6 +129,6 @@ jobs:
           message="❌ Deploy gagal: ${{ github.repository }} (${{
             github.ref_name
           }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -sS -X POST "http://wa.digitalpelajar.id/send-message" \
+          curl -sS --connect-timeout 10 --max-time 20 -X POST "http://wa.digitalpelajar.id/send-message" \
             -H "Content-Type: application/json" \
             -d "{\"api_key\":\"${WA_API_KEY}\",\"sender\":\"${WA_SENDER}\",\"number\":\"${WA_NUMBER}\",\"message\":\"${message}\"}"
