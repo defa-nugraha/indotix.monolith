@@ -51,16 +51,25 @@ jobs:
       - name: Setup SSH key
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_PRIVATE_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
         run: |
-          if [ -z "$SSH_PRIVATE_KEY" ] || [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
-            echo "Missing SSH secrets. Please set SSH_PRIVATE_KEY, SSH_HOST, SSH_USER."
+          if [ -z "$SSH_PRIVATE_KEY" ] && [ -z "$SSH_PRIVATE_KEY_B64" ]; then
+            echo "Missing SSH key. Please set SSH_PRIVATE_KEY or SSH_PRIVATE_KEY_B64."
+            exit 1
+          fi
+          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
+            echo "Missing SSH secrets. Please set SSH_HOST and SSH_USER."
             exit 1
           fi
           mkdir -p "$HOME/.ssh"
-          printf '%s' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/id_rsa"
+          if [ -n "$SSH_PRIVATE_KEY_B64" ]; then
+            echo "$SSH_PRIVATE_KEY_B64" | base64 -d > "$HOME/.ssh/id_rsa"
+          else
+            printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_rsa"
+          fi
           chmod 600 "$HOME/.ssh/id_rsa"
           ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" >> "$HOME/.ssh/known_hosts"
 
