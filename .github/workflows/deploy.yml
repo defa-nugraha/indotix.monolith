@@ -48,74 +48,24 @@ jobs:
       - name: Build Assets
         run: npm run build
 
-      - name: Setup SSH key
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_PRIVATE_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-        run: |
-          if [ -z "$SSH_PRIVATE_KEY" ] && [ -z "$SSH_PRIVATE_KEY_B64" ]; then
-            echo "Missing SSH key. Please set SSH_PRIVATE_KEY or SSH_PRIVATE_KEY_B64."
-            exit 1
-          fi
-          if [ -z "$SSH_HOST" ] || [ -z "$SSH_USER" ]; then
-            echo "Missing SSH secrets. Please set SSH_HOST and SSH_USER."
-            exit 1
-          fi
-          mkdir -p "$HOME/.ssh"
-          if [ -n "$SSH_PRIVATE_KEY_B64" ]; then
-            echo "$SSH_PRIVATE_KEY_B64" | base64 -d > "$HOME/.ssh/id_rsa"
-          else
-            # Try raw first (proper multiline key)
-            printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_rsa"
-            # If key still invalid (often stored with literal \n), rehydrate it
-            if ! ssh-keygen -y -f "$HOME/.ssh/id_rsa" >/dev/null 2>&1; then
-              printf '%b' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_rsa"
-            fi
-          fi
-          chmod 600 "$HOME/.ssh/id_rsa"
-          ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" >> "$HOME/.ssh/known_hosts"
-
-      - name: Deploy via rsync
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-        run: |
-          rsync -az --delete \
-            --exclude ".env" \
-            --exclude ".git" \
-            --exclude ".github" \
-            --exclude "node_modules" \
-            --exclude "vendor" \
-            --exclude "storage" \
-            --exclude "tests" \
-            --exclude "docs" \
-            -e "ssh -i $HOME/.ssh/id_rsa -o IdentitiesOnly=yes -p ${SSH_PORT:-22}" \
-            ./ "${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH%/}/"
-
-      - name: Run post-deploy commands
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-        run: |
-          ssh -i "$HOME/.ssh/id_rsa" -o IdentitiesOnly=yes -p "${SSH_PORT:-22}" "${SSH_USER}@${SSH_HOST}" <<EOF
-            set -e
-            cd "${DEPLOY_PATH%/}"
-            composer install --no-dev --prefer-dist --optimize-autoloader
-            php artisan migrate --force
-            php artisan optimize
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-            php artisan storage:link || true
-            php artisan queue:restart || true
-          EOF
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT }}
+          local-dir: ./
+          server-dir: ${{ secrets.FTP_PATH }}
+          exclude: |
+            **/.git*
+            **/.github/**
+            **/node_modules/**
+            **/vendor/**
+            **/storage/**
+            **/tests/**
+            **/docs/**
+            .env
 
       - name: WhatsApp notify success
         if: success()
