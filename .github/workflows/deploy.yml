@@ -68,7 +68,12 @@ jobs:
           if [ -n "$SSH_PRIVATE_KEY_B64" ]; then
             echo "$SSH_PRIVATE_KEY_B64" | base64 -d > "$HOME/.ssh/id_rsa"
           else
+            # Try raw first (proper multiline key)
             printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_rsa"
+            # If key still invalid (often stored with literal \n), rehydrate it
+            if ! ssh-keygen -y -f "$HOME/.ssh/id_rsa" >/dev/null 2>&1; then
+              printf '%b' "$SSH_PRIVATE_KEY" | tr -d '\r' > "$HOME/.ssh/id_rsa"
+            fi
           fi
           chmod 600 "$HOME/.ssh/id_rsa"
           ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" >> "$HOME/.ssh/known_hosts"
@@ -89,7 +94,7 @@ jobs:
             --exclude "storage" \
             --exclude "tests" \
             --exclude "docs" \
-            -e "ssh -p ${SSH_PORT:-22}" \
+            -e "ssh -i $HOME/.ssh/id_rsa -o IdentitiesOnly=yes -p ${SSH_PORT:-22}" \
             ./ "${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH%/}/"
 
       - name: Run post-deploy commands
@@ -99,7 +104,7 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
-          ssh -p "${SSH_PORT:-22}" "${SSH_USER}@${SSH_HOST}" <<EOF
+          ssh -i "$HOME/.ssh/id_rsa" -o IdentitiesOnly=yes -p "${SSH_PORT:-22}" "${SSH_USER}@${SSH_HOST}" <<EOF
             set -e
             cd "${DEPLOY_PATH%/}"
             composer install --no-dev --prefer-dist --optimize-autoloader
