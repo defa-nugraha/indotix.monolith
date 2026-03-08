@@ -3,16 +3,12 @@ import { BookOpen, CalendarCheck, MapPinned, ShoppingBag, Star, Ticket } from 'l
 import PublicLayout from '@/layouts/public-layout';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 
-type Policy = {
-    id: number;
+type AboutPage = {
     title: string;
     content: string;
-    terms_content?: string | null;
-    version: string | null;
-    effective_at: string | null;
-};
+} | null;
 
-export default function PrivacyPolicyPage({ policy }: { policy: Policy | null }) {
+export default function AboutPage({ about }: { about: AboutPage }) {
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
@@ -38,66 +34,45 @@ export default function PrivacyPolicyPage({ policy }: { policy: Policy | null })
 
     return (
         <PublicLayout categories={categories} chips={chips}>
-            <Head title="Kebijakan Privasi - Indotix">
+            <Head title="Tentang Kami - Indotix">
                 <meta
                     name="description"
-                    content="Kebijakan privasi Indotix mengenai pengumpulan, penggunaan, penyimpanan, dan perlindungan data pribadi pengguna."
+                    content="Kenali Indotix sebagai platform pemesanan wisata, hotel, event, special program, academy, dan retail shop di Indonesia."
                 />
-                <meta property="og:title" content="Kebijakan Privasi - Indotix" />
+                <meta property="og:title" content="Tentang Kami - Indotix" />
                 <meta
                     property="og:description"
-                    content="Kebijakan privasi Indotix mengenai pengumpulan, penggunaan, penyimpanan, dan perlindungan data pribadi pengguna."
+                    content="Kenali Indotix sebagai platform pemesanan wisata, hotel, event, special program, academy, dan retail shop di Indonesia."
                 />
                 <meta property="og:type" content="website" />
             </Head>
+
             <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-8">
                 <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
                     <nav className="text-xs text-slate-500">
                         <Link href="/" className="transition hover:text-sky-600">Beranda</Link>
                         <span className="mx-2">/</span>
-                        <span className="text-slate-700">Kebijakan Privasi</span>
+                        <span className="text-slate-700">Tentang Kami</span>
                     </nav>
-                    <h1 className="text-3xl font-semibold text-slate-900">{policy?.title ?? 'Kebijakan Privasi'}</h1>
-                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
-                        {policy?.version && (
-                            <span className="rounded-full bg-slate-100 px-3 py-1">Versi {policy.version}</span>
-                        )}
-                        {policy?.effective_at && (
-                            <span className="rounded-full bg-slate-100 px-3 py-1">Berlaku: {policy.effective_at}</span>
+                    <h1 className="mt-2 text-3xl font-semibold text-slate-900">
+                        {about?.title ?? 'Tentang Indotix'}
+                    </h1>
+                    <p className="mt-2 text-sm text-slate-600">
+                        Profil singkat Indotix dan komitmen layanan kami untuk perjalanan, event, dan pengalaman terbaik.
+                    </p>
+
+                    <div className="mt-6">
+                        {about?.content ? (
+                            <div
+                                className="prose prose-slate max-w-none"
+                                dangerouslySetInnerHTML={{ __html: about.content }}
+                            />
+                        ) : (
+                            <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
+                                Konten Tentang Kami belum tersedia.
+                            </div>
                         )}
                     </div>
-
-                    <div className="mt-6 flex flex-wrap gap-2 text-xs">
-                        <a href="#privacy-policy" className="rounded-full border border-slate-200 px-3 py-1 text-slate-600 transition hover:border-sky-200 hover:text-sky-600">
-                            Kebijakan Privasi
-                        </a>
-                        <a href="#terms" className="rounded-full border border-slate-200 px-3 py-1 text-slate-600 transition hover:border-sky-200 hover:text-sky-600">
-                            Syarat &amp; Ketentuan
-                        </a>
-                    </div>
-
-                    {policy ? (
-                        <div className="mt-8 space-y-10">
-                            <section id="privacy-policy" className="rounded-2xl border border-slate-200 bg-slate-50/60 p-6">
-                                <h2 className="text-xl font-semibold text-slate-900">Kebijakan Privasi</h2>
-                                <div className="prose prose-slate mt-4 max-w-none" dangerouslySetInnerHTML={{ __html: policy.content }} />
-                            </section>
-                            <section id="terms" className="rounded-2xl border border-slate-200 bg-slate-50/60 p-6">
-                                <h2 className="text-xl font-semibold text-slate-900">Syarat &amp; Ketentuan</h2>
-                                {policy.terms_content ? (
-                                    <div className="prose prose-slate mt-4 max-w-none" dangerouslySetInnerHTML={{ __html: policy.terms_content }} />
-                                ) : (
-                                    <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
-                                        Syarat &amp; ketentuan belum tersedia.
-                                    </div>
-                                )}
-                            </section>
-                        </div>
-                    ) : (
-                        <div className="mt-6 rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-                            Kebijakan privasi belum tersedia.
-                        </div>
-                    )}
                 </div>
             </div>
 

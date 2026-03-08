@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { loadCkeditor } from '@/lib/ckeditor-loader';
 
 type CkeditorFieldProps = {
@@ -12,15 +12,20 @@ export default function CkeditorField({ value, onChange, className, minHeightCla
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const editorRef = useRef<any>(null);
     const updatingRef = useRef(false);
+    const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+    const [retrySeed, setRetrySeed] = useState(0);
 
     useEffect(() => {
         let active = true;
 
+        setStatus('loading');
         loadCkeditor()
             .then(() => {
                 if (!active || !textareaRef.current || editorRef.current) return;
                 const ClassicEditor = (window as any).ClassicEditor;
-                return ClassicEditor.create(textareaRef.current).then((editor: any) => {
+                return ClassicEditor.create(textareaRef.current, {
+                    toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo'],
+                }).then((editor: any) => {
                     if (!active) {
                         editor.destroy();
                         return;
@@ -35,10 +40,13 @@ export default function CkeditorField({ value, onChange, className, minHeightCla
                         const data = editor.getData();
                         onChange(data);
                     });
+                    setStatus('ready');
                 });
             })
             .catch(() => {
-                // Fallback: keep textarea visible if CKEditor fails
+                if (!active) return;
+                editorRef.current = null;
+                setStatus('error');
             });
 
         return () => {
@@ -48,7 +56,7 @@ export default function CkeditorField({ value, onChange, className, minHeightCla
                 editorRef.current = null;
             }
         };
-    }, []);
+    }, [retrySeed]);
 
     useEffect(() => {
         const editor = editorRef.current;
@@ -61,10 +69,27 @@ export default function CkeditorField({ value, onChange, className, minHeightCla
     }, [value]);
 
     return (
-        <textarea
-            ref={textareaRef}
-            defaultValue={value}
-            className={`w-full rounded-lg border border-slate-200 px-3 py-2 text-sm ${minHeightClassName ?? ''} ${className ?? ''}`}
-        />
+        <div className="space-y-2">
+            <textarea
+                ref={textareaRef}
+                defaultValue={value}
+                className={`w-full rounded-lg border border-slate-200 px-3 py-2 text-sm ${minHeightClassName ?? ''} ${className ?? ''}`}
+            />
+            {status === 'loading' && (
+                <div className="text-xs text-slate-400">Memuat editor...</div>
+            )}
+            {status === 'error' && (
+                <div className="flex items-center gap-2 text-xs text-rose-500">
+                    <span>Editor gagal dimuat.</span>
+                    <button
+                        type="button"
+                        className="font-semibold text-sky-600"
+                        onClick={() => setRetrySeed((prev) => prev + 1)}
+                    >
+                        Coba lagi
+                    </button>
+                </div>
+            )}
+        </div>
     );
 }

@@ -63,6 +63,7 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/public/promo-videos') ||
         isCurrentUrl('/admin/public/promo-items') ||
         isCurrentUrl('/admin/public/contacts') ||
+        isCurrentUrl('/admin/public/about') ||
         isCurrentUrl('/admin/public/partners') ||
         isCurrentUrl('/admin/public/faqs') ||
         isCurrentUrl('/admin/public/privacy-policy');
@@ -904,6 +905,14 @@ export function AppSidebarAdmin() {
                                         <Link href="/admin/public/contacts">Kontak</Link>
                                     </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/public/about')}
+                                        >
+                                            <Link href="/admin/public/about">Tentang Kami</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
                                         <SidebarMenuSubButton
                                             asChild

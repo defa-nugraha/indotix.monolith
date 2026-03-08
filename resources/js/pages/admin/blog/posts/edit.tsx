@@ -1,9 +1,8 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
-import { loadCkeditor } from '@/lib/ckeditor-loader';
+import CkeditorField from '@/components/ckeditor-field';
 
 type Category = { id: number; name: string };
 type Tag = { id: number; name: string };
@@ -24,22 +23,11 @@ type Post = {
     tags?: string[];
 };
 
-declare global {
-    interface Window {
-        ClassicEditor?: any;
-    }
-}
-
 export default function BlogPostEdit({ post, categories = [], tags = [] }: { post: Post; categories: Category[]; tags: Tag[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Jelajah Indotix', href: '/admin/blog/posts' },
         { title: 'Edit Artikel', href: `/admin/blog/posts/${post.id}/edit` },
     ];
-
-    const editorRef = useRef<HTMLTextAreaElement | null>(null);
-    const editorInstanceRef = useRef<any>(null);
-    const [isEditorReady, setIsEditorReady] = useState(false);
-    const [editorError, setEditorError] = useState<string | null>(null);
 
     const form = useForm({
         title: post.title ?? '',
@@ -57,38 +45,6 @@ export default function BlogPostEdit({ post, categories = [], tags = [] }: { pos
         cover_image: null as File | null,
         _method: 'put',
     });
-
-    const initEditor = async () => {
-        if (editorInstanceRef.current) return;
-        setEditorError(null);
-        try {
-            await loadCkeditor();
-            if (!editorRef.current || !window.ClassicEditor) {
-                setEditorError('Editor belum tersedia.');
-                return;
-            }
-            editorInstanceRef.current = await window.ClassicEditor.create(editorRef.current, {
-                toolbar: ['heading', '|', 'bold', 'italic', 'link', 'bulletedList', 'numberedList', 'blockQuote', 'undo', 'redo'],
-            });
-            editorInstanceRef.current.setData(form.data.content ?? '');
-            editorInstanceRef.current.model.document.on('change:data', () => {
-                form.setData('content', editorInstanceRef.current.getData());
-            });
-            setIsEditorReady(true);
-        } catch (error) {
-            setEditorError('Gagal memuat editor. Coba muat ulang.');
-        }
-    };
-
-    useEffect(() => {
-        initEditor();
-        return () => {
-            if (editorInstanceRef.current) {
-                editorInstanceRef.current.destroy();
-                editorInstanceRef.current = null;
-            }
-        };
-    }, []);
 
     const submit = () => {
         form.post(`/admin/blog/posts/${post.id}`, {
@@ -163,16 +119,13 @@ export default function BlogPostEdit({ post, categories = [], tags = [] }: { pos
 
                     <div className="mt-6">
                         <label className="text-sm font-semibold text-slate-700">Konten</label>
-                        <textarea ref={editorRef} className="mt-2 h-64 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        {!isEditorReady && !editorError && <div className="mt-2 text-xs text-slate-400">Memuat editor...</div>}
-                        {editorError && (
-                            <div className="mt-2 flex items-center gap-3 text-xs text-rose-500">
-                                <span>{editorError}</span>
-                                <button type="button" className="font-semibold text-sky-600" onClick={initEditor}>
-                                    Coba lagi
-                                </button>
-                            </div>
-                        )}
+                        <div className="mt-2">
+                            <CkeditorField
+                                value={form.data.content}
+                                onChange={(value) => form.setData('content', value)}
+                                minHeightClassName="min-h-[260px]"
+                            />
+                        </div>
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">

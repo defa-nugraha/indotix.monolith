@@ -531,6 +531,10 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.public.privacy-policy.edit');
     Route::put('admin/public/privacy-policy', [\App\Http\Controllers\Admin\PrivacyPolicyController::class, 'update'])
         ->name('admin.public.privacy-policy.update');
+    Route::get('admin/public/about', [\App\Http\Controllers\Admin\AboutPageController::class, 'edit'])
+        ->name('admin.public.about.edit');
+    Route::put('admin/public/about', [\App\Http\Controllers\Admin\AboutPageController::class, 'update'])
+        ->name('admin.public.about.update');
 
     Route::get('admin/public/contacts', [\App\Http\Controllers\Admin\PublicContactController::class, 'edit'])
         ->name('admin.public.contacts.edit');
@@ -821,6 +825,8 @@ Route::get('/jelajah/{slug}', [\App\Http\Controllers\PublicBlogController::class
     ->name('public.blog.show');
 Route::get('/faq', [\App\Http\Controllers\PublicFaqController::class, 'index'])
     ->name('public.faq');
+Route::get('/about', [\App\Http\Controllers\PublicAboutController::class, 'show'])
+    ->name('public.about');
 Route::get('/privacy-policy', [\App\Http\Controllers\PublicPrivacyPolicyController::class, 'show'])
     ->name('public.privacy-policy');
 

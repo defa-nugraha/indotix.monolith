@@ -931,9 +931,12 @@ export default function Welcome({
                     <div>
                         <h4 className="text-sm font-semibold text-slate-900">Perusahaan</h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>Tentang Kami</li>
-                            <li>Karir</li>
-                            <li>Blog</li>
+                            <li>
+                                <Link href="/about" className="transition hover:text-sky-600">Tentang Kami</Link>
+                            </li>
+                            <li>
+                                <Link href="/jelajah" className="transition hover:text-sky-600">Blog</Link>
+                            </li>
                             <li>
                                 <Link href="/faq" className="transition hover:text-sky-600">FAQ</Link>
                             </li>

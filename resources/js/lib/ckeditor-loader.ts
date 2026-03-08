@@ -91,6 +91,9 @@ export const loadCkeditor = () => {
         });
         script.addEventListener('error', () => reject(new Error('Gagal memuat CKEditor')));
         document.head.appendChild(script);
+    }).catch((error) => {
+        loadingPromise = null;
+        throw error;
     });
 
     return loadingPromise;
