@@ -12,6 +12,7 @@ import PublicLayout from '@/layouts/public-layout';
 type Hotel = {
     id: number;
     encrypted_id?: string;
+    slug?: string | null;
     name: string;
     address?: string | null;
     city_name?: string | null;
@@ -34,6 +35,7 @@ type Filters = {
 type Recommendation = {
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     name: string;
     city_name?: string | null;
     star_rating?: number | null;
@@ -283,13 +285,15 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                 </section>
 
                 <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                    {hotels.map((hotel) => (
+                    {hotels.map((hotel) => {
+                        const detailSlug = hotel.slug ?? hotel.encrypted_id;
+                        return (
                         <div
                             key={hotel.id}
                             className="group overflow-hidden rounded-xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
                         >
                             <Link
-                                href={`/stay/hotels/${hotel.encrypted_id ?? hotel.id}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}`}
+                                href={detailSlug ? `/stay/hotels/${detailSlug}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}` : '/stay'}
                                 className="relative block h-28 overflow-hidden"
                             >
                                 <img
@@ -328,7 +332,7 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                                         </div>
                                     </div>
                                     <Link
-                                        href={`/stay/hotels/${hotel.encrypted_id ?? hotel.id}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}`}
+                                        href={detailSlug ? `/stay/hotels/${detailSlug}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}` : '/stay'}
                                         className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700"
                                     >
                                         Lihat Detail
@@ -354,7 +358,8 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
 
                     {hotels.length === 0 && (
                         <div className="md:col-span-2 rounded-2xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
@@ -369,7 +374,9 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                         <h2 className="text-xl font-semibold text-slate-900">Rekomendasi untuk kamu</h2>
                         <p className="mt-2 text-sm text-slate-500">Pilihan hotel favorit dengan lokasi strategis dan fasilitas lengkap.</p>
                         <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
-                            {recommendations.map((item) => (
+                            {recommendations.map((item) => {
+                                const detailSlug = item.slug ?? item.encrypted_id;
+                                return (
                                 <div key={item.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
                                     <img
                                         src={
@@ -386,14 +393,15 @@ export default function HotelSearch({ filters, hotels, recommendations }: { filt
                                             {item.min_price ? `Mulai Rp ${item.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
                                         </div>
                                         <Link
-                                            href={`/stay/hotels/${item.encrypted_id}?check_in=${form.check_in || ''}&check_out=${form.check_out || ''}&rooms=${rooms}&guests=${adults + children}`}
+                                            href={detailSlug ? `/stay/hotels/${detailSlug}?check_in=${form.check_in || ''}&check_out=${form.check_out || ''}&rooms=${rooms}&guests=${adults + children}` : '/stay'}
                                             className="mt-4 block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
                                         </Link>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </section>
                 )}

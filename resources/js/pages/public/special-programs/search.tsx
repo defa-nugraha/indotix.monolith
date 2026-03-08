@@ -16,6 +16,7 @@ type ProgramItem = {
     type: 'hotel' | 'wisata' | 'event';
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     title: string;
     city_name?: string | null;
     description?: string | null;
@@ -26,6 +27,7 @@ type ProgramItem = {
 type Program = {
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     name: string;
     program_type: string;
     status: string;
@@ -62,17 +64,19 @@ export default function SpecialProgramSearch({ programs = [] }: { programs: Prog
                                     <p className="text-sm text-slate-500">{program.program_type} · {program.starts_at ?? '-'} → {program.ends_at ?? '-'}</p>
                                 </div>
                                 <Link
-                                    href={`/special-programs/${program.encrypted_id}`}
+                                    href={`/special-programs/${program.slug ?? program.encrypted_id}`}
                                     className="rounded-lg border border-sky-200 px-4 py-2 text-sm font-semibold text-sky-600"
                                 >
                                     Lihat Detail
                                 </Link>
                             </div>
                             <div className="mt-4 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
-                                {program.items.map((item) => (
+                                {program.items.map((item) => {
+                                    const detailSlug = item.slug ?? item.encrypted_id;
+                                    return (
                                     <Link
                                         key={`${program.id}-${item.type}-${item.id}`}
-                                        href={item.type === 'hotel' ? `/stay/hotels/${item.encrypted_id}` : item.type === 'wisata' ? `/wisata/${item.encrypted_id}` : `/events/${item.encrypted_id}`}
+                                        href={item.type === 'hotel' ? `/stay/hotels/${detailSlug}` : item.type === 'wisata' ? `/wisata/${detailSlug}` : `/events/${detailSlug}`}
                                         className="group rounded-2xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-1"
                                     >
                                         <div className="h-32 overflow-hidden rounded-t-2xl bg-slate-200">
@@ -96,7 +100,8 @@ export default function SpecialProgramSearch({ programs = [] }: { programs: Prog
                                             )}
                                         </div>
                                     </Link>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </section>
                     ))}

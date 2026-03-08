@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AcademyClass;
 use App\Models\AcademyTicket;
 use App\Services\ProductReviewService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
@@ -45,6 +46,7 @@ class PublicAcademyController extends Controller
             return [
                 'id' => $class->id,
                 'encrypted_id' => Crypt::encryptString((string) $class->id),
+                'slug' => $class->slug,
                 'title' => $class->title,
                 'category' => $class->category,
                 'start_at' => $class->start_at?->toDateString(),
@@ -62,18 +64,34 @@ class PublicAcademyController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $class): Response
+    public function show(Request $request, string $class): Response|RedirectResponse
     {
-        try {
-            $classId = Crypt::decryptString($class);
-        } catch (\Throwable $exception) {
+        $classModel = AcademyClass::query()
+            ->where('is_active', true)
+            ->where('slug', $class)
+            ->first();
+
+        if (! $classModel) {
+            try {
+                $classId = Crypt::decryptString($class);
+                $classModel = AcademyClass::query()
+                    ->where('is_active', true)
+                    ->where('id', $classId)
+                    ->first();
+            } catch (\Throwable $exception) {
+                $classModel = null;
+            }
+        }
+
+        if (! $classModel) {
             abort(404);
         }
 
-        $class = AcademyClass::query()
-            ->where('is_active', true)
-            ->where('id', $classId)
-            ->firstOrFail();
+        if ($classModel->slug && $classModel->slug !== $class) {
+            return redirect()->route('academy.show', ['class' => $classModel->slug]);
+        }
+
+        $class = $classModel;
 
         $class->load('images');
 
@@ -109,6 +127,7 @@ class PublicAcademyController extends Controller
             'class' => [
                 'id' => $class->id,
                 'encrypted_id' => Crypt::encryptString((string) $class->id),
+                'slug' => $class->slug,
                 'title' => $class->title,
                 'description' => $class->description,
                 'category' => $class->category,

@@ -167,3 +167,58 @@ Response 200:
 Catatan:
 - Gunakan `snap_token` untuk membuka Midtrans Snap di mobile SDK.
 - Status pembayaran akan diperbarui via callback Midtrans.
+
+## 6) Cancel Booking
+
+**POST** `/hotel/bookings/{booking}/cancel`
+
+Catatan:
+- Hanya bisa dibatalkan jika status masih `pending_payment`.
+
+Response 200:
+
+```json
+{
+  "booking": { "...": "payload sama seperti create" }
+}
+```
+
+## 7) Download Invoice PDF
+
+**GET** `/hotel/bookings/{booking}/invoice`
+
+Response:
+- `application/pdf` (attachment)
+
+Catatan:
+- File mengikuti template invoice web.
+
+---
+
+## Perubahan API Hotel vs Sebelumnya
+
+Ringkasan perubahan terbaru yang menyamakan API hotel dengan web.
+
+### Produk Hotel (Products API)
+
+**List Hotel**
+- Tambah field `slug` di setiap item hotel pada response `/products/hotels`.
+
+**Detail Hotel**
+- Tambah field `slug` pada object `hotel` di response `/products/hotels/{hotel}`.
+- Tambah field baru:
+  - `reviews` (daftar ulasan publik)
+  - `user_review` (ulasan user yang sedang login)
+  - `can_review` (boolean, true jika user sudah memenuhi syarat review)
+- Catatan: jika request tanpa token, `user_review` = null dan `can_review` = false.
+
+### Transaksi Hotel (Hotel Booking API)
+
+**Cancel Booking**
+- Endpoint baru: `POST /hotel/bookings/{booking}/cancel`
+- Syarat: hanya `pending_payment`.
+- Response: payload booking (sama seperti create).
+
+**Download Invoice**
+- Endpoint baru: `GET /hotel/bookings/{booking}/invoice`
+- Response: file PDF invoice (attachment).

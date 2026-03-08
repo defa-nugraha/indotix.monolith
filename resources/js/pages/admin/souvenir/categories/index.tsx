@@ -1,8 +1,11 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import SouvenirAdminMenu from '@/components/souvenir-admin-menu';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type Category = {
     id: number;
@@ -26,6 +29,10 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
         is_active: true,
     });
 
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editData, setEditData] = useState<Record<string, any>>({});
+
     const submit = () => {
         form.post('/admin/souvenir/categories', {
             preserveScroll: true,
@@ -38,11 +45,37 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
     };
 
     const updateCategory = (categoryId: number, payload: Record<string, unknown>) => {
-        router.put(`/admin/souvenir/categories/${categoryId}`, payload, {
+        const current = categories.find((category) => category.id === categoryId);
+        if (!current) return;
+        const merged = {
+            name: current.name,
+            parent_id: current.parent_id ?? '',
+            sort_order: current.sort_order ?? 0,
+            is_active: current.is_active,
+            ...payload,
+        };
+        router.put(`/admin/souvenir/categories/${categoryId}`, merged, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Kategori diperbarui.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memperbarui kategori.' }),
         });
+    };
+
+    const handleEdit = (category: Category) => {
+        setEditingId(category.id);
+        setEditData({
+            name: category.name,
+            parent_id: category.parent_id ?? '',
+            sort_order: category.sort_order ?? 0,
+            is_active: category.is_active,
+        });
+        setIsEditOpen(true);
+    };
+
+    const submitEdit = () => {
+        if (!editingId) return;
+        updateCategory(editingId, editData);
+        setIsEditOpen(false);
     };
 
     const deleteCategory = async (categoryId: number) => {
@@ -69,6 +102,7 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <h1 className="text-2xl font-semibold text-slate-900">Kategori Produk Retail Shop</h1>
                     <p className="text-sm text-slate-500">Kelola kategori & sub-kategori untuk katalog souvenir.</p>
+                    <SouvenirAdminMenu className="mt-4" />
 
                     <div className="mt-6 grid gap-4 md:grid-cols-4">
                         <input
@@ -142,6 +176,13 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
+                                                    onClick={() => handleEdit(item)}
+                                                >
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
                                                     onClick={() => deleteCategory(item.id)}
                                                 >
                                                     Hapus
@@ -154,6 +195,63 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
                         </table>
                     </div>
                 </section>
+
+                <Dialog open={isEditOpen} onOpenChange={(open) => {
+                    setIsEditOpen(open);
+                    if (!open) setEditingId(null);
+                }}>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit Kategori</DialogTitle>
+                            <DialogDescription>Perbarui detail kategori retail shop.</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Nama kategori"
+                                value={editData.name ?? ''}
+                                onChange={(event) => setEditData({ ...editData, name: event.target.value })}
+                            />
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={editData.parent_id ?? ''}
+                                onChange={(event) => setEditData({ ...editData, parent_id: event.target.value })}
+                            >
+                                <option value="">Tanpa parent</option>
+                                {categories
+                                    .filter((category) => category.id !== editingId)
+                                    .map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                            </select>
+                            <input
+                                type="number"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Urutan"
+                                value={editData.sort_order ?? 0}
+                                onChange={(event) => setEditData({ ...editData, sort_order: Number(event.target.value) })}
+                            />
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={editData.is_active ? 'active' : 'inactive'}
+                                onChange={(event) => setEditData({ ...editData, is_active: event.target.value === 'active' })}
+                            >
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Nonaktif</option>
+                            </select>
+                        </div>
+                        <DialogFooter className="gap-2">
+                            <Button variant="outline" type="button" onClick={() => setIsEditOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={submitEdit}>
+                                Simpan Perubahan
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

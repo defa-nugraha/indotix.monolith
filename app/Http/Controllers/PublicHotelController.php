@@ -7,6 +7,7 @@ use App\Models\RoomType;
 use App\Models\RoomInventory;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use App\Services\ProductReviewService;
@@ -100,6 +101,7 @@ class PublicHotelController extends Controller
             return [
                 'id' => $hotel->id,
                 'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'slug' => $hotel->slug,
                 'name' => $hotel->name,
                 'address' => $hotel->address,
                 'star_rating' => $hotel->star_rating,
@@ -126,25 +128,40 @@ class PublicHotelController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $hotel): Response
+    public function show(Request $request, string $hotel): Response|RedirectResponse
     {
-        try {
-            $hotelId = Crypt::decryptString($hotel);
-        } catch (\Throwable $exception) {
-            abort(404);
-        }
-        $hotel = Hotel::query()->findOrFail($hotelId);
-
-        if ($hotel->status !== 'active') {
-            abort(404);
-        }
-
         $data = $request->validate([
             'check_in' => ['required', 'date'],
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
         ]);
+
+        $hotelModel = Hotel::query()->where('slug', $hotel)->first();
+        if (! $hotelModel) {
+            try {
+                $hotelId = Crypt::decryptString($hotel);
+                $hotelModel = Hotel::query()->find($hotelId);
+            } catch (\Throwable $exception) {
+                $hotelModel = null;
+            }
+        }
+
+        if (! $hotelModel) {
+            abort(404);
+        }
+
+        if ($hotelModel->slug && $hotelModel->slug !== $hotel) {
+            return redirect()->route('public.hotels.show', array_merge([
+                'hotel' => $hotelModel->slug,
+            ], $data));
+        }
+
+        $hotel = $hotelModel;
+
+        if ($hotel->status !== 'active') {
+            abort(404);
+        }
 
         $dates = $this->dateRange($data['check_in'], $data['check_out']);
 
@@ -210,6 +227,7 @@ class PublicHotelController extends Controller
             'hotel' => [
                 'id' => $hotel->id,
                 'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'slug' => $hotel->slug,
                 'name' => $hotel->name,
                 'description' => $hotel->description,
                 'address' => $hotel->address,
@@ -262,6 +280,7 @@ class PublicHotelController extends Controller
             ->map(fn (Hotel $hotel) => [
                 'id' => $hotel->id,
                 'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'slug' => $hotel->slug,
                 'name' => $hotel->name,
                 'city_name' => $hotel->city?->name,
                 'star_rating' => $hotel->star_rating,

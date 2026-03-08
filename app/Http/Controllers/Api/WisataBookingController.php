@@ -17,6 +17,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Spatie\LaravelPdf\Facades\Pdf;
 use RuntimeException;
 
 class WisataBookingController extends Controller
@@ -301,6 +302,35 @@ class WisataBookingController extends Controller
         ]);
     }
 
+    public function ticket(Request $request, string $booking)
+    {
+        $booking = $this->resolveBooking($booking);
+
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
+        }
+
+        $booking->load('ticket', 'destination');
+
+        $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
+        $cacheAllowed = in_array($booking->status, ['paid', 'completed'], true);
+
+        $qrImage = null;
+        if ($cacheAllowed) {
+            $qrUrl = $this->buildQrUrl('WISATA', (string) $booking->booking_code);
+            $context = stream_context_create(['http' => ['timeout' => 4]]);
+            $contents = @file_get_contents($qrUrl, false, $context);
+            if ($contents !== false) {
+                $qrImage = 'data:image/png;base64,'.base64_encode($contents);
+            }
+        }
+
+        return Pdf::view('wisata-ticket', [
+            'booking' => $booking,
+            'qrImage' => $qrImage,
+        ])->download($filename);
+    }
+
     private function bookingPayload(WisataBooking $booking): array
     {
         $latestPayment = $booking->payments()->latest()->first();
@@ -322,6 +352,7 @@ class WisataBookingController extends Controller
             ],
             'destination' => [
                 'id' => $booking->destination?->id,
+                'slug' => $booking->destination?->slug,
                 'name' => $booking->destination?->destination_name,
                 'address' => $booking->destination?->address_full,
             ],

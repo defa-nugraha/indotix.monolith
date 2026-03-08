@@ -10,6 +10,7 @@ import { guardPurchaseByRole } from '@/lib/purchase-guard';
 type EventDetail = {
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     title: string;
     description?: string | null;
     city_name?: string | null;

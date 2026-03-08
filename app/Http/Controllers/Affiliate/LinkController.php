@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Affiliate;
 
 use App\Http\Controllers\Controller;
+use App\Models\MitraWisataOnboarding;
 use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateLink;
 use App\Models\WisataAffiliateSetting;
@@ -24,6 +25,9 @@ class LinkController extends Controller
 
         $link = $affiliate->links->sortByDesc('id')->first();
         $destinationId = $affiliate->wisata_id;
+        $destination = $destinationId
+            ? MitraWisataOnboarding::query()->select('id', 'slug')->find($destinationId)
+            : null;
 
         return Inertia::render('affiliate/links', [
             'affiliate' => [
@@ -39,8 +43,9 @@ class LinkController extends Controller
                 'attribution_model' => $link->attribution_model,
                 'cookie_days' => $link->cookie_days,
             ] : null,
-            'destination' => $destinationId ? [
-                'encrypted_id' => Crypt::encryptString((string) $destinationId),
+            'destination' => $destination ? [
+                'slug' => $destination->slug,
+                'encrypted_id' => Crypt::encryptString((string) $destination->id),
             ] : null,
             'app_url' => config('app.url') ?: $request->getSchemeAndHttpHost(),
         ]);

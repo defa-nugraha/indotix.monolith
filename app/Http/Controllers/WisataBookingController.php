@@ -364,10 +364,10 @@ class WisataBookingController extends Controller
             return redirect()->route('home');
         }
 
-        $booking->load('ticket');
+        $booking->load('ticket', 'destination');
 
         $reviewUrl = $booking->mitra_wisata_onboarding_id
-            ? '/wisata/'.Crypt::encryptString((string) $booking->mitra_wisata_onboarding_id)
+            ? '/wisata/'.$booking->destination?->slug
             : null;
 
         return Inertia::render('public/wisata/booking/show', [

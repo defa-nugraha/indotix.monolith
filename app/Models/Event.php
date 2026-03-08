@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Event extends Model
 {
     protected $fillable = [
         'event_organizer_id',
         'title',
+        'slug',
         'description',
         'city_code',
         'location',
@@ -31,6 +33,41 @@ class Event extends Model
         'published_at' => 'datetime',
         'sales_stopped' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Event $event): void {
+            if (! $event->title) {
+                return;
+            }
+            if (! $event->slug || $event->isDirty('title')) {
+                $event->slug = self::generateUniqueSlug($event->title, $event->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(string $title, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($title);
+        if ($base === '' || $base === 'booking') {
+            $base = $base === '' ? 'event' : 'booking-event';
+        }
+
+        $candidate = $base;
+        $suffix = 1;
+        while (
+            in_array($candidate, ['booking'], true) ||
+            self::query()
+                ->where('slug', $candidate)
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $suffix++;
+            $candidate = $base.'-'.$suffix;
+        }
+
+        return $candidate;
+    }
 
     public function organizer(): BelongsTo
     {

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\WisataBooking;
 use App\Models\WisataTicket;
+use App\Services\ProductReviewService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -78,6 +79,7 @@ class WisataController extends Controller
             return [
                 'id' => $destination->id,
                 'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                'slug' => $destination->slug,
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
                 'city_name' => $this->resolveCityName($destination->city_code),
@@ -98,13 +100,22 @@ class WisataController extends Controller
 
     public function show(Request $request, string $destination): JsonResponse
     {
-        $destinationId = $this->resolveId($destination);
-
-        $destination = MitraWisataOnboarding::query()
+        $destinationModel = MitraWisataOnboarding::query()
+            ->where('slug', $destination)
             ->where('verification_status', 'verified')
             ->where('is_suspended', false)
-            ->where('id', $destinationId)
-            ->firstOrFail();
+            ->first();
+
+        if (! $destinationModel) {
+            $destinationId = $this->resolveId($destination);
+            $destinationModel = MitraWisataOnboarding::query()
+                ->where('verification_status', 'verified')
+                ->where('is_suspended', false)
+                ->where('id', $destinationId)
+                ->firstOrFail();
+        }
+
+        $destination = $destinationModel;
 
         $today = Carbon::today();
         $payload = [
@@ -146,6 +157,7 @@ class WisataController extends Controller
         $latitude = $this->extractLatitude($destination->maps_pin_url);
         $longitude = $this->extractLongitude($destination->maps_pin_url);
         $mapsUrl = $this->buildMapsUrl($latitude, $longitude);
+        $userId = $request->user('sanctum')?->id;
 
         return response()->json([
             'filters' => [
@@ -157,6 +169,7 @@ class WisataController extends Controller
                 'longitude' => $longitude,
                 'id' => $destination->id,
                 'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                'slug' => $destination->slug,
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
                 'description' => $destination->description,
@@ -174,6 +187,9 @@ class WisataController extends Controller
                 'maps_url' => $mapsUrl,
             ],
             'tickets' => $tickets,
+            'reviews' => ProductReviewService::publicReviews('wisata', $destination->id),
+            'user_review' => $userId ? ProductReviewService::userReview($userId, 'wisata', $destination->id) : null,
+            'can_review' => $userId ? ProductReviewService::hasUsedBooking($userId, 'wisata', $destination->id) : false,
         ]);
     }
 
@@ -239,6 +255,6 @@ class WisataController extends Controller
             return null;
         }
 
-        return sprintf('https://www.google.com/maps?q=%s,%s', $latitude, $longitude);
+        return sprintf('https://maps.google.com/?q=%s,%s', $latitude, $longitude);
     }
 }

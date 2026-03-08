@@ -17,6 +17,7 @@ type ProgramItem = {
     type: 'hotel' | 'wisata' | 'event';
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     title: string;
     city_name?: string | null;
     description?: string | null;
@@ -27,6 +28,7 @@ type ProgramItem = {
 type Program = {
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     name: string;
     program_type: string;
     status: string;
@@ -81,7 +83,8 @@ export default function SpecialProgramShow({
     const submitBooking = () => {
         if (!selectedItem) return;
         if (selectedItem.type === 'hotel') {
-            window.location.href = `/stay/hotels/${selectedItem.encrypted_id}`;
+            const detailSlug = selectedItem.slug ?? selectedItem.encrypted_id;
+            window.location.href = `/stay/hotels/${detailSlug}`;
             return;
         }
         if (guardPurchaseByRole(role)) {

@@ -97,6 +97,7 @@ class SouvenirProductController extends Controller
 
         $product = SouvenirProduct::create([
             'name' => $data['name'],
+            'slug' => SouvenirProduct::generateUniqueSlug($data['name']),
             'category_id' => $data['category_id'] ?? null,
             'description' => $data['description'] ?? null,
             'price' => $data['price'],
@@ -157,6 +158,7 @@ class SouvenirProductController extends Controller
 
         $product->update([
             'name' => $data['name'],
+            'slug' => SouvenirProduct::generateUniqueSlug($data['name'], $product->id),
             'category_id' => $data['category_id'] ?? null,
             'description' => $data['description'] ?? null,
             'price' => $data['price'],
@@ -238,8 +240,9 @@ class SouvenirProductController extends Controller
 
     public function duplicate(Request $request, SouvenirProduct $product): RedirectResponse
     {
-        $duplicate = $product->replicate(['sku']);
+        $duplicate = $product->replicate(['sku', 'slug']);
         $duplicate->sku = $product->sku.'-COPY-'.now()->format('His');
+        $duplicate->slug = SouvenirProduct::generateUniqueSlug($product->name.' copy');
         $duplicate->status = 'draft';
         $duplicate->is_active = false;
         $duplicate->created_by = $request->user()->id;

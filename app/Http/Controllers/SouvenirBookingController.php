@@ -250,6 +250,10 @@ class SouvenirBookingController extends Controller
             ->findOrFail($orderId);
 
         $userId = $request->user()?->id;
+        $productSlugs = SouvenirProduct::query()
+            ->whereIn('id', $order->items->pluck('product_id')->filter()->unique())
+            ->get(['id', 'slug'])
+            ->keyBy('id');
 
         return Inertia::render('public/souvenir/booking/show', [
             'order' => [
@@ -260,25 +264,27 @@ class SouvenirBookingController extends Controller
                 'payment_deadline' => $order->payment_deadline?->toIso8601String(),
                 'total_price' => $order->total_price,
                 'shipping_address' => $order->shipping_address,
-                'items' => $order->items->map(fn ($item) => [
-                    'product_id' => $item->product_id,
-                    'product_encrypted_id' => $item->product_id
-                        ? Crypt::encryptString((string) $item->product_id)
-                        : null,
-                    'name' => $item->product_id ? $item->product_name : 'Produk tidak tersedia',
-                    'sku' => $item->sku,
-                    'quantity' => $item->quantity,
-                    'unit_price' => $item->unit_price,
-                    'subtotal' => $item->subtotal,
-                    'review' => [
-                        'can_review' => $item->product_id && $userId
-                            ? ProductReviewService::hasUsedBooking($userId, 'souvenir', (int) $item->product_id)
-                            : false,
-                        'url' => $item->product_id
-                            ? '/souvenir/'.Crypt::encryptString((string) $item->product_id)
+                'items' => $order->items->map(function ($item) use ($userId, $productSlugs) {
+                    $slug = $item->product_id ? $productSlugs->get($item->product_id)?->slug : null;
+
+                    return [
+                        'product_id' => $item->product_id,
+                        'product_encrypted_id' => $item->product_id
+                            ? Crypt::encryptString((string) $item->product_id)
                             : null,
-                    ],
-                ]),
+                        'name' => $item->product_id ? $item->product_name : 'Produk tidak tersedia',
+                        'sku' => $item->sku,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
+                        'subtotal' => $item->subtotal,
+                        'review' => [
+                            'can_review' => $item->product_id && $userId
+                                ? ProductReviewService::hasUsedBooking($userId, 'souvenir', (int) $item->product_id)
+                                : false,
+                            'url' => $slug ? '/souvenir/'.$slug : null,
+                        ],
+                    ];
+                }),
             ],
         ]);
     }

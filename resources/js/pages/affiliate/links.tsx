@@ -14,6 +14,7 @@ type LinkData = {
 };
 
 type Destination = {
+    slug?: string | null;
     encrypted_id: string;
 };
 
@@ -93,7 +94,7 @@ export default function AffiliateLinks({
                                 </button>
                                 {destination && (
                                     <InertiaLink
-                                        href={`/wisata/${destination.encrypted_id}`}
+                                        href={`/wisata/${destination.slug ?? destination.encrypted_id}`}
                                         className="h-11 rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
                                     >
                                         Buka Wisata

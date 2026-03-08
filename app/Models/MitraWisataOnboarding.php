@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class MitraWisataOnboarding extends Model
 {
@@ -16,6 +17,7 @@ class MitraWisataOnboarding extends Model
         'responsible_phone',
         'responsible_role',
         'destination_name',
+        'slug',
         'destination_type',
         'description',
         'highlights',
@@ -70,6 +72,45 @@ class MitraWisataOnboarding extends Model
         'photo_ticket_hidden' => 'boolean',
         'is_temporarily_closed' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (MitraWisataOnboarding $destination): void {
+            if (! $destination->destination_name) {
+                return;
+            }
+            if (! $destination->slug || $destination->isDirty('destination_name')) {
+                $destination->slug = self::generateUniqueSlug($destination->destination_name, $destination->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name);
+        if ($base === '' || in_array($base, ['booking', 'history'], true)) {
+            if ($base === '') {
+                $base = 'wisata';
+            } else {
+                $base = $base.'-wisata';
+            }
+        }
+
+        $candidate = $base;
+        $suffix = 1;
+        while (
+            in_array($candidate, ['booking', 'history'], true) ||
+            self::query()
+                ->where('slug', $candidate)
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $suffix++;
+            $candidate = $base.'-'.$suffix;
+        }
+
+        return $candidate;
+    }
 
     public function tickets()
     {

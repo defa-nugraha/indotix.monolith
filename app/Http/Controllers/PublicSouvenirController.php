@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SouvenirCategory;
 use App\Models\SouvenirProduct;
 use App\Services\ProductReviewService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
@@ -33,6 +34,7 @@ class PublicSouvenirController extends Controller
             return [
                 'id' => $product->id,
                 'encrypted_id' => Crypt::encryptString((string) $product->id),
+                'slug' => $product->slug,
                 'name' => $product->name,
                 'price' => $product->price,
                 'stock' => $product->stock,
@@ -56,40 +58,57 @@ class PublicSouvenirController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $product): Response
+    public function show(Request $request, string $product): Response|RedirectResponse
     {
-        try {
-            $productId = Crypt::decryptString($product);
-        } catch (\Throwable $exception) {
-            abort(404);
-        }
-
-        $product = SouvenirProduct::query()
+        $productModel = SouvenirProduct::query()
             ->with(['category', 'images', 'variants'])
             ->where('status', 'active')
             ->where('is_active', true)
-            ->findOrFail($productId);
+            ->where('slug', $product)
+            ->first();
+
+        if (! $productModel) {
+            try {
+                $productId = Crypt::decryptString($product);
+                $productModel = SouvenirProduct::query()
+                    ->with(['category', 'images', 'variants'])
+                    ->where('status', 'active')
+                    ->where('is_active', true)
+                    ->find($productId);
+            } catch (\Throwable $exception) {
+                $productModel = null;
+            }
+        }
+
+        if (! $productModel) {
+            abort(404);
+        }
+
+        if ($productModel->slug && $productModel->slug !== $product) {
+            return redirect()->route('souvenir.show', ['product' => $productModel->slug]);
+        }
 
         $userId = $request->user()?->id;
-        $userReview = ProductReviewService::userReview($userId, 'souvenir', $product->id);
+        $userReview = ProductReviewService::userReview($userId, 'souvenir', $productModel->id);
         $canReview = $userId
-            ? (ProductReviewService::hasUsedBooking($userId, 'souvenir', $product->id) || (bool) $userReview)
+            ? (ProductReviewService::hasUsedBooking($userId, 'souvenir', $productModel->id) || (bool) $userReview)
             : false;
 
         return Inertia::render('public/souvenir/show', [
             'product' => [
-                'id' => $product->id,
-                'encrypted_id' => Crypt::encryptString((string) $product->id),
-                'name' => $product->name,
-                'description' => $product->description,
-                'price' => $product->price,
-                'stock' => $product->stock,
-                'category' => $product->category?->name,
-                'images' => $product->images
+                'id' => $productModel->id,
+                'encrypted_id' => Crypt::encryptString((string) $productModel->id),
+                'slug' => $productModel->slug,
+                'name' => $productModel->name,
+                'description' => $productModel->description,
+                'price' => $productModel->price,
+                'stock' => $productModel->stock,
+                'category' => $productModel->category?->name,
+                'images' => $productModel->images
                     ->map(fn ($image) => $image->image_url ? Storage::url($image->image_url) : null)
                     ->filter()
                     ->values(),
-                'variants' => $product->variants->map(fn ($variant) => [
+                'variants' => $productModel->variants->map(fn ($variant) => [
                     'id' => $variant->id,
                     'name' => $variant->name,
                     'variant_type' => $variant->variant_type,
@@ -99,7 +118,7 @@ class PublicSouvenirController extends Controller
                     'is_active' => $variant->is_active,
                 ]),
             ],
-            'reviews' => ProductReviewService::publicReviews('souvenir', $product->id),
+            'reviews' => ProductReviewService::publicReviews('souvenir', $productModel->id),
             'userReview' => $userReview,
             'canReview' => $canReview,
         ]);

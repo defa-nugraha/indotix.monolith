@@ -11,6 +11,7 @@ use App\Models\UserNotification;
 use App\Models\Voucher;
 use App\Services\BookingService;
 use App\Services\MidtransService;
+use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -328,6 +329,67 @@ class HotelBookingController extends Controller
                 'payload' => $charge,
             ],
         ]);
+    }
+
+    public function cancel(Request $request, string $booking): JsonResponse
+    {
+        $booking = $this->resolveBooking($booking);
+
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return response()->json(['message' => 'Booking tidak ditemukan.'], 404);
+        }
+
+        if ($booking->status !== 'pending_payment') {
+            return response()->json(['message' => 'Pesanan tidak dapat dibatalkan.'], 422);
+        }
+
+        $booking->load('rooms.roomType');
+        foreach ($booking->rooms as $room) {
+            if (! $room->roomType) {
+                continue;
+            }
+            app(BookingService::class)->releaseInventory(
+                $room->roomType,
+                $booking->check_in->toDateString(),
+                $booking->check_out->toDateString(),
+                $room->rooms_count
+            );
+        }
+
+        $booking->status = 'cancelled';
+        $booking->payment_status = 'cancelled';
+        $booking->save();
+
+        UserNotification::create([
+            'user_id' => $booking->user_id,
+            'title' => 'Pesanan dibatalkan',
+            'message' => 'Pesanan kamu berhasil dibatalkan dan kamar telah dilepas.',
+            'type' => 'booking_cancelled',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+                'category' => 'hotel',
+            ],
+        ]);
+
+        return response()->json([
+            'booking' => $this->bookingPayload($booking),
+        ]);
+    }
+
+    public function invoice(Request $request, string $booking)
+    {
+        $booking = $this->resolveBooking($booking);
+
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return response()->json(['message' => 'Booking tidak ditemukan.'], 404);
+        }
+
+        $booking->load('hotel', 'rooms.roomType');
+        $filename = sprintf('invoice-%s.pdf', $booking->id);
+
+        return Pdf::view('invoice', [
+            'booking' => $booking,
+        ])->download($filename);
     }
 
     private function bookingPayload(Booking $booking): array

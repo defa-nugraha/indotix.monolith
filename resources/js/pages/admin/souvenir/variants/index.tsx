@@ -1,9 +1,12 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import SouvenirAdminMenu from '@/components/souvenir-admin-menu';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 type Product = { id: number; name: string };
 
@@ -39,6 +42,10 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
         stock: 0,
         is_active: true,
     });
+
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editData, setEditData] = useState<Record<string, any>>({});
 
     const submitFilters = (formElement: HTMLFormElement) => {
         const data = new FormData(formElement);
@@ -80,6 +87,25 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
         });
     };
 
+    const handleEdit = (variant: Variant) => {
+        setEditingId(variant.id);
+        setEditData({
+            variant_type: variant.variant_type,
+            name: variant.name,
+            sku: variant.sku ?? '',
+            additional_price: variant.additional_price ?? 0,
+            stock: variant.stock ?? 0,
+            is_active: variant.is_active,
+        });
+        setIsEditOpen(true);
+    };
+
+    const submitEdit = () => {
+        if (!editingId) return;
+        updateVariant(editingId, editData);
+        setIsEditOpen(false);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Variasi Produk Retail Shop" />
@@ -87,6 +113,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <h1 className="text-2xl font-semibold text-slate-900">Variasi Produk</h1>
                     <p className="text-sm text-slate-500">Kelola ukuran, warna, bahan, atau variasi lain.</p>
+                    <SouvenirAdminMenu className="mt-4" />
 
                     <div className="mt-6 grid gap-3 md:grid-cols-4">
                         <select
@@ -210,6 +237,9 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex flex-wrap gap-2">
+                                                <Button size="sm" variant="outline" onClick={() => handleEdit(variant)}>
+                                                    Edit
+                                                </Button>
                                                 <Button size="sm" variant="outline" onClick={() => updateVariant(variant.id, { is_active: !variant.is_active })}>
                                                     {variant.is_active ? 'Nonaktifkan' : 'Aktifkan'}
                                                 </Button>
@@ -224,6 +254,72 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                         </table>
                     </div>
                 </section>
+
+                <Dialog open={isEditOpen} onOpenChange={(open) => {
+                    setIsEditOpen(open);
+                    if (!open) setEditingId(null);
+                }}>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit Variasi Produk</DialogTitle>
+                            <DialogDescription>Perbarui detail variasi retail shop.</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={editData.variant_type ?? 'size'}
+                                onChange={(event) => setEditData({ ...editData, variant_type: event.target.value })}
+                            >
+                                <option value="size">Ukuran</option>
+                                <option value="color">Warna</option>
+                                <option value="material">Bahan</option>
+                                <option value="other">Lainnya</option>
+                            </select>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Nama variasi"
+                                value={editData.name ?? ''}
+                                onChange={(event) => setEditData({ ...editData, name: event.target.value })}
+                            />
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="SKU variasi"
+                                value={editData.sku ?? ''}
+                                onChange={(event) => setEditData({ ...editData, sku: event.target.value })}
+                            />
+                            <input
+                                type="number"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Harga tambahan"
+                                value={editData.additional_price ?? 0}
+                                onChange={(event) => setEditData({ ...editData, additional_price: Number(event.target.value) })}
+                            />
+                            <input
+                                type="number"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Stok"
+                                value={editData.stock ?? 0}
+                                onChange={(event) => setEditData({ ...editData, stock: Number(event.target.value) })}
+                            />
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={editData.is_active ? 'active' : 'inactive'}
+                                onChange={(event) => setEditData({ ...editData, is_active: event.target.value === 'active' })}
+                            >
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Nonaktif</option>
+                            </select>
+                        </div>
+                        <DialogFooter className="gap-2">
+                            <Button variant="outline" type="button" onClick={() => setIsEditOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={submitEdit}>
+                                Simpan Perubahan
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

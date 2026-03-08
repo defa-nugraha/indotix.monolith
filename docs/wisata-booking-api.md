@@ -79,7 +79,7 @@ Response 201:
     "payment_status": "pending",
     "payment_deadline": "2026-02-16T12:15:00+07:00",
     "ticket": { "id": 11, "name": "Tiket Dewasa" },
-    "destination": { "id": 5, "name": "Taman Laut", "address": "Jl. Pantai No. 1" },
+    "destination": { "id": 5, "slug": "taman-laut-banyuwangi", "name": "Taman Laut", "address": "Jl. Pantai No. 1" },
     "guest": { "name": "User Indotix", "email": "user@indotix.id", "phone": "08123456789" },
     "payment": null,
     "qr_data": "INDOTIX|WISATA|WISATA-3-260216120101",
@@ -158,3 +158,21 @@ Response 200:
 
 Catatan:
 - Hanya bisa dibatalkan jika status masih `pending_payment`.
+
+## 7) Download Ticket PDF
+
+**GET** `/wisata/bookings/{booking}/ticket`
+
+Catatan:
+- Hanya tersedia jika status `paid` atau `completed`.
+
+Response:
+- `application/pdf` (attachment)
+
+Contoh (HTTP):
+
+```
+HTTP/1.1 200 OK
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="tiket-wisata-55.pdf"
+```

@@ -36,6 +36,7 @@ type TicketItem = {
 type Destination = {
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     destination_name: string;
     destination_type?: string | null;
     description?: string | null;
@@ -143,7 +144,7 @@ export default function WisataShow({
     };
 
     const handleFilter = () => {
-        router.get(`/wisata/${destination.encrypted_id}`, { visit_date: visitDate, quantity }, { preserveState: true });
+        router.get(`/wisata/${destination.slug ?? destination.encrypted_id}`, { visit_date: visitDate, quantity }, { preserveState: true });
     };
 
     return (

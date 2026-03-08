@@ -411,7 +411,7 @@ class BookingController extends Controller
         $booking->load('hotel', 'rooms.roomType', 'payments');
 
         $reviewUrl = $booking->hotel_id
-            ? '/stay/hotels/'.Crypt::encryptString((string) $booking->hotel_id)
+            ? '/stay/hotels/'.$booking->hotel?->slug
             : null;
 
         return Inertia::render('public/booking/show', [

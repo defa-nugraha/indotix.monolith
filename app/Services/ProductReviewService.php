@@ -22,9 +22,6 @@ use Illuminate\Support\Collection;
 
 class ProductReviewService
 {
-    private const PAID_BOOKING_STATUSES = ['paid', 'completed', 'no_show'];
-    private const PAID_PAYMENT_STATUSES = ['settlement', 'capture', 'success'];
-
     public const TYPES = [
         'hotel',
         'wisata',

@@ -98,6 +98,26 @@ export default function HotelShow({
         rooms: filters.rooms,
         guests: filters.guests,
     });
+    const reviewCount = reviews.length;
+    const averageRating = reviewCount > 0
+        ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviewCount
+        : 0;
+    const scoreOutOfTen = averageRating > 0 ? averageRating * 2 : 0;
+    const ratingText = scoreOutOfTen
+        ? scoreOutOfTen.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+        : '-';
+    const ratingLabel = scoreOutOfTen >= 9
+        ? 'Istimewa'
+        : scoreOutOfTen >= 8
+            ? 'Sangat Baik'
+            : scoreOutOfTen >= 7
+                ? 'Baik'
+                : scoreOutOfTen >= 6
+                    ? 'Cukup'
+                    : reviewCount > 0
+                        ? 'Perlu perbaikan'
+                        : 'Belum ada ulasan';
+    const ratingCaption = reviewCount > 0 ? `${reviewCount} ulasan` : 'Belum ada ulasan';
     const [guestOpen, setGuestOpen] = useState(false);
     const [dateOpen, setDateOpen] = useState(false);
     const [adults, setAdults] = useState(Math.max(1, Math.max(filters.guests - 0, 1)));
@@ -381,9 +401,12 @@ export default function HotelShow({
                 <section id="overview" className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
                     <div className="grid gap-6 md:grid-cols-3">
                         <div className="rounded-2xl border border-slate-100 p-4">
-                            <div className="text-2xl font-semibold text-slate-900">8,4<span className="text-sm text-slate-500">/10</span></div>
-                            <div className="text-sm font-semibold text-slate-900">Sangat Baik</div>
-                            <div className="text-xs text-slate-500">Ulasan terbatas</div>
+                            <div className="text-2xl font-semibold text-slate-900">
+                                {ratingText}
+                                <span className="text-sm text-slate-500">/10</span>
+                            </div>
+                            <div className="text-sm font-semibold text-slate-900">{ratingLabel}</div>
+                            <div className="text-xs text-slate-500">{ratingCaption}</div>
                             <div className="mt-4 flex flex-wrap gap-2">
                                 {['Kebersihan', 'Lokasi', 'Pelayanan'].map((chip) => (
                                     <span key={chip} className="rounded-full bg-emerald-50 px-3 py-1 text-xs text-emerald-700">{chip}</span>

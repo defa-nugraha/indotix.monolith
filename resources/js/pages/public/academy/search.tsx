@@ -7,6 +7,7 @@ import PublicLayout from '@/layouts/public-layout';
 type AcademyCard = {
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     title: string;
     category?: string | null;
     start_at?: string | null;
@@ -148,12 +149,14 @@ export default function AcademySearch({
                         </section>
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                            {filtered.map((item) => (
+                            {filtered.map((item) => {
+                                const detailSlug = item.slug ?? item.encrypted_id;
+                                return (
                                 <div
                                     key={item.id}
                                     className="group overflow-hidden rounded-xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
                                 >
-                                    <Link href={`/academy/${item.encrypted_id}`} className="relative block h-28 overflow-hidden">
+                                    <Link href={`/academy/${detailSlug}`} className="relative block h-28 overflow-hidden">
                                         <img
                                             src={
                                                 item.image_url ??
@@ -186,14 +189,15 @@ export default function AcademySearch({
                                             </span>
                                         </div>
                                         <Link
-                                            href={`/academy/${item.encrypted_id}`}
+                                            href={`/academy/${detailSlug}`}
                                             className="mt-3 inline-flex w-full items-center justify-center rounded-lg bg-sky-600 px-3 py-2 text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
                                         </Link>
                                     </div>
                                 </div>
-                            ))}
+                                );
+                            })}
                             {filtered.length === 0 && (
                                 <div className="col-span-full rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
                                     Belum ada kelas academy.

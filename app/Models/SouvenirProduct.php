@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class SouvenirProduct extends Model
 {
     protected $fillable = [
         'category_id',
         'name',
+        'slug',
         'description',
         'price',
         'cost_price',
@@ -30,6 +32,46 @@ class SouvenirProduct extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (SouvenirProduct $product): void {
+            if (! $product->slug) {
+                $product->slug = self::generateUniqueSlug($product->name);
+            }
+        });
+
+        static::updating(function (SouvenirProduct $product): void {
+            if (! $product->slug && $product->name) {
+                $product->slug = self::generateUniqueSlug($product->name, $product->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name);
+        if ($base === '') {
+            $base = 'produk';
+        }
+        if (in_array($base, ['cart', 'checkout', 'booking'], true)) {
+            $base .= '-produk';
+        }
+
+        $candidate = $base;
+        $suffix = 1;
+        while (
+            self::query()
+                ->where('slug', $candidate)
+                ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
+                ->exists()
+        ) {
+            $suffix++;
+            $candidate = $base.'-'.$suffix;
+        }
+
+        return $candidate;
+    }
 
     public function category(): BelongsTo
     {

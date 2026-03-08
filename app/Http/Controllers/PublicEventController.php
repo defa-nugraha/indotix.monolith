@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\EventTicket;
 use App\Services\ProductReviewService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,7 @@ class PublicEventController extends Controller
             return [
                 'id' => $event->id,
                 'encrypted_id' => Crypt::encryptString((string) $event->id),
+                'slug' => $event->slug,
                 'title' => $event->title,
                 'city_name' => $this->resolveCityName($event->city_code),
                 'location' => $event->location,
@@ -59,18 +61,34 @@ class PublicEventController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $event): Response
+    public function show(Request $request, string $event): Response|RedirectResponse
     {
-        try {
-            $eventId = Crypt::decryptString($event);
-        } catch (\Throwable $exception) {
+        $eventModel = Event::query()
+            ->where('status', 'published')
+            ->where('slug', $event)
+            ->first();
+
+        if (! $eventModel) {
+            try {
+                $eventId = Crypt::decryptString($event);
+                $eventModel = Event::query()
+                    ->where('status', 'published')
+                    ->where('id', $eventId)
+                    ->first();
+            } catch (\Throwable $exception) {
+                $eventModel = null;
+            }
+        }
+
+        if (! $eventModel) {
             abort(404);
         }
 
-        $event = Event::query()
-            ->where('status', 'published')
-            ->where('id', $eventId)
-            ->firstOrFail();
+        if ($eventModel->slug && $eventModel->slug !== $event) {
+            return redirect()->route('events.show', ['event' => $eventModel->slug]);
+        }
+
+        $event = $eventModel;
 
         $tickets = EventTicket::query()
             ->where('event_id', $event->id)
@@ -98,6 +116,7 @@ class PublicEventController extends Controller
             'event' => [
                 'id' => $event->id,
                 'encrypted_id' => Crypt::encryptString((string) $event->id),
+                'slug' => $event->slug,
                 'title' => $event->title,
                 'description' => $event->description,
                 'city_name' => $this->resolveCityName($event->city_code),

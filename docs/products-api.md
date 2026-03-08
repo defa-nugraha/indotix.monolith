@@ -47,6 +47,7 @@ Response 200:
     {
       "id": 12,
       "encrypted_id": "....",
+      "slug": "hotel-nusantara",
       "name": "Hotel Nusantara",
       "address": "Jl. Sudirman No. 10",
       "star_rating": 4,
@@ -60,6 +61,11 @@ Response 200:
   ]
 }
 ```
+
+Catatan:
+- Field `reviews` bersifat public.
+- `user_review` dan `can_review` hanya tersedia jika request menggunakan token login (Sanctum).
+- `maps_url` menggunakan format `https://maps.google.com/?q=latitude,longitude`.
 
 ### 1.2 Detail Hotel
 
@@ -80,6 +86,7 @@ Response 200:
   "hotel": {
     "id": 12,
     "encrypted_id": "...",
+    "slug": "hotel-nusantara",
     "name": "Hotel Nusantara",
     "description": "Deskripsi hotel",
     "address": "Jl. Sudirman No. 10",
@@ -89,6 +96,7 @@ Response 200:
     "check_out_time": "12:00",
     "latitude": -6.2,
     "longitude": 106.8,
+    "maps_url": "https://maps.google.com/?q=-6.2,106.8",
     "facilities": ["wifi", "pool"],
     "images": [{ "id": 1, "url": "/storage/hotel-images/xx.jpg" }]
   },
@@ -113,7 +121,27 @@ Response 200:
     "check_out": "2026-02-17",
     "rooms": 1,
     "guests": 2
-  }
+  },
+  "reviews": [
+    {
+      "id": 10,
+      "rating": 5,
+      "comment": "Kamar bersih dan nyaman.",
+      "user_name": "User Indotix",
+      "created_at": "2026-02-16 10:00:00",
+      "reply": "Terima kasih atas ulasannya!",
+      "reply_by": "Admin Indotix",
+      "reply_at": "2026-02-16 12:00:00",
+      "user_id": 3
+    }
+  ],
+  "user_review": {
+    "id": 10,
+    "rating": 5,
+    "comment": "Kamar bersih dan nyaman.",
+    "created_at": "2026-02-16 10:00:00"
+  },
+  "can_review": true
 }
 ```
 
@@ -141,6 +169,7 @@ Response 200:
     {
       "id": 5,
       "encrypted_id": "...",
+      "slug": "taman-laut-banyuwangi",
       "destination_name": "Taman Laut",
       "destination_type": "alam",
       "city_name": "Banyuwangi",
@@ -157,7 +186,7 @@ Response 200:
 
 **GET** `/products/wisata/{destination}`
 
-`{destination}` bisa `id` atau `encrypted_id`.
+`{destination}` bisa `id`, `encrypted_id`, atau `slug`.
 
 Query params:
 - `visit_date` (date, optional) - default hari ini
@@ -174,6 +203,7 @@ Response 200:
   "destination": {
     "id": 5,
     "encrypted_id": "...",
+    "slug": "taman-laut-banyuwangi",
     "destination_name": "Taman Laut",
     "destination_type": "alam",
     "description": "Deskripsi wisata",
@@ -187,7 +217,8 @@ Response 200:
     "photo_gate_url": "/storage/mitra-wisata/gate.jpg",
     "photo_area_url": "/storage/mitra-wisata/area.jpg",
     "photo_ticket_url": "/storage/mitra-wisata/ticket.jpg",
-    "maps_pin_url": "https://maps.google.com/..."
+    "maps_pin_url": "https://maps.google.com/?q=-8.216,114.365",
+    "maps_url": "https://maps.google.com/?q=-8.216,114.365"
   },
   "tickets": [
     {
@@ -199,7 +230,27 @@ Response 200:
       "ticket_type": "regular",
       "refund_policy": "non_refundable"
     }
-  ]
+  ],
+  "reviews": [
+    {
+      "id": 12,
+      "rating": 4,
+      "comment": "Pemandangan bagus, tiket cepat.",
+      "user_name": "User Indotix",
+      "created_at": "2026-02-16 10:00:00",
+      "reply": null,
+      "reply_by": null,
+      "reply_at": null,
+      "user_id": 3
+    }
+  ],
+  "user_review": {
+    "id": 12,
+    "rating": 4,
+    "comment": "Pemandangan bagus, tiket cepat.",
+    "created_at": "2026-02-16 10:00:00"
+  },
+  "can_review": true
 }
 ```
 

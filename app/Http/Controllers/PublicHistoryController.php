@@ -52,7 +52,7 @@ class PublicHistoryController extends Controller
                 'payment_url' => route('booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                 'detail_url' => route('booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                 'review_url' => $booking->hotel_id
-                    ? '/stay/hotels/'.Crypt::encryptString((string) $booking->hotel_id)
+                    ? '/stay/hotels/'.$booking->hotel?->slug
                     : null,
                 'can_review' => $booking->hotel_id
                     ? ProductReviewService::hasUsedBooking($userId, 'hotel', (int) $booking->hotel_id)
@@ -93,7 +93,7 @@ class PublicHistoryController extends Controller
                     'payment_url' => route('wisata.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('wisata.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'review_url' => $booking->mitra_wisata_onboarding_id
-                        ? '/wisata/'.Crypt::encryptString((string) $booking->mitra_wisata_onboarding_id)
+                        ? '/wisata/'.$destination?->slug
                         : null,
                     'can_review' => $booking->mitra_wisata_onboarding_id
                         ? ProductReviewService::hasUsedBooking($userId, 'wisata', (int) $booking->mitra_wisata_onboarding_id)
@@ -136,7 +136,7 @@ class PublicHistoryController extends Controller
                     'payment_url' => route('events.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('events.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'review_url' => $booking->event_id
-                        ? '/events/'.Crypt::encryptString((string) $booking->event_id)
+                        ? '/events/'.$event?->slug
                         : null,
                     'can_review' => $booking->event_id
                         ? ProductReviewService::hasUsedBooking($userId, 'event', (int) $booking->event_id)
@@ -147,6 +147,7 @@ class PublicHistoryController extends Controller
 
         $specialProgramBookings = SpecialProgramBooking::query()
             ->where('user_id', $request->user()->id)
+            ->with('program')
             ->latest()
             ->get()
             ->map(function (SpecialProgramBooking $booking) use ($userId) {
@@ -176,7 +177,7 @@ class PublicHistoryController extends Controller
                     'payment_url' => route('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'review_url' => $booking->special_program_id
-                        ? '/special-programs/'.Crypt::encryptString((string) $booking->special_program_id)
+                        ? '/special-programs/'.$booking->program?->slug
                         : null,
                     'can_review' => $booking->special_program_id
                         ? ProductReviewService::hasUsedBooking($userId, 'special_program', (int) $booking->special_program_id)
@@ -259,7 +260,7 @@ class PublicHistoryController extends Controller
                     'payment_url' => route('academy.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('academy.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'review_url' => $booking->academy_class_id
-                        ? '/academy/'.Crypt::encryptString((string) $booking->academy_class_id)
+                        ? '/academy/'.$class?->slug
                         : null,
                     'can_review' => $booking->academy_class_id
                         ? ProductReviewService::hasUsedBooking($userId, 'academy', (int) $booking->academy_class_id)

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Hotel;
 use App\Models\RoomInventory;
 use App\Models\RoomType;
+use App\Services\ProductReviewService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\JsonResponse;
@@ -99,6 +100,7 @@ class HotelController extends Controller
             return [
                 'id' => $hotel->id,
                 'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'slug' => $hotel->slug,
                 'name' => $hotel->name,
                 'address' => $hotel->address,
                 'star_rating' => $hotel->star_rating,
@@ -202,10 +204,13 @@ class HotelController extends Controller
             ->filter()
             ->values();
 
+        $userId = $request->user('sanctum')?->id;
+
         return response()->json([
             'hotel' => [
                 'id' => $hotel->id,
                 'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'slug' => $hotel->slug,
                 'name' => $hotel->name,
                 'description' => $hotel->description,
                 'address' => $hotel->address,
@@ -229,6 +234,9 @@ class HotelController extends Controller
                 'rooms' => $data['rooms'],
                 'guests' => $data['guests'],
             ],
+            'reviews' => ProductReviewService::publicReviews('hotel', $hotel->id),
+            'user_review' => $userId ? ProductReviewService::userReview($userId, 'hotel', $hotel->id) : null,
+            'can_review' => $userId ? ProductReviewService::hasUsedBooking($userId, 'hotel', $hotel->id) : false,
         ]);
     }
 
@@ -264,6 +272,6 @@ class HotelController extends Controller
             return null;
         }
 
-        return sprintf('https://www.google.com/maps?q=%s,%s', $latitude, $longitude);
+        return sprintf('https://maps.google.com/?q=%s,%s', $latitude, $longitude);
     }
 }

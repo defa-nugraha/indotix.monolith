@@ -58,6 +58,7 @@ class PublicHomeController extends Controller
             ->map(fn (Hotel $hotel) => [
                 'id' => $hotel->id,
                 'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'slug' => $hotel->slug,
                 'name' => $hotel->name,
                 'city_name' => $hotel->city?->name,
                 'star_rating' => $hotel->star_rating,
@@ -81,6 +82,7 @@ class PublicHomeController extends Controller
                 return [
                     'id' => $destination->id,
                     'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                    'slug' => $destination->slug,
                     'name' => $destination->destination_name,
                     'city_name' => DB::table('regencies')
                         ->where('code', $destination->city_code)
@@ -102,6 +104,7 @@ class PublicHomeController extends Controller
                 return [
                     'id' => $event->id,
                     'encrypted_id' => Crypt::encryptString((string) $event->id),
+                    'slug' => $event->slug,
                     'title' => $event->title,
                     'city_name' => DB::table('regencies')
                         ->where('code', $event->city_code)
@@ -180,6 +183,7 @@ class PublicHomeController extends Controller
                         'type' => 'hotel',
                         'id' => $hotel->id,
                         'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                        'slug' => $hotel->slug,
                         'title' => $hotel->name,
                         'city_name' => $hotel->city?->name,
                         'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
@@ -197,6 +201,7 @@ class PublicHomeController extends Controller
                         'type' => 'wisata',
                         'id' => $destination->id,
                         'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                        'slug' => $destination->slug,
                         'title' => $destination->destination_name,
                         'city_name' => DB::table('regencies')
                             ->where('code', $destination->city_code)
@@ -216,6 +221,7 @@ class PublicHomeController extends Controller
                         'type' => 'event',
                         'id' => $event->id,
                         'encrypted_id' => Crypt::encryptString((string) $event->id),
+                        'slug' => $event->slug,
                         'title' => $event->title,
                         'city_name' => DB::table('regencies')
                             ->where('code', $event->city_code)
@@ -242,6 +248,7 @@ class PublicHomeController extends Controller
                 return [
                     'id' => $product->id,
                     'encrypted_id' => Crypt::encryptString((string) $product->id),
+                    'slug' => $product->slug,
                     'name' => $product->name,
                     'price' => $product->price,
                     'image_url' => $image ? Storage::url($image) : null,
@@ -265,6 +272,7 @@ class PublicHomeController extends Controller
                 return [
                     'id' => $class->id,
                     'encrypted_id' => Crypt::encryptString((string) $class->id),
+                    'slug' => $class->slug,
                     'title' => $class->title,
                     'category' => $class->category,
                     'start_at' => $class->start_at?->toDateString(),

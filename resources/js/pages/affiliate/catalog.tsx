@@ -7,6 +7,7 @@ type Destination = {
     destination_type?: string | null;
     address_full?: string | null;
     photo_area_url?: string | null;
+    slug?: string | null;
     encrypted_id: string;
 };
 
@@ -60,7 +61,7 @@ export default function AffiliateCatalog({
                                     <span className="rounded-full bg-slate-100 px-3 py-1">{destination.destination_type ?? 'Wisata'}</span>
                                 </div>
                                 <Link
-                                    href={`/wisata/${destination.encrypted_id}`}
+                                    href={`/wisata/${destination.slug ?? destination.encrypted_id}`}
                                     className="inline-flex items-center gap-2 text-sm font-semibold text-sky-600 hover:text-sky-700"
                                 >
                                     Lihat halaman publik

@@ -41,6 +41,8 @@ Route::middleware('auth:sanctum')->prefix('hotel/bookings')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\HotelBookingController::class, 'index']);
     Route::get('{booking}', [\App\Http\Controllers\Api\HotelBookingController::class, 'show']);
     Route::post('{booking}/pay', [\App\Http\Controllers\Api\HotelBookingController::class, 'pay']);
+    Route::post('{booking}/cancel', [\App\Http\Controllers\Api\HotelBookingController::class, 'cancel']);
+    Route::get('{booking}/invoice', [\App\Http\Controllers\Api\HotelBookingController::class, 'invoice']);
 });
 
 Route::middleware('auth:sanctum')->get('history', [\App\Http\Controllers\Api\HistoryController::class, 'index']);
@@ -68,6 +70,7 @@ Route::middleware('auth:sanctum')->prefix('wisata/bookings')->group(function () 
     Route::get('{booking}', [\App\Http\Controllers\Api\WisataBookingController::class, 'show']);
     Route::post('{booking}/pay', [\App\Http\Controllers\Api\WisataBookingController::class, 'pay']);
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\WisataBookingController::class, 'cancel']);
+    Route::get('{booking}/ticket', [\App\Http\Controllers\Api\WisataBookingController::class, 'ticket']);
 });
 
 Route::middleware('auth:sanctum')->prefix('events/bookings')->group(function () {

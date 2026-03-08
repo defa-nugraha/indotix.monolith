@@ -209,23 +209,31 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
         });
     };
 
-    const removeExistingImage = async (productId: number, imageId: number) => {
-        const result = await Swal.fire({
-            title: 'Hapus foto?',
-            text: 'Foto akan dihapus dari produk.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Hapus',
-            cancelButtonText: 'Batal',
-        });
-        if (!result.isConfirmed) return;
+    const removeExistingImage = (productId: number, imageId: number) => {
         router.delete(`/admin/souvenir/products/${productId}/images/${imageId}`, {
             preserveScroll: true,
             onSuccess: () => {
                 setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
-                Swal.fire({ icon: 'success', title: 'Terhapus', text: 'Foto berhasil dihapus.' });
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'success',
+                    title: 'Foto berhasil dihapus.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                });
             },
-            onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat menghapus foto.' }),
+            onError: () =>
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: 'error',
+                    title: 'Gagal menghapus foto.',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                }),
         });
     };
 
@@ -628,7 +636,13 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                                 <button
                                                     type="button"
                                                     className="absolute right-1 top-1 rounded-full bg-white/90 px-2 text-xs text-rose-600 shadow"
-                                                    onClick={() => editingId && removeExistingImage(editingId, image.id)}
+                                                    onClick={(event) => {
+                                                        event.preventDefault();
+                                                        event.stopPropagation();
+                                                        if (editingId) {
+                                                            removeExistingImage(editingId, image.id);
+                                                        }
+                                                    }}
                                                 >
                                                     Hapus
                                                 </button>

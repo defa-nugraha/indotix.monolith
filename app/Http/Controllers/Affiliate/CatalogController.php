@@ -69,6 +69,7 @@ class CatalogController extends Controller
             'destination' => $destination ? [
                 'id' => $destination->id,
                 'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                'slug' => $destination->slug,
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
                 'address_full' => $destination->address_full,

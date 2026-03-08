@@ -7,6 +7,7 @@ import PublicLayout from '@/layouts/public-layout';
 type Destination = {
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     destination_name: string;
     destination_type?: string | null;
     city_name?: string | null;
@@ -192,13 +193,15 @@ export default function WisataSearch({ filters, destinations }: { filters: Filte
                 </section>
 
                 <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                    {destinations.map((item) => (
+                    {destinations.map((item) => {
+                        const detailSlug = item.slug ?? item.encrypted_id;
+                        return (
                         <div
                             key={item.id}
                             className="group overflow-hidden rounded-xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
                         >
                             <Link
-                                href={`/wisata/${item.encrypted_id}`}
+                                href={`/wisata/${detailSlug}`}
                                 className="relative block h-28 overflow-hidden"
                             >
                                 <img
@@ -233,7 +236,7 @@ export default function WisataSearch({ filters, destinations }: { filters: Filte
                                         </div>
                                     </div>
                                     <Link
-                                        href={`/wisata/${item.encrypted_id}`}
+                                        href={`/wisata/${detailSlug}`}
                                         className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700"
                                     >
                                         Lihat Detail
@@ -249,7 +252,8 @@ export default function WisataSearch({ filters, destinations }: { filters: Filte
                                 </div>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
 
                     {destinations.length === 0 && (
                         <div className="md:col-span-2 rounded-2xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm">

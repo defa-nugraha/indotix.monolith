@@ -32,6 +32,7 @@ type Partner = { id: number; image_path: string; link_url?: string | null; name?
 type HotelCard = {
     id: number;
     encrypted_id?: string;
+    slug?: string | null;
     name: string;
     city_name?: string | null;
     star_rating?: number | null;
@@ -41,6 +42,7 @@ type HotelCard = {
 type WisataCard = {
     id: number;
     encrypted_id?: string;
+    slug?: string | null;
     name: string;
     city_name?: string | null;
     min_price?: number | null;
@@ -50,6 +52,7 @@ type WisataCard = {
 type EventCard = {
     id: number;
     encrypted_id?: string;
+    slug?: string | null;
     title: string;
     city_name?: string | null;
     start_at?: string | null;
@@ -58,6 +61,7 @@ type EventCard = {
 type AcademyCard = {
     id: number;
     encrypted_id?: string;
+    slug?: string | null;
     title: string;
     category?: string | null;
     start_at?: string | null;
@@ -68,6 +72,7 @@ type SpecialProgramItem = {
     type: 'hotel' | 'wisata' | 'event';
     id: number;
     encrypted_id?: string;
+    slug?: string | null;
     title: string;
     city_name?: string | null;
     image_url?: string | null;
@@ -76,6 +81,7 @@ type SpecialProgramItem = {
 type SouvenirCard = {
     id: number;
     encrypted_id?: string;
+    slug?: string | null;
     name: string;
     price?: number | null;
     image_url?: string | null;
@@ -505,12 +511,13 @@ export default function Welcome({
                     </div>
                     <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
                         {specialProgramProducts.map((item) => {
+                            const detailSlug = item.slug ?? item.encrypted_id;
                             const link =
                                 item.type === 'hotel'
-                                    ? `/stay/hotels/${item.encrypted_id}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`
+                                    ? `/stay/hotels/${detailSlug}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`
                                     : item.type === 'event'
-                                      ? `/events/${item.encrypted_id}`
-                                      : `/wisata/${item.encrypted_id}`;
+                                      ? `/events/${detailSlug}`
+                                      : `/wisata/${detailSlug}`;
                             return (
                                 <div key={`${item.type}-${item.id}`} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                     <div className="h-40 overflow-hidden bg-gradient-to-br from-sky-600 to-blue-400">
@@ -534,7 +541,7 @@ export default function Welcome({
                                                 ? `Mulai Rp ${Number(item.price).toLocaleString('id-ID')}`
                                                 : 'Harga tersedia'}
                                         </div>
-                                        {item.encrypted_id ? (
+                                        {detailSlug ? (
                                             <Link
                                                 href={link}
                                                 className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
@@ -593,12 +600,12 @@ export default function Welcome({
                                     <div className="text-sm font-semibold text-sky-600">
                                         {hotel.min_price ? `Mulai Rp ${hotel.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
                                     </div>
-                                    {hotel.encrypted_id ? (
-                                        <Link
-                                            href={`/stay/hotels/${hotel.encrypted_id}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`}
-                                            className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
-                                        >
-                                            Lihat Detail
+                                        {hotel.slug || hotel.encrypted_id ? (
+                                            <Link
+                                                href={`/stay/hotels/${hotel.slug ?? hotel.encrypted_id}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`}
+                                                className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                            >
+                                                Lihat Detail
                                         </Link>
                                     ) : (
                                         <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
@@ -643,12 +650,12 @@ export default function Welcome({
                                     <div className="text-sm font-semibold text-indigo-600">
                                         {event.min_price ? `Mulai Rp ${event.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
                                     </div>
-                                    {event.encrypted_id ? (
-                                        <Link
-                                            href={`/events/${event.encrypted_id}`}
-                                            className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
-                                        >
-                                            Lihat Detail
+                                        {event.slug || event.encrypted_id ? (
+                                            <Link
+                                                href={`/events/${event.slug ?? event.encrypted_id}`}
+                                                className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                            >
+                                                Lihat Detail
                                         </Link>
                                     ) : (
                                         <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
@@ -696,12 +703,12 @@ export default function Welcome({
                                     <div className="text-sm font-semibold text-indigo-600">
                                         {item.min_price ? `Mulai Rp ${item.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
                                     </div>
-                                    {item.encrypted_id ? (
-                                        <Link
-                                            href={`/academy/${item.encrypted_id}`}
-                                            className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
-                                        >
-                                            Lihat Detail
+                                        {item.slug || item.encrypted_id ? (
+                                            <Link
+                                                href={`/academy/${item.slug ?? item.encrypted_id}`}
+                                                className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
+                                            >
+                                                Lihat Detail
                                         </Link>
                                     ) : (
                                         <span className="mt-4 inline-block w-full rounded-lg bg-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-500">
@@ -749,9 +756,9 @@ export default function Welcome({
                                     <div className="text-sm font-semibold text-emerald-600">
                                         {item.min_price ? `Mulai Rp ${item.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
                                     </div>
-                                    {item.encrypted_id ? (
+                                    {item.slug || item.encrypted_id ? (
                                         <Link
-                                            href={`/wisata/${item.encrypted_id}`}
+                                            href={`/wisata/${item.slug ?? item.encrypted_id}`}
                                             className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
@@ -780,7 +787,9 @@ export default function Welcome({
                         </Link>
                     </div>
                     <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-4">
-                        {souvenirProducts.map((item) => (
+                        {souvenirProducts.map((item) => {
+                            const detailSlug = item.slug ?? item.encrypted_id ?? '';
+                            return (
                             <div key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                 <div className="h-40 overflow-hidden bg-gradient-to-br from-amber-500 to-orange-400">
                                     <img
@@ -799,9 +808,9 @@ export default function Welcome({
                                     <div className="text-sm font-semibold text-amber-600">
                                         {item.price ? `Rp ${item.price.toLocaleString('id-ID')}` : 'Harga tersedia'}
                                     </div>
-                                    {item.encrypted_id ? (
+                                    {detailSlug ? (
                                         <Link
-                                            href={`/souvenir/${item.encrypted_id}`}
+                                            href={`/souvenir/${detailSlug}`}
                                             className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail
@@ -813,7 +822,8 @@ export default function Welcome({
                                     )}
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </section>
 

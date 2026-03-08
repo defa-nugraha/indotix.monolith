@@ -259,7 +259,7 @@ class AcademyPublicBookingController extends Controller
         $booking->load(['academyClass', 'ticket', 'payments']);
 
         $reviewUrl = $booking->academy_class_id
-            ? '/academy/'.Crypt::encryptString((string) $booking->academy_class_id)
+            ? '/academy/'.$booking->academyClass?->slug
             : null;
 
         return Inertia::render('public/academy/booking/show', [

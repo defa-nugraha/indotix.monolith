@@ -6,7 +6,8 @@ import PublicLayout from '@/layouts/public-layout';
 
 type Product = {
     id: number;
-    encrypted_id: string;
+    encrypted_id?: string;
+    slug?: string | null;
     name: string;
     price: number;
     stock: number;
@@ -108,10 +109,12 @@ export default function SouvenirSearch({
                         </section>
 
                         <section className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
-                            {products.data.map((product) => (
+                            {products.data.map((product) => {
+                                const detailSlug = product.slug ?? product.encrypted_id ?? '';
+                                return (
                                 <Link
                                     key={product.id}
-                                    href={`/souvenir/${product.encrypted_id}`}
+                                    href={detailSlug ? `/souvenir/${detailSlug}` : '/souvenir'}
                                     className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                                 >
                                     <div className="h-48 w-full bg-slate-100">
@@ -130,7 +133,8 @@ export default function SouvenirSearch({
                                         </div>
                                     </div>
                                 </Link>
-                            ))}
+                                );
+                            })}
                         </section>
                     </>
                 )}

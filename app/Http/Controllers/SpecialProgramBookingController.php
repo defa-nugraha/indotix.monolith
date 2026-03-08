@@ -259,10 +259,10 @@ class SpecialProgramBookingController extends Controller
         if ((int) $booking->user_id !== (int) $request->user()->id) {
             abort(403);
         }
-        $booking->load('payments');
+        $booking->load('payments', 'program');
 
         $reviewUrl = $booking->special_program_id
-            ? '/special-programs/'.Crypt::encryptString((string) $booking->special_program_id)
+            ? '/special-programs/'.$booking->program?->slug
             : null;
 
         return Inertia::render('public/special-programs/booking/show', [

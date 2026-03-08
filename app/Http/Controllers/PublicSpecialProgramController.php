@@ -10,6 +10,7 @@ use App\Models\SpecialProgram;
 use App\Models\SpecialProgramItem;
 use App\Models\WisataTicket;
 use App\Services\ProductReviewService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,7 @@ class PublicSpecialProgramController extends Controller
             return [
                 'id' => $program->id,
                 'encrypted_id' => Crypt::encryptString((string) $program->id),
+                'slug' => $program->slug,
                 'name' => $program->name,
                 'program_type' => $program->program_type,
                 'status' => $program->status,
@@ -57,18 +59,35 @@ class PublicSpecialProgramController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $program): Response
+    public function show(Request $request, string $program): Response|RedirectResponse
     {
-        try {
-            $programId = Crypt::decryptString($program);
-        } catch (\Throwable $exception) {
+        $programModel = SpecialProgram::query()
+            ->where('is_active', true)
+            ->whereIn('status', ['active', 'scheduled'])
+            ->where('slug', $program)
+            ->first();
+
+        if (! $programModel) {
+            try {
+                $programId = Crypt::decryptString($program);
+                $programModel = SpecialProgram::query()
+                    ->where('is_active', true)
+                    ->whereIn('status', ['active', 'scheduled'])
+                    ->find($programId);
+            } catch (\Throwable $exception) {
+                $programModel = null;
+            }
+        }
+
+        if (! $programModel) {
             abort(404);
         }
 
-        $program = SpecialProgram::query()
-            ->where('is_active', true)
-            ->whereIn('status', ['active', 'scheduled'])
-            ->findOrFail($programId);
+        if ($programModel->slug && $programModel->slug !== $program) {
+            return redirect()->route('special-programs.show', ['program' => $programModel->slug]);
+        }
+
+        $program = $programModel;
 
         $items = SpecialProgramItem::query()
             ->where('special_program_id', $program->id)
@@ -88,6 +107,7 @@ class PublicSpecialProgramController extends Controller
             'program' => [
                 'id' => $program->id,
                 'encrypted_id' => Crypt::encryptString((string) $program->id),
+                'slug' => $program->slug,
                 'name' => $program->name,
                 'program_type' => $program->program_type,
                 'status' => $program->status,
@@ -163,6 +183,7 @@ class PublicSpecialProgramController extends Controller
                     'type' => 'hotel',
                     'id' => $hotel->id,
                     'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                    'slug' => $hotel->slug,
                     'title' => $hotel->name,
                     'city_name' => $hotel->city?->name,
                     'description' => $hotel->description,
@@ -181,6 +202,7 @@ class PublicSpecialProgramController extends Controller
                     'type' => 'wisata',
                     'id' => $destination->id,
                     'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                    'slug' => $destination->slug,
                     'title' => $destination->destination_name,
                     'city_name' => $this->resolveCityName($destination->city_code),
                     'description' => $destination->description,
@@ -199,6 +221,7 @@ class PublicSpecialProgramController extends Controller
                     'type' => 'event',
                     'id' => $event->id,
                     'encrypted_id' => Crypt::encryptString((string) $event->id),
+                    'slug' => $event->slug,
                     'title' => $event->title,
                     'city_name' => $this->resolveCityName($event->city_code),
                     'description' => $event->description,

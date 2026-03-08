@@ -329,7 +329,7 @@ class EventPublicBookingController extends Controller
         $booking->load(['event', 'ticket', 'payments']);
 
         $reviewUrl = $booking->event_id
-            ? '/events/'.Crypt::encryptString((string) $booking->event_id)
+            ? '/events/'.$booking->event?->slug
             : null;
 
         return Inertia::render('public/events/booking/show', [

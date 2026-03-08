@@ -9,6 +9,7 @@ use App\Models\WisataBooking;
 use App\Models\WisataTicket;
 use App\Services\ProductReviewService;
 use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -81,6 +82,7 @@ class PublicWisataController extends Controller
             return [
                 'id' => $destination->id,
                 'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                'slug' => $destination->slug,
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
                 'city_name' => $this->resolveCityName($destination->city_code),
@@ -99,27 +101,58 @@ class PublicWisataController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $destination): Response
+    public function show(Request $request, string $destination): Response|RedirectResponse
     {
-        $destinationId = null;
+        $destinationModel = MitraWisataOnboarding::query()
+            ->where('verification_status', 'verified')
+            ->where('is_suspended', false)
+            ->where('slug', $destination)
+            ->first();
 
-        if (strlen($destination) <= 10) {
+        if (! $destinationModel && strlen($destination) <= 10) {
             $destinationId = $this->resolveAffiliateDestination($request, $destination);
-        }
-
-        if (! $destinationId) {
-            try {
-                $destinationId = Crypt::decryptString($destination);
-            } catch (\Throwable $exception) {
-                abort(404);
+            if ($destinationId) {
+                $destinationModel = MitraWisataOnboarding::query()
+                    ->where('verification_status', 'verified')
+                    ->where('is_suspended', false)
+                    ->where('id', $destinationId)
+                    ->first();
             }
         }
 
-        $destination = MitraWisataOnboarding::query()
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
-            ->where('id', $destinationId)
-            ->firstOrFail();
+        if (! $destinationModel) {
+            try {
+                $destinationId = Crypt::decryptString($destination);
+                $destinationModel = MitraWisataOnboarding::query()
+                    ->where('verification_status', 'verified')
+                    ->where('is_suspended', false)
+                    ->where('id', $destinationId)
+                    ->first();
+            } catch (\Throwable $exception) {
+                $destinationModel = null;
+            }
+        }
+
+        if (! $destinationModel) {
+            abort(404);
+        }
+
+        if ($destinationModel->slug && $destinationModel->slug !== $destination) {
+            $redirect = redirect()->route('wisata.show', ['destination' => $destinationModel->slug] + $request->query());
+            $affiliateLink = $request->attributes->get('affiliate_link');
+            $shouldStoreCookie = (bool) $request->attributes->get('affiliate_link_store');
+            if ($affiliateLink && $shouldStoreCookie) {
+                $redirect->withCookie(cookie(
+                    'affiliate_ref',
+                    json_encode(['link_id' => $affiliateLink->id, 'set_at' => now()->timestamp]),
+                    $affiliateLink->cookie_days * 1440
+                ));
+            }
+
+            return $redirect;
+        }
+
+        $destination = $destinationModel;
 
         $today = Carbon::today();
         $payload = [
@@ -172,6 +205,7 @@ class PublicWisataController extends Controller
             'destination' => [
                 'id' => $destination->id,
                 'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                'slug' => $destination->slug,
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
                 'description' => $destination->description,
