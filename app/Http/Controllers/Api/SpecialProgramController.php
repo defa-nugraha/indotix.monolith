@@ -154,6 +154,7 @@ class SpecialProgramController extends Controller
                     'description' => $hotel->description,
                     'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
                     'price' => $minPrice ? (int) $minPrice : null,
+                    'maps_url' => $this->buildMapsUrlFromCoordinates($hotel->latitude, $hotel->longitude),
                 ];
                 continue;
             }
@@ -172,6 +173,7 @@ class SpecialProgramController extends Controller
                     'description' => $destination->description,
                     'image_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
                     'price' => $wisataMinPrices[$destination->id] ?? null,
+                    'maps_url' => $this->buildMapsUrlFromMapsPin($destination->maps_pin_url),
                 ];
                 continue;
             }
@@ -190,6 +192,7 @@ class SpecialProgramController extends Controller
                     'description' => $event->description,
                     'image_url' => null,
                     'price' => $eventMinPrices[$event->id] ?? null,
+                    'maps_url' => $this->buildMapsUrlFromQuery($event->address ?? $event->location),
                 ];
             }
         }
@@ -204,6 +207,58 @@ class SpecialProgramController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function buildMapsUrlFromCoordinates(?float $latitude, ?float $longitude): ?string
+    {
+        if ($latitude === null || $longitude === null) {
+            return null;
+        }
+
+        return sprintf('https://www.google.com/maps/search/?api=1&query=%s,%s', $latitude, $longitude);
+    }
+
+    private function buildMapsUrlFromQuery(?string $query): ?string
+    {
+        if (! $query) {
+            return null;
+        }
+
+        $coordinates = $this->extractCoordinates($query);
+        $value = $coordinates ? $coordinates[0].','.$coordinates[1] : $query;
+
+        return 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($value);
+    }
+
+    private function buildMapsUrlFromMapsPin(?string $mapsPinUrl): ?string
+    {
+        if (! $mapsPinUrl) {
+            return null;
+        }
+
+        $coordinates = $this->extractCoordinates($mapsPinUrl);
+        if (! $coordinates) {
+            return null;
+        }
+
+        return sprintf('https://www.google.com/maps/search/?api=1&query=%s,%s', $coordinates[0], $coordinates[1]);
+    }
+
+    private function extractCoordinates(string $value): ?array
+    {
+        if (preg_match('/@(-?\d+\.\d+),(-?\d+\.\d+)/', $value, $matches)) {
+            return [$matches[1], $matches[2]];
+        }
+
+        if (preg_match('/q=(-?\d+\.\d+),(-?\d+\.\d+)/', $value, $matches)) {
+            return [$matches[1], $matches[2]];
+        }
+
+        if (preg_match('/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/', $value, $matches)) {
+            return [$matches[1], $matches[2]];
+        }
+
+        return null;
     }
 
     private function resolveId(string $value): int

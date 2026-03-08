@@ -255,6 +255,6 @@ class WisataController extends Controller
             return null;
         }
 
-        return sprintf('https://maps.google.com/?q=%s,%s', $latitude, $longitude);
+        return sprintf('https://www.google.com/maps/search/?api=1&query=%s,%s', $latitude, $longitude);
     }
 }

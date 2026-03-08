@@ -6,6 +6,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type Category = { id: number; name: string };
 
@@ -39,13 +40,6 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
         { title: 'Retail Shop', href: '/admin/souvenir/products' },
         { title: 'Master Produk', href: '/admin/souvenir/products' },
     ];
-
-    const formatNumber = (value: number | string | null | undefined) => {
-        const digits = String(value ?? '').replace(/\D/g, '');
-        return digits ? Number(digits).toLocaleString('id-ID') : '';
-    };
-
-    const parseNumber = (value: string) => value.replace(/\D/g, '');
 
     const form = useForm({
         name: '',
@@ -380,16 +374,16 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                 inputMode="numeric"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 placeholder="Harga jual"
-                                value={formatNumber(form.data.price)}
-                                onChange={(event) => form.setData('price', parseNumber(event.target.value))}
+                                value={formatCurrencyInput(form.data.price)}
+                                onChange={(event) => form.setData('price', parseCurrencyToDigits(event.target.value))}
                             />
                             <input
                                 type="text"
                                 inputMode="numeric"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 placeholder="Harga modal"
-                                value={formatNumber(form.data.cost_price)}
-                                onChange={(event) => form.setData('cost_price', parseNumber(event.target.value))}
+                                value={formatCurrencyInput(form.data.cost_price)}
+                                onChange={(event) => form.setData('cost_price', parseCurrencyToDigits(event.target.value))}
                             />
                             <input
                                 type="number"
@@ -535,16 +529,16 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                 type="text"
                                 inputMode="numeric"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={formatNumber(editData.price ?? '')}
-                                onChange={(event) => setEditData({ ...editData, price: parseNumber(event.target.value) })}
+                                value={formatCurrencyInput(editData.price ?? '')}
+                                onChange={(event) => setEditData({ ...editData, price: parseCurrencyToDigits(event.target.value) })}
                                 placeholder="Harga jual"
                             />
                             <input
                                 type="text"
                                 inputMode="numeric"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={formatNumber(editData.cost_price ?? '')}
-                                onChange={(event) => setEditData({ ...editData, cost_price: parseNumber(event.target.value) })}
+                                value={formatCurrencyInput(editData.cost_price ?? '')}
+                                onChange={(event) => setEditData({ ...editData, cost_price: parseCurrencyToDigits(event.target.value) })}
                                 placeholder="Harga modal"
                             />
                             <input

@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Sparkles, Zap, SlidersHorizontal, ShieldCheck, MonitorCheck, Megaphone, Wallet } from 'lucide-react';
+import { parseCurrencyToDigits } from '@/lib/currency';
 
 type ProgramSummary = {
     id: number;
@@ -78,7 +79,7 @@ const sectionLinks = [
     { id: 'compliance', label: 'Komunikasi & Kepatuhan', href: '/admin/special-programs/compliance', icon: ShieldCheck },
 ];
 
-const formatNumber = (value: string) => value.replace(/\D/g, '');
+const formatNumber = (value: string) => parseCurrencyToDigits(value);
 const formatCurrency = (value?: number | string | null) => {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return '-';

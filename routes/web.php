@@ -514,6 +514,24 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::delete('admin/public/partners/{partner}', [\App\Http\Controllers\Admin\PublicPartnerController::class, 'destroy'])
         ->name('admin.public.partners.destroy');
 
+    Route::get('admin/public/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'index'])
+        ->name('admin.public.faqs.index');
+    Route::get('admin/public/faqs/create', [\App\Http\Controllers\Admin\FaqController::class, 'create'])
+        ->name('admin.public.faqs.create');
+    Route::post('admin/public/faqs', [\App\Http\Controllers\Admin\FaqController::class, 'store'])
+        ->name('admin.public.faqs.store');
+    Route::get('admin/public/faqs/{faq}/edit', [\App\Http\Controllers\Admin\FaqController::class, 'edit'])
+        ->name('admin.public.faqs.edit');
+    Route::put('admin/public/faqs/{faq}', [\App\Http\Controllers\Admin\FaqController::class, 'update'])
+        ->name('admin.public.faqs.update');
+    Route::delete('admin/public/faqs/{faq}', [\App\Http\Controllers\Admin\FaqController::class, 'destroy'])
+        ->name('admin.public.faqs.destroy');
+
+    Route::get('admin/public/privacy-policy', [\App\Http\Controllers\Admin\PrivacyPolicyController::class, 'edit'])
+        ->name('admin.public.privacy-policy.edit');
+    Route::put('admin/public/privacy-policy', [\App\Http\Controllers\Admin\PrivacyPolicyController::class, 'update'])
+        ->name('admin.public.privacy-policy.update');
+
     Route::get('admin/public/contacts', [\App\Http\Controllers\Admin\PublicContactController::class, 'edit'])
         ->name('admin.public.contacts.edit');
     Route::put('admin/public/contacts', [\App\Http\Controllers\Admin\PublicContactController::class, 'update'])
@@ -801,6 +819,10 @@ Route::get('/jelajah', [\App\Http\Controllers\PublicBlogController::class, 'inde
     ->name('public.blog.index');
 Route::get('/jelajah/{slug}', [\App\Http\Controllers\PublicBlogController::class, 'show'])
     ->name('public.blog.show');
+Route::get('/faq', [\App\Http\Controllers\PublicFaqController::class, 'index'])
+    ->name('public.faq');
+Route::get('/privacy-policy', [\App\Http\Controllers\PublicPrivacyPolicyController::class, 'show'])
+    ->name('public.privacy-policy');
 
 Route::get('/souvenir/cart', [\App\Http\Controllers\SouvenirCartController::class, 'index'])
     ->name('souvenir.cart');

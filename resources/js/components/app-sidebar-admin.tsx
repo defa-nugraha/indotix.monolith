@@ -63,7 +63,9 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/public/promo-videos') ||
         isCurrentUrl('/admin/public/promo-items') ||
         isCurrentUrl('/admin/public/contacts') ||
-        isCurrentUrl('/admin/public/partners');
+        isCurrentUrl('/admin/public/partners') ||
+        isCurrentUrl('/admin/public/faqs') ||
+        isCurrentUrl('/admin/public/privacy-policy');
     const isWisataSectionActive =
         isCurrentUrl('/admin/wisata/destinations') ||
         isCurrentUrl('/admin/wisata/tickets') ||
@@ -902,15 +904,31 @@ export function AppSidebarAdmin() {
                                         <Link href="/admin/public/contacts">Kontak</Link>
                                     </SidebarMenuSubButton>
                                 </SidebarMenuSubItem>
-                                <SidebarMenuSubItem>
-                                    <SidebarMenuSubButton
-                                        asChild
-                                        isActive={isCurrentUrl('/admin/public/partners')}
-                                    >
-                                        <Link href="/admin/public/partners">Partner Kami</Link>
-                                    </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                            </SidebarMenuSub>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/public/partners')}
+                                        >
+                                            <Link href="/admin/public/partners">Partner Kami</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/public/faqs')}
+                                        >
+                                            <Link href="/admin/public/faqs">FAQ</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton
+                                            asChild
+                                            isActive={isCurrentUrl('/admin/public/privacy-policy')}
+                                        >
+                                            <Link href="/admin/public/privacy-policy">Privacy Policy</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                </SidebarMenuSub>
                         </CollapsibleContent>
                     </Collapsible>
                     </SidebarMenuItem>

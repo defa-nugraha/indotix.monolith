@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type Inventory = {
     id: number;
@@ -57,21 +58,13 @@ export default function EditRoomInventory({ inventory, roomTypeOptions, isMitra 
         breakfast_included: inventory.breakfast_included ?? false,
         smoking_allowed: inventory.smoking_allowed ?? false,
     });
-    const formatRupiah = (value: string) => {
-        const digits = value.replace(/\D/g, '');
-        if (!digits) {
-            return '';
-        }
-        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    };
     const [priceDisplay, setPriceDisplay] = useState(
-        formatRupiah(inventory.price_override ?? ''),
+        formatCurrencyInput(inventory.price_override ?? ''),
     );
 
     const handlePriceChange = (value: string) => {
-        const digits = value.replace(/\D/g, '');
-        setPriceDisplay(formatRupiah(digits));
-        setData('price_override', digits);
+        setPriceDisplay(formatCurrencyInput(value));
+        setData('price_override', parseCurrencyToDigits(value));
     };
 
     return (

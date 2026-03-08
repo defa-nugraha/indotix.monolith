@@ -23,5 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call(SpecialProgramSeeder::class);
         $this->call(SouvenirSeeder::class);
         $this->call(AcademySeeder::class);
+        $this->call(FaqSeeder::class);
+        $this->call(PrivacyPolicySeeder::class);
     }
 }

@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type FormData = {
     room_type_id: string;
@@ -49,18 +50,9 @@ export default function CreateRoomInventory({ roomTypeOptions, isMitra = false, 
     });
     const [priceDisplay, setPriceDisplay] = useState('');
 
-    const formatRupiah = (value: string) => {
-        const digits = value.replace(/\D/g, '');
-        if (!digits) {
-            return '';
-        }
-        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    };
-
     const handlePriceChange = (value: string) => {
-        const digits = value.replace(/\D/g, '');
-        setPriceDisplay(formatRupiah(digits));
-        setData('price_override', digits);
+        setPriceDisplay(formatCurrencyInput(value));
+        setData('price_override', parseCurrencyToDigits(value));
     };
 
     return (

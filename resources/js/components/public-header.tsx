@@ -81,7 +81,7 @@ export default function PublicHeader({
                         <input
                             type="text"
                             placeholder={search.placeholder ?? 'Cari kota/hotel/wisata/event...'}
-                            className="h-11 w-full min-w-0 rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
+                            className="h-12 w-full min-w-0 rounded-full border border-slate-200 px-5 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                             {...valueProps}
                             onChange={(event) => search.onChange?.(event.target.value)}
                         />
@@ -90,7 +90,7 @@ export default function PublicHeader({
                     <input
                         type="text"
                         placeholder={search?.placeholder ?? 'Cari kota/hotel/wisata/event...'}
-                        className="h-11 w-full min-w-0 rounded-lg border border-slate-200 px-4 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
+                        className="h-12 w-full min-w-0 rounded-full border border-slate-200 px-5 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
                         {...valueProps}
                         onChange={(event) => search?.onChange?.(event.target.value)}
                     />
@@ -102,123 +102,12 @@ export default function PublicHeader({
     return (
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
             <div className="mx-auto w-full max-w-6xl px-4 py-4 md:px-8">
-                <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
-                    <div className="flex items-center justify-between gap-3">
-                        <Link href="/" className="flex items-center gap-2">
-                            <img src="/logo.png" alt="Indotix" className="h-10 w-32 object-contain md:h-11 md:w-36" />
-                        </Link>
-                        <div className="flex items-center gap-2 md:hidden">
-                            {showCart && (
-                                <Link href="/souvenir/cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
-                                    <ShoppingCart className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Keranjang</span>
-                                    <span className="sr-only">Keranjang</span>
-                                    {Boolean(souvenir_cart_count) && (
-                                        <span className="absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                            {souvenir_cart_count}
-                                        </span>
-                                    )}
-                                </Link>
-                            )}
-                            <Sheet>
-                                <SheetTrigger className="inline-flex shrink-0 items-center justify-center rounded-full border border-slate-200 p-2 text-slate-600">
-                                    <Menu className="h-5 w-5" />
-                                </SheetTrigger>
-                                <SheetContent side="left" className="w-72">
-                                    <SheetHeader>
-                                        <SheetTitle>Menu</SheetTitle>
-                                    </SheetHeader>
-                                    <div className="flex flex-col gap-4 px-4 pb-6">
-                                        {!auth?.user && (
-                                            <div className="grid gap-2">
-                                                <SheetClose asChild>
-                                                    <Link href="/register" className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white text-center">
-                                                        Register
-                                                    </Link>
-                                                </SheetClose>
-                                                <SheetClose asChild>
-                                                    <Link href="/login" className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 text-center">
-                                                        Login
-                                                    </Link>
-                                                </SheetClose>
-                                            </div>
-                                        )}
-                                        {isUser && (
-                                            <div className="grid gap-2">
-                                                {userMenu
-                                                    .filter((item) => item.show)
-                                                    .map((item) => (
-                                                        <SheetClose asChild key={item.href}>
-                                                            <Link
-                                                                href={item.href}
-                                                                className={cn(
-                                                                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
-                                                                    isActivePath(item.href) ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50'
-                                                                )}
-                                                            >
-                                                                <item.icon className="h-4 w-4" />
-                                                                {item.label}
-                                                            </Link>
-                                                        </SheetClose>
-                                                    ))}
-                                            </div>
-                                        )}
-                                        {isNonUser && (
-                                            <div className="grid gap-2">
-                                                <SheetClose asChild>
-                                                    <Link
-                                                        href={dashboardHref}
-                                                        className={cn(
-                                                            'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
-                                                            isActivePath(dashboardHref) ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50'
-                                                        )}
-                                                    >
-                                                        <LayoutGrid className="h-4 w-4" />
-                                                        {dashboardLabel}
-                                                    </Link>
-                                                </SheetClose>
-                                                <SheetClose asChild>
-                                                    <Link
-                                                        href={logout()}
-                                                        as="button"
-                                                        onClick={handleLogout}
-                                                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
-                                                    >
-                                                        <LogOut className="h-4 w-4" />
-                                                        Logout
-                                                    </Link>
-                                                </SheetClose>
-                                            </div>
-                                        )}
-                                        {showCategories && hasCategories && (
-                                            <div className="grid gap-2">
-                                                <div className="text-xs font-semibold uppercase text-slate-400">Kategori</div>
-                                                {resolvedCategories.map((item) => {
-                                                    const active = item.active ?? isActivePath(item.href);
-                                                    return (
-                                                        <SheetClose asChild key={item.href}>
-                                                            <Link
-                                                                href={item.href}
-                                                                className={cn(
-                                                                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
-                                                                    active ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
-                                                                )}
-                                                            >
-                                                                <item.icon className="h-4 w-4" />
-                                                                {item.label}
-                                                            </Link>
-                                                        </SheetClose>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </div>
-                                </SheetContent>
-                            </Sheet>
-                        </div>
-                    </div>
+                <div className="flex items-center gap-4">
+                    <Link href="/" className="flex items-center gap-2">
+                        <img src="/logo.png" alt="Indotix" className="h-10 w-32 object-contain md:h-11 md:w-36" />
+                    </Link>
 
-                    {showSearch && renderSearch('md:flex-1 md:min-w-0')}
+                    {showSearch && renderSearch('flex-1')}
 
                     <div className="hidden items-center gap-4 md:flex">
                         {showCart && (
@@ -295,6 +184,116 @@ export default function PublicHeader({
                                 </Link>
                             </div>
                         )}
+                    </div>
+
+                    <div className="flex items-center gap-2 md:hidden">
+                        {showCart && (
+                            <Link href="/souvenir/cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
+                                <ShoppingCart className="h-4 w-4" />
+                                <span className="hidden sm:inline">Keranjang</span>
+                                <span className="sr-only">Keranjang</span>
+                                {Boolean(souvenir_cart_count) && (
+                                    <span className="absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
+                                        {souvenir_cart_count}
+                                    </span>
+                                )}
+                            </Link>
+                        )}
+                        <Sheet>
+                            <SheetTrigger className="inline-flex shrink-0 items-center justify-center rounded-full border border-slate-200 p-2 text-slate-600">
+                                <Menu className="h-5 w-5" />
+                            </SheetTrigger>
+                            <SheetContent side="left" className="w-72">
+                                <SheetHeader>
+                                    <SheetTitle>Menu</SheetTitle>
+                                </SheetHeader>
+                                <div className="flex flex-col gap-4 px-4 pb-6">
+                                    {!auth?.user && (
+                                        <div className="grid gap-2">
+                                            <SheetClose asChild>
+                                                <Link href="/register" className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white text-center">
+                                                    Register
+                                                </Link>
+                                            </SheetClose>
+                                            <SheetClose asChild>
+                                                <Link href="/login" className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 text-center">
+                                                    Login
+                                                </Link>
+                                            </SheetClose>
+                                        </div>
+                                    )}
+                                    {isUser && (
+                                        <div className="grid gap-2">
+                                            {userMenu
+                                                .filter((item) => item.show)
+                                                .map((item) => (
+                                                    <SheetClose asChild key={item.href}>
+                                                        <Link
+                                                            href={item.href}
+                                                            className={cn(
+                                                                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
+                                                                isActivePath(item.href) ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50'
+                                                            )}
+                                                        >
+                                                            <item.icon className="h-4 w-4" />
+                                                            {item.label}
+                                                        </Link>
+                                                    </SheetClose>
+                                                ))}
+                                        </div>
+                                    )}
+                                    {isNonUser && (
+                                        <div className="grid gap-2">
+                                            <SheetClose asChild>
+                                                <Link
+                                                    href={dashboardHref}
+                                                    className={cn(
+                                                        'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
+                                                        isActivePath(dashboardHref) ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50'
+                                                    )}
+                                                >
+                                                    <LayoutGrid className="h-4 w-4" />
+                                                    {dashboardLabel}
+                                                </Link>
+                                            </SheetClose>
+                                            <SheetClose asChild>
+                                                <Link
+                                                    href={logout()}
+                                                    as="button"
+                                                    onClick={handleLogout}
+                                                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                                                >
+                                                    <LogOut className="h-4 w-4" />
+                                                    Logout
+                                                </Link>
+                                            </SheetClose>
+                                        </div>
+                                    )}
+                                    {showCategories && hasCategories && (
+                                        <div className="grid gap-2">
+                                            <div className="text-xs font-semibold uppercase text-slate-400">Kategori</div>
+                                            {resolvedCategories.map((item) => {
+                                                const active = item.active ?? isActivePath(item.href);
+                                                return (
+                                                    <SheetClose asChild key={item.href}>
+                                                        <Link
+                                                            href={item.href}
+                                                            className={cn(
+                                                                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
+                                                                active ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
+                                                            )}
+                                                        >
+                                                            <item.icon className="h-4 w-4" />
+                                                            {item.label}
+                                                        </Link>
+                                                    </SheetClose>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            </SheetContent>
+                        </Sheet>
                     </div>
                 </div>
             </div>

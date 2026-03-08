@@ -496,7 +496,12 @@ export default function WisataShow({
                             <li>Tentang Kami</li>
                             <li>Karir</li>
                             <li>Blog</li>
-                            <li>Kebijakan Privasi</li>
+                            <li>
+                                <Link href="/faq" className="transition hover:text-sky-600">FAQ</Link>
+                            </li>
+                            <li>
+                                <Link href="/privacy-policy" className="transition hover:text-sky-600">Kebijakan Privasi</Link>
+                            </li>
                         </ul>
                     </div>
                     <FooterDownloadSocial />

@@ -48,6 +48,7 @@ class AcademyController extends Controller
                 'category' => $class->category,
                 'start_at' => $class->start_at?->toDateString(),
                 'location' => $class->location_detail,
+                'maps_url' => $this->buildMapsUrl($class->location_detail),
                 'min_price' => $minPrice ? (int) $minPrice : null,
                 'image_url' => $image ? Storage::url($image) : null,
             ];
@@ -106,6 +107,7 @@ class AcademyController extends Controller
                 'duration_minutes' => $class->duration_minutes,
                 'location_type' => $class->location_type,
                 'location_detail' => $class->location_detail,
+                'maps_url' => $this->buildMapsUrl($class->location_detail),
                 'capacity_total' => $class->capacity_total,
                 'capacity_sold' => $class->capacity_sold,
                 'images' => $class->images->map(fn ($image) => Storage::url($image->image_path)),
@@ -125,5 +127,26 @@ class AcademyController extends Controller
         } catch (\Throwable $exception) {
             abort(404);
         }
+    }
+
+    private function buildMapsUrl(?string $query): ?string
+    {
+        if (! $query) {
+            return null;
+        }
+
+        $coordinates = $this->extractCoordinates($query);
+        $value = $coordinates ? $coordinates[0].','.$coordinates[1] : $query;
+
+        return 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($value);
+    }
+
+    private function extractCoordinates(string $value): ?array
+    {
+        if (preg_match('/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/', $value, $matches)) {
+            return [$matches[1], $matches[2]];
+        }
+
+        return null;
     }
 }

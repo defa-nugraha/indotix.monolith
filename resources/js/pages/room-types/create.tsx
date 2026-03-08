@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type FormData = {
     hotel_id: string;
@@ -58,22 +59,13 @@ export default function CreateRoomType({
     const [basePriceDisplay, setBasePriceDisplay] = useState('');
     const [strikePriceDisplay, setStrikePriceDisplay] = useState('');
 
-    const formatRupiah = (value: string) => {
-        const digits = value.replace(/\D/g, '');
-        if (!digits) {
-            return '';
-        }
-        return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    };
-
     const handlePriceChange = (
         value: string,
         setter: (value: string) => void,
         field: 'base_price' | 'strike_price',
     ) => {
-        const digits = value.replace(/\D/g, '');
-        setter(formatRupiah(digits));
-        setData(field, digits);
+        setter(formatCurrencyInput(value));
+        setData(field, parseCurrencyToDigits(value));
     };
     const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files ? Array.from(event.target.files) : [];

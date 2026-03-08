@@ -44,6 +44,7 @@ class EventController extends Controller
                 'title' => $event->title,
                 'city_name' => $this->resolveCityName($event->city_code),
                 'location' => $event->location,
+                'maps_url' => $this->buildMapsUrl($event->location),
                 'start_at' => $event->start_at?->toDateString(),
                 'min_price' => $minPrice ? (int) $minPrice : null,
                 'image_url' => null,
@@ -92,6 +93,7 @@ class EventController extends Controller
                 'city_name' => $this->resolveCityName($event->city_code),
                 'location' => $event->location,
                 'address' => $event->address,
+                'maps_url' => $this->buildMapsUrl($event->address ?? $event->location),
                 'start_at' => $event->start_at?->toDateTimeString(),
                 'end_at' => $event->end_at?->toDateTimeString(),
                 'capacity_total' => $event->capacity_total,
@@ -121,5 +123,26 @@ class EventController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function buildMapsUrl(?string $query): ?string
+    {
+        if (! $query) {
+            return null;
+        }
+
+        $coordinates = $this->extractCoordinates($query);
+        $value = $coordinates ? $coordinates[0].','.$coordinates[1] : $query;
+
+        return 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($value);
+    }
+
+    private function extractCoordinates(string $value): ?array
+    {
+        if (preg_match('/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/', $value, $matches)) {
+            return [$matches[1], $matches[2]];
+        }
+
+        return null;
     }
 }

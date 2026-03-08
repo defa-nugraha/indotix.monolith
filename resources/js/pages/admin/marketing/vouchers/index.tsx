@@ -5,6 +5,7 @@ import AppLayout from '@/layouts/app-layout';
 import Swal from 'sweetalert2';
 import type { BreadcrumbItem } from '@/types';
 import { useState } from 'react';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Promo & Voucher', href: '/admin/marketing/vouchers' },
@@ -58,14 +59,6 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
         is_active: true,
     });
     const [minTransactionDisplay, setMinTransactionDisplay] = useState('');
-
-    const formatCurrencyInput = (value: string) => {
-        const digits = value.replace(/\D/g, '');
-        if (!digits) return '';
-        return Number(digits).toLocaleString('id-ID');
-    };
-
-    const parseCurrencyInput = (value: string) => value.replace(/\D/g, '');
 
     const startEdit = (voucher: Voucher) => {
         setEditingId(voucher.id);
@@ -222,7 +215,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                                 inputMode="numeric"
                                 value={minTransactionDisplay}
                                 onChange={(event) => {
-                                    const raw = parseCurrencyInput(event.target.value);
+                                    const raw = parseCurrencyToDigits(event.target.value);
                                     setForm((prev) => ({ ...prev, min_transaction: raw }));
                                     setMinTransactionDisplay(formatCurrencyInput(raw));
                                 }}

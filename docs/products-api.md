@@ -65,7 +65,7 @@ Response 200:
 Catatan:
 - Field `reviews` bersifat public.
 - `user_review` dan `can_review` hanya tersedia jika request menggunakan token login (Sanctum).
-- `maps_url` menggunakan format `https://maps.google.com/?q=latitude,longitude`.
+- `maps_url` menggunakan format `https://www.google.com/maps/search/?api=1&query=latitude,longitude`.
 
 ### 1.2 Detail Hotel
 
@@ -96,7 +96,7 @@ Response 200:
     "check_out_time": "12:00",
     "latitude": -6.2,
     "longitude": 106.8,
-    "maps_url": "https://maps.google.com/?q=-6.2,106.8",
+    "maps_url": "https://www.google.com/maps/search/?api=1&query=-6.2,106.8",
     "facilities": ["wifi", "pool"],
     "images": [{ "id": 1, "url": "/storage/hotel-images/xx.jpg" }]
   },
@@ -217,8 +217,8 @@ Response 200:
     "photo_gate_url": "/storage/mitra-wisata/gate.jpg",
     "photo_area_url": "/storage/mitra-wisata/area.jpg",
     "photo_ticket_url": "/storage/mitra-wisata/ticket.jpg",
-    "maps_pin_url": "https://maps.google.com/?q=-8.216,114.365",
-    "maps_url": "https://maps.google.com/?q=-8.216,114.365"
+    "maps_pin_url": "https://www.google.com/maps/search/?api=1&query=-8.216,114.365",
+    "maps_url": "https://www.google.com/maps/search/?api=1&query=-8.216,114.365"
   },
   "tickets": [
     {
@@ -275,6 +275,7 @@ Response 200:
       "title": "Indotix Music Festival 2026",
       "city_name": "Jakarta Barat",
       "location": "ICE BSD",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=ICE%20BSD",
       "start_at": "2026-02-18",
       "min_price": 250000,
       "image_url": null
@@ -301,6 +302,7 @@ Response 200:
     "city_name": "Jakarta Barat",
     "location": "ICE BSD",
     "address": "Jl. BSD",
+    "maps_url": "https://www.google.com/maps/search/?api=1&query=Jl.%20BSD",
     "start_at": "2026-02-18 18:00:00",
     "end_at": "2026-02-18 22:00:00",
     "capacity_total": 1000,
@@ -342,6 +344,7 @@ Response 200:
       "category": "Soft Skill",
       "start_at": "2026-02-20",
       "location": "Jakarta",
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=Jakarta",
       "min_price": 150000,
       "image_url": "/storage/academy/classes/1/img.jpg"
     }
@@ -370,6 +373,7 @@ Response 200:
     "duration_minutes": 180,
     "location_type": "offline",
     "location_detail": "Jakarta",
+    "maps_url": "https://www.google.com/maps/search/?api=1&query=Jakarta",
     "capacity_total": 60,
     "capacity_sold": 20,
     "images": ["/storage/academy/classes/1/img.jpg"]
@@ -491,7 +495,8 @@ Response 200:
           "city_name": "Jakarta Selatan",
           "description": "Deskripsi",
           "image_url": "/storage/hotel-images/xx.jpg",
-          "price": 350000
+          "price": 350000,
+          "maps_url": "https://www.google.com/maps/search/?api=1&query=-6.2,106.8"
         }
       ]
     }
@@ -532,7 +537,8 @@ Response 200:
       "city_name": "Banyuwangi",
       "description": "Deskripsi wisata",
       "image_url": "/storage/mitra-wisata/area.jpg",
-      "price": 25000
+      "price": 25000,
+      "maps_url": "https://www.google.com/maps/search/?api=1&query=-8.216,114.365"
     }
   ]
 }
