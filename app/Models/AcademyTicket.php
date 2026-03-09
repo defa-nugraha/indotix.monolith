@@ -6,6 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property int $academy_class_id
+ * @property string|null $name
+ * @property int $price
+ * @property int|null $quota
+ * @property int $sold_count
+ * @property string|null $ticket_type
+ * @property bool $refundable
+ * @property \Carbon\Carbon|null $sales_start_at
+ * @property \Carbon\Carbon|null $sales_end_at
+ * @property bool $is_active
+ */
 class AcademyTicket extends Model
 {
     protected $fillable = [

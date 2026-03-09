@@ -5,6 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $mitra_wisata_onboarding_id
+ * @property string|null $name
+ * @property string|null $description
+ * @property int $price
+ * @property int|null $quota
+ * @property int|null $daily_quota
+ * @property string|null $ticket_type
+ * @property string|null $refund_policy
+ * @property bool $is_active
+ * @property bool $is_closed
+ */
 class WisataTicket extends Model
 {
     use HasFactory;

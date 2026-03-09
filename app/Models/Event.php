@@ -7,6 +7,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property string|null $title
+ * @property string|null $city_code
+ * @property string|null $location
+ * @property string|null $address
+ * @property \Carbon\Carbon|null $start_at
+ * @property \Carbon\Carbon|null $end_at
+ * @property int|null $capacity_total
+ * @property int|null $capacity_sold
+ */
 class Event extends Model
 {
     protected $fillable = [

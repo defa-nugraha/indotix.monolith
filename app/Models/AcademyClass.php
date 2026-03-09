@@ -6,6 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property string|null $title
+ * @property string|null $category
+ * @property string|null $location_detail
+ * @property \Carbon\Carbon|null $start_at
+ * @property \Carbon\Carbon|null $end_at
+ * @property int|null $duration_minutes
+ * @property string|null $location_type
+ * @property int|null $capacity_total
+ * @property int|null $capacity_sold
+ * @property bool $is_active
+ */
 class AcademyClass extends Model
 {
     protected $fillable = [

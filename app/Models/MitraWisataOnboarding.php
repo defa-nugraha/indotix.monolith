@@ -6,6 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property string|null $slug
+ * @property string|null $destination_name
+ * @property string|null $destination_type
+ * @property string|null $city_code
+ * @property string|null $photo_area_path
+ * @property string|null $maps_pin_url
+ */
 class MitraWisataOnboarding extends Model
 {
     use HasFactory;

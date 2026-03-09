@@ -204,6 +204,8 @@ class WisataController extends Controller
         } catch (\Throwable $exception) {
             abort(404);
         }
+
+        return 0;
     }
 
     private function resolveCityName(?string $cityCode): ?string
