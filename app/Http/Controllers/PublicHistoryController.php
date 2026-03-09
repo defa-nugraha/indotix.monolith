@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Booking;
 use App\Models\EventBooking;
-use App\Models\SpecialProgramBooking;
 use App\Models\WisataBooking;
 use App\Models\SouvenirOrder;
 use App\Models\AcademyBooking;
@@ -145,25 +144,28 @@ class PublicHistoryController extends Controller
                 ];
             });
 
-        $specialProgramBookings = SpecialProgramBooking::query()
+        $specialProgramBookings = EventBooking::query()
             ->where('user_id', $request->user()->id)
-            ->with('program')
+            ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+            ->with(['event', 'ticket'])
             ->latest()
             ->get()
-            ->map(function (SpecialProgramBooking $booking) use ($userId) {
+            ->map(function (EventBooking $booking) use ($userId) {
+                $event = $booking->event;
+
                 return [
                     'id' => $booking->id,
                     'encrypted_id' => Crypt::encryptString((string) $booking->id),
                     'type' => 'special_program',
-                    'title' => $booking->item_name ?? 'Special Program',
-                    'city_name' => $booking->city_name,
-                    'address' => null,
+                    'title' => $event?->title ?? 'Special Program',
+                    'city_name' => $event?->location,
+                    'address' => $event?->address,
                     'check_in' => null,
                     'check_out' => null,
                     'nights' => null,
                     'rooms_count' => null,
                     'guests_count' => null,
-                    'visit_date' => $booking->visit_date?->toDateString(),
+                    'visit_date' => $event?->start_at?->toDateString(),
                     'quantity' => $booking->quantity,
                     'total' => $booking->total_price,
                     'status' => $booking->status,
@@ -176,13 +178,13 @@ class PublicHistoryController extends Controller
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'payment_url' => route('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                    'review_url' => $booking->special_program_id
-                        ? '/special-programs/'.$booking->program?->slug
+                    'review_url' => $booking->event_id
+                        ? '/special-programs/'.$event?->slug
                         : null,
-                    'can_review' => $booking->special_program_id
-                        ? ProductReviewService::hasUsedBooking($userId, 'special_program', (int) $booking->special_program_id)
+                    'can_review' => $booking->event_id
+                        ? ProductReviewService::hasUsedBooking($userId, 'special_program', (int) $booking->event_id)
                         : false,
-                    'ticket_name' => $booking->ticket_name,
+                    'ticket_name' => $booking->ticket?->name,
                 ];
             });
 
