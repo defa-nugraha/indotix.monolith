@@ -219,6 +219,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.academy.classes.show');
     Route::put('admin/academy/classes/{class}', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'update'])
         ->name('admin.academy.classes.update');
+    Route::delete('admin/academy/classes/{class}', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'destroy'])
+        ->name('admin.academy.classes.destroy');
     Route::delete('admin/academy/classes/{class}/images/{image}', [\App\Http\Controllers\Admin\Academy\ClassController::class, 'destroyImage'])
         ->name('admin.academy.classes.images.destroy');
 

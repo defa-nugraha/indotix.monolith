@@ -136,4 +136,30 @@ class ClassController extends Controller
 
         return back()->with('status', 'image-deleted');
     }
+
+    public function destroy(Request $request, AcademyClass $class): RedirectResponse
+    {
+        $bookingCount = $class->bookings()->count();
+        if ($bookingCount > 0) {
+            return back()->withErrors([
+                'class' => "Kelas tidak bisa dihapus karena sudah memiliki {$bookingCount} booking.",
+            ]);
+        }
+
+        $class->load('images');
+        foreach ($class->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+
+        $class->delete();
+
+        AcademyAuditLog::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'academy_class_deleted',
+            'subject_type' => AcademyClass::class,
+            'subject_id' => $class->id,
+        ]);
+
+        return back()->with('status', 'class-deleted');
+    }
 }

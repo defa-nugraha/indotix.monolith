@@ -1,7 +1,11 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Swal from 'sweetalert2';
 
 type Ticket = { id: number; name: string; price: number; is_active: boolean };
 type ClassImage = { id: number; image_path: string };
@@ -28,6 +32,19 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Detail', href: '#' },
 ];
 
+const toDate = (value?: string | null) => {
+    if (!value) return null;
+    const normalized = value.includes('T') ? value : value.replace(' ', 'T');
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const formatDateTime = (value?: string | null) => {
+    const date = toDate(value);
+    if (!date) return value ?? '-';
+    return format(date, 'd MMM yyyy HH:mm', { locale: localeId });
+};
+
 export default function AcademyClassShow({ class: academyClass }: { class: AcademyClass }) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -40,7 +57,47 @@ export default function AcademyClassShow({ class: academyClass }: { class: Acade
                             <p className="text-sm text-slate-500">{academyClass.category ?? '-'}</p>
                             <p className="mt-2 text-sm text-slate-600">{academyClass.description ?? '-'}</p>
                         </div>
-                        <Badge className="bg-slate-100 text-slate-700">{academyClass.status}</Badge>
+                        <div className="flex flex-col items-end gap-2">
+                            <Badge className="bg-slate-100 text-slate-700">{academyClass.status}</Badge>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                onClick={() => {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'Hapus kelas?',
+                                        text: 'Kelas akan dihapus permanen.',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Hapus',
+                                        cancelButtonText: 'Batal',
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            router.delete(`/admin/academy/classes/${academyClass.id}`, {
+                                                onSuccess: () => {
+                                                    Swal.fire({
+                                                        icon: 'success',
+                                                        title: 'Terhapus',
+                                                        text: 'Kelas dihapus.',
+                                                    }).then(() => {
+                                                        router.get('/admin/academy/classes');
+                                                    });
+                                                },
+                                                onError: (errors) => {
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'Gagal',
+                                                        text: errors.class ?? 'Kelas gagal dihapus.',
+                                                    });
+                                                },
+                                            });
+                                        }
+                                    });
+                                }}
+                            >
+                                Hapus
+                            </Button>
+                        </div>
                     </div>
                     {academyClass.images && academyClass.images.length > 0 && (
                         <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -54,8 +111,8 @@ export default function AcademyClassShow({ class: academyClass }: { class: Acade
                     <div className="mt-4 grid gap-4 md:grid-cols-3">
                         <div className="rounded-2xl border border-slate-100 p-4">
                             <p className="text-xs uppercase text-slate-500">Jadwal</p>
-                            <p className="mt-2 text-sm text-slate-900">{academyClass.start_at}</p>
-                            <p className="text-sm text-slate-900">{academyClass.end_at}</p>
+                            <p className="mt-2 text-sm text-slate-900">{formatDateTime(academyClass.start_at)}</p>
+                            <p className="text-sm text-slate-900">{formatDateTime(academyClass.end_at)}</p>
                         </div>
                         <div className="rounded-2xl border border-slate-100 p-4">
                             <p className="text-xs uppercase text-slate-500">Durasi</p>

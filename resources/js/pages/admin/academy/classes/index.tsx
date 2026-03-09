@@ -1,4 +1,6 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { format } from 'date-fns';
+import { id as localeId } from 'date-fns/locale';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -23,9 +25,13 @@ type ClassImage = {
 type AcademyClass = {
     id: number;
     title: string;
+    description?: string | null;
     category?: string | null;
     start_at: string;
     end_at: string;
+    duration_minutes?: number | null;
+    location_type?: string | null;
+    location_detail?: string | null;
     capacity_total: number;
     capacity_sold: number;
     status: string;
@@ -58,6 +64,36 @@ const emptyForm = {
     images: [] as File[],
 };
 
+const toDate = (value?: string | null) => {
+    if (!value) return null;
+    const normalized = value.includes('T') ? value : value.replace(' ', 'T');
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const toDatetimeLocal = (value?: string | null) => {
+    const date = toDate(value);
+    if (!date) return '';
+    return format(date, "yyyy-MM-dd'T'HH:mm");
+};
+
+const formatSchedule = (start?: string | null, end?: string | null) => {
+    const startDate = toDate(start);
+    const endDate = toDate(end);
+    if (!startDate || !endDate) return start ?? '-';
+
+    const sameDay =
+        startDate.getFullYear() === endDate.getFullYear() &&
+        startDate.getMonth() === endDate.getMonth() &&
+        startDate.getDate() === endDate.getDate();
+
+    if (sameDay) {
+        return `${format(startDate, 'd MMM yyyy', { locale: localeId })}, ${format(startDate, 'HH:mm', { locale: localeId })} - ${format(endDate, 'HH:mm', { locale: localeId })}`;
+    }
+
+    return `${format(startDate, 'd MMM yyyy HH:mm', { locale: localeId })} - ${format(endDate, 'd MMM yyyy HH:mm', { locale: localeId })}`;
+};
+
 export default function AcademyClassesIndex({ classes, filters }: Props) {
     const [editing, setEditing] = useState<AcademyClass | null>(null);
     const form = useForm({ ...emptyForm });
@@ -78,9 +114,13 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
         form.setData({
             ...emptyForm,
             title: item.title,
+            description: item.description ?? '',
             category: item.category ?? '',
-            start_at: item.start_at?.replace(' ', 'T') ?? '',
-            end_at: item.end_at?.replace(' ', 'T') ?? '',
+            start_at: toDatetimeLocal(item.start_at),
+            end_at: toDatetimeLocal(item.end_at),
+            duration_minutes: item.duration_minutes ?? 0,
+            location_type: item.location_type ?? 'offline',
+            location_detail: item.location_detail ?? '',
             capacity_total: item.capacity_total,
             status: item.status,
             is_active: item.is_active,
@@ -171,7 +211,7 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                                         <tr key={item.id} className="border-t border-slate-100">
                                             <td className="px-4 py-3 font-medium text-slate-900">{item.title}</td>
                                             <td className="px-4 py-3 text-slate-600">
-                                                {item.start_at} → {item.end_at}
+                                                {formatSchedule(item.start_at, item.end_at)}
                                             </td>
                                             <td className="px-4 py-3 text-slate-600">
                                                 {item.capacity_sold}/{item.capacity_total}
@@ -186,6 +226,42 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                                                     </Button>
                                                     <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
                                                         Edit
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                                        onClick={() => {
+                                                            Swal.fire({
+                                                                icon: 'warning',
+                                                                title: 'Hapus kelas?',
+                                                                text: 'Kelas akan dihapus permanen.',
+                                                                showCancelButton: true,
+                                                                confirmButtonText: 'Hapus',
+                                                                cancelButtonText: 'Batal',
+                                                            }).then((result) => {
+                                                            if (result.isConfirmed) {
+                                                                router.delete(`/admin/academy/classes/${item.id}`, {
+                                                                    onSuccess: () => {
+                                                                        Swal.fire({
+                                                                            icon: 'success',
+                                                                            title: 'Terhapus',
+                                                                            text: 'Kelas dihapus.',
+                                                                        });
+                                                                    },
+                                                                    onError: (errors) => {
+                                                                        Swal.fire({
+                                                                            icon: 'error',
+                                                                            title: 'Gagal',
+                                                                            text: errors.class ?? 'Kelas gagal dihapus.',
+                                                                        });
+                                                                    },
+                                                                });
+                                                            }
+                                                        });
+                                                    }}
+                                                    >
+                                                        Hapus
                                                     </Button>
                                                 </div>
                                             </td>
@@ -204,102 +280,135 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                     </div>
                 </section>
                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+                    <DialogContent className="max-h-[92vh] max-w-4xl overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>{editing ? 'Edit Kelas' : 'Buat Kelas'}</DialogTitle>
                             <DialogDescription>Lengkapi data kelas sebelum disimpan.</DialogDescription>
                         </DialogHeader>
                         <form
-                            className="grid gap-3"
+                            className="grid gap-3 md:grid-cols-2"
                             onSubmit={(event) => {
                                 event.preventDefault();
                                 submit();
                             }}
                         >
-                            <input
-                                value={form.data.title}
-                                onChange={(event) => form.setData('title', event.target.value)}
-                                placeholder="Nama kelas"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <InputError message={form.errors.title} />
-                            <input
-                                value={form.data.category}
-                                onChange={(event) => form.setData('category', event.target.value)}
-                                placeholder="Kategori"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <textarea
-                                value={form.data.description}
-                                onChange={(event) => form.setData('description', event.target.value)}
-                                placeholder="Deskripsi"
-                                rows={3}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <input
-                                type="datetime-local"
-                                value={form.data.start_at}
-                                onChange={(event) => form.setData('start_at', event.target.value)}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <input
-                                type="datetime-local"
-                                value={form.data.end_at}
-                                onChange={(event) => form.setData('end_at', event.target.value)}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <input
-                                type="number"
-                                min={0}
-                                value={form.data.duration_minutes}
-                                onChange={(event) => form.setData('duration_minutes', Number(event.target.value))}
-                                placeholder="Durasi (menit)"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <select
-                                value={form.data.location_type}
-                                onChange={(event) => form.setData('location_type', event.target.value)}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="offline">Offline</option>
-                                <option value="online">Online</option>
-                                <option value="hybrid">Hybrid</option>
-                            </select>
-                            <input
-                                value={form.data.location_detail}
-                                onChange={(event) => form.setData('location_detail', event.target.value)}
-                                placeholder="Alamat / Link"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <input
-                                type="number"
-                                min={0}
-                                value={form.data.capacity_total}
-                                onChange={(event) => form.setData('capacity_total', Number(event.target.value))}
-                                placeholder="Kapasitas"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <select
-                                value={form.data.status}
-                                onChange={(event) => form.setData('status', event.target.value)}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="draft">draft</option>
-                                <option value="scheduled">scheduled</option>
-                                <option value="open_for_sale">open_for_sale</option>
-                                <option value="closed">closed</option>
-                                <option value="completed">completed</option>
-                                <option value="cancelled">cancelled</option>
-                            </select>
-                            <select
-                                value={form.data.is_active ? '1' : '0'}
-                                onChange={(event) => form.setData('is_active', event.target.value === '1')}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="1">Aktif</option>
-                                <option value="0">Nonaktif</option>
-                            </select>
-                            <div className="rounded-lg border border-dashed border-slate-200 p-4">
+                            <div className="flex flex-col gap-1 md:col-span-2">
+                                <label className="text-xs font-medium text-slate-600">Nama kelas</label>
+                                <input
+                                    value={form.data.title}
+                                    onChange={(event) => form.setData('title', event.target.value)}
+                                    placeholder="Contoh: Kelas Public Speaking"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <InputError message={form.errors.title} />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-medium text-slate-600">Kategori kelas</label>
+                                <input
+                                    value={form.data.category}
+                                    onChange={(event) => form.setData('category', event.target.value)}
+                                    placeholder="Contoh: Komunikasi"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1 md:col-span-2">
+                                <label className="text-xs font-medium text-slate-600">Deskripsi kelas</label>
+                                <textarea
+                                    value={form.data.description}
+                                    onChange={(event) => form.setData('description', event.target.value)}
+                                    placeholder="Tuliskan ringkasan kelas"
+                                    rows={3}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-medium text-slate-600">Mulai</label>
+                                <input
+                                    type="datetime-local"
+                                    value={form.data.start_at}
+                                    onChange={(event) => form.setData('start_at', event.target.value)}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-medium text-slate-600">Selesai</label>
+                                <input
+                                    type="datetime-local"
+                                    value={form.data.end_at}
+                                    onChange={(event) => form.setData('end_at', event.target.value)}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-medium text-slate-600">Durasi (menit)</label>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={form.data.duration_minutes}
+                                    onChange={(event) => form.setData('duration_minutes', Number(event.target.value))}
+                                    placeholder="120"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-medium text-slate-600">Tipe lokasi</label>
+                                <select
+                                    value={form.data.location_type}
+                                    onChange={(event) => form.setData('location_type', event.target.value)}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="offline">Offline</option>
+                                    <option value="online">Online</option>
+                                    <option value="hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                            <div className="flex flex-col gap-1 md:col-span-2">
+                                <label className="text-xs font-medium text-slate-600">Alamat / Link</label>
+                                <input
+                                    value={form.data.location_detail}
+                                    onChange={(event) => form.setData('location_detail', event.target.value)}
+                                    placeholder="Alamat lengkap atau link meeting"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-medium text-slate-600">Kapasitas maksimum</label>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={form.data.capacity_total}
+                                    onChange={(event) => form.setData('capacity_total', Number(event.target.value))}
+                                    placeholder="50"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-medium text-slate-600">Status kelas</label>
+                                <select
+                                    value={form.data.status}
+                                    onChange={(event) => form.setData('status', event.target.value)}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="draft">draft</option>
+                                    <option value="scheduled">scheduled</option>
+                                    <option value="open_for_sale">open_for_sale</option>
+                                    <option value="closed">closed</option>
+                                    <option value="completed">completed</option>
+                                    <option value="cancelled">cancelled</option>
+                                </select>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                                <label className="text-xs font-medium text-slate-600">Status aktif</label>
+                                <select
+                                    value={form.data.is_active ? '1' : '0'}
+                                    onChange={(event) => form.setData('is_active', event.target.value === '1')}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="1">Aktif</option>
+                                    <option value="0">Nonaktif</option>
+                                </select>
+                            </div>
+                            <div className="rounded-lg border border-dashed border-slate-200 p-4 md:col-span-2">
                                 <div className="text-xs font-semibold uppercase text-slate-500">Gambar Kelas</div>
                                 <p className="mt-1 text-xs text-slate-500">Maksimal 5 gambar (JPG/PNG/WEBP).</p>
                                 <input
@@ -367,7 +476,7 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                                     </div>
                                 )}
                             </div>
-                            <DialogFooter className="gap-2">
+                            <DialogFooter className="gap-2 md:col-span-2">
                                 <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                                     Simpan
                                 </Button>
