@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/input-error';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import Swal from 'sweetalert2';
 
 type Organizer = {
     id: number;
@@ -181,9 +182,51 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Link href={`/admin/events/organizers/${item.id}`} className="text-sky-600 hover:underline">
-                                                Detail
-                                            </Link>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Link
+                                                    href={`/admin/events/organizers/${item.id}`}
+                                                    className="text-sky-600 hover:underline"
+                                                >
+                                                    Detail
+                                                </Link>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() => {
+                                                        Swal.fire({
+                                                            icon: 'warning',
+                                                            title: 'Hapus mitra event?',
+                                                            text: 'Mitra akan dihapus permanen jika tidak punya data terkait.',
+                                                            showCancelButton: true,
+                                                            confirmButtonText: 'Hapus',
+                                                            cancelButtonText: 'Batal',
+                                                        }).then((result) => {
+                                                            if (result.isConfirmed) {
+                                                                router.delete(`/admin/events/organizers/${item.id}`, {
+                                                                    onSuccess: () => {
+                                                                        Swal.fire({
+                                                                            icon: 'success',
+                                                                            title: 'Terhapus',
+                                                                            text: 'Mitra event dihapus.',
+                                                                        });
+                                                                    },
+                                                                    onError: (errors) => {
+                                                                        Swal.fire({
+                                                                            icon: 'error',
+                                                                            title: 'Gagal',
+                                                                            text:
+                                                                                errors.organizer ??
+                                                                                'Mitra event gagal dihapus.',
+                                                                        });
+                                                                    },
+                                                                });
+                                                            }
+                                                        });
+                                                    }}
+                                                >
+                                                    Hapus
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

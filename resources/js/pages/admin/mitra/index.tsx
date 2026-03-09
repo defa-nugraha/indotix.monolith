@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import InputError from '@/components/input-error';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import Swal from 'sweetalert2';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -323,15 +324,52 @@ export default function AdminMitraIndex({
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Button
-                                                asChild
-                                                variant="outline"
-                                                className="border-sky-200 text-slate-700 hover:bg-sky-50"
-                                            >
-                                                <Link href={`/admin/mitra/${row.id}`}>
-                                                    Detail
-                                                </Link>
-                                            </Button>
+                                            <div className="flex flex-wrap gap-2">
+                                                <Button
+                                                    asChild
+                                                    variant="outline"
+                                                    className="border-sky-200 text-slate-700 hover:bg-sky-50"
+                                                >
+                                                    <Link href={`/admin/mitra/${row.id}`}>
+                                                        Detail
+                                                    </Link>
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    onClick={() => {
+                                                        Swal.fire({
+                                                            icon: 'warning',
+                                                            title: 'Hapus mitra hotel?',
+                                                            text: 'Mitra akan dihapus permanen jika tidak punya data terkait.',
+                                                            showCancelButton: true,
+                                                            confirmButtonText: 'Hapus',
+                                                            cancelButtonText: 'Batal',
+                                                        }).then((result) => {
+                                                            if (result.isConfirmed) {
+                                                                router.delete(`/admin/mitra/${row.id}`, {
+                                                                    onSuccess: () => {
+                                                                        Swal.fire({
+                                                                            icon: 'success',
+                                                                            title: 'Terhapus',
+                                                                            text: 'Mitra hotel dihapus.',
+                                                                        });
+                                                                    },
+                                                                    onError: (errors) => {
+                                                                        Swal.fire({
+                                                                            icon: 'error',
+                                                                            title: 'Gagal',
+                                                                            text: errors.mitra ?? 'Mitra hotel gagal dihapus.',
+                                                                        });
+                                                                    },
+                                                                });
+                                                            }
+                                                        });
+                                                    }}
+                                                >
+                                                    Hapus
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

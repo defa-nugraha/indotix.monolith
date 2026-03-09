@@ -143,6 +143,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.events.organizers.store');
     Route::get('admin/events/organizers/{organizer}', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'show'])
         ->name('admin.events.organizers.show');
+    Route::delete('admin/events/organizers/{organizer}', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'destroy'])
+        ->name('admin.events.organizers.destroy');
     Route::post('admin/events/organizers/{organizer}/status', [\App\Http\Controllers\Admin\EventOrganizerController::class, 'updateStatus'])
         ->name('admin.events.organizers.status');
 
@@ -264,6 +266,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra.store');
     Route::get('admin/mitra/{user}', [\App\Http\Controllers\Admin\MitraController::class, 'show'])
         ->name('admin.mitra.show');
+    Route::delete('admin/mitra/{user}', [\App\Http\Controllers\Admin\MitraController::class, 'destroy'])
+        ->name('admin.mitra.destroy');
     Route::post('admin/mitra/{user}/verify', [\App\Http\Controllers\Admin\MitraController::class, 'verify'])
         ->name('admin.mitra.verify');
     Route::post('admin/mitra/{user}/payout', [\App\Http\Controllers\Admin\MitraController::class, 'payout'])
@@ -276,6 +280,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra-wisata.store');
     Route::get('admin/mitra-wisata/{user}', [\App\Http\Controllers\Admin\MitraWisataController::class, 'show'])
         ->name('admin.mitra-wisata.show');
+    Route::delete('admin/mitra-wisata/{user}', [\App\Http\Controllers\Admin\MitraWisataController::class, 'destroy'])
+        ->name('admin.mitra-wisata.destroy');
     Route::post('admin/mitra-wisata/{user}/verify', [\App\Http\Controllers\Admin\MitraWisataController::class, 'verify'])
         ->name('admin.mitra-wisata.verify');
     Route::post('admin/mitra-wisata/{user}/payout', [\App\Http\Controllers\Admin\MitraWisataController::class, 'payout'])

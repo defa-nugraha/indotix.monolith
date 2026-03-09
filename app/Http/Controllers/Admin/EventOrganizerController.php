@@ -4,8 +4,19 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\EventAuditLog;
+use App\Models\EventAttendee;
+use App\Models\EventBooking;
+use App\Models\EventCommission;
+use App\Models\EventDispute;
 use App\Models\EventOrganizer;
+use App\Models\EventPayment;
+use App\Models\EventRefund;
+use App\Models\EventScan;
+use App\Models\EventSettlement;
+use App\Models\EventTicket;
+use App\Models\Event;
 use App\Models\MitraEventOnboarding;
+use App\Models\MitraEventStaff;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -183,5 +194,54 @@ class EventOrganizerController extends Controller
         ]);
 
         return back();
+    }
+
+    public function destroy(Request $request, EventOrganizer $organizer): RedirectResponse
+    {
+        $eventIds = Event::query()->where('event_organizer_id', $organizer->id)->pluck('id');
+        $bookingIds = $eventIds->isNotEmpty()
+            ? EventBooking::query()->whereIn('event_id', $eventIds)->pluck('id')
+            : collect();
+
+        $onboarding = MitraEventOnboarding::query()->where('user_id', $organizer->user_id)->first();
+        $counts = [
+            'event' => $eventIds->count(),
+            'tiket' => EventTicket::query()->whereIn('event_id', $eventIds)->count(),
+            'booking' => $bookingIds->count(),
+            'pembayaran' => EventPayment::query()->whereIn('event_booking_id', $bookingIds)->count(),
+            'refund' => EventRefund::query()->whereIn('event_booking_id', $bookingIds)->count(),
+            'dispute' => EventDispute::query()->whereIn('event_booking_id', $bookingIds)->count(),
+            'scan' => EventScan::query()->whereIn('event_booking_id', $bookingIds)->count(),
+            'attendee' => EventAttendee::query()->whereIn('event_booking_id', $bookingIds)->count(),
+            'komisi' => EventCommission::query()->whereIn('event_id', $eventIds)->count(),
+            'settlement' => EventSettlement::query()->where('event_organizer_id', $organizer->id)->count(),
+            'staff' => $onboarding
+                ? MitraEventStaff::query()->where('mitra_event_onboarding_id', $onboarding->id)->count()
+                : 0,
+        ];
+
+        $blocked = array_filter($counts, fn ($count) => $count > 0);
+        if ($blocked) {
+            $details = collect($blocked)
+                ->map(fn ($count, $key) => "{$key} ({$count})")
+                ->implode(', ');
+
+            return back()->withErrors([
+                'organizer' => "Mitra event tidak dapat dihapus karena masih memiliki data: {$details}.",
+            ]);
+        }
+
+        if ($onboarding) {
+            MitraEventStaff::query()->where('mitra_event_onboarding_id', $onboarding->id)->delete();
+            $onboarding->delete();
+        }
+
+        $user = $organizer->user;
+        $organizer->delete();
+        if ($user) {
+            $user->delete();
+        }
+
+        return back()->with('status', 'mitra-event-deleted');
     }
 }
