@@ -32,6 +32,7 @@ class EventPublicBookingController extends Controller
 
         $event = Event::query()
             ->where('id', $data['event_id'])
+            ->where('event_type', 'event')
             ->where('status', 'published')
             ->firstOrFail();
 
@@ -74,7 +75,10 @@ class EventPublicBookingController extends Controller
             return redirect()->route('events.search')->withErrors(['booking' => 'Data pemesanan tidak ditemukan.']);
         }
 
-        $event = Event::query()->findOrFail($draft['event_id']);
+        $event = Event::query()
+            ->where('event_type', 'event')
+            ->where('id', $draft['event_id'])
+            ->firstOrFail();
         $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
 
         $total = (int) $ticket->price * (int) $draft['quantity'];
@@ -136,7 +140,10 @@ class EventPublicBookingController extends Controller
                     ]);
                 }
 
-                $event = Event::query()->findOrFail($draft['event_id']);
+                $event = Event::query()
+                    ->where('event_type', 'event')
+                    ->where('id', $draft['event_id'])
+                    ->firstOrFail();
                 $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
                 $total = (int) $ticket->price * (int) $draft['quantity'];
                 $snap = $this->createSnapPayment($existingBooking, $midtransService);
@@ -235,7 +242,10 @@ class EventPublicBookingController extends Controller
             ]);
         }
 
-        $event = Event::query()->findOrFail($draft['event_id']);
+        $event = Event::query()
+            ->where('event_type', 'event')
+            ->where('id', $draft['event_id'])
+            ->firstOrFail();
         $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
         $total = (int) $ticket->price * (int) $draft['quantity'];
         $snap = $this->createSnapPayment($booking, $midtransService);
@@ -279,6 +289,7 @@ class EventPublicBookingController extends Controller
             ]);
         }
         $booking->load(['event', 'ticket', 'payments']);
+        abort_unless($booking->event?->event_type === 'event', 404);
 
         return Inertia::render('public/events/booking/payment', [
             'booking' => $this->buildPaymentPayload($booking),
@@ -307,6 +318,9 @@ class EventPublicBookingController extends Controller
                 ->withErrors(['payment' => 'Booking sudah kedaluwarsa.']);
         }
 
+        $booking->loadMissing('event');
+        abort_unless($booking->event?->event_type === 'event', 404);
+
         if ($booking->status !== 'pending_payment') {
             return redirect()->route('events.booking.payment', ['booking' => $this->encryptId($booking->id)]);
         }
@@ -327,6 +341,7 @@ class EventPublicBookingController extends Controller
             return redirect()->route('home');
         }
         $booking->load(['event', 'ticket', 'payments']);
+        abort_unless($booking->event?->event_type === 'event', 404);
 
         $reviewUrl = $booking->event_id
             ? '/events/'.$booking->event?->slug
@@ -351,6 +366,7 @@ class EventPublicBookingController extends Controller
         }
 
         $booking->load('ticket', 'event');
+        abort_unless($booking->event?->event_type === 'event', 404);
 
         $filename = sprintf('tiket-event-%s.pdf', $booking->id);
         $cacheAllowed = in_array($booking->status, ['paid', 'completed'], true);

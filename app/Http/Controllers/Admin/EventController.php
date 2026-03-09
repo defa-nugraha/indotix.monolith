@@ -15,7 +15,10 @@ class EventController extends Controller
     public function index(Request $request): Response
     {
         $status = $request->string('status')->toString();
-        $query = Event::query()->with('organizer')->latest();
+        $query = Event::query()
+            ->where('event_type', 'event')
+            ->with('organizer')
+            ->latest();
         if ($status) {
             $query->where('status', $status);
         }
@@ -30,6 +33,7 @@ class EventController extends Controller
 
     public function show(Event $event): Response
     {
+        abort_unless($event->event_type === 'event', 404);
         $event->load('organizer', 'tickets');
 
         return Inertia::render('admin/events/show', [

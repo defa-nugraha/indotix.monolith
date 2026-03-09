@@ -23,6 +23,7 @@ class EventController extends Controller
         ])->validate();
 
         $events = Event::query()
+            ->where('event_type', 'event')
             ->where('status', 'published')
             ->when($data['q'] ?? null, fn ($query, $term) => $query->where('title', 'like', "%{$term}%"))
             ->orderByDesc('start_at')
@@ -64,6 +65,7 @@ class EventController extends Controller
         $eventId = $this->resolveId($event);
 
         $event = Event::query()
+            ->where('event_type', 'event')
             ->where('status', 'published')
             ->where('id', $eventId)
             ->firstOrFail();

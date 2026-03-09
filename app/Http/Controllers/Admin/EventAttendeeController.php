@@ -14,14 +14,21 @@ class EventAttendeeController extends Controller
     public function index(Request $request): Response
     {
         $eventId = $request->integer('event_id');
-        $query = EventAttendee::query()->with(['booking.event', 'booking.ticket'])->latest();
+        $query = EventAttendee::query()
+            ->with(['booking.event', 'booking.ticket'])
+            ->whereHas('booking.event', fn ($q) => $q->where('event_type', 'event'))
+            ->latest();
         if ($eventId) {
-            $query->whereHas('booking', fn ($q) => $q->where('event_id', $eventId));
+            $query->whereHas('booking.event', fn ($q) => $q->where('event_type', 'event')->where('id', $eventId));
         }
 
         return Inertia::render('admin/events/attendees/index', [
             'attendees' => $query->paginate(20)->withQueryString(),
-            'events' => Event::query()->select('id', 'title')->orderBy('title')->get(),
+            'events' => Event::query()
+                ->where('event_type', 'event')
+                ->select('id', 'title')
+                ->orderBy('title')
+                ->get(),
             'filters' => [
                 'event_id' => $eventId ?: null,
             ],

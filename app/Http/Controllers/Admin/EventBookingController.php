@@ -17,7 +17,10 @@ class EventBookingController extends Controller
         $eventId = $request->integer('event_id');
         $date = $request->string('date')->toString();
 
-        $query = EventBooking::query()->with(['event', 'ticket', 'user'])->latest();
+        $query = EventBooking::query()
+            ->with(['event', 'ticket', 'user'])
+            ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
+            ->latest();
         if ($status) {
             $query->where('status', $status);
         }
@@ -30,7 +33,11 @@ class EventBookingController extends Controller
 
         return Inertia::render('admin/events/bookings/index', [
             'bookings' => $query->paginate(20)->withQueryString(),
-            'events' => Event::query()->select('id', 'title')->orderBy('title')->get(),
+            'events' => Event::query()
+                ->where('event_type', 'event')
+                ->select('id', 'title')
+                ->orderBy('title')
+                ->get(),
             'filters' => [
                 'status' => $status,
                 'event_id' => $eventId ?: null,
@@ -42,6 +49,7 @@ class EventBookingController extends Controller
     public function show(EventBooking $booking): Response
     {
         $booking->load(['event', 'ticket', 'user', 'attendees', 'scans']);
+        abort_unless($booking->event?->event_type === 'event', 404);
 
         return Inertia::render('admin/events/bookings/show', [
             'booking' => $booking,

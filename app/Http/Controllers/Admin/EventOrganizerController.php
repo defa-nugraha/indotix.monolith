@@ -85,7 +85,10 @@ class EventOrganizerController extends Controller
             }
         }
 
-        $query = EventOrganizer::query()->with(['user', 'onboarding'])->latest();
+        $query = EventOrganizer::query()
+            ->with(['user', 'onboarding'])
+            ->whereNotNull('user_id')
+            ->latest();
         if ($status) {
             $query->where('status', $status);
         }
@@ -198,7 +201,10 @@ class EventOrganizerController extends Controller
 
     public function destroy(Request $request, EventOrganizer $organizer): RedirectResponse
     {
-        $eventIds = Event::query()->where('event_organizer_id', $organizer->id)->pluck('id');
+        $eventIds = Event::query()
+            ->where('event_organizer_id', $organizer->id)
+            ->where('event_type', 'event')
+            ->pluck('id');
         $bookingIds = $eventIds->isNotEmpty()
             ? EventBooking::query()->whereIn('event_id', $eventIds)->pluck('id')
             : collect();

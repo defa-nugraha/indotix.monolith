@@ -17,8 +17,16 @@ class EventFinanceController extends Controller
     public function commissions(): Response
     {
         return Inertia::render('admin/events/finance/commissions', [
-            'commissions' => EventCommission::query()->with('event')->latest()->get(),
-            'events' => Event::query()->select('id', 'title')->orderBy('title')->get(),
+            'commissions' => EventCommission::query()
+                ->with('event')
+                ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
+                ->latest()
+                ->get(),
+            'events' => Event::query()
+                ->where('event_type', 'event')
+                ->select('id', 'title')
+                ->orderBy('title')
+                ->get(),
         ]);
     }
 

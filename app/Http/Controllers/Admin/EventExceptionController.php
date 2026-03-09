@@ -21,6 +21,7 @@ class EventExceptionController extends Controller
 
     public function updateEvent(Request $request, Event $event): RedirectResponse
     {
+        abort_unless($event->event_type === 'event', 404);
         $data = $request->validate([
             'status' => ['required', 'in:postponed,cancelled'],
             'reason' => ['required', 'string'],
@@ -44,6 +45,7 @@ class EventExceptionController extends Controller
 
     public function refund(Request $request, EventBooking $booking): RedirectResponse
     {
+        abort_unless($booking->event?->event_type === 'event', 404);
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0'],
             'reason' => ['required', 'string'],

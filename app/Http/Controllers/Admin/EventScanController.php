@@ -14,14 +14,21 @@ class EventScanController extends Controller
     public function index(Request $request): Response
     {
         $eventId = $request->integer('event_id');
-        $query = EventScan::query()->with(['booking.event', 'ticket'])->latest('scanned_at');
+        $query = EventScan::query()
+            ->with(['booking.event', 'ticket'])
+            ->whereHas('booking.event', fn ($q) => $q->where('event_type', 'event'))
+            ->latest('scanned_at');
         if ($eventId) {
-            $query->whereHas('booking', fn ($q) => $q->where('event_id', $eventId));
+            $query->whereHas('booking.event', fn ($q) => $q->where('event_type', 'event')->where('id', $eventId));
         }
 
         return Inertia::render('admin/events/scans/index', [
             'scans' => $query->paginate(30)->withQueryString(),
-            'events' => Event::query()->select('id', 'title')->orderBy('title')->get(),
+            'events' => Event::query()
+                ->where('event_type', 'event')
+                ->select('id', 'title')
+                ->orderBy('title')
+                ->get(),
             'filters' => [
                 'event_id' => $eventId ?: null,
             ],

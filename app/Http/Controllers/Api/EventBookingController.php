@@ -23,6 +23,7 @@ class EventBookingController extends Controller
     {
         $bookings = EventBooking::query()
             ->where('user_id', $request->user()->id)
+            ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
             ->with(['event', 'ticket', 'payments'])
             ->latest()
             ->get()
@@ -43,6 +44,7 @@ class EventBookingController extends Controller
 
         $event = Event::query()
             ->where('id', $data['event_id'])
+            ->where('event_type', 'event')
             ->where('status', 'published')
             ->firstOrFail();
 
@@ -83,6 +85,7 @@ class EventBookingController extends Controller
 
         $event = Event::query()
             ->where('id', $data['event_id'])
+            ->where('event_type', 'event')
             ->where('status', 'published')
             ->firstOrFail();
 
@@ -161,6 +164,9 @@ class EventBookingController extends Controller
         }
 
         $booking->load(['event', 'ticket', 'payments']);
+        if ($booking->event?->event_type !== 'event') {
+            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
+        }
 
         return response()->json([
             'booking' => $this->bookingPayload($booking),
@@ -172,6 +178,10 @@ class EventBookingController extends Controller
         $booking = $this->resolveBooking($booking);
 
         if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
+        }
+        $booking->loadMissing('event');
+        if ($booking->event?->event_type !== 'event') {
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
@@ -241,6 +251,10 @@ class EventBookingController extends Controller
         $booking = $this->resolveBooking($booking);
 
         if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
+        }
+        $booking->loadMissing('event');
+        if ($booking->event?->event_type !== 'event') {
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
