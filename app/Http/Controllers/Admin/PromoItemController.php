@@ -8,6 +8,7 @@ use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -28,7 +29,20 @@ class PromoItemController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('admin/public/promo-items/create');
+        $usedOrders = PromoItem::query()
+            ->pluck('sort_order')
+            ->map(fn ($value) => (int) $value)
+            ->filter(fn ($value) => $value >= 1 && $value <= 3)
+            ->unique()
+            ->values()
+            ->all();
+        $availableOrders = array_values(array_diff([1, 2, 3], $usedOrders));
+        $nextSortOrder = $availableOrders[0] ?? 1;
+
+        return Inertia::render('admin/public/promo-items/create', [
+            'nextSortOrder' => $nextSortOrder,
+            'orderFull' => empty($availableOrders),
+        ]);
     }
 
     public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
@@ -41,7 +55,22 @@ class PromoItemController extends Controller
             ]);
         }
 
-        $sortOrder = (int) $request->input('sort_order', 0);
+        $usedOrders = PromoItem::query()
+            ->pluck('sort_order')
+            ->map(fn ($value) => (int) $value)
+            ->filter(fn ($value) => $value >= 1 && $value <= 3)
+            ->unique()
+            ->values()
+            ->all();
+        $availableOrders = array_values(array_diff([1, 2, 3], $usedOrders));
+        if (empty($availableOrders)) {
+            throw ValidationException::withMessages([
+                'sort_order' => 'Semua urutan promo (1-3) sudah terpakai. Hapus promo atau ubah urutan terlebih dahulu.',
+            ]);
+        }
+        $sortOrder = $request->filled('sort_order')
+            ? (int) $request->input('sort_order')
+            : $availableOrders[0];
         $dimensionRule = $sortOrder >= 3 ? 'dimensions:width=1200,height=400' : 'dimensions:width=600,height=800';
         $dimensionMessage = $sortOrder >= 3
             ? 'Ukuran gambar promo urutan 3 harus 1200 x 400 px.'
@@ -50,11 +79,12 @@ class PromoItemController extends Controller
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'string', 'max:500'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:1', 'max:3', Rule::notIn($usedOrders)],
             'is_active' => ['nullable', 'boolean'],
             'image' => ['required', 'image', $dimensionRule],
         ], [
             'image.dimensions' => $dimensionMessage,
+            'sort_order.not_in' => 'Urutan promo sudah digunakan. Pilih urutan lain.',
         ]);
 
         $path = $mediaCompression->store($request->file('image'), 'promo-items', 'public');
@@ -62,7 +92,7 @@ class PromoItemController extends Controller
         PromoItem::create([
             'title' => $data['title'] ?? null,
             'link_url' => $data['link_url'] ?? null,
-            'sort_order' => $data['sort_order'] ?? 0,
+            'sort_order' => $data['sort_order'] ?? $sortOrder,
             'is_active' => (bool) ($data['is_active'] ?? true),
             'image_path' => $path,
         ]);
@@ -90,7 +120,15 @@ class PromoItemController extends Controller
             ]);
         }
 
-        $sortOrder = (int) $request->input('sort_order', $promoItem->sort_order ?? 0);
+        $usedOrders = PromoItem::query()
+            ->where('id', '!=', $promoItem->id)
+            ->pluck('sort_order')
+            ->map(fn ($value) => (int) $value)
+            ->filter(fn ($value) => $value >= 1 && $value <= 3)
+            ->unique()
+            ->values()
+            ->all();
+        $sortOrder = (int) $request->input('sort_order', $promoItem->sort_order ?? 1);
         $dimensionRule = $sortOrder >= 3 ? 'dimensions:width=1200,height=400' : 'dimensions:width=600,height=800';
         $dimensionMessage = $sortOrder >= 3
             ? 'Ukuran gambar promo urutan 3 harus 1200 x 400 px.'
@@ -99,11 +137,12 @@ class PromoItemController extends Controller
         $data = $request->validate([
             'title' => ['nullable', 'string', 'max:255'],
             'link_url' => ['nullable', 'string', 'max:500'],
-            'sort_order' => ['nullable', 'integer', 'min:0'],
+            'sort_order' => ['nullable', 'integer', 'min:1', 'max:3', Rule::notIn($usedOrders)],
             'is_active' => ['nullable', 'boolean'],
             'image' => ['nullable', 'image', $dimensionRule],
         ], [
             'image.dimensions' => $dimensionMessage,
+            'sort_order.not_in' => 'Urutan promo sudah digunakan. Pilih urutan lain.',
         ]);
 
         if ($request->hasFile('image')) {
