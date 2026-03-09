@@ -13,8 +13,6 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\ProductReview;
 use App\Models\SouvenirOrder;
 use App\Models\SouvenirProduct;
-use App\Models\SpecialProgram;
-use App\Models\SpecialProgramBooking;
 use App\Models\User;
 use App\Models\WisataBooking;
 use Illuminate\Database\Eloquent\Model;
@@ -41,10 +39,10 @@ class ProductReviewService
         return match ($type) {
             'hotel' => Hotel::query()->find($id),
             'wisata' => MitraWisataOnboarding::query()->find($id),
-            'event' => Event::query()->find($id),
+            'event' => Event::query()->where('event_type', 'event')->find($id),
             'academy' => AcademyClass::query()->find($id),
             'souvenir' => SouvenirProduct::query()->find($id),
-            'special_program' => SpecialProgram::query()->find($id),
+            'special_program' => Event::query()->where('event_type', 'special_program')->find($id),
             default => null,
         };
     }
@@ -54,10 +52,10 @@ class ProductReviewService
         return match ($type) {
             'hotel' => Hotel::query()->whereKey($id)->value('name'),
             'wisata' => MitraWisataOnboarding::query()->whereKey($id)->value('destination_name'),
-            'event' => Event::query()->whereKey($id)->value('title'),
+            'event' => Event::query()->where('event_type', 'event')->whereKey($id)->value('title'),
             'academy' => AcademyClass::query()->whereKey($id)->value('title'),
             'souvenir' => SouvenirProduct::query()->whereKey($id)->value('name'),
-            'special_program' => SpecialProgram::query()->whereKey($id)->value('name'),
+            'special_program' => Event::query()->where('event_type', 'special_program')->whereKey($id)->value('title'),
             default => null,
         };
     }
@@ -72,10 +70,10 @@ class ProductReviewService
         return match ($type) {
             'hotel' => Hotel::query()->whereIn('id', $ids)->pluck('name', 'id')->all(),
             'wisata' => MitraWisataOnboarding::query()->whereIn('id', $ids)->pluck('destination_name', 'id')->all(),
-            'event' => Event::query()->whereIn('id', $ids)->pluck('title', 'id')->all(),
+            'event' => Event::query()->where('event_type', 'event')->whereIn('id', $ids)->pluck('title', 'id')->all(),
             'academy' => AcademyClass::query()->whereIn('id', $ids)->pluck('title', 'id')->all(),
             'souvenir' => SouvenirProduct::query()->whereIn('id', $ids)->pluck('name', 'id')->all(),
-            'special_program' => SpecialProgram::query()->whereIn('id', $ids)->pluck('name', 'id')->all(),
+            'special_program' => Event::query()->where('event_type', 'special_program')->whereIn('id', $ids)->pluck('title', 'id')->all(),
             default => [],
         };
     }
@@ -87,13 +85,14 @@ class ProductReviewService
             'wisata' => MitraWisataOnboarding::query()->whereKey($id)->value('user_id'),
             'event' => Event::query()
                 ->with('organizer')
+                ->where('event_type', 'event')
                 ->whereKey($id)
                 ->first()
                 ?->organizer
                 ?->user_id,
             'academy' => null,
             'souvenir' => SouvenirProduct::query()->whereKey($id)->value('created_by'),
-            'special_program' => SpecialProgram::query()->whereKey($id)->value('created_by'),
+            'special_program' => null,
             default => null,
         };
     }
@@ -105,7 +104,7 @@ class ProductReviewService
             'wisata' => MitraWisataOnboarding::query()->where('user_id', $user->id)->pluck('id'),
             'event' => self::eventIdsFor($user),
             'souvenir' => SouvenirProduct::query()->where('created_by', $user->id)->pluck('id'),
-            'special_program' => SpecialProgram::query()->where('created_by', $user->id)->pluck('id'),
+            'special_program' => collect(),
             'academy' => collect(),
             default => collect(),
         };
@@ -193,6 +192,7 @@ class ProductReviewService
             'event' => EventBooking::query()
                 ->where('user_id', $userId)
                 ->where('event_id', $productId)
+                ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
                 ->where(function ($query) {
                     $query
                         ->where('status', 'completed')
@@ -208,10 +208,15 @@ class ProductReviewService
                         ->orWhereHas('scans');
                 })
                 ->exists(),
-            'special_program' => SpecialProgramBooking::query()
+            'special_program' => EventBooking::query()
                 ->where('user_id', $userId)
-                ->where('special_program_id', $productId)
-                ->where('status', 'completed')
+                ->where('event_id', $productId)
+                ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+                ->where(function ($query) {
+                    $query
+                        ->where('status', 'completed')
+                        ->orWhereHas('scans');
+                })
                 ->exists(),
             'souvenir' => SouvenirOrder::query()
                 ->where('user_id', $userId)
@@ -239,6 +244,9 @@ class ProductReviewService
             return collect();
         }
 
-        return Event::query()->where('event_organizer_id', $organizerId)->pluck('id');
+        return Event::query()
+            ->where('event_type', 'event')
+            ->where('event_organizer_id', $organizerId)
+            ->pluck('id');
     }
 }

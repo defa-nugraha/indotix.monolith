@@ -15,9 +15,6 @@ use App\Models\PublicBanner;
 use App\Models\PublicContact;
 use App\Models\PublicPartner;
 use App\Models\SouvenirProduct;
-use App\Models\SpecialProgram;
-use App\Models\SpecialProgramItem;
-use App\Models\WisataTicket;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -93,6 +90,7 @@ class PublicHomeController extends Controller
                 ];
             });
         $eventCards = Event::query()
+            ->where('event_type', 'event')
             ->where('status', 'published')
             ->with(['tickets'])
             ->latest('start_at')
@@ -114,126 +112,33 @@ class PublicHomeController extends Controller
                 ];
             });
 
-        $specialPrograms = SpecialProgram::query()
-            ->where('is_active', true)
-            ->whereIn('status', ['active', 'scheduled'])
-            ->orderByDesc('priority')
-            ->get();
-
-        $specialProgramItems = SpecialProgramItem::query()
-            ->whereIn('special_program_id', $specialPrograms->pluck('id'))
-            ->where('is_active', true)
-            ->orderBy('sort_order')
+        $specialPrograms = Event::query()
+            ->where('event_type', 'special_program')
+            ->where('status', 'published')
+            ->latest('start_at')
             ->take(6)
             ->get();
 
-        $specialProgramItemsMapped = (function () use ($specialProgramItems) {
-            $items = collect($specialProgramItems);
-            $hotelIds = $items->where('item_type', 'hotel')->pluck('item_id');
-            $wisataIds = $items->where('item_type', 'wisata')->pluck('item_id');
-            $eventIds = $items->where('item_type', 'event')->pluck('item_id');
+        $specialTickets = EventTicket::query()
+            ->whereIn('event_id', $specialPrograms->pluck('id'))
+            ->select('event_id', DB::raw('MIN(price) as min_price'))
+            ->groupBy('event_id')
+            ->pluck('min_price', 'event_id');
 
-            $hotels = $hotelIds->isEmpty()
-                ? collect()
-                : Hotel::query()
-                    ->whereIn('id', $hotelIds)
-                    ->with('images', 'city', 'roomTypes')
-                    ->get()
-                    ->keyBy('id');
-
-            $destinations = $wisataIds->isEmpty()
-                ? collect()
-                : MitraWisataOnboarding::query()
-                    ->whereIn('id', $wisataIds)
-                    ->get()
-                    ->keyBy('id');
-
-            $events = $eventIds->isEmpty()
-                ? collect()
-                : Event::query()
-                    ->whereIn('id', $eventIds)
-                    ->get()
-                    ->keyBy('id');
-
-            $wisataMinPrices = $wisataIds->isEmpty()
-                ? collect()
-                : WisataTicket::query()
-                    ->whereIn('mitra_wisata_onboarding_id', $wisataIds)
-                    ->select('mitra_wisata_onboarding_id', DB::raw('MIN(price) as min_price'))
-                    ->groupBy('mitra_wisata_onboarding_id')
-                    ->pluck('min_price', 'mitra_wisata_onboarding_id');
-
-            $eventMinPrices = $eventIds->isEmpty()
-                ? collect()
-                : EventTicket::query()
-                    ->whereIn('event_id', $eventIds)
-                    ->select('event_id', DB::raw('MIN(price) as min_price'))
-                    ->groupBy('event_id')
-                    ->pluck('min_price', 'event_id');
-
-            $results = [];
-            foreach ($items as $item) {
-                if ($item->item_type === 'hotel') {
-                    $hotel = $hotels->get($item->item_id);
-                    if (! $hotel) {
-                        continue;
-                    }
-                    $minPrice = $hotel->roomTypes->min('base_price');
-                    $results[] = [
-                        'type' => 'hotel',
-                        'id' => $hotel->id,
-                        'encrypted_id' => Crypt::encryptString((string) $hotel->id),
-                        'slug' => $hotel->slug,
-                        'title' => $hotel->name,
-                        'city_name' => $hotel->city?->name,
-                        'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
-                        'price' => $minPrice ? (int) $minPrice : null,
-                    ];
-                    continue;
-                }
-
-                if ($item->item_type === 'wisata') {
-                    $destination = $destinations->get($item->item_id);
-                    if (! $destination) {
-                        continue;
-                    }
-                    $results[] = [
-                        'type' => 'wisata',
-                        'id' => $destination->id,
-                        'encrypted_id' => Crypt::encryptString((string) $destination->id),
-                        'slug' => $destination->slug,
-                        'title' => $destination->destination_name,
-                        'city_name' => DB::table('regencies')
-                            ->where('code', $destination->city_code)
-                            ->value('name'),
-                        'image_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
-                        'price' => $wisataMinPrices[$destination->id] ?? null,
-                    ];
-                    continue;
-                }
-
-                if ($item->item_type === 'event') {
-                    $event = $events->get($item->item_id);
-                    if (! $event) {
-                        continue;
-                    }
-                    $results[] = [
-                        'type' => 'event',
-                        'id' => $event->id,
-                        'encrypted_id' => Crypt::encryptString((string) $event->id),
-                        'slug' => $event->slug,
-                        'title' => $event->title,
-                        'city_name' => DB::table('regencies')
-                            ->where('code', $event->city_code)
-                            ->value('name'),
-                        'image_url' => null,
-                        'price' => $eventMinPrices[$event->id] ?? null,
-                    ];
-                }
-            }
-
-            return $results;
-        })();
+        $specialProgramItemsMapped = $specialPrograms->map(function (Event $program) use ($specialTickets) {
+            return [
+                'type' => 'special_program',
+                'id' => $program->id,
+                'encrypted_id' => Crypt::encryptString((string) $program->id),
+                'slug' => $program->slug,
+                'title' => $program->title,
+                'city_name' => DB::table('regencies')
+                    ->where('code', $program->city_code)
+                    ->value('name'),
+                'image_url' => null,
+                'price' => isset($specialTickets[$program->id]) ? (int) $specialTickets[$program->id] : null,
+            ];
+        });
 
         $souvenirCards = SouvenirProduct::query()
             ->where('status', 'active')

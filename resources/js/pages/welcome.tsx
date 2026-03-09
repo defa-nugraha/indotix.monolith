@@ -69,7 +69,7 @@ type AcademyCard = {
     image_url?: string | null;
 };
 type SpecialProgramItem = {
-    type: 'hotel' | 'wisata' | 'event';
+    type: 'special_program';
     id: number;
     encrypted_id?: string;
     slug?: string | null;
@@ -249,9 +249,9 @@ export default function Welcome({
         { id: 2, encrypted_id: undefined, title: 'Digital Marketing for Tourism', category: 'Marketing', start_at: '2026-04-02', min_price: 250000 },
     ];
     const specialProgramProducts = specialProgramItems.length > 0 ? specialProgramItems : [
-        { id: 0, encrypted_id: undefined, title: 'Promo Liburan Sekolah', city_name: 'Indonesia', price: 120000, type: 'wisata' },
-        { id: 1, encrypted_id: undefined, title: 'Flash Sale Event Musik', city_name: 'Jakarta', price: 180000, type: 'event' },
-        { id: 2, encrypted_id: undefined, title: 'Staycation Hemat', city_name: 'Bandung', price: 350000, type: 'hotel' },
+        { id: 0, encrypted_id: undefined, title: 'Promo Liburan Sekolah', city_name: 'Indonesia', price: 120000, type: 'special_program' },
+        { id: 1, encrypted_id: undefined, title: 'Flash Sale Festival', city_name: 'Jakarta', price: 180000, type: 'special_program' },
+        { id: 2, encrypted_id: undefined, title: 'Hemat Akhir Pekan', city_name: 'Bandung', price: 350000, type: 'special_program' },
     ];
     const souvenirProducts = souvenirCards.length > 0 ? souvenirCards : [
         { id: 0, encrypted_id: undefined, name: 'Gantungan Kunci Nusantara', price: 25000 },
@@ -512,12 +512,7 @@ export default function Welcome({
                     <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
                         {specialProgramProducts.map((item) => {
                             const detailSlug = item.slug ?? item.encrypted_id;
-                            const link =
-                                item.type === 'hotel'
-                                    ? `/stay/hotels/${detailSlug}?check_in=${defaultCheckIn}&check_out=${defaultCheckOut}&rooms=1&guests=2`
-                                    : item.type === 'event'
-                                      ? `/events/${detailSlug}`
-                                      : `/wisata/${detailSlug}`;
+                            const link = `/special-programs/${detailSlug}`;
                             return (
                                 <div key={`${item.type}-${item.id}`} className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm">
                                     <div className="h-40 overflow-hidden bg-gradient-to-br from-sky-600 to-blue-400">

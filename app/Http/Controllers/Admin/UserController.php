@@ -10,7 +10,6 @@ use App\Models\EmailOtp;
 use App\Models\EventBooking;
 use App\Models\ProductReview;
 use App\Models\SouvenirOrder;
-use App\Models\SpecialProgramBooking;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserDeviceToken;
@@ -141,17 +140,18 @@ class UserController extends Controller
                 'created_at' => optional($booking->created_at)->toDateTimeString(),
             ]);
 
-        $specialProgramBookings = SpecialProgramBooking::query()
-            ->with('program:id,name')
+        $specialProgramBookings = EventBooking::query()
+            ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+            ->with('event:id,title')
             ->where('user_id', $user->id)
             ->latest()
             ->take(10)
             ->get()
-            ->map(fn (SpecialProgramBooking $booking) => [
+            ->map(fn (EventBooking $booking) => [
                 'id' => $booking->id,
                 'type' => 'special_program',
-                'title' => $booking->item_name ?? $booking->program?->name ?? 'Special Program',
-                'code' => $booking->midtrans_order_id ?? $booking->id,
+                'title' => $booking->event?->title ?? 'Special Program',
+                'code' => $booking->booking_code ?? $booking->id,
                 'total' => $booking->total_price,
                 'status' => $booking->status,
                 'payment_status' => $booking->payment_status,
@@ -236,7 +236,10 @@ class UserController extends Controller
             'wisata' => WisataBooking::query()->where('user_id', $user->id)->count(),
             'event' => EventBooking::query()->where('user_id', $user->id)->count(),
             'academy' => AcademyBooking::query()->where('user_id', $user->id)->count(),
-            'special_program' => SpecialProgramBooking::query()->where('user_id', $user->id)->count(),
+            'special_program' => EventBooking::query()
+                ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+                ->where('user_id', $user->id)
+                ->count(),
             'retail_shop' => SouvenirOrder::query()->where('user_id', $user->id)->count(),
         ];
 

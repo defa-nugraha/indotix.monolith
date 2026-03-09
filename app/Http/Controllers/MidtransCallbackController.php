@@ -9,8 +9,6 @@ use App\Models\EventBooking;
 use App\Models\EventPayment;
 use App\Models\AcademyBooking;
 use App\Models\AcademyPayment;
-use App\Models\SpecialProgramBooking;
-use App\Models\SpecialProgramPayment;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
 use App\Models\WisataAffiliateCommissionItem;
@@ -46,8 +44,6 @@ class MidtransCallbackController extends Controller
         $eventBooking = null;
         $academyPayment = null;
         $academyBooking = null;
-        $specialPayment = null;
-        $specialBooking = null;
         $souvenirOrder = null;
         if (! $booking) {
             $wisataPayment = WisataPayment::query()->where('order_id', $orderId)->latest()->first();
@@ -62,14 +58,10 @@ class MidtransCallbackController extends Controller
             $academyBooking = $academyPayment?->booking ?? AcademyBooking::query()->where('midtrans_order_id', $orderId)->first();
         }
         if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking) {
-            $specialPayment = SpecialProgramPayment::query()->where('order_id', $orderId)->latest()->first();
-            $specialBooking = $specialPayment?->booking ?? SpecialProgramBooking::query()->where('midtrans_order_id', $orderId)->first();
-        }
-        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking && ! $specialBooking) {
             $souvenirOrder = SouvenirOrder::query()->where('midtrans_order_id', $orderId)->first();
         }
 
-        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking && ! $specialBooking && ! $souvenirOrder) {
+        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking && ! $souvenirOrder) {
             return response('Booking not found', 404);
         }
 
@@ -212,6 +204,7 @@ class MidtransCallbackController extends Controller
         }
 
         if ($eventBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $eventBooking->loadMissing('event', 'ticket');
             $wasPaid = $eventBooking->status === 'paid';
             $eventBooking->update([
                 'status' => 'paid',
@@ -223,27 +216,36 @@ class MidtransCallbackController extends Controller
             }
 
             $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id);
+            $isSpecial = $eventBooking->event?->event_type === 'special_program';
+            $notificationType = $isSpecial ? 'special_program_payment_paid' : 'event_payment_paid';
+            $notificationTitle = $isSpecial
+                ? 'Pembayaran special program berhasil'
+                : 'Pembayaran event berhasil';
+            $notificationMessage = $isSpecial
+                ? 'Pembayaran kamu sudah diterima. Pesanan special program aktif.'
+                : 'Pembayaran kamu sudah diterima. Tiket event aktif.';
+            $category = $isSpecial ? 'special_program' : 'event';
             UserNotification::create([
                 'user_id' => $eventBooking->user_id,
-                'title' => 'Pembayaran event berhasil',
-                'message' => 'Pembayaran kamu sudah diterima. Tiket event aktif.',
-                'type' => 'event_payment_paid',
+                'title' => $notificationTitle,
+                'message' => $notificationMessage,
+                'type' => $notificationType,
                 'data' => [
                     'booking_id' => $encryptedId,
-                    'type' => 'event',
-                    'category' => 'event',
+                    'type' => $category,
+                    'category' => $category,
                 ],
             ]);
 
             $this->sendPaymentPush(
                 $eventBooking->user_id,
-                'Pembayaran event berhasil',
-                'Pembayaran kamu sudah diterima. Tiket event aktif.',
+                $notificationTitle,
+                $notificationMessage,
                 [
                     'booking_id' => $encryptedId,
-                    'type' => 'event',
-                    'category' => 'event',
-                    'notification_type' => 'event_payment_paid',
+                    'type' => $category,
+                    'category' => $category,
+                    'notification_type' => $notificationType,
                 ]
             );
         }
@@ -281,37 +283,6 @@ class MidtransCallbackController extends Controller
                     'type' => 'academy',
                     'category' => 'academy',
                     'notification_type' => 'academy_payment_paid',
-                ]
-            );
-        }
-
-        if ($specialBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
-            $specialBooking->update([
-                'status' => 'paid',
-                'payment_status' => $status,
-            ]);
-
-            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id);
-            UserNotification::create([
-                'user_id' => $specialBooking->user_id,
-                'title' => 'Pembayaran special program berhasil',
-                'message' => 'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
-                'type' => 'special_program_payment_paid',
-                'data' => [
-                    'booking_id' => $encryptedId,
-                    'category' => 'special_program',
-                ],
-            ]);
-
-            $this->sendPaymentPush(
-                $specialBooking->user_id,
-                'Pembayaran special program berhasil',
-                'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
-                [
-                    'booking_id' => $encryptedId,
-                    'type' => 'special_program',
-                    'category' => 'special_program',
-                    'notification_type' => 'special_program_payment_paid',
                 ]
             );
         }
@@ -451,36 +422,25 @@ class MidtransCallbackController extends Controller
                     'payment_status' => $status,
                 ]);
             }
-
+            $eventBooking->loadMissing('event');
+            $isSpecial = $eventBooking->event?->event_type === 'special_program';
+            $notificationType = $isSpecial ? 'special_program_booking_expired' : 'event_booking_expired';
+            $notificationTitle = $isSpecial
+                ? 'Pembayaran special program gagal'
+                : 'Pembayaran event gagal';
+            $notificationMessage = $isSpecial
+                ? 'Pembayaran special program tidak berhasil atau kedaluwarsa.'
+                : 'Pembayaran event tidak berhasil atau kedaluwarsa.';
+            $category = $isSpecial ? 'special_program' : 'event';
             UserNotification::create([
                 'user_id' => $eventBooking->user_id,
-                'title' => 'Pembayaran event gagal',
-                'message' => 'Pembayaran event tidak berhasil atau kedaluwarsa.',
-                'type' => 'event_booking_expired',
+                'title' => $notificationTitle,
+                'message' => $notificationMessage,
+                'type' => $notificationType,
                 'data' => [
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id),
-                    'type' => 'event',
-                    'category' => 'event',
-                ],
-            ]);
-        }
-
-        if ($specialBooking && in_array($status, ['cancel', 'expire', 'deny'], true)) {
-            if ($specialBooking->status === 'pending_payment') {
-                $specialBooking->update([
-                    'status' => 'expired',
-                    'payment_status' => $status,
-                ]);
-            }
-
-            UserNotification::create([
-                'user_id' => $specialBooking->user_id,
-                'title' => 'Pembayaran special program gagal',
-                'message' => 'Pembayaran special program tidak berhasil atau kedaluwarsa.',
-                'type' => 'special_program_booking_expired',
-                'data' => [
-                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id),
-                    'category' => 'special_program',
+                    'type' => $category,
+                    'category' => $category,
                 ],
             ]);
         }

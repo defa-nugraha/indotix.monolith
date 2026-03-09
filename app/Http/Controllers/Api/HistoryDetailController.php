@@ -8,7 +8,6 @@ use App\Models\Booking;
 use App\Models\BookingRoom;
 use App\Models\EventBooking;
 use App\Models\SouvenirOrder;
-use App\Models\SpecialProgramBooking;
 use App\Models\WisataBooking;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -253,11 +252,14 @@ class HistoryDetailController extends Controller
     private function specialProgramDetail(int $userId, string $booking): JsonResponse
     {
         $bookingId = $this->resolveId($booking);
-        $booking = SpecialProgramBooking::query()
-            ->with(['program', 'payments'])
+        $booking = EventBooking::query()
+            ->with(['event', 'ticket', 'payments'])
             ->findOrFail($bookingId);
 
         if ((int) $booking->user_id !== $userId) {
+            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
+        }
+        if ($booking->event?->event_type !== 'special_program') {
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
@@ -268,29 +270,32 @@ class HistoryDetailController extends Controller
             'booking' => [
                 'id' => $booking->id,
                 'encrypted_id' => Crypt::encryptString((string) $booking->id),
-                'program' => [
-                    'id' => $booking->special_program_id,
-                    'name' => $booking->program?->name,
-                ],
-                'item' => [
-                    'type' => $booking->item_type,
-                    'name' => $booking->item_name,
-                    'city_name' => $booking->city_name,
-                ],
+                'booking_code' => $booking->booking_code,
                 'quantity' => $booking->quantity,
-                'unit_price' => $booking->unit_price,
                 'total' => $booking->total_price,
                 'status' => $booking->status,
                 'payment_status' => $booking->payment_status,
                 'payment_deadline' => $booking->payment_deadline?->toIso8601String(),
-                'ticket_name' => $booking->ticket_name,
+                'ticket' => [
+                    'id' => $booking->ticket?->id,
+                    'name' => $booking->ticket?->name,
+                ],
+                'program' => [
+                    'id' => $booking->event?->id,
+                    'title' => $booking->event?->title,
+                    'location' => $booking->event?->location,
+                    'start_at' => $booking->event?->start_at?->toDateTimeString(),
+                ],
                 'guest' => [
                     'name' => $booking->guest_name,
                     'email' => $booking->guest_email,
                     'phone' => $booking->guest_phone,
                 ],
+                'qr_data' => $this->buildQrData('SPECIAL_PROGRAM', (string) $booking->booking_code),
+                'qr_url' => $this->buildQrUrl('SPECIAL_PROGRAM', (string) $booking->booking_code),
                 'payment' => $payment ? [
                     'status' => $payment->status,
+                    'payment_type' => $payment->payment_type,
                     'payload' => $payment->payload,
                 ] : null,
             ],

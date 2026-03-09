@@ -7,19 +7,27 @@ import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Draft = {
     program_id: number;
-    item_type: string;
-    item_id: number;
-    ticket_id?: number | null;
-    visit_date?: string | null;
+    ticket_id: number;
     quantity: number;
 };
 
 type Props = {
     draft: Draft;
-    program: { id: number; name: string; program_type: string };
-    item: { title: string; city_name?: string | null };
-    ticket: { name: string; price: number };
-    pricing: { total: number };
+    program: {
+        id: number;
+        title: string;
+        city_name?: string | null;
+        location?: string | null;
+        start_at?: string | null;
+    };
+    ticket: {
+        id: number;
+        name: string;
+        price: number;
+    };
+    pricing: {
+        total: number;
+    };
     snapClientKey: string;
     snapScriptUrl: string;
     snapToken?: string | null;
@@ -27,14 +35,15 @@ type Props = {
 
 declare global {
     interface Window {
-        snap?: { pay: (token: string, options?: Record<string, unknown>) => void };
+        snap?: {
+            pay: (token: string, options?: Record<string, unknown>) => void;
+        };
     }
 }
 
 export default function SpecialProgramBookingReview({
     draft,
     program,
-    item,
     ticket,
     pricing,
     snapClientKey,
@@ -48,10 +57,12 @@ export default function SpecialProgramBookingReview({
         guest_name: '',
         guest_email: '',
         guest_phone: '',
+        special_request: '',
     });
     const [loading, setLoading] = useState(false);
     const [snapToken, setSnapToken] = useState<string | null>(initialSnapToken ?? null);
     const snapOpened = useRef(false);
+    const pricePerTicket = Number(ticket.price) || 0;
 
     useEffect(() => {
         if (auth?.user?.name && !form.data.guest_name) {
@@ -74,45 +85,36 @@ export default function SpecialProgramBookingReview({
     }, [initialSnapToken]);
 
     useEffect(() => {
-        if (!snapScriptUrl || !snapClientKey || !snapToken) return;
-        const launch = () => {
-            if (!snapOpened.current && window.snap) {
+        if (!snapScriptUrl || !snapClientKey) return;
+        if (document.querySelector('script[data-midtrans-snap]')) return;
+        const script = document.createElement('script');
+        script.src = snapScriptUrl;
+        script.setAttribute('data-client-key', snapClientKey);
+        script.setAttribute('data-midtrans-snap', 'true');
+        script.async = true;
+        script.onload = () => {
+            if (snapToken && !snapOpened.current && window.snap) {
                 snapOpened.current = true;
                 window.snap.pay(snapToken);
             }
         };
-
-        if (window.snap) {
-            launch();
-            return;
-        }
-
-        let script = document.querySelector('script[data-midtrans-snap]') as HTMLScriptElement | null;
-        if (!script) {
-            script = document.createElement('script');
-            script.src = snapScriptUrl;
-            script.setAttribute('data-client-key', snapClientKey);
-            script.setAttribute('data-midtrans-snap', 'true');
-            script.async = true;
-            script.onerror = () => {
-                Swal.fire({ icon: 'error', title: 'Gagal memuat pembayaran', text: 'Silakan coba lagi.' });
-            };
-            document.body.appendChild(script);
-        }
-
-        const timer = window.setInterval(() => {
-            if (window.snap) {
-                window.clearInterval(timer);
-                launch();
-            }
-        }, 500);
-
-        return () => window.clearInterval(timer);
+        document.body.appendChild(script);
     }, [snapClientKey, snapScriptUrl, snapToken]);
+
+    useEffect(() => {
+        if (!snapToken || snapOpened.current || !window.snap) return;
+        snapOpened.current = true;
+        window.snap.pay(snapToken);
+    }, [snapToken]);
 
     return (
         <PublicLayout>
-            <Head title="Review Booking Special Program" />
+            <Head title="Review Booking Special Program">
+                <link
+                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
+                    rel="stylesheet"
+                />
+            </Head>
                         <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8">
                 <section className="flex flex-col gap-6 lg:flex-row">
                     <div className="flex-1 rounded-3xl bg-white p-6 shadow-sm">
@@ -126,11 +128,11 @@ export default function SpecialProgramBookingReview({
                         <div className="mt-4 grid gap-2 text-sm text-slate-600">
                             <div className="flex items-center gap-2">
                                 <Ticket className="h-4 w-4 text-sky-500" />
-                                {program.name} · {item.title}
+                                {program.title} · {program.city_name ?? program.location}
                             </div>
                             <div className="flex items-center gap-2">
                                 <CalendarCheck className="h-4 w-4 text-sky-500" />
-                                {draft.visit_date ?? '-'} · {draft.quantity} tiket
+                                {program.start_at ?? '-'} · {draft.quantity} tiket
                             </div>
                         </div>
                         <form
@@ -143,17 +145,6 @@ export default function SpecialProgramBookingReview({
                                 setLoading(true);
                                 form.post('/special-programs/booking/confirm', {
                                     preserveScroll: true,
-                                    onSuccess: (page: any) => {
-                                        const token = page?.props?.snapToken as string | undefined;
-                                        if (token) {
-                                            setSnapToken(token);
-                                            if (window.snap) {
-                                                snapOpened.current = true;
-                                                window.snap.pay(token);
-                                            }
-                                        }
-                                        setLoading(false);
-                                    },
                                     onError: (errors) => {
                                         Swal.fire({
                                             icon: 'error',
@@ -227,12 +218,8 @@ export default function SpecialProgramBookingReview({
                         <h2 className="text-lg font-semibold text-slate-900">Ringkasan Pesanan</h2>
                         <div className="mt-4 space-y-3 text-sm text-slate-600">
                             <div className="flex items-center justify-between">
-                                <span>Program</span>
-                                <span className="font-semibold text-slate-900">{program.name}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span>Produk</span>
-                                <span className="font-semibold text-slate-900">{item.title}</span>
+                                <span>Tiket</span>
+                                <span className="font-semibold text-slate-900">{ticket.name}</span>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span>Jumlah tiket</span>
@@ -240,7 +227,7 @@ export default function SpecialProgramBookingReview({
                             </div>
                             <div className="flex items-center justify-between">
                                 <span>Harga per tiket</span>
-                                <span className="font-semibold text-slate-900">Rp {Number(ticket.price).toLocaleString('id-ID')}</span>
+                                <span className="font-semibold text-slate-900">Rp {pricePerTicket.toLocaleString('id-ID')}</span>
                             </div>
                             <div className="flex items-center justify-between border-t border-slate-200 pt-3">
                                 <span>Total</span>

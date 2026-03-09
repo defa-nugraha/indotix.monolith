@@ -110,12 +110,19 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/blog/tags');
     const isSpecialProgramSectionActive =
         isCurrentUrl('/admin/special-programs') ||
-        isCurrentUrl('/admin/special-programs/scope') ||
-        isCurrentUrl('/admin/special-programs/benefits') ||
-        isCurrentUrl('/admin/special-programs/visibility') ||
-        isCurrentUrl('/admin/special-programs/monitoring') ||
-        isCurrentUrl('/admin/special-programs/finance') ||
-        isCurrentUrl('/admin/special-programs/compliance');
+        isCurrentUrl('/admin/special-programs/create') ||
+        isCurrentUrl('/admin/special-programs/tickets') ||
+        isCurrentUrl('/admin/special-programs/bookings') ||
+        isCurrentUrl('/admin/special-programs/attendees') ||
+        isCurrentUrl('/admin/special-programs/scans') ||
+        isCurrentUrl('/admin/special-programs/content') ||
+        isCurrentUrl('/admin/special-programs/reviews') ||
+        isCurrentUrl('/admin/special-programs/exceptions') ||
+        isCurrentUrl('/admin/special-programs/finance/commissions') ||
+        isCurrentUrl('/admin/special-programs/finance/settlements') ||
+        isCurrentUrl('/admin/special-programs/finance/reports') ||
+        isCurrentUrl('/admin/special-programs/system/audit-logs') ||
+        isCurrentUrl('/admin/special-programs/system/settings');
     const isSouvenirSectionActive =
         isCurrentUrl('/admin/souvenir/products') ||
         isCurrentUrl('/admin/souvenir/categories') ||
@@ -193,12 +200,18 @@ export function AppSidebarAdmin() {
     ];
     const specialFlatItems = [
         { title: 'Manajemen Program', href: '/admin/special-programs', icon: Sparkles },
-        { title: 'Cakupan & Aturan', href: '/admin/special-programs/scope', icon: Sparkles },
-        { title: 'Diskon & Benefit', href: '/admin/special-programs/benefits', icon: Sparkles },
-        { title: 'Visibilitas', href: '/admin/special-programs/visibility', icon: Sparkles },
-        { title: 'Monitoring', href: '/admin/special-programs/monitoring', icon: Sparkles },
-        { title: 'Keuangan & Audit', href: '/admin/special-programs/finance', icon: Sparkles },
-        { title: 'Komunikasi & Kepatuhan', href: '/admin/special-programs/compliance', icon: Sparkles },
+        { title: 'Produk Tiket', href: '/admin/special-programs/tickets', icon: Sparkles },
+        { title: 'Booking', href: '/admin/special-programs/bookings', icon: Sparkles },
+        { title: 'Peserta', href: '/admin/special-programs/attendees', icon: Sparkles },
+        { title: 'Monitoring QR', href: '/admin/special-programs/scans', icon: Sparkles },
+        { title: 'Moderasi Konten', href: '/admin/special-programs/content', icon: Sparkles },
+        { title: 'Review & Rating', href: '/admin/special-programs/reviews', icon: Sparkles },
+        { title: 'Exception & Refund', href: '/admin/special-programs/exceptions', icon: Sparkles },
+        { title: 'Komisi Platform', href: '/admin/special-programs/finance/commissions', icon: Sparkles },
+        { title: 'Settlement', href: '/admin/special-programs/finance/settlements', icon: Sparkles },
+        { title: 'Laporan', href: '/admin/special-programs/finance/reports', icon: Sparkles },
+        { title: 'Audit Log', href: '/admin/special-programs/system/audit-logs', icon: Sparkles },
+        { title: 'Konfigurasi', href: '/admin/special-programs/system/settings', icon: Sparkles },
     ];
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -760,33 +773,63 @@ export function AppSidebarAdmin() {
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/scope')}>
-                                            <Link href="/admin/special-programs/scope">Cakupan & Aturan</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/tickets')}>
+                                            <Link href="/admin/special-programs/tickets">Produk Tiket</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/benefits')}>
-                                            <Link href="/admin/special-programs/benefits">Diskon & Benefit</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/bookings')}>
+                                            <Link href="/admin/special-programs/bookings">Booking</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/visibility')}>
-                                            <Link href="/admin/special-programs/visibility">Visibilitas</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/attendees')}>
+                                            <Link href="/admin/special-programs/attendees">Peserta</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/monitoring')}>
-                                            <Link href="/admin/special-programs/monitoring">Monitoring</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/scans')}>
+                                            <Link href="/admin/special-programs/scans">Monitoring QR</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/finance')}>
-                                            <Link href="/admin/special-programs/finance">Keuangan & Audit</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/content')}>
+                                            <Link href="/admin/special-programs/content">Moderasi Konten</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/compliance')}>
-                                            <Link href="/admin/special-programs/compliance">Komunikasi & Kepatuhan</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/reviews')}>
+                                            <Link href="/admin/special-programs/reviews">Review & Rating</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/exceptions')}>
+                                            <Link href="/admin/special-programs/exceptions">Exception & Refund</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/finance/commissions')}>
+                                            <Link href="/admin/special-programs/finance/commissions">Komisi Platform</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/finance/settlements')}>
+                                            <Link href="/admin/special-programs/finance/settlements">Settlement</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/finance/reports')}>
+                                            <Link href="/admin/special-programs/finance/reports">Laporan</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/system/audit-logs')}>
+                                            <Link href="/admin/special-programs/system/audit-logs">Audit Log</Link>
+                                        </SidebarMenuSubButton>
+                                    </SidebarMenuSubItem>
+                                    <SidebarMenuSubItem>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/special-programs/system/settings')}>
+                                            <Link href="/admin/special-programs/system/settings">Konfigurasi</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

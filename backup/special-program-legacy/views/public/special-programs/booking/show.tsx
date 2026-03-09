@@ -1,0 +1,139 @@
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import { CheckCircle, Clock, CreditCard, Loader2, ShoppingCart } from 'lucide-react';
+import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
+
+type Booking = {
+    encrypted_id: string;
+    quantity: number;
+    unit_price: number;
+    total: number;
+    status: string;
+    payment_status?: string | null;
+    payment_deadline?: string | null;
+    ticket_name?: string | null;
+    program: { name?: string | null };
+    item: { name: string; type: string; city_name?: string | null };
+    guest: { name: string; email: string; phone: string };
+    review?: { can_review?: boolean; url?: string | null } | null;
+};
+
+type Props = {
+    booking: Booking;
+};
+
+export default function SpecialProgramBookingShow({ booking }: Props) {
+    const { auth, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; souvenir_cart_count?: number };
+    const role = auth?.user?.role;
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    return (
+        <PublicLayout>
+            <Head title="Detail Booking Special Program" />
+                        <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+                <div className="grid gap-6 lg:grid-cols-[1.25fr_0.9fr]">
+                    <div className="space-y-6">
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <h1 className="text-2xl font-semibold text-slate-900">Detail Booking Special Program</h1>
+                            <p className="mt-2 text-sm text-slate-500">Cek informasi booking kamu.</p>
+                            <div className="mt-6 grid gap-4 text-sm text-slate-600">
+                                <div className="flex items-center justify-between">
+                                    <span>Program</span>
+                                    <span className="font-semibold text-slate-900">{booking.program?.name ?? '-'}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Produk</span>
+                                    <span className="font-semibold text-slate-900">{booking.item.name}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Jumlah</span>
+                                    <span className="font-semibold text-slate-900">{booking.quantity}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Harga</span>
+                                    <span className="font-semibold text-slate-900">Rp {Number(booking.unit_price).toLocaleString('id-ID')}</span>
+                                </div>
+                                <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+                                    <span>Total</span>
+                                    <span className="text-lg font-semibold text-sky-600">Rp {Number(booking.total).toLocaleString('id-ID')}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <h2 className="text-lg font-semibold text-slate-900">Data Tamu</h2>
+                            <div className="mt-4 grid gap-3 text-sm text-slate-600">
+                                <div>{booking.guest.name ?? '-'}</div>
+                                <div>{booking.guest.email ?? '-'}</div>
+                                <div>{booking.guest.phone ?? '-'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <aside className="space-y-6">
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <div className="flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700">
+                                <CheckCircle className="h-4 w-4" />
+                                Booking kamu tercatat aman di INDOTIX
+                            </div>
+                            <div className="mt-4 space-y-2 text-sm text-slate-600">
+                                <div className="flex items-center gap-2">
+                                    <CreditCard className="h-4 w-4 text-slate-400" />
+                                    Status pembayaran: {booking.payment_status ?? 'pending'}
+                                </div>
+                                {booking.payment_deadline && (
+                                    <div className="flex items-center gap-2">
+                                        <Clock className="h-4 w-4 text-slate-400" />
+                                        Batas bayar: {new Date(booking.payment_deadline).toLocaleString('id-ID')}
+                                    </div>
+                                )}
+                            </div>
+                            {booking.status === 'pending_payment' && (
+                                <Link
+                                    href={`/special-programs/booking/${booking.encrypted_id}/payment`}
+                                    className="mt-4 block rounded-lg bg-sky-600 px-4 py-2 text-center text-sm font-semibold text-white"
+                                    onClick={(event) => {
+                                        if (guardPurchaseByRole(role)) {
+                                            event.preventDefault();
+                                        }
+                                    }}
+                                >
+                                    Lanjutkan Pembayaran
+                                </Link>
+                            )}
+                            {(booking.status === 'paid' || booking.status === 'completed') && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (isDownloading) return;
+                                        setIsDownloading(true);
+                                        window.open(`/special-programs/booking/${booking.encrypted_id}/ticket`, '_blank');
+                                        window.setTimeout(() => setIsDownloading(false), 8000);
+                                    }}
+                                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
+                                >
+                                    {isDownloading ? (
+                                        <>
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Menyiapkan tiket...
+                                        </>
+                                    ) : (
+                                        'Download Tiket'
+                                    )}
+                                </button>
+                            )}
+                            {booking.review?.can_review && booking.review?.url && (
+                                <Link
+                                    href={booking.review.url}
+                                    className="mt-3 block rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
+                                >
+                                    Beri Ulasan
+                                </Link>
+                            )}
+                        </div>
+                    </aside>
+                </div>
+            </main>
+        </PublicLayout>
+    );
+}

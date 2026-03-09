@@ -3,13 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\EventBooking;
+use App\Models\EventPayment;
 use App\Models\EventTicket;
-use App\Models\Hotel;
-use App\Models\MitraWisataOnboarding;
-use App\Models\SpecialProgram;
-use App\Models\SpecialProgramBooking;
-use App\Models\SpecialProgramPayment;
-use App\Models\WisataTicket;
 use App\Models\UserNotification;
 use App\Services\MidtransService;
 use App\Services\ProductReviewService;
@@ -19,6 +15,8 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use RuntimeException;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class SpecialProgramBookingController extends Controller
 {
@@ -27,37 +25,33 @@ class SpecialProgramBookingController extends Controller
     public function prepare(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'program_id' => ['required', 'integer', 'exists:special_programs,id'],
-            'item_type' => ['required', 'string', 'in:wisata,event'],
-            'item_id' => ['required', 'integer'],
-            'ticket_id' => ['nullable', 'integer'],
-            'visit_date' => ['nullable', 'date'],
+            'program_id' => ['required', 'integer', 'exists:events,id'],
+            'ticket_id' => ['required', 'integer', 'exists:event_tickets,id'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
         ]);
 
-        if (empty($data['visit_date'])) {
-            return back()->withErrors(['visit_date' => 'Tanggal kunjungan wajib diisi.']);
+        $program = Event::query()
+            ->where('id', $data['program_id'])
+            ->where('event_type', 'special_program')
+            ->where('status', 'published')
+            ->firstOrFail();
+
+        $ticket = EventTicket::query()->where('id', $data['ticket_id'])->firstOrFail();
+        if ((int) $ticket->event_id !== (int) $program->id) {
+            return back()->withErrors(['ticket_id' => 'Tiket tidak sesuai program.']);
         }
 
-        $program = SpecialProgram::query()->where('id', $data['program_id'])->where('is_active', true)->firstOrFail();
-        $itemExists = \App\Models\SpecialProgramItem::query()
-            ->where('special_program_id', $program->id)
-            ->where('item_type', $data['item_type'])
-            ->where('item_id', $data['item_id'])
-            ->where('is_active', true)
-            ->exists();
-        if (! $itemExists) {
-            return back()->withErrors(['booking' => 'Produk tidak tersedia dalam program ini.']);
+        if (! $ticket->is_active) {
+            return back()->withErrors(['ticket_id' => 'Tiket belum tersedia.']);
         }
 
-        $ticketPayload = $this->resolveTicketPayload($data['item_type'], (int) $data['item_id'], $data['ticket_id'] ?? null);
+        if ($this->availableTickets($ticket) < (int) $data['quantity']) {
+            return back()->withErrors(['quantity' => 'Kuota tiket tidak mencukupi.']);
+        }
 
         $draft = [
             'program_id' => (int) $program->id,
-            'item_type' => $data['item_type'],
-            'item_id' => (int) $data['item_id'],
-            'ticket_id' => $ticketPayload['ticket_id'],
-            'visit_date' => $data['visit_date'],
+            'ticket_id' => (int) $ticket->id,
             'quantity' => (int) $data['quantity'],
         ];
 
@@ -81,22 +75,33 @@ class SpecialProgramBookingController extends Controller
             return redirect()->route('special-programs.search')->withErrors(['booking' => 'Data pemesanan tidak ditemukan.']);
         }
 
-        $program = SpecialProgram::query()->findOrFail($draft['program_id']);
-        $payload = $this->resolveTicketPayload($draft['item_type'], (int) $draft['item_id'], $draft['ticket_id'] ?? null);
+        $program = Event::query()
+            ->where('event_type', 'special_program')
+            ->where('id', $draft['program_id'])
+            ->firstOrFail();
+        $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
+        if ((int) $ticket->event_id !== (int) $program->id) {
+            return redirect()->route('special-programs.search')->withErrors(['booking' => 'Tiket tidak sesuai program.']);
+        }
+        if (! $ticket->is_active) {
+            return redirect()->route('special-programs.search')->withErrors(['booking' => 'Tiket belum tersedia.']);
+        }
 
-        $total = $payload['unit_price'] * (int) $draft['quantity'];
+        $total = (int) $ticket->price * (int) $draft['quantity'];
 
         return Inertia::render('public/special-programs/booking/review', [
             'draft' => $draft,
             'program' => [
                 'id' => $program->id,
-                'name' => $program->name,
-                'program_type' => $program->program_type,
+                'title' => $program->title,
+                'city_name' => $this->resolveCityName($program->city_code),
+                'location' => $program->location,
+                'start_at' => $program->start_at?->toDateTimeString(),
             ],
-            'item' => $payload['item'],
             'ticket' => [
-                'name' => $payload['ticket_name'],
-                'price' => $payload['unit_price'],
+                'id' => $ticket->id,
+                'name' => $ticket->name,
+                'price' => $ticket->price,
             ],
             'pricing' => [
                 'total' => $total,
@@ -105,11 +110,10 @@ class SpecialProgramBookingController extends Controller
             'snapScriptUrl' => config('services.midtrans.is_production')
                 ? 'https://app.midtrans.com/snap/snap.js'
                 : 'https://app.sandbox.midtrans.com/snap/snap.js',
-            'snapToken' => null,
         ]);
     }
 
-    public function confirm(Request $request, MidtransService $midtransService): Response|RedirectResponse
+    public function confirm(Request $request, MidtransService $midtransService)
     {
         $draft = $request->session()->get('special_program_booking_draft');
         if (! $draft) {
@@ -118,7 +122,8 @@ class SpecialProgramBookingController extends Controller
 
         $data = $request->validate([
             'guest_name' => ['required', 'string', 'max:255'],
-            'guest_email' => ['required', 'email'],
+            'guest_email' => ['required', 'email', 'max:255'],
+            'special_request' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $profilePhone = $request->user()?->phone;
@@ -127,48 +132,100 @@ class SpecialProgramBookingController extends Controller
         }
         $data['guest_phone'] = $profilePhone;
 
-        $program = SpecialProgram::query()->findOrFail($draft['program_id']);
-        $payload = $this->resolveTicketPayload($draft['item_type'], (int) $draft['item_id'], $draft['ticket_id'] ?? null);
+        $existingBookingId = $request->session()->get('special_program_booking_pending');
+        if ($existingBookingId) {
+            $existingBooking = EventBooking::query()->find($existingBookingId);
+            if ($existingBooking) {
+                $existingBooking->loadMissing('event');
+                if ($existingBooking->event?->event_type !== 'special_program') {
+                    $request->session()->forget('special_program_booking_pending');
+                } else {
+                if ($request->expectsJson()) {
+                    $snap = $this->createSnapPayment($existingBooking, $midtransService);
 
-        $total = $payload['unit_price'] * (int) $draft['quantity'];
+                    return response()->json([
+                        'booking_id' => $this->encryptId($existingBooking->id),
+                        'snap_token' => $snap['token'] ?? null,
+                        'redirect_url' => $snap['redirect_url'] ?? null,
+                    ]);
+                }
 
-        try {
-            [$booking, $snap] = DB::transaction(function () use ($request, $midtransService, $draft, $program, $payload, $data, $total) {
-                $booking = SpecialProgramBooking::create([
-                    'user_id' => $request->user()->id,
-                    'special_program_id' => $program->id,
-                    'item_type' => $draft['item_type'],
-                    'item_id' => $draft['item_id'],
-                    'item_name' => $payload['item']['title'],
-                    'city_name' => $payload['item']['city_name'] ?? null,
-                    'visit_date' => $draft['visit_date'],
-                    'ticket_name' => $payload['ticket_name'],
-                    'quantity' => $draft['quantity'],
-                    'unit_price' => $payload['unit_price'],
-                    'total_price' => $total,
-                    'status' => 'pending_payment',
-                    'payment_status' => 'pending',
-                    'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
-                    'guest_name' => $data['guest_name'],
-                    'guest_email' => $data['guest_email'],
-                    'guest_phone' => $data['guest_phone'],
+                $program = Event::query()
+                    ->where('event_type', 'special_program')
+                    ->where('id', $draft['program_id'])
+                    ->firstOrFail();
+                $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
+                $total = (int) $ticket->price * (int) $draft['quantity'];
+                $snap = $this->createSnapPayment($existingBooking, $midtransService);
+
+                return Inertia::render('public/special-programs/booking/review', [
+                    'draft' => $draft,
+                    'program' => [
+                        'id' => $program->id,
+                        'title' => $program->title,
+                        'city_name' => $this->resolveCityName($program->city_code),
+                        'location' => $program->location,
+                        'start_at' => $program->start_at?->toDateTimeString(),
+                    ],
+                    'ticket' => [
+                        'id' => $ticket->id,
+                        'name' => $ticket->name,
+                        'price' => $ticket->price,
+                    ],
+                    'pricing' => [
+                        'total' => $total,
+                    ],
+                    'snapToken' => $snap['token'] ?? null,
+                    'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+                    'snapScriptUrl' => config('services.midtrans.is_production')
+                        ? 'https://app.midtrans.com/snap/snap.js'
+                        : 'https://app.sandbox.midtrans.com/snap/snap.js',
                 ]);
-
-                $snap = $this->createSnapPayment($booking, $midtransService);
-
-                return [$booking, $snap];
-            });
-        } catch (\Throwable $exception) {
-            return back()->withErrors(['booking' => 'Gagal memproses pembayaran. Silakan coba lagi.']);
+                }
+            }
         }
+
+        $booking = DB::transaction(function () use ($draft, $data, $request) {
+            $program = Event::query()
+                ->where('event_type', 'special_program')
+                ->where('id', $draft['program_id'])
+                ->firstOrFail();
+            $ticket = EventTicket::query()->lockForUpdate()->findOrFail($draft['ticket_id']);
+            if ((int) $ticket->event_id !== (int) $program->id) {
+                throw new RuntimeException('Tiket tidak sesuai program.');
+            }
+            if (! $ticket->is_active) {
+                throw new RuntimeException('Tiket belum tersedia.');
+            }
+            $available = $this->availableTickets($ticket, true);
+            if ($available < (int) $draft['quantity']) {
+                throw new RuntimeException('Kuota tiket sudah habis.');
+            }
+
+            return EventBooking::create([
+                'user_id' => $request->user()->id,
+                'event_id' => $draft['program_id'],
+                'event_ticket_id' => $ticket->id,
+                'booking_code' => strtoupper('SPECIAL-'.$request->user()->id.'-'.now()->format('ymdHis')),
+                'quantity' => $draft['quantity'],
+                'total_price' => $ticket->price * $draft['quantity'],
+                'status' => 'pending_payment',
+                'payment_status' => 'pending',
+                'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
+                'guest_name' => $data['guest_name'],
+                'guest_email' => $data['guest_email'],
+                'guest_phone' => $data['guest_phone'],
+            ]);
+        });
 
         UserNotification::create([
             'user_id' => $request->user()->id,
             'title' => 'Pemesanan special program berhasil',
-            'message' => 'Pesanan kamu sudah dibuat. Silakan lanjutkan pembayaran.',
+            'message' => 'Pesanan special program sudah dibuat. Silakan lanjutkan pembayaran.',
             'type' => 'special_program_booking_created',
             'data' => [
-                'booking_id' => Crypt::encryptString((string) $booking->id),
+                'booking_id' => $this->encryptId($booking->id),
+                'type' => 'special_program',
                 'category' => 'special_program',
             ],
         ]);
@@ -179,96 +236,140 @@ class SpecialProgramBookingController extends Controller
             'message' => 'Ada pembayaran special program yang perlu diselesaikan.',
             'type' => 'special_program_payment_pending',
             'data' => [
-                'booking_id' => Crypt::encryptString((string) $booking->id),
+                'booking_id' => $this->encryptId($booking->id),
+                'type' => 'special_program',
                 'category' => 'special_program',
             ],
         ]);
 
         $request->session()->forget('special_program_booking_draft');
+        $request->session()->put('special_program_booking_pending', $booking->id);
+
+        if ($request->expectsJson()) {
+            try {
+                $snap = $this->createSnapPayment($booking, $midtransService);
+            } catch (\Throwable $exception) {
+                return response()->json([
+                    'message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.',
+                ], 422);
+            }
+
+            return response()->json([
+                'booking_id' => $this->encryptId($booking->id),
+                'snap_token' => $snap['token'] ?? null,
+                'redirect_url' => $snap['redirect_url'] ?? null,
+            ]);
+        }
+
+        $program = Event::query()
+            ->where('event_type', 'special_program')
+            ->where('id', $draft['program_id'])
+            ->firstOrFail();
+        $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
+        $total = (int) $ticket->price * (int) $draft['quantity'];
+        $snap = $this->createSnapPayment($booking, $midtransService);
 
         return Inertia::render('public/special-programs/booking/review', [
             'draft' => $draft,
             'program' => [
                 'id' => $program->id,
-                'name' => $program->name,
-                'program_type' => $program->program_type,
+                'title' => $program->title,
+                'city_name' => $this->resolveCityName($program->city_code),
+                'location' => $program->location,
+                'start_at' => $program->start_at?->toDateTimeString(),
             ],
-            'item' => $payload['item'],
             'ticket' => [
-                'name' => $payload['ticket_name'],
-                'price' => $payload['unit_price'],
+                'id' => $ticket->id,
+                'name' => $ticket->name,
+                'price' => $ticket->price,
             ],
             'pricing' => [
                 'total' => $total,
             ],
+            'snapToken' => $snap['token'] ?? null,
             'snapClientKey' => (string) config('services.midtrans.client_key', ''),
             'snapScriptUrl' => config('services.midtrans.is_production')
                 ? 'https://app.midtrans.com/snap/snap.js'
                 : 'https://app.sandbox.midtrans.com/snap/snap.js',
-            'snapToken' => $snap['token'] ?? null,
         ]);
     }
 
-    public function payment(Request $request, string $booking, MidtransService $midtransService): Response
+    public function payment(Request $request, string $booking): Response|RedirectResponse
     {
         $booking = $this->resolveBooking($booking);
         if ((int) $booking->user_id !== (int) $request->user()->id) {
-            abort(403);
+            return redirect()->route('home');
         }
 
-        if ($booking->payment_deadline && now()->greaterThan($booking->payment_deadline) && $booking->status === 'pending_payment') {
+        if ($booking->isExpired()) {
             $booking->update([
                 'status' => 'expired',
                 'payment_status' => 'expired',
             ]);
         }
-        $booking->load('payments');
-
-        if ($booking->status === 'pending_payment') {
-            $latestPayment = $booking->payments()->latest()->first();
-            if (! $latestPayment || empty($latestPayment->payload['token'])) {
-                try {
-                    $this->createSnapPayment($booking, $midtransService);
-                    $booking->load('payments');
-                } catch (\Throwable $exception) {
-                    return Inertia::render('public/special-programs/booking/payment', [
-                        'booking' => $this->buildPayload($booking),
-                        'snapClientKey' => (string) config('services.midtrans.client_key', ''),
-                        'snapScriptUrl' => config('services.midtrans.is_production')
-                            ? 'https://app.midtrans.com/snap/snap.js'
-                            : 'https://app.sandbox.midtrans.com/snap/snap.js',
-                        'snapError' => 'Gagal menyiapkan pembayaran. Silakan coba lagi.',
-                    ]);
-                }
-            }
-        }
+        $booking->load(['event', 'ticket', 'payments']);
+        abort_unless($booking->event?->event_type === 'special_program', 404);
 
         return Inertia::render('public/special-programs/booking/payment', [
-            'booking' => $this->buildPayload($booking),
+            'booking' => $this->buildPaymentPayload($booking),
             'snapClientKey' => (string) config('services.midtrans.client_key', ''),
             'snapScriptUrl' => config('services.midtrans.is_production')
                 ? 'https://app.midtrans.com/snap/snap.js'
                 : 'https://app.sandbox.midtrans.com/snap/snap.js',
-            'snapError' => null,
         ]);
     }
 
-    public function show(Request $request, string $booking): Response
+    public function pay(Request $request, string $booking, MidtransService $midtransService): RedirectResponse
+    {
+        $booking = $this->resolveBooking($booking);
+
+        if ((int) $booking->user_id !== (int) $request->user()->id) {
+            return redirect()->route('home');
+        }
+
+        $booking->loadMissing('event');
+        abort_unless($booking->event?->event_type === 'special_program', 404);
+
+        if ($booking->isExpired()) {
+            $booking->update([
+                'status' => 'expired',
+                'payment_status' => 'expired',
+            ]);
+
+            return redirect()->route('special-programs.booking.payment', ['booking' => $this->encryptId($booking->id)])
+                ->withErrors(['payment' => 'Booking sudah kedaluwarsa.']);
+        }
+
+        if ($booking->status !== 'pending_payment') {
+            return redirect()->route('special-programs.booking.payment', ['booking' => $this->encryptId($booking->id)]);
+        }
+
+        if ($booking->payments()->where('status', 'pending')->exists()) {
+            return redirect()->route('special-programs.booking.payment', ['booking' => $this->encryptId($booking->id)]);
+        }
+
+        $this->createSnapPayment($booking, $midtransService);
+
+        return redirect()->route('special-programs.booking.payment', ['booking' => $this->encryptId($booking->id)]);
+    }
+
+    public function show(Request $request, string $booking): Response|RedirectResponse
     {
         $booking = $this->resolveBooking($booking);
         if ((int) $booking->user_id !== (int) $request->user()->id) {
-            abort(403);
+            return redirect()->route('home');
         }
-        $booking->load('payments', 'program');
+        $booking->load(['event', 'ticket', 'payments']);
+        abort_unless($booking->event?->event_type === 'special_program', 404);
 
-        $reviewUrl = $booking->special_program_id
-            ? '/special-programs/'.$booking->program?->slug
+        $reviewUrl = $booking->event_id
+            ? '/special-programs/'.$booking->event?->slug
             : null;
 
         return Inertia::render('public/special-programs/booking/show', [
-            'booking' => array_merge($this->buildPayload($booking), [
+            'booking' => array_merge($this->buildPaymentPayload($booking), [
                 'review' => [
-                    'can_review' => ProductReviewService::hasUsedBooking($request->user()->id, 'special_program', (int) $booking->special_program_id),
+                    'can_review' => ProductReviewService::hasUsedBooking($request->user()->id, 'special_program', (int) $booking->event_id),
                     'url' => $reviewUrl,
                 ],
             ]),
@@ -278,96 +379,46 @@ class SpecialProgramBookingController extends Controller
     public function ticket(Request $request, string $booking)
     {
         $booking = $this->resolveBooking($booking);
+
         if ((int) $booking->user_id !== (int) $request->user()->id) {
             return redirect()->route('home');
         }
 
-        $filename = sprintf('tiket-special-program-%s.pdf', $booking->id);
+        $booking->load('ticket', 'event');
+        abort_unless($booking->event?->event_type === 'special_program', 404);
 
-        return \Spatie\LaravelPdf\Facades\Pdf::view('special-program-ticket', [
+        $filename = sprintf('tiket-special-program-%s.pdf', $booking->id);
+        $cacheAllowed = in_array($booking->status, ['paid', 'completed'], true);
+
+        $qrImage = null;
+        if ($cacheAllowed) {
+            $qrUrl = $this->buildQrUrl('SPECIAL_PROGRAM', $booking->booking_code);
+            $context = stream_context_create(['http' => ['timeout' => 4]]);
+            $contents = @file_get_contents($qrUrl, false, $context);
+            if ($contents !== false) {
+                $qrImage = 'data:image/png;base64,'.base64_encode($contents);
+            }
+        }
+
+        return Pdf::view('special-program-ticket', [
             'booking' => $booking,
+            'qrImage' => $qrImage,
         ])->download($filename);
     }
 
-    private function resolveTicketPayload(string $itemType, int $itemId, ?int $ticketId): array
-    {
-        if ($itemType === 'hotel') {
-            $hotel = Hotel::query()->with('city', 'roomTypes')->findOrFail($itemId);
-            $roomType = $hotel->roomTypes()->orderBy('base_price')->first();
-            return [
-                'item' => [
-                    'title' => $hotel->name,
-                    'city_name' => $hotel->city?->name,
-                ],
-                'ticket_id' => null,
-                'ticket_name' => 'Booking Hotel',
-                'unit_price' => $roomType ? (int) $roomType->base_price : 0,
-            ];
-        }
-
-        if ($itemType === 'event') {
-            $event = Event::query()->findOrFail($itemId);
-            $ticket = $ticketId
-                ? $event->tickets()->where('id', $ticketId)->firstOrFail()
-                : $event->tickets()->firstOrFail();
-            return [
-                'item' => [
-                    'title' => $event->title,
-                    'city_name' => $this->resolveCityName($event->city_code),
-                ],
-                'ticket_id' => $ticket->id,
-                'ticket_name' => $ticket->name,
-                'unit_price' => (int) $ticket->price,
-            ];
-        }
-
-        $destination = MitraWisataOnboarding::query()->findOrFail($itemId);
-        $ticket = $ticketId
-            ? WisataTicket::query()
-                ->where('mitra_wisata_onboarding_id', $destination->id)
-                ->where('id', $ticketId)
-                ->firstOrFail()
-            : WisataTicket::query()
-                ->where('mitra_wisata_onboarding_id', $destination->id)
-                ->firstOrFail();
-        return [
-            'item' => [
-                'title' => $destination->destination_name,
-                'city_name' => $this->resolveCityName($destination->city_code),
-            ],
-            'ticket_id' => $ticket->id,
-            'ticket_name' => $ticket->name,
-            'unit_price' => (int) $ticket->price,
-        ];
-    }
-
-    private function resolveCityName(?string $cityCode): ?string
-    {
-        if (! $cityCode) {
-            return null;
-        }
-
-        return DB::table('regencies')->where('code', $cityCode)->value('name');
-    }
-
-    private function buildSnapPayload(SpecialProgramBooking $booking, string $orderId): array
+    private function buildSnapPayload(EventBooking $booking, string $orderId): array
     {
         return [
             'transaction_details' => [
                 'order_id' => $orderId,
                 'gross_amount' => (int) $booking->total_price,
             ],
-            'expiry' => [
-                'start_time' => now()->format('Y-m-d H:i:s O'),
-                'unit' => 'hours',
-                'duration' => 24,
-            ],
             'item_details' => [
                 [
-                    'id' => (string) $booking->id,
-                    'price' => (int) $booking->unit_price,
+                    'id' => (string) $booking->ticket?->id,
+                    'price' => (int) $booking->ticket?->price,
                     'quantity' => (int) $booking->quantity,
-                    'name' => $booking->ticket_name ?? $booking->item_name,
+                    'name' => $booking->ticket?->name ?? 'Tiket Special Program',
                 ],
             ],
             'customer_details' => [
@@ -378,22 +429,19 @@ class SpecialProgramBookingController extends Controller
         ];
     }
 
-    private function createSnapPayment(SpecialProgramBooking $booking, MidtransService $midtransService): array
+    private function createSnapPayment(EventBooking $booking, MidtransService $midtransService): array
     {
-        $latestPayment = $booking->payments()->latest()->first();
-        if ($latestPayment && $latestPayment->status === 'pending') {
-            $existingPayload = (array) ($latestPayment->payload ?? []);
-            if (! empty($existingPayload['token'])) {
-                return $existingPayload;
-            }
+        if ($booking->payments()->where('status', 'pending')->exists()) {
+            return (array) ($booking->payments()->latest()->value('payload') ?? []);
         }
 
-        $orderId = sprintf('SPP-%s-%s', $booking->id, now()->format('YmdHis'));
+        $orderId = sprintf('SPECIAL-%s-%s', $booking->id, now()->format('YmdHis'));
         $payload = $this->buildSnapPayload($booking, $orderId);
+
         $snap = $midtransService->snap($payload);
 
-        $payment = SpecialProgramPayment::create([
-            'special_program_booking_id' => $booking->id,
+        $payment = EventPayment::create([
+            'event_booking_id' => $booking->id,
             'provider' => 'midtrans',
             'status' => 'pending',
             'gross_amount' => (int) $booking->total_price,
@@ -411,7 +459,7 @@ class SpecialProgramBookingController extends Controller
         return $snap;
     }
 
-    private function resolveBooking(string $booking): SpecialProgramBooking
+    private function resolveBooking(string $booking): EventBooking
     {
         try {
             $id = Crypt::decryptString($booking);
@@ -419,41 +467,85 @@ class SpecialProgramBookingController extends Controller
             abort(404);
         }
 
-        return SpecialProgramBooking::query()->findOrFail($id);
+        return EventBooking::query()->findOrFail($id);
     }
 
-    private function buildPayload(SpecialProgramBooking $booking): array
+    private function encryptId(int $id): string
+    {
+        return Crypt::encryptString((string) $id);
+    }
+
+    private function availableTickets(EventTicket $ticket, bool $useLock = false): int
+    {
+        $query = EventBooking::query()
+            ->where('event_ticket_id', $ticket->id)
+            ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+
+        if ($useLock) {
+            $query->lockForUpdate();
+        }
+
+        $reserved = (int) $query->sum('quantity');
+
+        return max(0, (int) $ticket->quota - $reserved);
+    }
+
+    private function buildPaymentPayload(EventBooking $booking): array
     {
         $payment = $booking->payments()->latest()->first();
 
         return [
             'id' => $booking->id,
-            'encrypted_id' => Crypt::encryptString((string) $booking->id),
-            'program' => [
-                'id' => $booking->special_program_id,
-                'name' => $booking->program?->name,
-            ],
-            'item' => [
-                'type' => $booking->item_type,
-                'name' => $booking->item_name,
-                'city_name' => $booking->city_name,
-            ],
+            'encrypted_id' => $this->encryptId($booking->id),
+            'booking_code' => $booking->booking_code,
             'quantity' => $booking->quantity,
-            'unit_price' => $booking->unit_price,
             'total' => $booking->total_price,
             'status' => $booking->status,
             'payment_status' => $booking->payment_status,
             'payment_deadline' => $booking->payment_deadline?->toIso8601String(),
-            'ticket_name' => $booking->ticket_name,
+            'ticket' => [
+                'id' => $booking->ticket?->id,
+                'name' => $booking->ticket?->name,
+            ],
+            'program' => [
+                'id' => $booking->event?->id,
+                'title' => $booking->event?->title,
+                'location' => $booking->event?->location,
+                'start_at' => $booking->event?->start_at?->toDateTimeString(),
+            ],
             'guest' => [
                 'name' => $booking->guest_name,
                 'email' => $booking->guest_email,
                 'phone' => $booking->guest_phone,
             ],
+            'qr_data' => $this->buildQrData('SPECIAL_PROGRAM', $booking->booking_code),
+            'qr_url' => $this->buildQrUrl('SPECIAL_PROGRAM', $booking->booking_code),
             'payment' => $payment ? [
                 'status' => $payment->status,
+                'payment_type' => $payment->payment_type,
                 'payload' => $payment->payload,
             ] : null,
         ];
+    }
+
+    private function buildQrData(string $type, string $code): string
+    {
+        return sprintf('INDOTIX|%s|%s', $type, $code);
+    }
+
+    private function buildQrUrl(string $type, string $code): string
+    {
+        $data = rawurlencode($this->buildQrData($type, $code));
+
+        return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
+    }
+
+    private function resolveCityName(?string $cityCode): ?string
+    {
+        if (! $cityCode) {
+            return null;
+        }
+
+        return DB::table('regencies')->where('code', $cityCode)->value('name');
     }
 }

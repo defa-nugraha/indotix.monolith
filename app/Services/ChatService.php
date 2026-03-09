@@ -7,7 +7,6 @@ use App\Models\Event;
 use App\Models\Hotel;
 use App\Models\MitraWisataOnboarding;
 use App\Models\SouvenirProduct;
-use App\Models\SpecialProgram;
 use App\Models\User;
 
 class ChatService
@@ -36,7 +35,7 @@ class ChatService
             'souvenir' => optional(SouvenirProduct::query()->find($id))->name,
             'event' => optional(Event::query()->find($id))->title,
             'academy' => optional(AcademyClass::query()->find($id))->title,
-            'special_program' => optional(SpecialProgram::query()->find($id))->name,
+            'special_program' => optional(Event::query()->where('event_type', 'special_program')->find($id))->title,
             default => null,
         };
     }

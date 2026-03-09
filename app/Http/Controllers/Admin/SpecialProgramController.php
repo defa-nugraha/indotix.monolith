@@ -3,209 +3,220 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\SpecialProgram;
+use App\Models\Event;
+use App\Models\EventAuditLog;
+use App\Models\EventOrganizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SpecialProgramController extends Controller
 {
-    private const TYPE_OPTIONS = ['diskon', 'subsidi', 'bundling', 'highlight'];
-    private const STATUS_OPTIONS = ['draft', 'scheduled', 'active', 'expired', 'suspended'];
-    private const HIGHLIGHT_OPTIONS = ['low', 'medium', 'high'];
-
-    public function index(Request $request, ?string $section = null): Response
+    public function index(Request $request): Response
     {
-        $section = $section ?: 'programs';
-        $programs = SpecialProgram::query()->latest()->get();
-        $selectedId = $request->query('program') ? (int) $request->query('program') : $programs->first()?->id;
-        $selected = $selectedId ? SpecialProgram::query()->find($selectedId) : null;
+        $status = $request->string('status')->toString();
+        $query = Event::query()
+            ->where('event_type', 'special_program')
+            ->latest();
+        if ($status) {
+            $query->where('status', $status);
+        }
 
         return Inertia::render('admin/special-programs/index', [
-            'section' => $section,
-            'programs' => $programs->map(fn (SpecialProgram $program) => [
-                'id' => $program->id,
-                'name' => $program->name,
-                'program_type' => $program->program_type,
-                'status' => $program->status,
-                'is_active' => (bool) $program->is_active,
-                'starts_at' => $program->starts_at?->toDateString(),
-                'ends_at' => $program->ends_at?->toDateString(),
-                'priority' => $program->priority,
-                'highlight_level' => $program->highlight_level,
-            ]),
-            'selectedProgram' => $selected ? [
-                'id' => $selected->id,
-                'name' => $selected->name,
-                'program_type' => $selected->program_type,
-                'description_internal' => $selected->description_internal,
-                'starts_at' => $selected->starts_at?->toDateString(),
-                'ends_at' => $selected->ends_at?->toDateString(),
-                'status' => $selected->status,
-                'is_active' => (bool) $selected->is_active,
-                'scope' => $selected->scope ?? [],
-                'rules' => $selected->rules ?? [],
-                'discount' => $selected->discount ?? [],
-                'visibility' => $selected->visibility ?? [],
-                'budget' => $selected->budget ?? [],
-                'compliance' => $selected->compliance ?? [],
-                'terms' => $selected->terms,
-                'priority' => $selected->priority,
-                'highlight_level' => $selected->highlight_level,
-            ] : null,
-            'typeOptions' => self::TYPE_OPTIONS,
-            'statusOptions' => self::STATUS_OPTIONS,
-            'highlightOptions' => self::HIGHLIGHT_OPTIONS,
+            'programs' => $query->paginate(20)->withQueryString(),
+            'filters' => [
+                'status' => $status,
+            ],
+        ]);
+    }
+
+    public function create(): Response
+    {
+        $organizer = $this->resolveOrganizer();
+
+        return Inertia::render('admin/special-programs/create', [
+            'organizer' => [
+                'id' => $organizer->id,
+                'name' => $organizer->name,
+            ],
+            'event' => null,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $organizer = $this->resolveOrganizer();
+
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'program_type' => ['required', Rule::in(self::TYPE_OPTIONS)],
-            'description_internal' => ['nullable', 'string'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
-            'status' => ['nullable', Rule::in(self::STATUS_OPTIONS)],
-            'is_active' => ['boolean'],
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'city_code' => ['nullable', 'string', 'max:10'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'start_at' => ['required', 'date'],
+            'end_at' => ['required', 'date', 'after_or_equal:start_at'],
+            'capacity_total' => ['required', 'integer', 'min:0'],
         ]);
 
-        $data['status'] = $data['status'] ?? 'draft';
-        $data['is_active'] = $request->boolean('is_active');
-        $data['scope'] = [
-            'mode' => 'all',
-            'categories' => [],
-            'locations' => [],
-            'partners' => [],
-            'events' => [],
-        ];
-        $data['rules'] = [
-            'min_transaction' => 0,
-            'max_quota' => 0,
-            'per_user_limit' => 0,
-            'stackable' => false,
-        ];
-        $data['discount'] = [
-            'type' => $data['program_type'],
-            'value' => 0,
-            'platform_subsidy' => 0,
-            'partner_subsidy' => 0,
-            'max_cap' => 0,
-        ];
-        $data['visibility'] = [
-            'placements' => ['special_section'],
-            'priority' => 0,
-            'highlight_level' => 'low',
-            'push_enabled' => false,
-            'tag_label' => 'Special Program',
-        ];
-        $data['budget'] = [
-            'limit' => 0,
-            'used' => 0,
-        ];
-        $data['compliance'] = [
-            'partner_notification' => '',
-            'partner_approval_required' => false,
-            'legal_note' => '',
-        ];
-        $data['created_by'] = $request->user()?->id;
-        $data['updated_by'] = $request->user()?->id;
+        $event = Event::create([
+            'event_organizer_id' => $organizer->id,
+            'event_type' => 'special_program',
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'city_code' => $data['city_code'] ?? null,
+            'location' => $data['location'] ?? null,
+            'address' => $data['address'] ?? null,
+            'start_at' => $data['start_at'],
+            'end_at' => $data['end_at'],
+            'capacity_total' => $data['capacity_total'],
+            'capacity_sold' => 0,
+            'sales_stopped' => false,
+            'status' => 'draft',
+        ]);
 
-        SpecialProgram::create($data);
+        EventAuditLog::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'special_program_created',
+            'subject_type' => Event::class,
+            'subject_id' => $event->id,
+            'metadata' => $data,
+        ]);
 
-        return back()->with('status', 'special-program-created');
+        return redirect()->route('admin.special-programs.show', $event)->with('status', 'special-program-created');
     }
 
-    public function update(Request $request, SpecialProgram $program): RedirectResponse
+    public function edit(Event $event): Response
     {
+        abort_unless($event->event_type === 'special_program', 404);
+
+        $organizer = $this->resolveOrganizer();
+
+        return Inertia::render('admin/special-programs/create', [
+            'organizer' => [
+                'id' => $organizer->id,
+                'name' => $organizer->name,
+            ],
+            'event' => [
+                'id' => $event->id,
+                'title' => $event->title,
+                'description' => $event->description,
+                'city_code' => $event->city_code,
+                'location' => $event->location,
+                'address' => $event->address,
+                'start_at' => $event->start_at?->format('Y-m-d\\TH:i'),
+                'end_at' => $event->end_at?->format('Y-m-d\\TH:i'),
+                'capacity_total' => $event->capacity_total,
+                'status' => $event->status,
+            ],
+        ]);
+    }
+
+    public function update(Request $request, Event $event): RedirectResponse
+    {
+        abort_unless($event->event_type === 'special_program', 404);
+
         $data = $request->validate([
-            'name' => ['sometimes', 'string', 'max:255'],
-            'program_type' => ['sometimes', Rule::in(self::TYPE_OPTIONS)],
-            'description_internal' => ['nullable', 'string'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
-            'status' => ['sometimes', Rule::in(self::STATUS_OPTIONS)],
-            'is_active' => ['sometimes', 'boolean'],
-            'priority' => ['nullable', 'integer', 'min:0'],
-            'highlight_level' => ['nullable', Rule::in(self::HIGHLIGHT_OPTIONS)],
-            'scope' => ['nullable', 'array'],
-            'rules' => ['nullable', 'array'],
-            'discount' => ['nullable', 'array'],
-            'visibility' => ['nullable', 'array'],
-            'budget' => ['nullable', 'array'],
-            'compliance' => ['nullable', 'array'],
-            'terms' => ['nullable', 'string'],
+            'title' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'city_code' => ['nullable', 'string', 'max:10'],
+            'location' => ['nullable', 'string', 'max:255'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'start_at' => ['required', 'date'],
+            'end_at' => ['required', 'date', 'after_or_equal:start_at'],
+            'capacity_total' => ['required', 'integer', 'min:0'],
         ]);
 
-        if ($request->has('is_active')) {
-            $data['is_active'] = $request->boolean('is_active');
-        }
+        $event->update([
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'city_code' => $data['city_code'] ?? null,
+            'location' => $data['location'] ?? null,
+            'address' => $data['address'] ?? null,
+            'start_at' => $data['start_at'],
+            'end_at' => $data['end_at'],
+            'capacity_total' => $data['capacity_total'],
+        ]);
 
-        $program->fill($data);
-        $program->updated_by = $request->user()?->id;
-        $program->save();
+        EventAuditLog::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'special_program_updated',
+            'subject_type' => Event::class,
+            'subject_id' => $event->id,
+            'metadata' => $data,
+        ]);
 
         return back()->with('status', 'special-program-updated');
     }
 
-    public function duplicate(Request $request, SpecialProgram $program): RedirectResponse
+    public function show(Event $event): Response
     {
-        $copy = $program->replicate();
-        $copy->name = $program->name.' (Copy)';
-        $copy->status = 'draft';
-        $copy->is_active = false;
-        $copy->created_by = $request->user()?->id;
-        $copy->updated_by = $request->user()?->id;
-        $copy->save();
+        abort_unless($event->event_type === 'special_program', 404);
+        $event->load('tickets');
 
-        return back()->with('status', 'special-program-duplicated');
+        return Inertia::render('admin/special-programs/show', [
+            'event' => $event,
+        ]);
     }
 
-    public function updateStatus(Request $request, SpecialProgram $program): RedirectResponse
+    public function updateStatus(Request $request, Event $event): RedirectResponse
     {
+        abort_unless($event->event_type === 'special_program', 404);
+
         $data = $request->validate([
-            'action' => ['required', Rule::in(['activate', 'deactivate', 'suspend', 'resume', 'expire'])],
+            'status' => ['required', 'in:draft,pending_review,published,postponed,cancelled,completed'],
+            'status_reason' => ['nullable', 'string'],
         ]);
 
-        switch ($data['action']) {
-            case 'activate':
-                $program->status = 'active';
-                $program->is_active = true;
-                break;
-            case 'deactivate':
-                $program->is_active = false;
-                if ($program->status === 'active') {
-                    $program->status = 'suspended';
-                }
-                break;
-            case 'suspend':
-                $program->status = 'suspended';
-                $program->is_active = false;
-                break;
-            case 'resume':
-                $program->status = 'active';
-                $program->is_active = true;
-                break;
-            case 'expire':
-                $program->status = 'expired';
-                $program->is_active = false;
-                break;
-        }
+        $event->update([
+            'status' => $data['status'],
+            'status_reason' => $data['status_reason'] ?? $event->status_reason,
+            'published_at' => $data['status'] === 'published' ? now() : $event->published_at,
+        ]);
 
-        $program->updated_by = $request->user()?->id;
-        $program->save();
+        EventAuditLog::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'special_program_status_updated',
+            'subject_type' => Event::class,
+            'subject_id' => $event->id,
+            'metadata' => $data,
+        ]);
 
-        return back()->with('status', 'special-program-status-updated');
+        return back();
     }
 
-    public function destroy(SpecialProgram $program): RedirectResponse
+    public function updateCapacity(Request $request, Event $event): RedirectResponse
     {
-        $program->delete();
+        abort_unless($event->event_type === 'special_program', 404);
 
-        return back()->with('status', 'special-program-deleted');
+        $data = $request->validate([
+            'capacity_total' => ['required', 'integer', 'min:0'],
+            'sales_stopped' => ['required', 'boolean'],
+        ]);
+
+        $event->update($data);
+
+        EventAuditLog::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'special_program_capacity_updated',
+            'subject_type' => Event::class,
+            'subject_id' => $event->id,
+            'metadata' => $data,
+        ]);
+
+        return back();
+    }
+
+    private function resolveOrganizer(): EventOrganizer
+    {
+        return EventOrganizer::query()->firstOrCreate(
+            ['user_id' => null, 'name' => 'Indotix Special Program'],
+            [
+                'email' => null,
+                'phone' => null,
+                'status' => 'verified',
+                'notes' => 'Organizer internal untuk special program.',
+            ]
+        );
     }
 }

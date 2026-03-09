@@ -1,65 +1,81 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CheckCircle, Clock, CreditCard, Loader2, ShoppingCart } from 'lucide-react';
+import { CheckCircle, Clock, CreditCard, Loader2, ShoppingCart} from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Booking = {
+    id: number;
     encrypted_id: string;
+    booking_code: string;
     quantity: number;
-    unit_price: number;
     total: number;
     status: string;
     payment_status?: string | null;
     payment_deadline?: string | null;
-    ticket_name?: string | null;
-    program: { name?: string | null };
-    item: { name: string; type: string; city_name?: string | null };
+    qr_url?: string | null;
+    qr_data?: string | null;
+    ticket: { id: number; name: string };
+    program: { id: number; title: string; location?: string | null; start_at?: string | null };
     guest: { name: string; email: string; phone: string };
     review?: { can_review?: boolean; url?: string | null } | null;
 };
 
-type Props = {
-    booking: Booking;
-};
-
-export default function SpecialProgramBookingShow({ booking }: Props) {
-    const { auth, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; souvenir_cart_count?: number };
-    const role = auth?.user?.role;
+export default function SpecialProgramBookingShow({ booking }: { booking: Booking }) {
+    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
+    const role = (auth?.user as any)?.role as string | undefined;
     const [isDownloading, setIsDownloading] = useState(false);
+    const formatIdr = (value?: number | string | null) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return '-';
+        return `Rp ${numeric.toLocaleString('id-ID')}`;
+    };
+
+    const isPaid = ['paid', 'completed'].includes(booking.status)
+        || ['settlement', 'capture', 'success', 'paid'].includes((booking.payment_status ?? '').toString());
 
     return (
         <PublicLayout>
-            <Head title="Detail Booking Special Program" />
+            <Head title="Detail Booking Special Program">
+                <link
+                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
+                    rel="stylesheet"
+                />
+            </Head>
                         <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1.25fr_0.9fr]">
                     <div className="space-y-6">
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <h1 className="text-2xl font-semibold text-slate-900">Detail Booking Special Program</h1>
-                            <p className="mt-2 text-sm text-slate-500">Cek informasi booking kamu.</p>
+                            <p className="mt-2 text-sm text-slate-500">Ringkasan pesanan special program kamu.</p>
                             <div className="mt-6 grid gap-4 text-sm text-slate-600">
                                 <div className="flex items-center justify-between">
-                                    <span>Program</span>
-                                    <span className="font-semibold text-slate-900">{booking.program?.name ?? '-'}</span>
+                                    <span>Special Program</span>
+                                    <span className="font-semibold text-slate-900">{booking.program.title}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span>Produk</span>
-                                    <span className="font-semibold text-slate-900">{booking.item.name}</span>
+                                    <span>Lokasi</span>
+                                    <span className="font-semibold text-slate-900">{booking.program.location ?? '-'}</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Tiket</span>
+                                    <span className="font-semibold text-slate-900">{booking.ticket.name}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <span>Jumlah</span>
                                     <span className="font-semibold text-slate-900">{booking.quantity}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span>Harga</span>
-                                    <span className="font-semibold text-slate-900">Rp {Number(booking.unit_price).toLocaleString('id-ID')}</span>
+                                    <span>Status</span>
+                                    <span className="font-semibold text-slate-900">{booking.status}</span>
                                 </div>
                                 <div className="flex items-center justify-between border-t border-slate-200 pt-3">
                                     <span>Total</span>
-                                    <span className="text-lg font-semibold text-sky-600">Rp {Number(booking.total).toLocaleString('id-ID')}</span>
+                                    <span className="text-lg font-semibold text-sky-600">{formatIdr(booking.total)}</span>
                                 </div>
                             </div>
                         </div>
+
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-slate-900">Data Tamu</h2>
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
@@ -101,7 +117,7 @@ export default function SpecialProgramBookingShow({ booking }: Props) {
                                     Lanjutkan Pembayaran
                                 </Link>
                             )}
-                            {(booking.status === 'paid' || booking.status === 'completed') && (
+                            {isPaid && (
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -131,6 +147,17 @@ export default function SpecialProgramBookingShow({ booking }: Props) {
                                 </Link>
                             )}
                         </div>
+
+                        {isPaid && booking.qr_url && (
+                            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                                <div className="text-sm font-semibold text-slate-900">QR Validasi Tiket</div>
+                                <img src={booking.qr_url} alt="QR Tiket" className="mx-auto mt-3 h-44 w-44" />
+                                {booking.qr_data && (
+                                    <div className="mt-2 text-xs text-slate-500">Kode: {booking.qr_data}</div>
+                                )}
+                                <div className="mt-2 text-xs text-slate-500">Tunjukkan QR ini saat validasi di lokasi.</div>
+                            </div>
+                        )}
                     </aside>
                 </div>
             </main>

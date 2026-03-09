@@ -49,9 +49,9 @@
         <div class="divider"></div>
 
         <div class="section-title">Informasi Program</div>
-        <div style="font-size:12px; font-weight:700;">{{ $booking->program?->name ?? 'Special Program' }}</div>
-        <div class="section-title">Produk</div>
-        <div style="font-size:12px; font-weight:700;">{{ $booking->item_name }}</div>
+        <div style="font-size:12px; font-weight:700;">{{ $booking->event?->title ?? 'Special Program' }}</div>
+        <div class="section-title">Tiket</div>
+        <div style="font-size:12px; font-weight:700;">{{ $booking->ticket?->name ?? 'Tiket Special Program' }}</div>
 
         <div class="section-title">Data Pemesan</div>
         <div class="info-row">
@@ -86,7 +86,7 @@
             <tbody>
                 <tr>
                     <td>1</td>
-                    <td>{{ $booking->ticket_name ?? $booking->item_name }}</td>
+                    <td>{{ $booking->ticket?->name ?? 'Tiket Special Program' }}</td>
                     <td>{{ $booking->quantity }}</td>
                     <td>Rp {{ number_format($booking->total_price ?? 0, 0, ',', '.') }}</td>
                 </tr>

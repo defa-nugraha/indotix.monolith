@@ -7,6 +7,7 @@ use App\Models\AcademyBooking;
 use App\Models\AcademyClass;
 use App\Models\AcademyRefund;
 use App\Models\Booking;
+use App\Models\Event;
 use App\Models\EventBooking;
 use App\Models\MitraEventOnboarding;
 use App\Models\MitraOnboarding;
@@ -15,8 +16,6 @@ use App\Models\SouvenirOrder;
 use App\Models\SouvenirOrderItem;
 use App\Models\SouvenirProduct;
 use App\Models\SouvenirRefund;
-use App\Models\SpecialProgram;
-use App\Models\SpecialProgramBooking;
 use App\Models\WisataBooking;
 use Inertia\Inertia;
 
@@ -56,10 +55,12 @@ class DashboardController extends Controller
             ->sum('quantity');
 
         $eventBookingsToday = EventBooking::query()
+            ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
             ->whereDate('created_at', $today)
             ->whereIn('status', ['paid', 'completed'])
             ->count();
         $eventTicketsSoldToday = (int) EventBooking::query()
+            ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
             ->whereDate('created_at', $today)
             ->whereIn('status', ['paid', 'completed'])
             ->sum('quantity');
@@ -85,11 +86,13 @@ class DashboardController extends Controller
             })
             ->sum('quantity');
 
-        $specialProgramBookingsToday = SpecialProgramBooking::query()
+        $specialProgramBookingsToday = EventBooking::query()
+            ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
             ->whereDate('created_at', $today)
             ->whereIn('status', ['paid', 'completed'])
             ->count();
-        $specialProgramTicketsSoldToday = (int) SpecialProgramBooking::query()
+        $specialProgramTicketsSoldToday = (int) EventBooking::query()
+            ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
             ->whereDate('created_at', $today)
             ->whereIn('status', ['paid', 'completed'])
             ->sum('quantity');
@@ -134,7 +137,10 @@ class DashboardController extends Controller
 
         $pendingPayments = Booking::query()->where('status', 'pending_payment')->count()
             + WisataBooking::query()->where('status', 'pending_payment')->count()
-            + EventBooking::query()->where('status', 'pending_payment')->count()
+            + EventBooking::query()
+                ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
+                ->where('status', 'pending_payment')
+                ->count()
             + AcademyBooking::query()->where('status', 'pending_payment')->count()
             + SouvenirOrder::query()->where('status', 'pending_payment')->count();
 
@@ -159,10 +165,14 @@ class DashboardController extends Controller
                 ]);
             }
         } elseif ($scope === 'special') {
-            $latestSpecial = SpecialProgramBooking::query()->with('program')->latest('created_at')->first();
+            $latestSpecial = EventBooking::query()
+                ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+                ->with('event')
+                ->latest('created_at')
+                ->first();
             if ($latestSpecial) {
                 $activities->push([
-                    'title' => 'Booking special program '.($latestSpecial->program?->name ?? 'baru'),
+                    'title' => 'Booking special program '.($latestSpecial->event?->title ?? 'baru'),
                     'meta' => $latestSpecial->quantity.' tiket • '.$latestSpecial->created_at->diffForHumans(),
                     'created_at' => $latestSpecial->created_at?->timestamp ?? 0,
                 ]);
@@ -186,7 +196,11 @@ class DashboardController extends Controller
                 ]);
             }
 
-            $latestEvent = EventBooking::query()->with('event')->latest('created_at')->first();
+            $latestEvent = EventBooking::query()
+                ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
+                ->with('event')
+                ->latest('created_at')
+                ->first();
             if ($latestEvent) {
                 $activities->push([
                     'title' => 'Booking event '.($latestEvent->event?->title ?? 'baru'),
@@ -256,12 +270,18 @@ class DashboardController extends Controller
                 'summary' => [
                     'transactions_today' => $specialProgramBookingsToday,
                     'tickets_sold' => $specialProgramTicketsSoldToday,
-                    'active_partners' => SpecialProgram::query()->where('is_active', true)->count(),
+                    'active_partners' => Event::query()
+                        ->where('event_type', 'special_program')
+                        ->where('status', 'published')
+                        ->count(),
                 ],
                 'system' => [
                     'pending_reviews' => 0,
                     'pending_payouts' => 0,
-                    'pending_payments' => SpecialProgramBooking::query()->where('status', 'pending_payment')->count(),
+                    'pending_payments' => EventBooking::query()
+                        ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+                        ->where('status', 'pending_payment')
+                        ->count(),
                 ],
                 'activities' => $activities,
             ]);
