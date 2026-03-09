@@ -230,6 +230,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.academy.tickets.store');
     Route::put('admin/academy/tickets/{ticket}', [\App\Http\Controllers\Admin\Academy\TicketController::class, 'update'])
         ->name('admin.academy.tickets.update');
+    Route::delete('admin/academy/tickets/{ticket}', [\App\Http\Controllers\Admin\Academy\TicketController::class, 'destroy'])
+        ->name('admin.academy.tickets.destroy');
 
     Route::get('admin/academy/bookings', [\App\Http\Controllers\Admin\Academy\BookingController::class, 'index'])
         ->name('admin.academy.bookings.index');

@@ -81,4 +81,27 @@ class TicketController extends Controller
 
         return back()->with('status', 'ticket-updated');
     }
+
+    public function destroy(Request $request, AcademyTicket $ticket): RedirectResponse
+    {
+        $bookingCount = $ticket->bookings()->count();
+        if ($bookingCount > 0) {
+            return back()->withErrors([
+                'ticket' => "Tiket tidak dapat dihapus karena sudah memiliki {$bookingCount} booking.",
+            ]);
+        }
+
+        $payload = $ticket->toArray();
+        $ticket->delete();
+
+        AcademyAuditLog::create([
+            'admin_id' => $request->user()->id,
+            'action' => 'academy_ticket_deleted',
+            'subject_type' => AcademyTicket::class,
+            'subject_id' => $ticket->id,
+            'metadata' => $payload,
+        ]);
+
+        return back()->with('status', 'ticket-deleted');
+    }
 }

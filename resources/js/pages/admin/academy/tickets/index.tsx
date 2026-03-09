@@ -172,9 +172,46 @@ export default function AcademyTicketsIndex({ tickets, classes, filters }: Props
                                                 </Badge>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
-                                                    Edit
-                                                </Button>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
+                                                        Edit
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        onClick={() => {
+                                                            Swal.fire({
+                                                                icon: 'warning',
+                                                                title: 'Hapus tiket?',
+                                                                text: 'Tiket yang dihapus tidak bisa dikembalikan.',
+                                                                showCancelButton: true,
+                                                                confirmButtonText: 'Hapus',
+                                                                cancelButtonText: 'Batal',
+                                                            }).then((result) => {
+                                                                if (result.isConfirmed) {
+                                                                    router.delete(`/admin/academy/tickets/${item.id}`, {
+                                                                        onSuccess: () => {
+                                                                            Swal.fire({
+                                                                                icon: 'success',
+                                                                                title: 'Terhapus',
+                                                                                text: 'Tiket dihapus.',
+                                                                            });
+                                                                        },
+                                                                        onError: (errors) => {
+                                                                            Swal.fire({
+                                                                                icon: 'error',
+                                                                                title: 'Gagal',
+                                                                                text: errors.ticket ?? 'Tiket gagal dihapus.',
+                                                                            });
+                                                                        },
+                                                                    });
+                                                                }
+                                                            });
+                                                        }}
+                                                    >
+                                                        Hapus
+                                                    </Button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
