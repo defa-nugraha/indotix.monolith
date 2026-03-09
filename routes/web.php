@@ -274,6 +274,15 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra.payout');
     Route::post('admin/mitra/{user}/suspend', [\App\Http\Controllers\Admin\MitraController::class, 'suspend'])
         ->name('admin.mitra.suspend');
+
+    Route::get('admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])
+        ->name('admin.users.index');
+    Route::get('admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'show'])
+        ->name('admin.users.show');
+    Route::post('admin/users/{user}/suspend', [\App\Http\Controllers\Admin\UserController::class, 'suspend'])
+        ->name('admin.users.suspend');
+    Route::delete('admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])
+        ->name('admin.users.destroy');
     Route::get('admin/mitra-wisata', [\App\Http\Controllers\Admin\MitraWisataController::class, 'index'])
         ->name('admin.mitra-wisata.index');
     Route::post('admin/mitra-wisata', [\App\Http\Controllers\Admin\MitraWisataController::class, 'store'])

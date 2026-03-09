@@ -26,6 +26,11 @@ const baseMainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
+        title: 'Kelola User',
+        href: '/admin/users',
+        icon: Users,
+    },
+    {
         title: 'Live Chat',
         href: '/admin/chat',
         icon: MessageCircle,
