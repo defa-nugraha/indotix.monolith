@@ -320,9 +320,9 @@ export default function PublicHeader({
 
             {showChips && hasChips && (
                 <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl flex-wrap gap-2 px-4 py-3 md:px-8">
+                    <div className="mx-auto flex w-full max-w-6xl gap-2 overflow-x-auto px-4 py-3 md:flex-wrap md:overflow-visible md:px-8">
                         {chips.map((chip) => (
-                            <span key={chip} className="rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600">
+                            <span key={chip} className="whitespace-nowrap rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600">
                                 {chip}
                             </span>
                         ))}
