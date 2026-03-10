@@ -368,9 +368,9 @@ export default function Welcome({
                                 const isSideBanner = !isMainBanner;
                                 const content = (
                                     <div
-                                        className={`relative w-full aspect-[842/236] transition-opacity duration-300 ${
-                                            isBannerTransitioning ? 'opacity-0' : 'opacity-100'
-                                        }`}
+                                        className={`relative w-full transition-opacity duration-300 ${
+                                            isMainBanner ? 'aspect-[842/236]' : 'h-full'
+                                        } ${isBannerTransitioning ? 'opacity-0' : 'opacity-100'}`}
                                         style={{
                                             backgroundImage: slide.image
                                                 ? `url(${slide.image})`
@@ -387,7 +387,7 @@ export default function Welcome({
                                     <div
                                         key={`${slide.id}-${idx}`}
                                         className={`overflow-hidden rounded-2xl bg-white shadow-sm ${
-                                            isMainBanner ? 'mx-auto w-full max-w-[842px]' : ''
+                                            isMainBanner ? 'mx-auto w-full max-w-[842px]' : 'h-full'
                                         } ${slot.className}`}
                                     >
                                         {slide.link ? (
