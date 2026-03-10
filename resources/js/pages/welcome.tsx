@@ -364,11 +364,12 @@ export default function Welcome({
                         <div className="grid w-full gap-6 md:grid-cols-[1fr_2.4fr_1fr]">
                             {bannerSlots.map((slot, idx) => {
                                 const slide = bannerSlides[slot.index];
+                                const isMainBanner = slot.className === '';
                                 const content = (
                                     <div
-                                        className={`h-[150px] w-full transition-opacity duration-300 md:h-56 ${
-                                            isBannerTransitioning ? 'opacity-0' : 'opacity-100'
-                                        }`}
+                                        className={`w-full transition-opacity duration-300 ${
+                                            isMainBanner ? 'h-[236px]' : 'h-[150px] md:h-56'
+                                        } ${isBannerTransitioning ? 'opacity-0' : 'opacity-100'}`}
                                         style={{
                                             backgroundImage: slide.image
                                                 ? `url(${slide.image})`
@@ -381,7 +382,9 @@ export default function Welcome({
                                 return (
                                     <div
                                         key={`${slide.id}-${idx}`}
-                                        className={`overflow-hidden rounded-2xl bg-white shadow-sm ${slot.className}`}
+                                        className={`overflow-hidden rounded-2xl bg-white shadow-sm ${
+                                            isMainBanner ? 'mx-auto w-full max-w-[842px]' : ''
+                                        } ${slot.className}`}
                                     >
                                         {slide.link ? (
                                             <a href={slide.link} className="block">
