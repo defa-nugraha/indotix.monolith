@@ -6,7 +6,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
+import { formatCurrencyInput, parseCurrencyToInteger } from '@/lib/currency';
 
 type Category = { id: number; name: string };
 
@@ -306,7 +306,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                             <div className="font-semibold text-slate-900">{product.name}</div>
                                             <div className="text-xs text-slate-500">{product.sku} · {product.category?.name ?? 'Tanpa kategori'}</div>
                                         </td>
-                                        <td className="px-4 py-3">Rp {product.price.toLocaleString('id-ID')}</td>
+                                        <td className="px-4 py-3">Rp {Number(product.price || 0).toLocaleString('id-ID')}</td>
                                         <td className="px-4 py-3">{product.stock}</td>
                                         <td className="px-4 py-3">
                                             <Badge className={product.status === 'active' ? 'bg-emerald-50 text-emerald-700' : product.status === 'draft' ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-600'}>
@@ -336,109 +336,148 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                             <DialogDescription>Lengkapi data produk sebelum disimpan.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-3 md:grid-cols-3">
-                            <input
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3"
-                                placeholder="Nama produk"
-                                value={form.data.name}
-                                onChange={(event) => form.setData('name', event.target.value)}
-                            />
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={form.data.category_id}
-                                onChange={(event) => form.setData('category_id', event.target.value)}
-                            >
-                                <option value="">Pilih kategori</option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="SKU"
-                                value={form.data.sku}
-                                onChange={(event) => form.setData('sku', event.target.value)}
-                            />
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={form.data.status}
-                                onChange={(event) => form.setData('status', event.target.value)}
-                            >
-                                <option value="draft">Draft</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Harga jual"
-                                value={formatCurrencyInput(form.data.price)}
-                                onChange={(event) => form.setData('price', parseCurrencyToDigits(event.target.value))}
-                            />
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Harga modal"
-                                value={formatCurrencyInput(form.data.cost_price)}
-                                onChange={(event) => form.setData('cost_price', parseCurrencyToDigits(event.target.value))}
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Berat (gram)"
-                                value={form.data.weight}
-                                onChange={(event) => form.setData('weight', event.target.value)}
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Panjang"
-                                value={form.data.length}
-                                onChange={(event) => form.setData('length', event.target.value)}
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Lebar"
-                                value={form.data.width}
-                                onChange={(event) => form.setData('width', event.target.value)}
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Tinggi"
-                                value={form.data.height}
-                                onChange={(event) => form.setData('height', event.target.value)}
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Min stok"
-                                value={form.data.min_stock}
-                                onChange={(event) => {
-                                    const value = event.target.value;
-                                    form.setData('min_stock', value === '' ? '' : Number(value));
-                                }}
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Stok awal"
-                                value={form.data.stock}
-                                onChange={(event) => {
-                                    const value = event.target.value;
-                                    form.setData('stock', value === '' ? '' : Number(value));
-                                }}
-                            />
-                            <textarea
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3"
-                                placeholder="Deskripsi"
-                                value={form.data.description}
-                                onChange={(event) => form.setData('description', event.target.value)}
-                            />
+                            <div className="space-y-1 md:col-span-3">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Nama produk</label>
+                                <input
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Nama produk"
+                                    value={form.data.name}
+                                    onChange={(event) => form.setData('name', event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Kategori</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={form.data.category_id}
+                                    onChange={(event) => form.setData('category_id', event.target.value)}
+                                >
+                                    <option value="">Pilih kategori</option>
+                                    {categories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">SKU</label>
+                                <input
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="SKU"
+                                    value={form.data.sku}
+                                    onChange={(event) => form.setData('sku', event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Status</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={form.data.status}
+                                    onChange={(event) => form.setData('status', event.target.value)}
+                                >
+                                    <option value="draft">Draft</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Harga jual</label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Harga jual"
+                                    value={formatCurrencyInput(form.data.price)}
+                                    onChange={(event) => form.setData('price', parseCurrencyToInteger(event.target.value))}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Harga modal</label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Harga modal"
+                                    value={formatCurrencyInput(form.data.cost_price)}
+                                    onChange={(event) => form.setData('cost_price', parseCurrencyToInteger(event.target.value))}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Berat (gram)</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Berat (gram)"
+                                    value={form.data.weight}
+                                    onChange={(event) => form.setData('weight', event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Panjang</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Panjang"
+                                    value={form.data.length}
+                                    onChange={(event) => form.setData('length', event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Lebar</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Lebar"
+                                    value={form.data.width}
+                                    onChange={(event) => form.setData('width', event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Tinggi</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Tinggi"
+                                    value={form.data.height}
+                                    onChange={(event) => form.setData('height', event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Min stok</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Min stok"
+                                    value={form.data.min_stock}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        form.setData('min_stock', value === '' ? '' : Number(value));
+                                    }}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Stok awal</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Stok awal"
+                                    value={form.data.stock}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        form.setData('stock', value === '' ? '' : Number(value));
+                                    }}
+                                />
+                            </div>
+                            <div className="space-y-1 md:col-span-3">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Deskripsi</label>
+                                <textarea
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Deskripsi"
+                                    value={form.data.description}
+                                    onChange={(event) => form.setData('description', event.target.value)}
+                                />
+                            </div>
                             <div className="md:col-span-3">
                                 <label className="text-xs font-semibold uppercase text-slate-500">Foto Produk (maks 10)</label>
                                 <input
@@ -492,115 +531,160 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                             <DialogDescription>Perbarui detail produk dan simpan perubahan.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-3 md:grid-cols-3">
-                            <input
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3"
-                                value={editData.name ?? ''}
-                                onChange={(event) => setEditData({ ...editData, name: event.target.value })}
-                                placeholder="Nama produk"
-                            />
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.category_id ?? ''}
-                                onChange={(event) => setEditData({ ...editData, category_id: event.target.value })}
-                            >
-                                <option value="">Pilih kategori</option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.sku ?? ''}
-                                onChange={(event) => setEditData({ ...editData, sku: event.target.value })}
-                                placeholder="SKU"
-                            />
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.status ?? 'draft'}
-                                onChange={(event) => setEditData({ ...editData, status: event.target.value })}
-                            >
-                                <option value="draft">Draft</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={formatCurrencyInput(editData.price ?? '')}
-                                onChange={(event) => setEditData({ ...editData, price: parseCurrencyToDigits(event.target.value) })}
-                                placeholder="Harga jual"
-                            />
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={formatCurrencyInput(editData.cost_price ?? '')}
-                                onChange={(event) => setEditData({ ...editData, cost_price: parseCurrencyToDigits(event.target.value) })}
-                                placeholder="Harga modal"
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.weight ?? ''}
-                                onChange={(event) => {
-                                    const value = event.target.value;
-                                    setEditData({ ...editData, weight: value === '' ? '' : Number(value) });
-                                }}
-                                placeholder="Berat (gram)"
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.length ?? ''}
-                                onChange={(event) => {
-                                    const value = event.target.value;
-                                    setEditData({ ...editData, length: value === '' ? '' : Number(value) });
-                                }}
-                                placeholder="Panjang"
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.width ?? ''}
-                                onChange={(event) => {
-                                    const value = event.target.value;
-                                    setEditData({ ...editData, width: value === '' ? '' : Number(value) });
-                                }}
-                                placeholder="Lebar"
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.height ?? ''}
-                                onChange={(event) => {
-                                    const value = event.target.value;
-                                    setEditData({ ...editData, height: value === '' ? '' : Number(value) });
-                                }}
-                                placeholder="Tinggi"
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.min_stock ?? ''}
-                                onChange={(event) => setEditData({ ...editData, min_stock: Number(event.target.value) })}
-                                placeholder="Min stok"
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.stock ?? ''}
-                                onChange={(event) => setEditData({ ...editData, stock: Number(event.target.value) })}
-                                placeholder="Stok"
-                            />
-                            <textarea
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3"
-                                value={editData.description ?? ''}
-                                onChange={(event) => setEditData({ ...editData, description: event.target.value })}
-                                placeholder="Deskripsi"
-                            />
+                            <div className="space-y-1 md:col-span-3">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Nama produk</label>
+                                <input
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.name ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, name: event.target.value })}
+                                    placeholder="Nama produk"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Kategori</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.category_id ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, category_id: event.target.value })}
+                                >
+                                    <option value="">Pilih kategori</option>
+                                    {categories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">SKU</label>
+                                <input
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.sku ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, sku: event.target.value })}
+                                    placeholder="SKU"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Status</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.status ?? 'draft'}
+                                    onChange={(event) => setEditData({ ...editData, status: event.target.value })}
+                                >
+                                    <option value="draft">Draft</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Harga jual</label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={formatCurrencyInput(editData.price ?? '')}
+                                    onChange={(event) => setEditData({ ...editData, price: parseCurrencyToInteger(event.target.value) })}
+                                    placeholder="Harga jual"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Harga modal</label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={formatCurrencyInput(editData.cost_price ?? '')}
+                                    onChange={(event) => setEditData({ ...editData, cost_price: parseCurrencyToInteger(event.target.value) })}
+                                    placeholder="Harga modal"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Berat (gram)</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.weight ?? ''}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        setEditData({ ...editData, weight: value === '' ? '' : Number(value) });
+                                    }}
+                                    placeholder="Berat (gram)"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Panjang</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.length ?? ''}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        setEditData({ ...editData, length: value === '' ? '' : Number(value) });
+                                    }}
+                                    placeholder="Panjang"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Lebar</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.width ?? ''}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        setEditData({ ...editData, width: value === '' ? '' : Number(value) });
+                                    }}
+                                    placeholder="Lebar"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Tinggi</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.height ?? ''}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        setEditData({ ...editData, height: value === '' ? '' : Number(value) });
+                                    }}
+                                    placeholder="Tinggi"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Min stok</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.min_stock ?? ''}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        setEditData({ ...editData, min_stock: value === '' ? '' : Number(value) });
+                                    }}
+                                    placeholder="Min stok"
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Stok</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.stock ?? ''}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        setEditData({ ...editData, stock: value === '' ? '' : Number(value) });
+                                    }}
+                                    placeholder="Stok"
+                                />
+                            </div>
+                            <div className="space-y-1 md:col-span-3">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Deskripsi</label>
+                                <textarea
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.description ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, description: event.target.value })}
+                                    placeholder="Deskripsi"
+                                />
+                            </div>
                             <div className="md:col-span-3">
                                 <label className="text-xs font-semibold uppercase text-slate-500">Foto Produk (maks 10)</label>
                                 <input
