@@ -139,13 +139,6 @@ class ClassController extends Controller
 
     public function destroy(Request $request, AcademyClass $class): RedirectResponse
     {
-        $bookingCount = $class->bookings()->count();
-        if ($bookingCount > 0) {
-            return back()->withErrors([
-                'class' => "Kelas tidak bisa dihapus karena sudah memiliki {$bookingCount} booking.",
-            ]);
-        }
-
         $class->load('images');
         foreach ($class->images as $image) {
             Storage::disk('public')->delete($image->image_path);

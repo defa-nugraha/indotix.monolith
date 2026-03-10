@@ -211,6 +211,7 @@ class HistoryDetailController extends Controller
         }
 
         $payment = $booking->payments()->latest()->first();
+        $class = $booking->academyClass;
 
         return response()->json([
             'type' => 'academy',
@@ -228,10 +229,10 @@ class HistoryDetailController extends Controller
                     'name' => $booking->ticket?->name,
                 ],
                 'class' => [
-                    'id' => $booking->academyClass?->id,
-                    'title' => $booking->academyClass?->title,
-                    'location' => $booking->academyClass?->location_detail,
-                    'start_at' => $booking->academyClass?->start_at?->toDateTimeString(),
+                    'id' => $class?->id,
+                    'title' => $class?->title ?? 'Produk tidak tersedia',
+                    'location' => $class?->location_detail,
+                    'start_at' => $class?->start_at?->toDateTimeString(),
                 ],
                 'guest' => [
                     'name' => $booking->guest_name,

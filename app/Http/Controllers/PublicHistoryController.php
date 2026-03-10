@@ -235,20 +235,21 @@ class PublicHistoryController extends Controller
             ->get()
             ->map(function (AcademyBooking $booking) use ($userId) {
                 $class = $booking->academyClass;
+                $classAvailable = (bool) $class;
 
                 return [
                     'id' => $booking->id,
                     'encrypted_id' => Crypt::encryptString((string) $booking->id),
                     'type' => 'academy',
-                    'title' => $class?->title ?? 'Academy',
+                    'title' => $classAvailable ? $class->title : 'Produk tidak tersedia',
                     'city_name' => null,
-                    'address' => $class?->location_detail,
+                    'address' => $classAvailable ? $class->location_detail : null,
                     'check_in' => null,
                     'check_out' => null,
                     'nights' => null,
                     'rooms_count' => null,
                     'guests_count' => null,
-                    'visit_date' => $class?->start_at?->toDateString(),
+                    'visit_date' => $classAvailable ? $class->start_at?->toDateString() : null,
                     'quantity' => $booking->quantity,
                     'total' => $booking->total_price,
                     'status' => $booking->status,
@@ -261,11 +262,9 @@ class PublicHistoryController extends Controller
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'payment_url' => route('academy.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('academy.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                    'review_url' => $booking->academy_class_id
-                        ? '/academy/'.$class?->slug
-                        : null,
-                    'can_review' => $booking->academy_class_id
-                        ? ProductReviewService::hasUsedBooking($userId, 'academy', (int) $booking->academy_class_id)
+                    'review_url' => $classAvailable ? '/academy/'.$class?->slug : null,
+                    'can_review' => $classAvailable
+                        ? ProductReviewService::hasUsedBooking($userId, 'academy', (int) $class->id)
                         : false,
                     'ticket_name' => $booking->ticket?->name,
                 ];
