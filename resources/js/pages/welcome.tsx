@@ -297,7 +297,7 @@ export default function Welcome({
                         <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 {!isReady && (
                     <section className="space-y-8">
-                        <div className="grid w-full gap-6 md:grid-cols-[1fr_2.4fr_1fr]">
+                        <div className="grid w-full items-start gap-6 md:grid-cols-[1fr_2.4fr_1fr]">
                             {[0, 1, 2].map((idx) => (
                                 <Skeleton
                                     key={idx}
