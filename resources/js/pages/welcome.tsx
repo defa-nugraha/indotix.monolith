@@ -361,7 +361,7 @@ export default function Welcome({
                             </button>
                         )}
 
-                        <div className="grid w-full gap-6 md:grid-cols-[1fr_2.4fr_1fr]">
+                        <div className="grid w-full items-stretch gap-6 md:grid-cols-[1fr_2.4fr_1fr]">
                             {bannerSlots.map((slot, idx) => {
                                 const slide = bannerSlides[slot.index];
                                 const isMainBanner = slot.className === '';
@@ -369,7 +369,7 @@ export default function Welcome({
                                 const content = (
                                     <div
                                         className={`relative w-full transition-opacity duration-300 ${
-                                            isMainBanner ? 'aspect-[842/236]' : 'h-[400px]'
+                                            isMainBanner ? 'aspect-[842/236]' : 'h-full'
                                         } ${isBannerTransitioning ? 'opacity-0' : 'opacity-100'}`}
                                         style={{
                                             backgroundImage: slide.image
@@ -387,11 +387,11 @@ export default function Welcome({
                                     <div
                                         key={`${slide.id}-${idx}`}
                                         className={`overflow-hidden rounded-2xl bg-white shadow-sm ${
-                                            isMainBanner ? 'mx-auto w-full max-w-[842px]' : ''
+                                            isMainBanner ? 'mx-auto w-full max-w-[842px]' : 'h-full'
                                         } ${slot.className}`}
                                     >
                                         {slide.link ? (
-                                            <a href={slide.link} className="block">
+                                            <a href={slide.link} className="block h-full">
                                                 {content}
                                             </a>
                                         ) : (
