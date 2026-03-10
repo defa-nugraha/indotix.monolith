@@ -220,6 +220,12 @@ export default function Welcome({
         'Danau',
     ];
 
+    const formatRupiah = (value: number | string | null | undefined) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric) || numeric <= 0) return null;
+        return `Rp ${numeric.toLocaleString('id-ID')}`;
+    };
+
     const promoVideoData: PromoVideo = promoVideo ?? {
         title: 'MJS Talent Management',
         description:
@@ -540,8 +546,9 @@ export default function Welcome({
                                         <p className="text-xs text-slate-500">{item.city_name ?? 'Indonesia'}</p>
                                         <div className="text-sm font-semibold text-sky-600">
                                             {Number.isFinite(Number(item.price))
-                                                ? `Mulai Rp ${Number(item.price).toLocaleString('id-ID')}`
-                                                : 'Harga tersedia'}
+                                                formatRupiah(item.price)
+                                                    ? `Mulai ${formatRupiah(item.price)}`
+                                                    : 'Harga tersedia'}
                                         </div>
                                         {detailSlug ? (
                                             <Link
@@ -600,7 +607,9 @@ export default function Welcome({
                                         )}
                                     </div>
                                     <div className="text-sm font-semibold text-sky-600">
-                                        {hotel.min_price ? `Mulai Rp ${hotel.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                        {formatRupiah(hotel.min_price)
+                                            ? `Mulai ${formatRupiah(hotel.min_price)}`
+                                            : 'Harga tersedia'}
                                     </div>
                                         {hotel.slug || hotel.encrypted_id ? (
                                             <Link
@@ -650,7 +659,9 @@ export default function Welcome({
                                         {event.city_name ?? 'Indonesia'} · {event.start_at ?? 'Jadwal segera'}
                                     </p>
                                     <div className="text-sm font-semibold text-indigo-600">
-                                        {event.min_price ? `Mulai Rp ${event.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                        {formatRupiah(event.min_price)
+                                            ? `Mulai ${formatRupiah(event.min_price)}`
+                                            : 'Harga tersedia'}
                                     </div>
                                         {event.slug || event.encrypted_id ? (
                                             <Link
@@ -703,7 +714,9 @@ export default function Welcome({
                                         {item.category ?? 'Academy'} · {item.start_at ?? 'Jadwal segera'}
                                     </p>
                                     <div className="text-sm font-semibold text-indigo-600">
-                                        {item.min_price ? `Mulai Rp ${item.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                        {formatRupiah(item.min_price)
+                                            ? `Mulai ${formatRupiah(item.min_price)}`
+                                            : 'Harga tersedia'}
                                     </div>
                                         {item.slug || item.encrypted_id ? (
                                             <Link
@@ -756,7 +769,9 @@ export default function Welcome({
                                         {item.city_name ?? 'Indonesia'} · {item.type ?? 'wisata'}
                                     </p>
                                     <div className="text-sm font-semibold text-emerald-600">
-                                        {item.min_price ? `Mulai Rp ${item.min_price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                        {formatRupiah(item.min_price)
+                                            ? `Mulai ${formatRupiah(item.min_price)}`
+                                            : 'Harga tersedia'}
                                     </div>
                                     {item.slug || item.encrypted_id ? (
                                         <Link
@@ -780,9 +795,9 @@ export default function Welcome({
                     <div className="flex items-center justify-between">
                         <div>
                             <h2 className="text-xl font-semibold text-slate-900">
-                                Oleh-oleh khas, kirim ke rumah <span className="text-sky-600">#OlehOlehVibes</span>
+                                Produk retail pilihan, siap dikirim cepat <span className="text-sky-600">#RetailShopReady</span>
                             </h2>
-                            <p className="text-sm text-slate-500">Bawa pulang kenangan terbaik dari perjalananmu.</p>
+                            <p className="text-sm text-slate-500">Temukan gadget, kebutuhan perjalanan, dan produk lifestyle dari mitra terpercaya.</p>
                         </div>
                         <Link href="/retail-shop" className="text-sm font-semibold text-sky-600">
                             Lihat Semua Retail Shop →
@@ -808,7 +823,7 @@ export default function Welcome({
                                         {item.name}
                                     </h3>
                                     <div className="text-sm font-semibold text-amber-600">
-                                        {item.price ? `Rp ${item.price.toLocaleString('id-ID')}` : 'Harga tersedia'}
+                                        {formatRupiah(item.price) ?? 'Harga tersedia'}
                                     </div>
                                     {detailSlug ? (
                                         <Link
