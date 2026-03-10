@@ -367,14 +367,14 @@ export default function Welcome({
                                 const isMainBanner = slot.className === '';
                                 const content = (
                                     <div
-                                        className={`w-full transition-opacity duration-300 ${
-                                            isMainBanner ? 'h-[236px]' : 'h-[150px] md:h-56'
-                                        } ${isBannerTransitioning ? 'opacity-0' : 'opacity-100'}`}
+                                        className={`w-full aspect-[842/236] transition-opacity duration-300 ${
+                                            isBannerTransitioning ? 'opacity-0' : 'opacity-100'
+                                        }`}
                                         style={{
                                             backgroundImage: slide.image
                                                 ? `url(${slide.image})`
                                                 : slide.gradient,
-                                            backgroundSize: isMainBanner ? 'contain' : 'cover',
+                                            backgroundSize: 'contain',
                                             backgroundPosition: 'center',
                                             backgroundRepeat: 'no-repeat',
                                         }}
