@@ -545,10 +545,9 @@ export default function Welcome({
                                         <h3 className="text-sm font-semibold text-slate-900">{item.title}</h3>
                                         <p className="text-xs text-slate-500">{item.city_name ?? 'Indonesia'}</p>
                                         <div className="text-sm font-semibold text-sky-600">
-                                            {Number.isFinite(Number(item.price))
-                                                formatRupiah(item.price)
-                                                    ? `Mulai ${formatRupiah(item.price)}`
-                                                    : 'Harga tersedia'}
+                                            {formatRupiah(item.price)
+                                                ? `Mulai ${formatRupiah(item.price)}`
+                                                : 'Harga tersedia'}
                                         </div>
                                         {detailSlug ? (
                                             <Link
