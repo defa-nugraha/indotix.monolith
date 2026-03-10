@@ -68,14 +68,19 @@ export default function SouvenirShow({
 
     const activeVariants = product.variants.filter((variant) => variant.is_active);
     const variant = activeVariants.find((item) => item.id === selectedVariant);
-    const unitPrice = product.price + (variant?.additional_price ?? 0);
+    const unitPrice = Number(product.price) + Number(variant?.additional_price ?? 0);
     const maxQty = variant ? variant.stock : product.stock;
+    const formatIdr = (value: number | string | null | undefined) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return 'Rp -';
+        return `Rp ${numeric.toLocaleString('id-ID')}`;
+    };
 
     const handleAddToCart = () => {
         if (guardPurchaseByRole(role)) {
             return;
         }
-        router.post('/souvenir/cart/add', {
+        router.post('/retail-shop/cart/add', {
             product_id: product.id,
             variant_id: selectedVariant,
             quantity,
@@ -89,7 +94,7 @@ export default function SouvenirShow({
     const navItems = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir', active: true },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop', active: true },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
@@ -131,7 +136,7 @@ export default function SouvenirShow({
                         <div className="flex items-center justify-between">
                             <div>
                                 <div className="text-sm text-slate-500">Harga</div>
-                                <div className="text-2xl font-semibold text-sky-600">Rp {unitPrice.toLocaleString('id-ID')}</div>
+                                <div className="text-2xl font-semibold text-sky-600">{formatIdr(unitPrice)}</div>
                             </div>
                             <div className="text-xs text-slate-500">Stok {maxQty}</div>
                         </div>

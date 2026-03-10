@@ -52,13 +52,19 @@ export default function SouvenirSearch({
 
     const submitSearch = (event: React.FormEvent) => {
         event.preventDefault();
-        router.get('/souvenir', form, { preserveState: true, preserveScroll: true });
+        router.get('/retail-shop', form, { preserveState: true, preserveScroll: true });
+    };
+
+    const formatIdr = (value: number | string | null | undefined) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return 'Rp -';
+        return `Rp ${numeric.toLocaleString('id-ID')}`;
     };
 
     const navItems = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir', active: true },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop', active: true },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
@@ -114,7 +120,7 @@ export default function SouvenirSearch({
                                 return (
                                 <Link
                                     key={product.id}
-                                    href={detailSlug ? `/souvenir/${detailSlug}` : '/souvenir'}
+                                    href={detailSlug ? `/retail-shop/${detailSlug}` : '/retail-shop'}
                                     className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
                                 >
                                     <div className="h-48 w-full bg-slate-100">
@@ -128,7 +134,7 @@ export default function SouvenirSearch({
                                         <div className="text-xs text-slate-500">{product.category ?? 'Retail Shop'}</div>
                                         <h3 className="mt-1 text-base font-semibold text-slate-900">{product.name}</h3>
                                         <div className="mt-2 flex items-center justify-between text-sm">
-                                            <span className="font-semibold text-sky-600">Rp {product.price.toLocaleString('id-ID')}</span>
+                                            <span className="font-semibold text-sky-600">{formatIdr(product.price)}</span>
                                             <span className="text-xs text-slate-500">Stok {product.stock}</span>
                                         </div>
                                     </div>

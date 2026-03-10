@@ -36,8 +36,8 @@ class PublicSouvenirController extends Controller
                 'encrypted_id' => Crypt::encryptString((string) $product->id),
                 'slug' => $product->slug,
                 'name' => $product->name,
-                'price' => $product->price,
-                'stock' => $product->stock,
+                'price' => (int) $product->price,
+                'stock' => (int) $product->stock,
                 'category' => $product->category?->name,
                 'image_url' => $product->images->first()?->image_url ? Storage::url($product->images->first()->image_url) : null,
             ];
@@ -101,8 +101,8 @@ class PublicSouvenirController extends Controller
                 'slug' => $productModel->slug,
                 'name' => $productModel->name,
                 'description' => $productModel->description,
-                'price' => $productModel->price,
-                'stock' => $productModel->stock,
+                'price' => (int) $productModel->price,
+                'stock' => (int) $productModel->stock,
                 'category' => $productModel->category?->name,
                 'images' => $productModel->images
                     ->map(fn ($image) => $image->image_url ? Storage::url($image->image_url) : null)
@@ -113,8 +113,8 @@ class PublicSouvenirController extends Controller
                     'name' => $variant->name,
                     'variant_type' => $variant->variant_type,
                     'sku' => $variant->sku,
-                    'additional_price' => $variant->additional_price,
-                    'stock' => $variant->stock,
+                    'additional_price' => (int) $variant->additional_price,
+                    'stock' => (int) $variant->stock,
                     'is_active' => $variant->is_active,
                 ]),
             ],

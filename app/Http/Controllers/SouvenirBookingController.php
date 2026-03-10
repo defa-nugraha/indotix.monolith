@@ -281,7 +281,7 @@ class SouvenirBookingController extends Controller
                             'can_review' => $item->product_id && $userId
                                 ? ProductReviewService::hasUsedBooking($userId, 'souvenir', (int) $item->product_id)
                                 : false,
-                            'url' => $slug ? '/souvenir/'.$slug : null,
+                            'url' => $slug ? '/retail-shop/'.$slug : null,
                         ],
                     ];
                 }),

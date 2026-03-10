@@ -200,7 +200,7 @@ export default function Welcome({
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir' },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Academy', icon: BookOpen, href: '/academy' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
@@ -777,7 +777,7 @@ export default function Welcome({
                             </h2>
                             <p className="text-sm text-slate-500">Bawa pulang kenangan terbaik dari perjalananmu.</p>
                         </div>
-                        <Link href="/souvenir" className="text-sm font-semibold text-sky-600">
+                        <Link href="/retail-shop" className="text-sm font-semibold text-sky-600">
                             Lihat Semua Retail Shop →
                         </Link>
                     </div>
@@ -805,7 +805,7 @@ export default function Welcome({
                                     </div>
                                     {detailSlug ? (
                                         <Link
-                                            href={`/souvenir/${detailSlug}`}
+                                            href={`/retail-shop/${detailSlug}`}
                                             className="mt-4 inline-block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
                                         >
                                             Lihat Detail

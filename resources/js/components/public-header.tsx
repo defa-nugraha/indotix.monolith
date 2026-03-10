@@ -111,7 +111,7 @@ export default function PublicHeader({
 
                     <div className="hidden items-center gap-4 md:flex">
                         {showCart && (
-                            <Link href="/souvenir/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                            <Link href="/retail-shop/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
                                 <ShoppingCart className="h-4 w-4" />
                                 Keranjang
                                 {Boolean(souvenir_cart_count) && (
@@ -188,7 +188,7 @@ export default function PublicHeader({
 
                     <div className="flex items-center gap-2 md:hidden">
                         {showCart && (
-                            <Link href="/souvenir/cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
+                            <Link href="/retail-shop/cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
                                 <ShoppingCart className="h-4 w-4" />
                                 <span className="hidden sm:inline">Keranjang</span>
                                 <span className="sr-only">Keranjang</span>

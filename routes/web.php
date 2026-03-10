@@ -890,31 +890,37 @@ Route::get('/about', [\App\Http\Controllers\PublicAboutController::class, 'show'
 Route::get('/privacy-policy', [\App\Http\Controllers\PublicPrivacyPolicyController::class, 'show'])
     ->name('public.privacy-policy');
 
-Route::get('/souvenir/cart', [\App\Http\Controllers\SouvenirCartController::class, 'index'])
+Route::get('/retail-shop/cart', [\App\Http\Controllers\SouvenirCartController::class, 'index'])
     ->name('souvenir.cart');
-Route::post('/souvenir/cart/add', [\App\Http\Controllers\SouvenirCartController::class, 'add'])
+Route::post('/retail-shop/cart/add', [\App\Http\Controllers\SouvenirCartController::class, 'add'])
     ->name('souvenir.cart.add');
-Route::post('/souvenir/cart/update', [\App\Http\Controllers\SouvenirCartController::class, 'update'])
+Route::post('/retail-shop/cart/update', [\App\Http\Controllers\SouvenirCartController::class, 'update'])
     ->name('souvenir.cart.update');
-Route::post('/souvenir/cart/remove', [\App\Http\Controllers\SouvenirCartController::class, 'remove'])
+Route::post('/retail-shop/cart/remove', [\App\Http\Controllers\SouvenirCartController::class, 'remove'])
     ->name('souvenir.cart.remove');
-Route::post('/souvenir/cart/clear', [\App\Http\Controllers\SouvenirCartController::class, 'clear'])
+Route::post('/retail-shop/cart/clear', [\App\Http\Controllers\SouvenirCartController::class, 'clear'])
     ->name('souvenir.cart.clear');
-Route::get('/souvenir', [\App\Http\Controllers\PublicSouvenirController::class, 'index'])
+Route::get('/retail-shop', [\App\Http\Controllers\PublicSouvenirController::class, 'index'])
     ->name('souvenir.search');
 
 Route::middleware(['auth', 'verified', 'user'])->group(function () {
-    Route::get('/souvenir/checkout', [\App\Http\Controllers\SouvenirBookingController::class, 'review'])
+    Route::get('/retail-shop/checkout', [\App\Http\Controllers\SouvenirBookingController::class, 'review'])
         ->name('souvenir.checkout.review');
-    Route::post('/souvenir/checkout/confirm', [\App\Http\Controllers\SouvenirBookingController::class, 'confirm'])
+    Route::post('/retail-shop/checkout/confirm', [\App\Http\Controllers\SouvenirBookingController::class, 'confirm'])
         ->name('souvenir.checkout.confirm');
-    Route::get('/souvenir/booking/{order}', [\App\Http\Controllers\SouvenirBookingController::class, 'show'])
+    Route::get('/retail-shop/booking/{order}', [\App\Http\Controllers\SouvenirBookingController::class, 'show'])
         ->name('souvenir.booking.show');
-    Route::get('/souvenir/booking/{order}/payment', [\App\Http\Controllers\SouvenirBookingController::class, 'payment'])
+    Route::get('/retail-shop/booking/{order}/payment', [\App\Http\Controllers\SouvenirBookingController::class, 'payment'])
         ->name('souvenir.booking.payment');
 });
-Route::get('/souvenir/{product}', [\App\Http\Controllers\PublicSouvenirController::class, 'show'])
+Route::get('/retail-shop/{product}', [\App\Http\Controllers\PublicSouvenirController::class, 'show'])
     ->name('souvenir.show');
+Route::redirect('/souvenir', '/retail-shop');
+Route::redirect('/souvenir/cart', '/retail-shop/cart');
+Route::redirect('/souvenir/checkout', '/retail-shop/checkout');
+Route::redirect('/souvenir/booking/{order}', '/retail-shop/booking/{order}');
+Route::redirect('/souvenir/booking/{order}/payment', '/retail-shop/booking/{order}/payment');
+Route::redirect('/souvenir/{product}', '/retail-shop/{product}');
 Route::get('/wisata', [\App\Http\Controllers\PublicWisataController::class, 'index'])
     ->name('wisata.search');
 Route::get('/wisata/{destination}', [\App\Http\Controllers\PublicWisataController::class, 'show'])

@@ -119,7 +119,7 @@ export default function SouvenirBookingReview({ items, summary, snapClientKey, s
                                     return;
                                 }
                                 setLoading(true);
-                                form.post('/souvenir/checkout/confirm', {
+                                form.post('/retail-shop/checkout/confirm', {
                                     preserveScroll: true,
                                     onError: (errors) => {
                                         Swal.fire({

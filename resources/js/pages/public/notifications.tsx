@@ -24,7 +24,7 @@ export default function Notifications({ notifications = [] }: { notifications: N
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir' },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop' },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Academy', icon: BookOpen, href: '/academy' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
@@ -203,7 +203,7 @@ export default function Notifications({ notifications = [] }: { notifications: N
                                                             : item.data?.category === 'event'
                                                                 ? `/events/booking/${item.data.booking_id}`
                                                                 : item.data?.category === 'souvenir'
-                                                                    ? `/souvenir/booking/${item.data.booking_id}`
+                                                                    ? `/retail-shop/booking/${item.data.booking_id}`
                                                                 : item.data?.category === 'special_program'
                                                                     ? `/special-programs/booking/${item.data.booking_id}`
                                                                     : `/booking/${item.data.booking_id}`

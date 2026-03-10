@@ -29,13 +29,13 @@ export default function SouvenirCart({ items, summary }: { items: CartItem[]; su
     const navItems = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir', active: true },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop', active: true },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
     const updateQuantity = (item: CartItem, quantity: number) => {
-        router.post('/souvenir/cart/update', {
+        router.post('/retail-shop/cart/update', {
             product_id: item.product_id,
             variant_id: item.variant_id,
             quantity,
@@ -46,7 +46,7 @@ export default function SouvenirCart({ items, summary }: { items: CartItem[]; su
     };
 
     const removeItem = (item: CartItem) => {
-        router.post('/souvenir/cart/remove', {
+        router.post('/retail-shop/cart/remove', {
             product_id: item.product_id,
             variant_id: item.variant_id,
         }, { preserveScroll: true });
@@ -126,7 +126,7 @@ export default function SouvenirCart({ items, summary }: { items: CartItem[]; su
                             </div>
                         </div>
                         <Link
-                            href="/souvenir/checkout"
+                            href="/retail-shop/checkout"
                             className={`mt-6 flex w-full items-center justify-center rounded-xl py-3 text-sm font-semibold text-white ${
                                 items.length === 0 ? 'pointer-events-none bg-slate-300' : 'bg-sky-600 hover:bg-sky-700'
                             }`}

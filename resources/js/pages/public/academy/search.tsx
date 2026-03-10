@@ -44,7 +44,7 @@ export default function AcademySearch({
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata', active: false },
         { label: 'Event', icon: CalendarCheck, href: '/events', active: false },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/souvenir', active: false },
+        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop', active: false },
         { label: 'Spesial Program', icon: Star, href: '/special-programs', active: false },
         { label: 'Academy', icon: BookOpen, href: '/academy', active: true },
         { label: 'Hotel', icon: Ticket, href: '/stay', active: false },
