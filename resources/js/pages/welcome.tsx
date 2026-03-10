@@ -374,8 +374,9 @@ export default function Welcome({
                                             backgroundImage: slide.image
                                                 ? `url(${slide.image})`
                                                 : slide.gradient,
-                                            backgroundSize: 'cover',
+                                            backgroundSize: isMainBanner ? 'contain' : 'cover',
                                             backgroundPosition: 'center',
+                                            backgroundRepeat: 'no-repeat',
                                         }}
                                     />
                                 );
