@@ -83,6 +83,7 @@ class HotelController extends Controller
             'facilityOptions' => self::FACILITY_CODES,
             'mitraOptions' => $this->mitraOptions(),
             'cityOptions' => $this->cityOptions(),
+            'taxes' => [],
         ]);
     }
 
@@ -92,12 +93,15 @@ class HotelController extends Controller
 
         $facilityCodes = $validated['facility_codes'] ?? [];
         $images = $validated['images'] ?? [];
+        $taxes = $validated['taxes'] ?? [];
         unset($validated['facility_codes']);
         unset($validated['images']);
+        unset($validated['taxes']);
 
         $hotel = Hotel::create($validated);
 
         $this->syncFacilities($hotel, $facilityCodes);
+        $this->syncTaxes($hotel, $taxes);
         $this->attachImages($hotel, $images, $mediaCompression);
 
         return redirect()->route('hotels.index');
@@ -105,7 +109,7 @@ class HotelController extends Controller
 
     public function edit(Hotel $hotel): Response
     {
-        $hotel->load('facilities', 'images');
+        $hotel->load('facilities', 'images', 'taxes');
 
         return Inertia::render('hotels/edit', [
             'hotel' => $this->toPayload($hotel),
@@ -121,11 +125,14 @@ class HotelController extends Controller
         $validated = $this->validateHotel($request);
         $facilityCodes = $validated['facility_codes'] ?? [];
         $images = $validated['images'] ?? [];
+        $taxes = $validated['taxes'] ?? [];
         unset($validated['facility_codes']);
         unset($validated['images']);
+        unset($validated['taxes']);
 
         $hotel->update($validated);
         $this->syncFacilities($hotel, $facilityCodes);
+        $this->syncTaxes($hotel, $taxes);
         $this->attachImages($hotel, $images, $mediaCompression);
 
         return redirect()->route('hotels.index');
@@ -173,6 +180,9 @@ class HotelController extends Controller
             'status' => ['required', Rule::in(self::STATUSES)],
             'facility_codes' => ['nullable', 'array'],
             'facility_codes.*' => ['string', Rule::in(self::FACILITY_CODES)],
+            'taxes' => ['nullable', 'array'],
+            'taxes.*.name' => ['required_with:taxes.*.rate', 'string', 'max:120'],
+            'taxes.*.rate' => ['required_with:taxes.*.name', 'numeric', 'min:0', 'max:100'],
             'images' => ['nullable', 'array'],
             'images.*' => ['file', 'image'],
         ]);
@@ -194,6 +204,26 @@ class HotelController extends Controller
         $hotel->facilities()->createMany(
             $uniqueCodes->map(fn (string $code) => ['facility_code' => $code])->all()
         );
+    }
+
+    private function syncTaxes(Hotel $hotel, array $taxes): void
+    {
+        $cleanTaxes = collect($taxes)
+            ->filter(fn ($tax) => filled($tax['name'] ?? null) || filled($tax['rate'] ?? null))
+            ->map(fn ($tax) => [
+                'name' => trim((string) ($tax['name'] ?? '')),
+                'rate' => (float) ($tax['rate'] ?? 0),
+            ])
+            ->filter(fn ($tax) => $tax['name'] !== '')
+            ->values();
+
+        $hotel->taxes()->delete();
+
+        if ($cleanTaxes->isEmpty()) {
+            return;
+        }
+
+        $hotel->taxes()->createMany($cleanTaxes->all());
     }
 
     private function attachImages(Hotel $hotel, array $images, MediaCompressionService $mediaCompression): void
@@ -237,6 +267,14 @@ class HotelController extends Controller
             'status' => $hotel->status,
             'facility_codes' => $hotel->facilities
                 ->pluck('facility_code')
+                ->values()
+                ->all(),
+            'taxes' => $hotel->taxes
+                ->map(fn ($tax) => [
+                    'id' => $tax->id,
+                    'name' => $tax->name,
+                    'rate' => $tax->rate,
+                ])
                 ->values()
                 ->all(),
             'images' => $hotel->images

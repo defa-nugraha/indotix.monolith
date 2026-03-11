@@ -21,6 +21,9 @@ type Booking = {
     subtotal?: number;
     discount_amount?: number | null;
     voucher_code?: string | null;
+    service_fee?: number | null;
+    tax_total?: number | null;
+    taxes?: Array<{ name?: string; rate?: number; amount?: number }>;
     total: number;
     payment?: { status?: string | null; payment_type?: string | null; payload?: any } | null;
 };
@@ -132,6 +135,27 @@ export default function BookingPayment({
                                     <div className="mt-2 flex items-center justify-between text-emerald-600">
                                         <span>Voucher {booking.voucher_code ?? ''}</span>
                                         <span>- Rp {booking.discount_amount.toLocaleString('id-ID')}</span>
+                                    </div>
+                                )}
+                                {Number(booking.service_fee ?? 0) > 0 && (
+                                    <div className="mt-2 flex items-center justify-between">
+                                        <span>Biaya admin pembayaran</span>
+                                        <span>Rp {Number(booking.service_fee ?? 0).toLocaleString('id-ID')}</span>
+                                    </div>
+                                )}
+                                {(booking.taxes ?? []).map((tax, index) => (
+                                    <div key={`${tax.name ?? 'tax'}-${index}`} className="mt-2 flex items-center justify-between">
+                                        <span>
+                                            Pajak {tax.name}
+                                            {tax.rate ? ` (${tax.rate}%)` : ''}
+                                        </span>
+                                        <span>Rp {Number(tax.amount ?? 0).toLocaleString('id-ID')}</span>
+                                    </div>
+                                ))}
+                                {Number(booking.tax_total ?? 0) > 0 && (
+                                    <div className="mt-2 flex items-center justify-between text-slate-700">
+                                        <span>Total pajak</span>
+                                        <span>Rp {Number(booking.tax_total ?? 0).toLocaleString('id-ID')}</span>
                                     </div>
                                 )}
                                 <div className="mt-2 flex items-center justify-between border-t border-dashed border-slate-200 pt-2 font-semibold text-slate-900">

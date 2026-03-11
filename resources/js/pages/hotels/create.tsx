@@ -26,6 +26,7 @@ type FormData = {
     status: string;
     facility_codes: string[];
     images: File[];
+    taxes: Array<{ name: string; rate: string }>;
 };
 
 type CreateProps = {
@@ -58,7 +59,7 @@ export default function CreateHotel({
         { title: 'Tambah', href: `${basePath}/create` },
     ];
     const [isMapOpen, setIsMapOpen] = useState(false);
-    const { data, setData, post, processing, errors } = useForm<FormData>({
+    const { data, setData, post, processing, errors, transform } = useForm<FormData>({
         vendor_id: mitraId ? String(mitraId) : '',
         name: '',
         description: '',
@@ -72,6 +73,7 @@ export default function CreateHotel({
         status: statusOptions[0] ?? 'draft',
         facility_codes: [],
         images: [],
+        taxes: [],
     });
 
     const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,6 +98,24 @@ export default function CreateHotel({
             data.facility_codes.includes(code)
                 ? data.facility_codes.filter((item) => item !== code)
                 : [...data.facility_codes, code],
+        );
+    };
+
+    const addTaxRow = () => {
+        setData('taxes', [...data.taxes, { name: '', rate: '' }]);
+    };
+
+    const updateTaxRow = (index: number, key: 'name' | 'rate', value: string) => {
+        setData(
+            'taxes',
+            data.taxes.map((tax, idx) => (idx === index ? { ...tax, [key]: value } : tax)),
+        );
+    };
+
+    const removeTaxRow = (index: number) => {
+        setData(
+            'taxes',
+            data.taxes.filter((_, idx) => idx !== index),
         );
     };
 
@@ -153,6 +173,12 @@ export default function CreateHotel({
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
+                        transform((payload) => ({
+                            ...payload,
+                            taxes: payload.taxes.filter(
+                                (tax) => tax.name.trim() !== '' || String(tax.rate).trim() !== '',
+                            ),
+                        }));
                         post(basePath, {
                             onSuccess: () => {
                                 Swal.fire({
@@ -363,6 +389,73 @@ export default function CreateHotel({
                             placeholder="Deskripsi singkat hotel"
                         />
                         <InputError message={errors.description} />
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                                <Label>Pajak Hotel</Label>
+                                <p className="text-xs text-slate-500">
+                                    Tambahkan pajak yang berlaku untuk booking hotel ini.
+                                </p>
+                            </div>
+                            <Button type="button" variant="outline" onClick={addTaxRow}>
+                                <Plus className="mr-2 size-4" />
+                                Tambah pajak
+                            </Button>
+                        </div>
+                        {data.taxes.length === 0 ? (
+                            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
+                                Belum ada pajak yang ditambahkan.
+                            </div>
+                        ) : (
+                            <div className="space-y-4">
+                                {data.taxes.map((tax, index) => (
+                                    <div
+                                        key={`tax-${index}`}
+                                        className="grid gap-3 rounded-2xl border border-slate-100 bg-white p-4 md:grid-cols-[2fr_1fr_auto]"
+                                    >
+                                        <div className="grid gap-2">
+                                            <Label htmlFor={`tax-name-${index}`}>Nama pajak</Label>
+                                            <Input
+                                                id={`tax-name-${index}`}
+                                                value={tax.name}
+                                                onChange={(event) =>
+                                                    updateTaxRow(index, 'name', event.target.value)
+                                                }
+                                                placeholder="Contoh: Pajak layanan"
+                                            />
+                                            <InputError message={(errors as any)[`taxes.${index}.name`]} />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor={`tax-rate-${index}`}>Besaran (%)</Label>
+                                            <Input
+                                                id={`tax-rate-${index}`}
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={tax.rate}
+                                                onChange={(event) =>
+                                                    updateTaxRow(index, 'rate', event.target.value)
+                                                }
+                                                placeholder="Misal 10"
+                                            />
+                                            <InputError message={(errors as any)[`taxes.${index}.rate`]} />
+                                        </div>
+                                        <div className="flex items-end">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="border-red-200 text-red-600 hover:bg-red-50"
+                                                onClick={() => removeTaxRow(index)}
+                                            >
+                                                Hapus
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-3">

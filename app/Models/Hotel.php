@@ -88,4 +88,9 @@ class Hotel extends Model
     {
         return $this->hasMany(HotelImage::class);
     }
+
+    public function taxes(): HasMany
+    {
+        return $this->hasMany(HotelTax::class);
+    }
 }

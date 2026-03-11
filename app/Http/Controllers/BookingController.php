@@ -7,6 +7,7 @@ use App\Models\BookingRoom;
 use App\Models\Hotel;
 use App\Models\Payment;
 use App\Models\RoomType;
+use App\Models\SystemSetting;
 use App\Services\BookingService;
 use App\Services\MidtransService;
 use App\Services\ProductReviewService;
@@ -77,8 +78,9 @@ class BookingController extends Controller
             return redirect()->route('home')->withErrors(['booking' => 'Data booking tidak ditemukan.']);
         }
 
-        $hotel = Hotel::query()->with('city')->findOrFail($draft['hotel_id']);
+        $hotel = Hotel::query()->with('city', 'taxes')->findOrFail($draft['hotel_id']);
         $roomType = RoomType::query()->findOrFail($draft['room_type_id']);
+        $hotel = Hotel::query()->with('taxes')->findOrFail($draft['hotel_id']);
         if ((int) $roomType->hotel_id !== (int) $draft['hotel_id']) {
             return back()->withErrors(['rooms' => 'Tipe kamar tidak sesuai hotel.']);
         }
@@ -114,7 +116,10 @@ class BookingController extends Controller
             }
         }
 
-        $total = max(0, $pricing['subtotal'] - $discountAmount);
+        $taxableSubtotal = max(0, $pricing['subtotal'] - $discountAmount);
+        [$taxItems, $taxTotal] = $this->buildTaxBreakdown($hotel, $taxableSubtotal);
+        $serviceFee = $this->resolveServiceFee();
+        $total = max(0, $taxableSubtotal + $taxTotal + $serviceFee);
 
         return Inertia::render('public/booking/review', [
             'draft' => $draft,
@@ -135,6 +140,9 @@ class BookingController extends Controller
                 'nights' => $pricing['nights'],
                 'subtotal' => $pricing['subtotal'],
                 'discount_amount' => $discountAmount,
+                'service_fee' => $serviceFee,
+                'tax_total' => $taxTotal,
+                'taxes' => $taxItems,
                 'total' => $total,
             ],
             'voucher' => $voucherPayload,
@@ -159,6 +167,7 @@ class BookingController extends Controller
         }
 
         $roomType = RoomType::query()->findOrFail($draft['room_type_id']);
+        $hotel = Hotel::query()->with('taxes')->findOrFail($draft['hotel_id']);
         try {
             $pricing = app(BookingService::class)
                 ->calculatePricing($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms']);
@@ -214,7 +223,7 @@ class BookingController extends Controller
         $roomType = RoomType::query()->findOrFail($draft['room_type_id']);
 
         try {
-            $booking = DB::transaction(function () use ($request, $draft, $roomType, $data, $bookingService) {
+            $booking = DB::transaction(function () use ($request, $draft, $roomType, $hotel, $data, $bookingService) {
                 $pricing = $bookingService->calculatePricing($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms']);
                 $voucher = null;
                 $discountAmount = 0;
@@ -247,6 +256,11 @@ class BookingController extends Controller
 
                 $bookingService->reserveInventory($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms'], false);
 
+                $taxableSubtotal = max(0, $pricing['subtotal'] - $discountAmount);
+                [$taxItems, $taxTotal] = $this->buildTaxBreakdown($hotel, $taxableSubtotal);
+                $serviceFee = $this->resolveServiceFee();
+                $total = max(0, $taxableSubtotal + $taxTotal + $serviceFee);
+
                 $booking = Booking::create([
                     'user_id' => $request->user()->id,
                     'hotel_id' => $draft['hotel_id'],
@@ -261,7 +275,10 @@ class BookingController extends Controller
                     'discount_type' => $voucher?->discount_type,
                     'discount_value' => $voucher?->discount_value,
                     'discount_amount' => $discountAmount > 0 ? $discountAmount : null,
-                    'total' => max(0, $pricing['subtotal'] - $discountAmount),
+                    'service_fee' => $serviceFee,
+                    'tax_total' => $taxTotal,
+                    'tax_details' => $taxItems,
+                    'total' => $total,
                     'status' => 'pending_payment',
                     'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
                     'guest_name' => $data['guest_name'],
@@ -506,6 +523,9 @@ class BookingController extends Controller
             'total' => $booking->total,
             'subtotal' => $booking->subtotal,
             'discount_amount' => $booking->discount_amount,
+            'service_fee' => $booking->service_fee ?? 0,
+            'tax_total' => $booking->tax_total ?? 0,
+            'taxes' => $booking->tax_details ?? [],
             'voucher_code' => $booking->voucher_code,
             'guest_name' => $booking->guest_name,
             'guest_email' => $booking->guest_email,
@@ -525,6 +545,39 @@ class BookingController extends Controller
             'qr_data' => $this->buildQrData('HOTEL', $this->encryptId($booking->id)),
             'qr_url' => $this->buildQrUrl('HOTEL', $this->encryptId($booking->id)),
         ];
+    }
+
+    private function resolveServiceFee(): int
+    {
+        $value = SystemSetting::query()
+            ->where('key', 'service_fee')
+            ->value('value');
+
+        if ($value === null) {
+            return 0;
+        }
+
+        return (int) round((float) $value);
+    }
+
+    private function buildTaxBreakdown(Hotel $hotel, int $taxableSubtotal): array
+    {
+        $items = $hotel->taxes
+            ->map(function ($tax) use ($taxableSubtotal) {
+                $rate = (float) $tax->rate;
+                $amount = (int) round($taxableSubtotal * ($rate / 100));
+                return [
+                    'name' => $tax->name,
+                    'rate' => $rate,
+                    'amount' => $amount,
+                ];
+            })
+            ->values()
+            ->all();
+
+        $total = array_sum(array_map(fn ($item) => $item['amount'], $items));
+
+        return [$items, $total];
     }
 
     private function buildSnapPayload(Booking $booking, string $orderId): array

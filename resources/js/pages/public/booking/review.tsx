@@ -199,6 +199,27 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
                                                 <span>- Rp {pricing.discount_amount.toLocaleString('id-ID')}</span>
                                             </div>
                                         )}
+                                        {pricing.service_fee > 0 && (
+                                            <div className="flex items-center justify-between">
+                                                <span>Biaya admin pembayaran</span>
+                                                <span>Rp {pricing.service_fee.toLocaleString('id-ID')}</span>
+                                            </div>
+                                        )}
+                                        {(pricing.taxes ?? []).map((tax: any, index: number) => (
+                                            <div key={`${tax.name}-${index}`} className="flex items-center justify-between">
+                                                <span>
+                                                    Pajak {tax.name}
+                                                    {tax.rate ? ` (${tax.rate}%)` : ''}
+                                                </span>
+                                                <span>Rp {Number(tax.amount ?? 0).toLocaleString('id-ID')}</span>
+                                            </div>
+                                        ))}
+                                        {pricing.tax_total > 0 && (
+                                            <div className="flex items-center justify-between text-slate-700">
+                                                <span>Total pajak</span>
+                                                <span>Rp {pricing.tax_total.toLocaleString('id-ID')}</span>
+                                            </div>
+                                        )}
                                         <div className="flex items-center justify-between border-t border-dashed border-slate-200 pt-2 font-semibold text-slate-900">
                                             <span>Total</span>
                                             <span>Rp {pricing.total.toLocaleString('id-ID')}</span>
