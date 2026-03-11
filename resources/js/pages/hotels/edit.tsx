@@ -1,6 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeft, Plus } from 'lucide-react';
+import Select from 'react-select';
 import InputError from '@/components/input-error';
 import LocationPickerModal from '@/components/location-picker-modal';
 import { Button } from '@/components/ui/button';
@@ -54,6 +55,8 @@ type EditProps = {
     basePath?: string;
     mitraId?: number;
 };
+
+type CitySelectOption = { value: string; label: string };
 
 const textareaClass =
     'border-input placeholder:text-muted-foreground flex min-h-[96px] w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]';
@@ -113,6 +116,26 @@ export default function EditHotel({
                 ? data.facility_codes.filter((item) => item !== code)
                 : [...data.facility_codes, code],
         );
+    };
+
+    const citySelectOptions: CitySelectOption[] = cityOptions.map((city) => ({
+        value: city.code,
+        label: city.label,
+    }));
+    const selectedCity = citySelectOptions.find((option) => option.value === data.city_id) ?? null;
+    const selectStyles = {
+        control: (base: any) => ({
+            ...base,
+            minHeight: '36px',
+            borderColor: '#e2e8f0',
+            boxShadow: 'none',
+            ':hover': { borderColor: '#94a3b8' },
+        }),
+        valueContainer: (base: any) => ({ ...base, padding: '0 12px' }),
+        input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+        indicatorSeparator: () => ({ display: 'none' }),
+        dropdownIndicator: (base: any) => ({ ...base, padding: '0 8px' }),
+        menu: (base: any) => ({ ...base, zIndex: 50 }),
     };
 
     return (
@@ -209,22 +232,15 @@ export default function EditHotel({
 
                         <div className="grid gap-2">
                             <Label htmlFor="city_id">Kota/Kabupaten</Label>
-                            <select
-                                id="city_id"
-                                value={data.city_id}
-                                onChange={(event) =>
-                                    setData('city_id', event.target.value)
-                                }
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                                required
-                            >
-                                <option value="">Pilih kota/kabupaten</option>
-                                {cityOptions.map((city) => (
-                                    <option key={city.code} value={city.code}>
-                                        {city.label}
-                                    </option>
-                                ))}
-                            </select>
+                            <Select
+                                inputId="city_id"
+                                instanceId="city_id_edit"
+                                options={citySelectOptions}
+                                value={selectedCity}
+                                placeholder="Pilih kota/kabupaten"
+                                onChange={(option) => setData('city_id', option?.value ?? '')}
+                                styles={selectStyles}
+                            />
                             <InputError message={errors.city_id} />
                         </div>
 
