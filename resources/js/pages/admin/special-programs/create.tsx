@@ -4,6 +4,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
+import Select from 'react-select';
 
 type ProgramForm = {
     id?: number;
@@ -20,6 +21,7 @@ type ProgramForm = {
 type Props = {
     organizer: { id: number; name?: string | null };
     event: ProgramForm | null;
+    cityOptions: Array<{ code: string; label: string }>;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -27,7 +29,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Form Special Program', href: '#' },
 ];
 
-export default function SpecialProgramCreate({ organizer, event }: Props) {
+type CitySelectOption = { value: string; label: string };
+
+export default function SpecialProgramCreate({ organizer, event, cityOptions }: Props) {
     const form = useForm<ProgramForm>({
         title: event?.title ?? '',
         description: event?.description ?? '',
@@ -38,6 +42,26 @@ export default function SpecialProgramCreate({ organizer, event }: Props) {
         end_at: event?.end_at ?? '',
         capacity_total: event?.capacity_total ?? 0,
     });
+
+    const citySelectOptions: CitySelectOption[] = cityOptions.map((city) => ({
+        value: city.code,
+        label: city.label,
+    }));
+    const selectedCity = citySelectOptions.find((option) => option.value === form.data.city_code) ?? null;
+    const selectStyles = {
+        control: (base: any) => ({
+            ...base,
+            minHeight: '40px',
+            borderColor: '#e2e8f0',
+            boxShadow: 'none',
+            ':hover': { borderColor: '#94a3b8' },
+        }),
+        valueContainer: (base: any) => ({ ...base, padding: '0 12px' }),
+        input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+        indicatorSeparator: () => ({ display: 'none' }),
+        dropdownIndicator: (base: any) => ({ ...base, padding: '0 8px' }),
+        menu: (base: any) => ({ ...base, zIndex: 50 }),
+    };
 
     const submit = () => {
         const payload = {
@@ -95,12 +119,19 @@ export default function SpecialProgramCreate({ organizer, event }: Props) {
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-500">Kode Kota</label>
-                            <input
-                                value={form.data.city_code}
-                                onChange={(e) => form.setData('city_code', e.target.value)}
-                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
+                            <label className="text-xs font-semibold uppercase text-slate-500">Kota/Kabupaten</label>
+                            <div className="mt-2">
+                                <Select
+                                    inputId="city_code"
+                                    instanceId="city_code"
+                                    options={citySelectOptions}
+                                    value={selectedCity}
+                                    placeholder="Pilih kota/kabupaten"
+                                    onChange={(option) => form.setData('city_code', option?.value ?? '')}
+                                    styles={selectStyles}
+                                />
+                            </div>
+                            <InputError message={form.errors.city_code} />
                         </div>
                         <div>
                             <label className="text-xs font-semibold uppercase text-slate-500">Lokasi</label>

@@ -1,11 +1,14 @@
 import { Head, router } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Swal from 'sweetalert2';
+import Select from 'react-select';
 
 type Option = { id: string; label: string };
+type CitySelectOption = { value: string; label: string };
 
 type Destination = {
     id: number;
@@ -51,6 +54,27 @@ const statusTone = (status?: string | null) => {
 };
 
 export default function AdminWisataDestinationShow({ destination, provinces, cities, cityName }: Props) {
+    const [cityCode, setCityCode] = useState(destination.city_code ?? '');
+    const citySelectOptions: CitySelectOption[] = useMemo(
+        () => cities.map((item) => ({ value: item.id, label: item.label })),
+        [cities]
+    );
+    const selectedCity = citySelectOptions.find((option) => option.value === cityCode) ?? null;
+    const selectStyles = {
+        control: (base: any) => ({
+            ...base,
+            minHeight: '40px',
+            borderColor: '#e2e8f0',
+            boxShadow: 'none',
+            ':hover': { borderColor: '#94a3b8' },
+        }),
+        valueContainer: (base: any) => ({ ...base, padding: '0 12px' }),
+        input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+        indicatorSeparator: () => ({ display: 'none' }),
+        dropdownIndicator: (base: any) => ({ ...base, padding: '0 8px' }),
+        menu: (base: any) => ({ ...base, zIndex: 50 }),
+    };
+
     const handleSuspend = async () => {
         const result = await Swal.fire({
             title: destination.is_suspended ? 'Aktifkan destinasi?' : 'Suspend destinasi?',
@@ -182,18 +206,16 @@ export default function AdminWisataDestinationShow({ destination, provinces, cit
                         </div>
                         <div className="grid gap-2">
                             <label className="text-sm font-medium text-slate-700">Kota/Kabupaten</label>
-                            <select
-                                name="city_code"
-                                defaultValue={destination.city_code ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Pilih kota</option>
-                                {cities.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.label}
-                                    </option>
-                                ))}
-                            </select>
+                            <input type="hidden" name="city_code" value={cityCode} />
+                            <Select
+                                inputId="city_code"
+                                instanceId="city_code"
+                                options={citySelectOptions}
+                                value={selectedCity}
+                                placeholder="Pilih kota/kabupaten"
+                                onChange={(option) => setCityCode(option?.value ?? '')}
+                                styles={selectStyles}
+                            />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <label className="text-sm font-medium text-slate-700">Alamat lengkap</label>

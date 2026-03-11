@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventOrganizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +45,7 @@ class EventController extends Controller
                 'id' => $organizer->id,
                 'name' => $organizer->name,
             ],
+            'cityOptions' => $this->cityOptions(),
             'event' => null,
         ]);
     }
@@ -63,6 +65,7 @@ class EventController extends Controller
                 'id' => $organizer->id,
                 'name' => $organizer->name,
             ],
+            'cityOptions' => $this->cityOptions(),
             'event' => [
                 'id' => $event->id,
                 'title' => $event->title,
@@ -184,5 +187,18 @@ class EventController extends Controller
         ]);
 
         return back()->with('status', 'event-submitted');
+    }
+
+    private function cityOptions(): array
+    {
+        return DB::table('regencies')
+            ->select('code', 'name', 'type')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($row) => [
+                'code' => $row->code,
+                'label' => trim(sprintf('%s %s', $row->type ?? 'Kabupaten', $row->name)),
+            ])
+            ->all();
     }
 }

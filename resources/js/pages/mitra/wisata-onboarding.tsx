@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select as UiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Swal from 'sweetalert2';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import Select from 'react-select';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard Mitra', href: '/mitra/dashboard' },
@@ -18,6 +19,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const stepTitles = ['Akun Mitra', 'Data Destinasi Wisata', 'Legalitas & Keuangan'];
 
 type Option = { id: string; label: string };
+type CitySelectOption = { value: string; label: string };
 
 type Onboarding = {
     id: number;
@@ -168,13 +170,8 @@ export default function MitraWisataOnboarding({
         [provinces]
     );
 
-    const cityItems = useMemo(
-        () =>
-            cities.map((item) => (
-                <SelectItem key={item.id} value={item.id}>
-                    {item.label}
-                </SelectItem>
-            )),
+    const citySelectOptions: CitySelectOption[] = useMemo(
+        () => cities.map((item) => ({ value: item.id, label: item.label })),
         [cities]
     );
 
@@ -183,6 +180,22 @@ export default function MitraWisataOnboarding({
             return value > 0;
         }
         return Boolean(value && String(value).trim().length > 0);
+    };
+
+    const selectedCity = citySelectOptions.find((option) => option.value === step2Form.data.city_code) ?? null;
+    const selectStyles = {
+        control: (base: any) => ({
+            ...base,
+            minHeight: '40px',
+            borderColor: '#e2e8f0',
+            boxShadow: 'none',
+            ':hover': { borderColor: '#94a3b8' },
+        }),
+        valueContainer: (base: any) => ({ ...base, padding: '0 12px' }),
+        input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+        indicatorSeparator: () => ({ display: 'none' }),
+        dropdownIndicator: (base: any) => ({ ...base, padding: '0 8px' }),
+        menu: (base: any) => ({ ...base, zIndex: 50 }),
     };
 
     const hasFile = (file?: File | null, path?: string | null) => Boolean(file || path);
@@ -456,7 +469,7 @@ export default function MitraWisataOnboarding({
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Jabatan Penanggung Jawab</Label>
-                                <Select
+                                <UiSelect
                                     value={step1Form.data.responsible_role}
                                     onValueChange={(value) => step1Form.setData('responsible_role', value)}
                                 >
@@ -470,7 +483,7 @@ export default function MitraWisataOnboarding({
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
-                                </Select>
+                                </UiSelect>
                                 <InputError message={step1Form.errors.responsible_role} />
                             </div>
                             <div className="md:col-span-2 flex justify-end">
@@ -510,7 +523,7 @@ export default function MitraWisataOnboarding({
                             </div>
                             <div className="grid gap-2">
                                 <Label>Jenis Wisata</Label>
-                                <Select
+                                <UiSelect
                                     value={step2Form.data.destination_type}
                                     onValueChange={(value) => step2Form.setData('destination_type', value)}
                                 >
@@ -524,7 +537,7 @@ export default function MitraWisataOnboarding({
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
-                                </Select>
+                                </UiSelect>
                                 <InputError message={step2Form.errors.destination_type} />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
@@ -549,7 +562,7 @@ export default function MitraWisataOnboarding({
                             </div>
                             <div className="grid gap-2">
                                 <Label>Provinsi</Label>
-                                <Select
+                                <UiSelect
                                     value={step2Form.data.province_code}
                                     onValueChange={(value) => step2Form.setData('province_code', value)}
                                 >
@@ -559,22 +572,20 @@ export default function MitraWisataOnboarding({
                                     <SelectContent>
                                         {provinceItems}
                                     </SelectContent>
-                                </Select>
+                                </UiSelect>
                                 <InputError message={step2Form.errors.province_code} />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Kota/Kabupaten</Label>
                                 <Select
-                                    value={step2Form.data.city_code}
-                                    onValueChange={(value) => step2Form.setData('city_code', value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih kota" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {cityItems}
-                                    </SelectContent>
-                                </Select>
+                                    inputId="city_code"
+                                    instanceId="city_code"
+                                    options={citySelectOptions}
+                                    value={selectedCity}
+                                    placeholder="Pilih kota/kabupaten"
+                                    onChange={(option) => step2Form.setData('city_code', option?.value ?? '')}
+                                    styles={selectStyles}
+                                />
                                 <InputError message={step2Form.errors.city_code} />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
@@ -767,7 +778,7 @@ export default function MitraWisataOnboarding({
                             </div>
                             <div className="grid gap-2">
                                 <Label>Jenis Dokumen Legalitas</Label>
-                                <Select
+                                <UiSelect
                                     value={step3Form.data.legal_doc_type}
                                     onValueChange={(value) => step3Form.setData('legal_doc_type', value)}
                                 >
@@ -781,7 +792,7 @@ export default function MitraWisataOnboarding({
                                         <SelectItem value="izin_wisata">Surat Izin Pengelolaan Wisata</SelectItem>
                                         <SelectItem value="dokumen_kawasan">Dokumen Pengelola Kawasan</SelectItem>
                                     </SelectContent>
-                                </Select>
+                                </UiSelect>
                                 <InputError message={step3Form.errors.legal_doc_type} />
                             </div>
                             <div className="grid gap-2">

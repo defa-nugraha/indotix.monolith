@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select as UiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Swal from 'sweetalert2';
+import Select from 'react-select';
 
 type Option = { id: string; label: string };
+type CitySelectOption = { value: string; label: string };
 
 type Destination = {
     id: number;
@@ -98,6 +100,26 @@ export default function MitraWisataDestination({
         photo_ticket_file: null as File | null,
     });
 
+    const citySelectOptions: CitySelectOption[] = cities.map((city) => ({
+        value: city.id,
+        label: city.label,
+    }));
+    const selectedCity = citySelectOptions.find((option) => option.value === form.data.city_code) ?? null;
+    const selectStyles = {
+        control: (base: any) => ({
+            ...base,
+            minHeight: '40px',
+            borderColor: '#e2e8f0',
+            boxShadow: 'none',
+            ':hover': { borderColor: '#94a3b8' },
+        }),
+        valueContainer: (base: any) => ({ ...base, padding: '0 12px' }),
+        input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+        indicatorSeparator: () => ({ display: 'none' }),
+        dropdownIndicator: (base: any) => ({ ...base, padding: '0 8px' }),
+        menu: (base: any) => ({ ...base, zIndex: 50 }),
+    };
+
     const submit = () => {
         form.put('/mitra/wisata/destination', {
             forceFormData: true,
@@ -153,7 +175,7 @@ export default function MitraWisataDestination({
                         </div>
                         <div className="grid gap-2">
                             <Label>Jenis Wisata</Label>
-                            <Select
+                            <UiSelect
                                 value={form.data.destination_type}
                                 onValueChange={(value) => form.setData('destination_type', value)}
                             >
@@ -167,7 +189,7 @@ export default function MitraWisataDestination({
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
-                            </Select>
+                            </UiSelect>
                             <InputError message={form.errors.destination_type} />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
@@ -188,7 +210,7 @@ export default function MitraWisataDestination({
                         </div>
                         <div className="grid gap-2">
                             <Label>Provinsi</Label>
-                            <Select
+                            <UiSelect
                                 value={form.data.province_code}
                                 onValueChange={(value) => form.setData('province_code', value)}
                             >
@@ -202,26 +224,20 @@ export default function MitraWisataDestination({
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
-                            </Select>
+                            </UiSelect>
                             <InputError message={form.errors.province_code} />
                         </div>
                         <div className="grid gap-2">
                             <Label>Kota/Kabupaten</Label>
                             <Select
-                                value={form.data.city_code}
-                                onValueChange={(value) => form.setData('city_code', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Pilih kota" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {cities.map((item) => (
-                                        <SelectItem key={item.id} value={item.id}>
-                                            {item.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                inputId="city_code"
+                                instanceId="city_code"
+                                options={citySelectOptions}
+                                value={selectedCity}
+                                placeholder="Pilih kota/kabupaten"
+                                onChange={(option) => form.setData('city_code', option?.value ?? '')}
+                                styles={selectStyles}
+                            />
                             <InputError message={form.errors.city_code} />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
