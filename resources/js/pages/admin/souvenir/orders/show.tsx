@@ -38,13 +38,13 @@ type Order = {
 
 export default function SouvenirOrderShow({ order }: { order: Order }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Order & Transaksi', href: '/admin/souvenir/orders' },
-        { title: `Order #${order.id}`, href: `/admin/souvenir/orders/${order.id}` },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Order & Transaksi', href: '/admin/retail-shop/orders' },
+        { title: `Order #${order.id}`, href: `/admin/retail-shop/orders/${order.id}` },
     ];
 
     const updateStatus = (status: string) => {
-        router.post(`/admin/souvenir/orders/${order.id}/status`, { status }, {
+        router.post(`/admin/retail-shop/orders/${order.id}/status`, { status }, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Status order diperbarui.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memperbarui status.' }),

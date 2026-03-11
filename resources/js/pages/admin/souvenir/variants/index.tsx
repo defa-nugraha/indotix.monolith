@@ -30,8 +30,8 @@ type Props = {
 
 export default function SouvenirVariantsIndex({ variants, products, filters }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Variasi Produk', href: '/admin/souvenir/variants' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Variasi Produk', href: '/admin/retail-shop/variants' },
     ];
 
     const form = useForm({
@@ -51,7 +51,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
 
     const submitFilters = (formElement: HTMLFormElement) => {
         const data = new FormData(formElement);
-        router.get('/admin/souvenir/variants', Object.fromEntries(data.entries()), { preserveState: true });
+        router.get('/admin/retail-shop/variants', Object.fromEntries(data.entries()), { preserveState: true });
     };
 
     const submitCreate = () => {
@@ -60,7 +60,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
             additional_price: form.data.additional_price === '' ? null : form.data.additional_price,
             stock: form.data.stock === '' ? null : Number(form.data.stock),
         };
-        router.post('/admin/souvenir/variants', payload, {
+        router.post('/admin/retail-shop/variants', payload, {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
@@ -72,7 +72,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
     };
 
     const updateVariant = (variantId: number, payload: Record<string, unknown>) => {
-        router.put(`/admin/souvenir/variants/${variantId}`, payload, {
+        router.put(`/admin/retail-shop/variants/${variantId}`, payload, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Variasi diperbarui.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memperbarui variasi.' }),
@@ -88,7 +88,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
             cancelButtonText: 'Batal',
         });
         if (!result.isConfirmed) return;
-        router.delete(`/admin/souvenir/variants/${variantId}`, {
+        router.delete(`/admin/retail-shop/variants/${variantId}`, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Terhapus', text: 'Variasi dihapus.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat menghapus variasi.' }),

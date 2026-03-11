@@ -13,8 +13,8 @@ type Log = {
 
 export default function SouvenirAuditIndex({ logs }: { logs: { data: Log[]; links: any[] } }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Audit Log', href: '/admin/souvenir/audit' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Audit Log', href: '/admin/retail-shop/audit' },
     ];
 
     return (

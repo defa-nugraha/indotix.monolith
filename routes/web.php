@@ -72,80 +72,83 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::post('admin/special-programs/{event}/capacity', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'updateCapacity'])
         ->name('admin.special-programs.capacity');
 
-    Route::get('admin/souvenir/products', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'index'])
+    Route::get('admin/retail-shop/products', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'index'])
         ->name('admin.souvenir.products.index');
-    Route::post('admin/souvenir/products', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'store'])
+    Route::post('admin/retail-shop/products', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'store'])
         ->name('admin.souvenir.products.store');
-    Route::put('admin/souvenir/products/{product}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'update'])
+    Route::put('admin/retail-shop/products/{product}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'update'])
         ->name('admin.souvenir.products.update');
-    Route::post('admin/souvenir/products/{product}/duplicate', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'duplicate'])
+    Route::post('admin/retail-shop/products/{product}/duplicate', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'duplicate'])
         ->name('admin.souvenir.products.duplicate');
-    Route::delete('admin/souvenir/products/{product}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroy'])
+    Route::delete('admin/retail-shop/products/{product}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroy'])
         ->name('admin.souvenir.products.destroy');
-    Route::delete('admin/souvenir/products/{product}/force', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'forceDelete'])
+    Route::delete('admin/retail-shop/products/{product}/force', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'forceDelete'])
         ->name('admin.souvenir.products.force-delete');
-    Route::delete('admin/souvenir/products/{product}/images/{image}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroyImage'])
+    Route::delete('admin/retail-shop/products/{product}/images/{image}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroyImage'])
         ->name('admin.souvenir.products.images.destroy');
 
-    Route::get('admin/souvenir/categories', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'index'])
+    Route::get('admin/retail-shop/categories', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'index'])
         ->name('admin.souvenir.categories.index');
-    Route::post('admin/souvenir/categories', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'store'])
+    Route::post('admin/retail-shop/categories', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'store'])
         ->name('admin.souvenir.categories.store');
-    Route::put('admin/souvenir/categories/{category}', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'update'])
+    Route::put('admin/retail-shop/categories/{category}', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'update'])
         ->name('admin.souvenir.categories.update');
-    Route::delete('admin/souvenir/categories/{category}', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'destroy'])
+    Route::delete('admin/retail-shop/categories/{category}', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'destroy'])
         ->name('admin.souvenir.categories.destroy');
 
-    Route::get('admin/souvenir/variants', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'index'])
+    Route::get('admin/retail-shop/variants', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'index'])
         ->name('admin.souvenir.variants.index');
-    Route::post('admin/souvenir/variants', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'store'])
+    Route::post('admin/retail-shop/variants', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'store'])
         ->name('admin.souvenir.variants.store');
-    Route::put('admin/souvenir/variants/{variant}', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'update'])
+    Route::put('admin/retail-shop/variants/{variant}', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'update'])
         ->name('admin.souvenir.variants.update');
-    Route::delete('admin/souvenir/variants/{variant}', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'destroy'])
+    Route::delete('admin/retail-shop/variants/{variant}', [\App\Http\Controllers\Admin\SouvenirVariantController::class, 'destroy'])
         ->name('admin.souvenir.variants.destroy');
 
-    Route::get('admin/souvenir/inventory', [\App\Http\Controllers\Admin\SouvenirInventoryController::class, 'index'])
+    Route::get('admin/retail-shop/inventory', [\App\Http\Controllers\Admin\SouvenirInventoryController::class, 'index'])
         ->name('admin.souvenir.inventory.index');
-    Route::post('admin/souvenir/inventory', [\App\Http\Controllers\Admin\SouvenirInventoryController::class, 'store'])
+    Route::post('admin/retail-shop/inventory', [\App\Http\Controllers\Admin\SouvenirInventoryController::class, 'store'])
         ->name('admin.souvenir.inventory.store');
 
-    Route::get('admin/souvenir/orders', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'index'])
+    Route::get('admin/retail-shop/orders', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'index'])
         ->name('admin.souvenir.orders.index');
-    Route::get('admin/souvenir/orders/{order}', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'show'])
+    Route::get('admin/retail-shop/orders/{order}', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'show'])
         ->name('admin.souvenir.orders.show');
-    Route::post('admin/souvenir/orders/{order}/status', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'updateStatus'])
+    Route::post('admin/retail-shop/orders/{order}/status', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'updateStatus'])
         ->name('admin.souvenir.orders.status');
-    Route::post('admin/souvenir/orders/{order}/shipping', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'updateShipping'])
+    Route::post('admin/retail-shop/orders/{order}/shipping', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'updateShipping'])
         ->name('admin.souvenir.orders.shipping');
-    Route::get('admin/souvenir/fulfillment', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'fulfillment'])
+    Route::get('admin/retail-shop/fulfillment', [\App\Http\Controllers\Admin\SouvenirOrderController::class, 'fulfillment'])
         ->name('admin.souvenir.fulfillment.index');
 
-    Route::get('admin/souvenir/refunds', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'index'])
+    Route::get('admin/retail-shop/refunds', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'index'])
         ->name('admin.souvenir.refunds.index');
-    Route::post('admin/souvenir/refunds', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'store'])
+    Route::post('admin/retail-shop/refunds', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'store'])
         ->name('admin.souvenir.refunds.store');
-    Route::put('admin/souvenir/refunds/{refund}', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'update'])
+    Route::put('admin/retail-shop/refunds/{refund}', [\App\Http\Controllers\Admin\SouvenirRefundController::class, 'update'])
         ->name('admin.souvenir.refunds.update');
 
-    Route::get('admin/souvenir/promotions', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'index'])
+    Route::get('admin/retail-shop/promotions', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'index'])
         ->name('admin.souvenir.promotions.index');
-    Route::post('admin/souvenir/promotions', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'store'])
+    Route::post('admin/retail-shop/promotions', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'store'])
         ->name('admin.souvenir.promotions.store');
-    Route::put('admin/souvenir/promotions/{promotion}', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'update'])
+    Route::put('admin/retail-shop/promotions/{promotion}', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'update'])
         ->name('admin.souvenir.promotions.update');
-    Route::delete('admin/souvenir/promotions/{promotion}', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'destroy'])
+    Route::delete('admin/retail-shop/promotions/{promotion}', [\App\Http\Controllers\Admin\SouvenirPromotionController::class, 'destroy'])
         ->name('admin.souvenir.promotions.destroy');
 
-    Route::get('admin/souvenir/reports', [\App\Http\Controllers\Admin\SouvenirReportController::class, 'index'])
+    Route::get('admin/retail-shop/reports', [\App\Http\Controllers\Admin\SouvenirReportController::class, 'index'])
         ->name('admin.souvenir.reports.index');
-    Route::get('admin/souvenir/audit', [\App\Http\Controllers\Admin\SouvenirAuditController::class, 'index'])
+    Route::get('admin/retail-shop/audit', [\App\Http\Controllers\Admin\SouvenirAuditController::class, 'index'])
         ->name('admin.souvenir.audit.index');
 
-    Route::get('admin/souvenir/settings', [\App\Http\Controllers\Admin\SouvenirSettingController::class, 'index'])
+    Route::get('admin/retail-shop/settings', [\App\Http\Controllers\Admin\SouvenirSettingController::class, 'index'])
         ->name('admin.souvenir.settings.index');
-    Route::post('admin/souvenir/settings', [\App\Http\Controllers\Admin\SouvenirSettingController::class, 'update'])
+    Route::post('admin/retail-shop/settings', [\App\Http\Controllers\Admin\SouvenirSettingController::class, 'update'])
         ->name('admin.souvenir.settings.update');
+
+    Route::redirect('admin/souvenir', 'admin/retail-shop/products');
+    Route::redirect('admin/souvenir/{any}', 'admin/retail-shop/{any}')->where('any', '.*');
 
     Route::get('admin/blog/posts', [\App\Http\Controllers\Admin\BlogPostController::class, 'index'])
         ->name('admin.blog.posts.index');

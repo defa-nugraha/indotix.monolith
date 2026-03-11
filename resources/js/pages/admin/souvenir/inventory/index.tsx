@@ -31,8 +31,8 @@ type Props = {
 
 export default function SouvenirInventoryIndex({ products, logs }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Inventory & Stok', href: '/admin/souvenir/inventory' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Inventory & Stok', href: '/admin/retail-shop/inventory' },
     ];
 
     const form = useForm({
@@ -44,7 +44,7 @@ export default function SouvenirInventoryIndex({ products, logs }: Props) {
     });
 
     const submit = () => {
-        form.post('/admin/souvenir/inventory', {
+        form.post('/admin/retail-shop/inventory', {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();

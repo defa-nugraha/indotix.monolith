@@ -20,8 +20,8 @@ type Program = { id: number; name: string };
 
 export default function SouvenirPromotionsIndex({ promotions, programs }: { promotions: Promotion[]; programs: Program[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Promo Retail Shop', href: '/admin/souvenir/promotions' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Promo Retail Shop', href: '/admin/retail-shop/promotions' },
     ];
 
     const form = useForm({
@@ -35,7 +35,7 @@ export default function SouvenirPromotionsIndex({ promotions, programs }: { prom
     });
 
     const submit = () => {
-        form.post('/admin/souvenir/promotions', {
+        form.post('/admin/retail-shop/promotions', {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
@@ -46,7 +46,7 @@ export default function SouvenirPromotionsIndex({ promotions, programs }: { prom
     };
 
     const updatePromo = (promotionId: number, payload: Record<string, unknown>) => {
-        router.put(`/admin/souvenir/promotions/${promotionId}`, payload, {
+        router.put(`/admin/retail-shop/promotions/${promotionId}`, payload, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Promo diperbarui.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memperbarui promo.' }),
@@ -62,7 +62,7 @@ export default function SouvenirPromotionsIndex({ promotions, programs }: { prom
             cancelButtonText: 'Batal',
         });
         if (!result.isConfirmed) return;
-        router.delete(`/admin/souvenir/promotions/${promotionId}`, {
+        router.delete(`/admin/retail-shop/promotions/${promotionId}`, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Terhapus', text: 'Promo dihapus.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat menghapus promo.' }),

@@ -107,7 +107,7 @@ export default function PublicHeader({
                         <img src="/logo.png" alt="Indotix" className="h-10 w-32 object-contain md:h-11 md:w-36" />
                     </Link>
 
-                    {showSearch && renderSearch('hidden flex-1 md:flex')}
+                    {showSearch && renderSearch('flex-1')}
 
                     <div className="hidden items-center gap-4 md:flex">
                         {showCart && (

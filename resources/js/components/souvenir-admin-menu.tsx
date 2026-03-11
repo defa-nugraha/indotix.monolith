@@ -9,17 +9,17 @@ type MenuItem = {
 };
 
 const menuItems: MenuItem[] = [
-    { label: 'Produk', href: '/admin/souvenir/products', match: '/admin/souvenir/products' },
-    { label: 'Kategori', href: '/admin/souvenir/categories', match: '/admin/souvenir/categories' },
-    { label: 'Variasi', href: '/admin/souvenir/variants', match: '/admin/souvenir/variants' },
-    { label: 'Inventory', href: '/admin/souvenir/inventory', match: '/admin/souvenir/inventory' },
-    { label: 'Order', href: '/admin/souvenir/orders', match: '/admin/souvenir/orders' },
-    { label: 'Fulfillment', href: '/admin/souvenir/fulfillment', match: '/admin/souvenir/fulfillment' },
-    { label: 'Refund', href: '/admin/souvenir/refunds', match: '/admin/souvenir/refunds' },
-    { label: 'Promo', href: '/admin/souvenir/promotions', match: '/admin/souvenir/promotions' },
-    { label: 'Laporan', href: '/admin/souvenir/reports', match: '/admin/souvenir/reports' },
-    { label: 'Audit', href: '/admin/souvenir/audit', match: '/admin/souvenir/audit' },
-    { label: 'Konfigurasi', href: '/admin/souvenir/settings', match: '/admin/souvenir/settings' },
+    { label: 'Produk', href: '/admin/retail-shop/products', match: '/admin/retail-shop/products' },
+    { label: 'Kategori', href: '/admin/retail-shop/categories', match: '/admin/retail-shop/categories' },
+    { label: 'Variasi', href: '/admin/retail-shop/variants', match: '/admin/retail-shop/variants' },
+    { label: 'Inventory', href: '/admin/retail-shop/inventory', match: '/admin/retail-shop/inventory' },
+    { label: 'Order', href: '/admin/retail-shop/orders', match: '/admin/retail-shop/orders' },
+    { label: 'Fulfillment', href: '/admin/retail-shop/fulfillment', match: '/admin/retail-shop/fulfillment' },
+    { label: 'Refund', href: '/admin/retail-shop/refunds', match: '/admin/retail-shop/refunds' },
+    { label: 'Promo', href: '/admin/retail-shop/promotions', match: '/admin/retail-shop/promotions' },
+    { label: 'Laporan', href: '/admin/retail-shop/reports', match: '/admin/retail-shop/reports' },
+    { label: 'Audit', href: '/admin/retail-shop/audit', match: '/admin/retail-shop/audit' },
+    { label: 'Konfigurasi', href: '/admin/retail-shop/settings', match: '/admin/retail-shop/settings' },
 ];
 
 export default function SouvenirAdminMenu({ className }: { className?: string }) {

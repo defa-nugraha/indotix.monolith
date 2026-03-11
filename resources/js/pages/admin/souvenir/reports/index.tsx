@@ -18,8 +18,8 @@ type TopProduct = {
 
 export default function SouvenirReportsIndex({ stats, topProducts }: { stats: Stats; topProducts: TopProduct[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Laporan & Analitik', href: '/admin/souvenir/reports' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Laporan & Analitik', href: '/admin/retail-shop/reports' },
     ];
 
     return (

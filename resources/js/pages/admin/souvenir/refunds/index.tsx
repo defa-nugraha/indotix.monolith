@@ -15,8 +15,8 @@ type Refund = {
 
 export default function SouvenirRefundsIndex({ refunds, orders }: { refunds: { data: Refund[]; links: any[] }; orders: Array<{ id: number }> }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Refund & Retur', href: '/admin/souvenir/refunds' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Refund & Retur', href: '/admin/retail-shop/refunds' },
     ];
 
     const form = useForm({
@@ -27,7 +27,7 @@ export default function SouvenirRefundsIndex({ refunds, orders }: { refunds: { d
     });
 
     const submit = () => {
-        form.post('/admin/souvenir/refunds', {
+        form.post('/admin/retail-shop/refunds', {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
@@ -38,7 +38,7 @@ export default function SouvenirRefundsIndex({ refunds, orders }: { refunds: { d
     };
 
     const updateStatus = (refundId: number, status: string) => {
-        router.put(`/admin/souvenir/refunds/${refundId}`, { status }, {
+        router.put(`/admin/retail-shop/refunds/${refundId}`, { status }, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Status refund diperbarui.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memperbarui refund.' }),

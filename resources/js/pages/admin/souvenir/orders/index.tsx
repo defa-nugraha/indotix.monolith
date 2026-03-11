@@ -25,12 +25,12 @@ type Props = {
 
 export default function SouvenirOrdersIndex({ orders, filters, mode = 'orders' }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: mode === 'fulfillment' ? 'Fulfillment & Pengiriman' : 'Order & Transaksi', href: mode === 'fulfillment' ? '/admin/souvenir/fulfillment' : '/admin/souvenir/orders' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: mode === 'fulfillment' ? 'Fulfillment & Pengiriman' : 'Order & Transaksi', href: mode === 'fulfillment' ? '/admin/retail-shop/fulfillment' : '/admin/retail-shop/orders' },
     ];
 
     const updateStatus = (orderId: number, status: string) => {
-        router.post(`/admin/souvenir/orders/${orderId}/status`, { status }, {
+        router.post(`/admin/retail-shop/orders/${orderId}/status`, { status }, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Status order diperbarui.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memperbarui status.' }),
@@ -51,7 +51,7 @@ export default function SouvenirOrdersIndex({ orders, filters, mode = 'orders' }
             confirmButtonText: 'Simpan',
         }).then((result) => {
             if (!result.isConfirmed) return;
-            router.post(`/admin/souvenir/orders/${orderId}/shipping`, {
+            router.post(`/admin/retail-shop/orders/${orderId}/shipping`, {
                 tracking_number: result.value.tracking,
                 shipping_status: result.value.status,
             }, {
@@ -76,7 +76,7 @@ export default function SouvenirOrdersIndex({ orders, filters, mode = 'orders' }
                         onSubmit={(event) => {
                             event.preventDefault();
                             const formData = new FormData(event.currentTarget);
-                            router.get(mode === 'fulfillment' ? '/admin/souvenir/fulfillment' : '/admin/souvenir/orders', Object.fromEntries(formData.entries()));
+                            router.get(mode === 'fulfillment' ? '/admin/retail-shop/fulfillment' : '/admin/retail-shop/orders', Object.fromEntries(formData.entries()));
                         }}
                     >
                         <select name="status" defaultValue={filters.status ?? ''} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
@@ -124,7 +124,7 @@ export default function SouvenirOrdersIndex({ orders, filters, mode = 'orders' }
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex flex-wrap gap-2">
-                                                <Link href={`/admin/souvenir/orders/${order.id}`} className="text-xs font-semibold text-sky-600">
+                                                <Link href={`/admin/retail-shop/orders/${order.id}`} className="text-xs font-semibold text-sky-600">
                                                     Detail
                                                 </Link>
                                                 <Button size="sm" variant="outline" onClick={() => updateStatus(order.id, order.status === 'processing' ? 'shipped' : 'processing')}>

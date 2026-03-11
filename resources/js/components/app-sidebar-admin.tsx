@@ -124,17 +124,17 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/special-programs/system/audit-logs') ||
         isCurrentUrl('/admin/special-programs/system/settings');
     const isSouvenirSectionActive =
-        isCurrentUrl('/admin/souvenir/products') ||
-        isCurrentUrl('/admin/souvenir/categories') ||
-        isCurrentUrl('/admin/souvenir/variants') ||
-        isCurrentUrl('/admin/souvenir/inventory') ||
-        isCurrentUrl('/admin/souvenir/orders') ||
-        isCurrentUrl('/admin/souvenir/fulfillment') ||
-        isCurrentUrl('/admin/souvenir/refunds') ||
-        isCurrentUrl('/admin/souvenir/promotions') ||
-        isCurrentUrl('/admin/souvenir/reports') ||
-        isCurrentUrl('/admin/souvenir/audit') ||
-        isCurrentUrl('/admin/souvenir/settings');
+        isCurrentUrl('/admin/retail-shop/products') ||
+        isCurrentUrl('/admin/retail-shop/categories') ||
+        isCurrentUrl('/admin/retail-shop/variants') ||
+        isCurrentUrl('/admin/retail-shop/inventory') ||
+        isCurrentUrl('/admin/retail-shop/orders') ||
+        isCurrentUrl('/admin/retail-shop/fulfillment') ||
+        isCurrentUrl('/admin/retail-shop/refunds') ||
+        isCurrentUrl('/admin/retail-shop/promotions') ||
+        isCurrentUrl('/admin/retail-shop/reports') ||
+        isCurrentUrl('/admin/retail-shop/audit') ||
+        isCurrentUrl('/admin/retail-shop/settings');
     const isEventSectionActive =
         isCurrentUrl('/admin/events') ||
         isCurrentUrl('/admin/events/organizers') ||
@@ -186,17 +186,17 @@ export function AppSidebarAdmin() {
         { title: 'Konfigurasi', href: '/admin/academy/system/settings', icon: CalendarCheck },
     ];
     const retailFlatItems = [
-        { title: 'Master Produk', href: '/admin/souvenir/products', icon: ShoppingBag },
-        { title: 'Kategori Produk', href: '/admin/souvenir/categories', icon: ShoppingBag },
-        { title: 'Variasi Produk', href: '/admin/souvenir/variants', icon: ShoppingBag },
-        { title: 'Inventory & Stok', href: '/admin/souvenir/inventory', icon: ShoppingBag },
-        { title: 'Order & Transaksi', href: '/admin/souvenir/orders', icon: ShoppingBag },
-        { title: 'Fulfillment & Pengiriman', href: '/admin/souvenir/fulfillment', icon: ShoppingBag },
-        { title: 'Refund & Retur', href: '/admin/souvenir/refunds', icon: ShoppingBag },
-        { title: 'Promo Retail Shop', href: '/admin/souvenir/promotions', icon: ShoppingBag },
-        { title: 'Laporan & Analitik', href: '/admin/souvenir/reports', icon: ShoppingBag },
-        { title: 'Audit Log', href: '/admin/souvenir/audit', icon: ShoppingBag },
-        { title: 'Konfigurasi Retail Shop', href: '/admin/souvenir/settings', icon: ShoppingBag },
+        { title: 'Master Produk', href: '/admin/retail-shop/products', icon: ShoppingBag },
+        { title: 'Kategori Produk', href: '/admin/retail-shop/categories', icon: ShoppingBag },
+        { title: 'Variasi Produk', href: '/admin/retail-shop/variants', icon: ShoppingBag },
+        { title: 'Inventory & Stok', href: '/admin/retail-shop/inventory', icon: ShoppingBag },
+        { title: 'Order & Transaksi', href: '/admin/retail-shop/orders', icon: ShoppingBag },
+        { title: 'Fulfillment & Pengiriman', href: '/admin/retail-shop/fulfillment', icon: ShoppingBag },
+        { title: 'Refund & Retur', href: '/admin/retail-shop/refunds', icon: ShoppingBag },
+        { title: 'Promo Retail Shop', href: '/admin/retail-shop/promotions', icon: ShoppingBag },
+        { title: 'Laporan & Analitik', href: '/admin/retail-shop/reports', icon: ShoppingBag },
+        { title: 'Audit Log', href: '/admin/retail-shop/audit', icon: ShoppingBag },
+        { title: 'Konfigurasi Retail Shop', href: '/admin/retail-shop/settings', icon: ShoppingBag },
     ];
     const specialFlatItems = [
         { title: 'Manajemen Program', href: '/admin/special-programs', icon: Sparkles },
@@ -850,58 +850,58 @@ export function AppSidebarAdmin() {
                             <CollapsibleContent>
                                 <SidebarMenuSub>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/products')}>
-                                            <Link href="/admin/souvenir/products">Master Produk</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/products')}>
+                                            <Link href="/admin/retail-shop/products">Master Produk</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/categories')}>
-                                            <Link href="/admin/souvenir/categories">Kategori Produk</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/categories')}>
+                                            <Link href="/admin/retail-shop/categories">Kategori Produk</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/variants')}>
-                                            <Link href="/admin/souvenir/variants">Variasi Produk</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/variants')}>
+                                            <Link href="/admin/retail-shop/variants">Variasi Produk</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/inventory')}>
-                                            <Link href="/admin/souvenir/inventory">Inventory & Stok</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/inventory')}>
+                                            <Link href="/admin/retail-shop/inventory">Inventory & Stok</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/orders')}>
-                                            <Link href="/admin/souvenir/orders">Order & Transaksi</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/orders')}>
+                                            <Link href="/admin/retail-shop/orders">Order & Transaksi</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/fulfillment')}>
-                                            <Link href="/admin/souvenir/fulfillment">Fulfillment & Pengiriman</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/fulfillment')}>
+                                            <Link href="/admin/retail-shop/fulfillment">Fulfillment & Pengiriman</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/refunds')}>
-                                            <Link href="/admin/souvenir/refunds">Refund & Retur</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/refunds')}>
+                                            <Link href="/admin/retail-shop/refunds">Refund & Retur</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/promotions')}>
-                                            <Link href="/admin/souvenir/promotions">Promo Retail Shop</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/promotions')}>
+                                            <Link href="/admin/retail-shop/promotions">Promo Retail Shop</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/reports')}>
-                                            <Link href="/admin/souvenir/reports">Laporan & Analitik</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/reports')}>
+                                            <Link href="/admin/retail-shop/reports">Laporan & Analitik</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/audit')}>
-                                            <Link href="/admin/souvenir/audit">Audit Log</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/audit')}>
+                                            <Link href="/admin/retail-shop/audit">Audit Log</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                     <SidebarMenuSubItem>
-                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/souvenir/settings')}>
-                                            <Link href="/admin/souvenir/settings">Konfigurasi Retail Shop</Link>
+                                        <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/retail-shop/settings')}>
+                                            <Link href="/admin/retail-shop/settings">Konfigurasi Retail Shop</Link>
                                         </SidebarMenuSubButton>
                                     </SidebarMenuSubItem>
                                 </SidebarMenuSub>

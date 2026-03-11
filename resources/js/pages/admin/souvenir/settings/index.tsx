@@ -13,8 +13,8 @@ type Settings = {
 
 export default function SouvenirSettingsIndex({ settings }: { settings: Settings }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Konfigurasi Retail Shop', href: '/admin/souvenir/settings' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Konfigurasi Retail Shop', href: '/admin/retail-shop/settings' },
     ];
 
     const [form, setForm] = useState({
@@ -24,7 +24,7 @@ export default function SouvenirSettingsIndex({ settings }: { settings: Settings
     });
 
     const submit = () => {
-        router.post('/admin/souvenir/settings', form, {
+        router.post('/admin/retail-shop/settings', form, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Konfigurasi disimpan.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat menyimpan konfigurasi.' }),

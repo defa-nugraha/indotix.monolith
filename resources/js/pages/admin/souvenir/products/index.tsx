@@ -37,8 +37,8 @@ type Props = {
 
 export default function SouvenirProductsIndex({ products, categories, filters }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Master Produk', href: '/admin/souvenir/products' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Master Produk', href: '/admin/retail-shop/products' },
     ];
 
     const form = useForm({
@@ -114,13 +114,13 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
 
     const submitFilters = (formElement: HTMLFormElement) => {
         const data = new FormData(formElement);
-        router.get('/admin/souvenir/products', Object.fromEntries(data.entries()), {
+        router.get('/admin/retail-shop/products', Object.fromEntries(data.entries()), {
             preserveState: true,
         });
     };
 
     const submitCreate = () => {
-        form.post('/admin/souvenir/products', {
+        form.post('/admin/retail-shop/products', {
             preserveScroll: true,
             forceFormData: true,
             onSuccess: () => {
@@ -156,7 +156,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
     };
 
     const submitEdit = (productId: number) => {
-        router.post(`/admin/souvenir/products/${productId}`, { ...editData, _method: 'put' }, {
+        router.post(`/admin/retail-shop/products/${productId}`, { ...editData, _method: 'put' }, {
             preserveScroll: true,
             forceFormData: true,
             onSuccess: () => {
@@ -180,7 +180,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
             cancelButtonText: 'Batal',
         });
         if (!result.isConfirmed) return;
-        router.delete(`/admin/souvenir/products/${productId}`, {
+        router.delete(`/admin/retail-shop/products/${productId}`, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Produk dinonaktifkan.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat menonaktifkan produk.' }),
@@ -197,7 +197,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
             cancelButtonText: 'Batal',
         });
         if (!result.isConfirmed) return;
-        router.delete(`/admin/souvenir/products/${productId}/force`, {
+        router.delete(`/admin/retail-shop/products/${productId}/force`, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Terhapus', text: 'Produk dihapus permanen.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Produk tidak dapat dihapus.' }),
@@ -205,7 +205,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
     };
 
     const duplicate = (productId: number) => {
-        router.post(`/admin/souvenir/products/${productId}/duplicate`, {}, {
+        router.post(`/admin/retail-shop/products/${productId}/duplicate`, {}, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Produk diduplikasi.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat duplikasi produk.' }),
@@ -213,7 +213,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
     };
 
     const removeExistingImage = (productId: number, imageId: number) => {
-        router.delete(`/admin/souvenir/products/${productId}/images/${imageId}`, {
+        router.delete(`/admin/retail-shop/products/${productId}/images/${imageId}`, {
             preserveScroll: true,
             onSuccess: () => {
                 setExistingImages((prev) => prev.filter((img) => img.id !== imageId));

@@ -18,8 +18,8 @@ type Category = {
 
 export default function SouvenirCategoriesIndex({ categories = [] }: { categories: Category[] }) {
     const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Retail Shop', href: '/admin/souvenir/products' },
-        { title: 'Kategori Produk', href: '/admin/souvenir/categories' },
+        { title: 'Retail Shop', href: '/admin/retail-shop/products' },
+        { title: 'Kategori Produk', href: '/admin/retail-shop/categories' },
     ];
 
     const form = useForm({
@@ -34,7 +34,7 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
     const [editData, setEditData] = useState<Record<string, any>>({});
 
     const submit = () => {
-        form.post('/admin/souvenir/categories', {
+        form.post('/admin/retail-shop/categories', {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
@@ -54,7 +54,7 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
             is_active: current.is_active,
             ...payload,
         };
-        router.put(`/admin/souvenir/categories/${categoryId}`, merged, {
+        router.put(`/admin/retail-shop/categories/${categoryId}`, merged, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Kategori diperbarui.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memperbarui kategori.' }),
@@ -88,7 +88,7 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
             cancelButtonText: 'Batal',
         });
         if (!result.isConfirmed) return;
-        router.delete(`/admin/souvenir/categories/${categoryId}`, {
+        router.delete(`/admin/retail-shop/categories/${categoryId}`, {
             preserveScroll: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Terhapus', text: 'Kategori dihapus.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat menghapus kategori.' }),

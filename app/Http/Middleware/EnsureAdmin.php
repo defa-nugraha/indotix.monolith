@@ -28,7 +28,7 @@ class EnsureAdmin
             return $next($request);
         }
 
-        if ($role === 'admin_retail' && ($isDashboard || $request->is('admin/souvenir*'))) {
+        if ($role === 'admin_retail' && ($isDashboard || $request->is('admin/retail-shop*'))) {
             return $next($request);
         }
 
