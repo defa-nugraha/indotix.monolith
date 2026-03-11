@@ -343,7 +343,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                 </section>
 
                 <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                    <DialogContent className="max-w-3xl">
+                    <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Tambah Produk Retail Shop</DialogTitle>
                             <DialogDescription>Lengkapi data produk sebelum disimpan.</DialogDescription>
@@ -547,7 +547,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                     setIsEditOpen(open);
                     if (!open) setEditingId(null);
                 }}>
-                    <DialogContent className="max-w-3xl">
+                    <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Edit Produk Retail Shop</DialogTitle>
                             <DialogDescription>Perbarui detail produk dan simpan perubahan.</DialogDescription>
