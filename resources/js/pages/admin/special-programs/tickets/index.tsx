@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import {
     Dialog,
     DialogContent,
@@ -192,68 +193,91 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                                 submit();
                             }}
                         >
-                            <select
-                                value={form.data.event_id}
-                                onChange={(event) => form.setData('event_id', event.target.value)}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Pilih special program</option>
-                                {events.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.title}
-                                    </option>
-                                ))}
-                            </select>
-                            <InputError message={form.errors.event_id} />
-                            <input
-                                value={form.data.name}
-                                onChange={(event) => form.setData('name', event.target.value)}
-                                placeholder="Nama tiket"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <InputError message={form.errors.name} />
-                            <textarea
-                                value={form.data.description}
-                                onChange={(event) => form.setData('description', event.target.value)}
-                                placeholder="Deskripsi tiket (opsional)"
-                                rows={3}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                value={priceDisplay}
-                                onChange={(event) => handlePriceChange(event.target.value)}
-                                placeholder="Harga (Rp)"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <InputError message={form.errors.price} />
-                            <input
-                                type="number"
-                                min={0}
-                                value={form.data.quota}
-                                onChange={(event) => form.setData('quota', event.target.value)}
-                                placeholder="Kuota"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <InputError message={form.errors.quota} />
-                            <input
-                                type="number"
-                                min={1}
-                                value={form.data.max_per_user}
-                                onChange={(event) => form.setData('max_per_user', event.target.value)}
-                                placeholder="Maks per user"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <InputError message={form.errors.max_per_user} />
-                            <select
-                                value={form.data.is_active ? '1' : '0'}
-                                onChange={(event) => form.setData('is_active', event.target.value === '1')}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="1">Aktif</option>
-                                <option value="0">Nonaktif</option>
-                            </select>
+                            <div className="grid gap-1">
+                                <Label>Special Program</Label>
+                                <select
+                                    value={form.data.event_id}
+                                    onChange={(event) => form.setData('event_id', event.target.value)}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Pilih special program</option>
+                                    {events.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.title}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={form.errors.event_id} />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label>Nama tiket</Label>
+                                <input
+                                    value={form.data.name}
+                                    onChange={(event) => form.setData('name', event.target.value)}
+                                    placeholder="Nama tiket"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <InputError message={form.errors.name} />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label>Deskripsi</Label>
+                                <textarea
+                                    value={form.data.description}
+                                    onChange={(event) => form.setData('description', event.target.value)}
+                                    placeholder="Deskripsi tiket (opsional)"
+                                    rows={3}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <InputError message={form.errors.description} />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label>Harga (Rp)</Label>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={priceDisplay}
+                                    onChange={(event) => handlePriceChange(event.target.value)}
+                                    placeholder="10.000"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <InputError message={form.errors.price} />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label>Kuota</Label>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={form.data.quota}
+                                    onChange={(event) => form.setData('quota', event.target.value)}
+                                    placeholder="Kuota"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <InputError message={form.errors.quota} />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label>Maks per user</Label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={form.data.max_per_user}
+                                    onChange={(event) => form.setData('max_per_user', event.target.value)}
+                                    placeholder="Maks per user"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <InputError message={form.errors.max_per_user} />
+                            </div>
+                            <div className="grid gap-1">
+                                <Label>Status tiket</Label>
+                                <select
+                                    value={form.data.is_active ? '1' : '0'}
+                                    onChange={(event) => form.setData('is_active', event.target.value === '1')}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="1">Aktif</option>
+                                    <option value="0">Nonaktif</option>
+                                </select>
+                                <InputError message={form.errors.is_active} />
+                            </div>
                             <DialogFooter className="gap-2">
                                 <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                                     Simpan
