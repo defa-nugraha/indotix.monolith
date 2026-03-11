@@ -88,6 +88,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.souvenir.products.force-delete');
     Route::delete('admin/retail-shop/products/{product}/images/{image}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroyImage'])
         ->name('admin.souvenir.products.images.destroy');
+    Route::post('admin/retail-shop/products/{product}/images/{image}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroyImage'])
+        ->name('admin.souvenir.products.images.destroy.post');
 
     Route::get('admin/retail-shop/categories', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'index'])
         ->name('admin.souvenir.categories.index');

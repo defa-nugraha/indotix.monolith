@@ -213,7 +213,10 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
     };
 
     const removeExistingImage = (productId: number, imageId: number) => {
-        router.delete(`/admin/retail-shop/products/${productId}/images/${imageId}`, {
+        router.post(
+            `/admin/retail-shop/products/${productId}/images/${imageId}`,
+            { _method: 'delete' },
+            {
             preserveScroll: true,
             onSuccess: () => {
                 setExistingImages((prev) => prev.filter((img) => img.id !== imageId));
@@ -237,7 +240,8 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                     timer: 2000,
                     timerProgressBar: true,
                 }),
-        });
+            },
+        );
     };
 
     return (
