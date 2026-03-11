@@ -25,6 +25,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.special-programs.store');
     Route::get('admin/special-programs/tickets', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'index'])
         ->name('admin.special-programs.tickets.index');
+    Route::post('admin/special-programs/tickets', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'store'])
+        ->name('admin.special-programs.tickets.store');
     Route::post('admin/special-programs/tickets/{ticket}', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'update'])
         ->name('admin.special-programs.tickets.update');
     Route::get('admin/special-programs/bookings', [\App\Http\Controllers\Admin\SpecialProgramBookingController::class, 'index'])

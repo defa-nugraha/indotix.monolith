@@ -1,8 +1,20 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import InputError from '@/components/input-error';
+import Swal from 'sweetalert2';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type Ticket = {
     id: number;
@@ -26,6 +38,54 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EventTicketsIndex({ tickets, events, filters }: Props) {
+    const emptyForm = {
+        event_id: '',
+        name: '',
+        description: '',
+        price: '',
+        quota: '',
+        max_per_user: 1,
+        is_active: true,
+    };
+    const form = useForm({ ...emptyForm });
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [priceDisplay, setPriceDisplay] = useState('');
+
+    const openCreate = () => {
+        form.setData({ ...emptyForm });
+        setPriceDisplay('');
+        setIsFormOpen(true);
+    };
+
+    const handlePriceChange = (value: string) => {
+        setPriceDisplay(formatCurrencyInput(value));
+        form.setData('price', parseCurrencyToDigits(value));
+    };
+
+    const submit = () => {
+        form.transform((data) => ({
+            ...data,
+            event_id: Number(data.event_id),
+            price: Number(data.price || 0),
+            quota: data.quota === '' ? null : Number(data.quota),
+            max_per_user: Number(data.max_per_user || 1),
+            is_active: Boolean(data.is_active),
+        }));
+
+        form.post('/admin/special-programs/tickets', {
+            onSuccess: () => {
+                Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Tiket special program dibuat.' });
+                setIsFormOpen(false);
+            },
+            onError: () =>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Periksa data tiket.',
+                }),
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Produk Tiket Special Program" />
@@ -51,6 +111,9 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                         </select>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Filter
+                        </Button>
+                        <Button type="button" variant="outline" onClick={openCreate}>
+                            Buat Tiket
                         </Button>
                     </form>
                 </section>
@@ -115,6 +178,93 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                         </table>
                     </div>
                 </section>
+
+                <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>Buat Tiket Special Program</DialogTitle>
+                            <DialogDescription>Lengkapi data tiket sebelum disimpan.</DialogDescription>
+                        </DialogHeader>
+                        <form
+                            className="grid gap-3"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                submit();
+                            }}
+                        >
+                            <select
+                                value={form.data.event_id}
+                                onChange={(event) => form.setData('event_id', event.target.value)}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Pilih special program</option>
+                                {events.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.title}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={form.errors.event_id} />
+                            <input
+                                value={form.data.name}
+                                onChange={(event) => form.setData('name', event.target.value)}
+                                placeholder="Nama tiket"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                            <InputError message={form.errors.name} />
+                            <textarea
+                                value={form.data.description}
+                                onChange={(event) => form.setData('description', event.target.value)}
+                                placeholder="Deskripsi tiket (opsional)"
+                                rows={3}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                            <input
+                                type="text"
+                                inputMode="numeric"
+                                value={priceDisplay}
+                                onChange={(event) => handlePriceChange(event.target.value)}
+                                placeholder="Harga (Rp)"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                            <InputError message={form.errors.price} />
+                            <input
+                                type="number"
+                                min={0}
+                                value={form.data.quota}
+                                onChange={(event) => form.setData('quota', event.target.value)}
+                                placeholder="Kuota"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                            <InputError message={form.errors.quota} />
+                            <input
+                                type="number"
+                                min={1}
+                                value={form.data.max_per_user}
+                                onChange={(event) => form.setData('max_per_user', event.target.value)}
+                                placeholder="Maks per user"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                            <InputError message={form.errors.max_per_user} />
+                            <select
+                                value={form.data.is_active ? '1' : '0'}
+                                onChange={(event) => form.setData('is_active', event.target.value === '1')}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="1">Aktif</option>
+                                <option value="0">Nonaktif</option>
+                            </select>
+                            <DialogFooter className="gap-2">
+                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                                    Simpan
+                                </Button>
+                                <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
+                                    Batal
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );
