@@ -65,20 +65,29 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
     const [createPreviews, setCreatePreviews] = useState<string[]>([]);
     const [editPreviews, setEditPreviews] = useState<string[]>([]);
     const [existingImages, setExistingImages] = useState<Array<{ id: number; url: string }>>([]);
+    const [isSkuManual, setIsSkuManual] = useState(false);
 
     const maxImages = 10;
     const canAddCreateImages = maxImages - form.data.images.length;
     const canAddEditImages = maxImages - (existingImages.length + editPreviews.length);
-    const generateSku = () => {
+    const getCategoryCode = (categoryId: string) => {
+        const category = categories.find((item) => String(item.id) === String(categoryId));
+        if (!category?.name) return 'RETAIL';
+        const normalized = category.name.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        return normalized.slice(0, 5) || 'RETAIL';
+    };
+    const generateSku = (categoryId = '') => {
         const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
         const random = Math.random().toString(36).slice(2, 6).toUpperCase();
-        return `RETAIL-${timestamp}-${random}`;
+        const prefix = categoryId ? getCategoryCode(categoryId) : 'RETAIL';
+        return `${prefix}-${timestamp}-${random}`;
     };
 
     const openCreateModal = () => {
         form.reset();
-        form.setData('sku', generateSku());
+        form.setData('sku', generateSku(form.data.category_id));
         form.setData('status', 'active');
+        setIsSkuManual(false);
         setCreatePreviews([]);
         setIsCreateOpen(true);
     };
@@ -350,7 +359,13 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                 <select
                                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     value={form.data.category_id}
-                                    onChange={(event) => form.setData('category_id', event.target.value)}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        form.setData('category_id', value);
+                                        if (!isSkuManual) {
+                                            form.setData('sku', generateSku(value));
+                                        }
+                                    }}
                                 >
                                     <option value="">Pilih kategori</option>
                                     {categories.map((category) => (
@@ -366,7 +381,10 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
                                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     placeholder="SKU"
                                     value={form.data.sku}
-                                    onChange={(event) => form.setData('sku', event.target.value)}
+                                    onChange={(event) => {
+                                        setIsSkuManual(true);
+                                        form.setData('sku', event.target.value);
+                                    }}
                                 />
                             </div>
                             <div className="space-y-1">
