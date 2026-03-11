@@ -127,7 +127,7 @@ export default function SouvenirShow({
                             <div>
                                 <div className="text-xs text-slate-500">{product.category ?? 'Retail Shop'}</div>
                                 <h1 className="mt-2 text-2xl font-semibold text-slate-900">{product.name}</h1>
-                                <p className="mt-3 text-sm text-slate-600">{product.description ?? 'Produk souvenir pilihan dari INDOTIX.'}</p>
+                                <p className="mt-3 text-sm text-slate-600">{product.description ?? 'Produk retail pilihan dari INDOTIX.'}</p>
                             </div>
                         </div>
                     </div>
@@ -197,7 +197,7 @@ export default function SouvenirShow({
                         >
                             Chat Admin
                         </Link>
-                        <p className="mt-3 text-xs text-slate-500">Kamu bisa membeli lebih dari satu souvenir melalui keranjang.</p>
+                        <p className="mt-3 text-xs text-slate-500">Kamu bisa membeli lebih dari satu produk retail melalui keranjang.</p>
                     </div>
                 </div>
 
