@@ -40,7 +40,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
         name: '',
         sku: '',
         additional_price: '',
-        stock: 0,
+        stock: '',
         is_active: true,
     });
 
@@ -58,6 +58,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
         const payload = {
             ...form.data,
             additional_price: form.data.additional_price === '' ? null : form.data.additional_price,
+            stock: form.data.stock === '' ? null : Number(form.data.stock),
         };
         router.post('/admin/souvenir/variants', payload, {
             preserveScroll: true,
@@ -101,7 +102,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
             name: variant.name,
             sku: variant.sku ?? '',
             additional_price: variant.additional_price ?? 0,
-            stock: variant.stock ?? 0,
+            stock: variant.stock ? String(variant.stock) : '',
             is_active: variant.is_active,
         });
         setIsEditOpen(true);
@@ -112,6 +113,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
         const payload = {
             ...editData,
             additional_price: editData.additional_price === '' ? null : editData.additional_price,
+            stock: editData.stock === '' ? null : Number(editData.stock),
         };
         updateVariant(editingId, payload);
         setIsEditOpen(false);
@@ -276,8 +278,8 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                                     type="number"
                                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     placeholder="Stok"
-                                    value={editData.stock ?? 0}
-                                    onChange={(event) => setEditData({ ...editData, stock: Number(event.target.value) })}
+                                    value={editData.stock ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, stock: event.target.value })}
                                 />
                             </div>
                             <div className="space-y-1">
@@ -374,7 +376,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     placeholder="Stok"
                                     value={form.data.stock}
-                                    onChange={(event) => form.setData('stock', Number(event.target.value))}
+                                    onChange={(event) => form.setData('stock', event.target.value)}
                                 />
                             </div>
                             <div className="space-y-1">
