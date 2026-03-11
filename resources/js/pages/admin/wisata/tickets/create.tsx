@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type Option = { id: number; label: string };
 
@@ -34,6 +36,12 @@ export default function AdminWisataTicketCreate({ destinations }: Props) {
         is_active: false,
         is_closed: false,
     });
+    const [priceDisplay, setPriceDisplay] = useState('');
+
+    const handlePriceChange = (value: string) => {
+        setPriceDisplay(formatCurrencyInput(value));
+        form.setData('price', parseCurrencyToDigits(value));
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -106,11 +114,11 @@ export default function AdminWisataTicketCreate({ destinations }: Props) {
                         <div className="grid gap-2">
                             <Label>Harga (Rp)</Label>
                             <Input
-                                type="number"
-                                min={0}
-                                value={form.data.price}
-                                onChange={(event) => form.setData('price', event.target.value)}
-                                placeholder="25000"
+                                type="text"
+                                inputMode="numeric"
+                                value={priceDisplay}
+                                onChange={(event) => handlePriceChange(event.target.value)}
+                                placeholder="10.000"
                             />
                             <InputError message={form.errors.price} />
                         </div>

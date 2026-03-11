@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Swal from 'sweetalert2';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type Ticket = {
     id: number;
@@ -48,6 +50,12 @@ export default function MitraWisataTicketCreate({ destination, ticket }: Props) 
         is_active: ticket?.is_active ?? false,
         is_closed: ticket?.is_closed ?? false,
     });
+    const [priceDisplay, setPriceDisplay] = useState(formatCurrencyInput(ticket?.price ?? ''));
+
+    const handlePriceChange = (value: string) => {
+        setPriceDisplay(formatCurrencyInput(value));
+        form.setData('price', parseCurrencyToDigits(value));
+    };
 
     const handleSubmit = () => {
         form.transform((data) => ({
@@ -114,10 +122,11 @@ export default function MitraWisataTicketCreate({ destination, ticket }: Props) 
                         <div className="grid gap-2">
                             <Label>Harga (Rp)</Label>
                             <Input
-                                type="number"
-                                min={0}
-                                value={form.data.price}
-                                onChange={(e) => form.setData('price', e.target.value)}
+                                type="text"
+                                inputMode="numeric"
+                                value={priceDisplay}
+                                onChange={(e) => handlePriceChange(e.target.value)}
+                                placeholder="10.000"
                             />
                             <InputError message={form.errors.price} />
                         </div>

@@ -14,6 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type TicketRow = {
     id: number;
@@ -41,7 +42,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 const emptyForm = {
     academy_class_id: '',
     name: '',
-    price: 0,
+    price: '',
     quota: '',
     ticket_type: 'regular',
     refundable: false,
@@ -54,10 +55,12 @@ export default function AcademyTicketsIndex({ tickets, classes, filters }: Props
     const [editing, setEditing] = useState<TicketRow | null>(null);
     const form = useForm({ ...emptyForm });
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [priceDisplay, setPriceDisplay] = useState('');
 
     const openCreate = () => {
         setEditing(null);
         form.setData({ ...emptyForm });
+        setPriceDisplay('');
         setIsFormOpen(true);
     };
 
@@ -67,13 +70,19 @@ export default function AcademyTicketsIndex({ tickets, classes, filters }: Props
             ...emptyForm,
             academy_class_id: item.academy_class_id,
             name: item.name,
-            price: item.price,
+            price: String(item.price ?? ''),
             quota: item.quota ?? '',
             ticket_type: item.ticket_type,
             refundable: item.refundable,
             is_active: item.is_active,
         });
+        setPriceDisplay(formatCurrencyInput(item.price ?? ''));
         setIsFormOpen(true);
+    };
+
+    const handlePriceChange = (value: string) => {
+        setPriceDisplay(formatCurrencyInput(value));
+        form.setData('price', parseCurrencyToDigits(value));
     };
 
     const submit = () => {
@@ -261,10 +270,10 @@ export default function AcademyTicketsIndex({ tickets, classes, filters }: Props
                             />
                             <InputError message={form.errors.name} />
                             <input
-                                type="number"
-                                min={0}
-                                value={form.data.price}
-                                onChange={(event) => form.setData('price', Number(event.target.value))}
+                                type="text"
+                                inputMode="numeric"
+                                value={priceDisplay}
+                                onChange={(event) => handlePriceChange(event.target.value)}
                                 placeholder="Harga"
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />

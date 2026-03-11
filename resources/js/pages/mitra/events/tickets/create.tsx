@@ -1,9 +1,11 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
+import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type TicketForm = {
     event_id: number | string;
@@ -49,6 +51,12 @@ export default function MitraEventTicketCreate({ ticket, events }: Props) {
         benefits_text: ticket?.benefits?.join(', ') ?? '',
         is_active: ticket?.is_active ?? true,
     });
+    const [priceDisplay, setPriceDisplay] = useState(formatCurrencyInput(ticket?.price ?? ''));
+
+    const handlePriceChange = (value: string) => {
+        setPriceDisplay(formatCurrencyInput(value));
+        form.setData('price', parseCurrencyToDigits(value));
+    };
 
     const submit = () => {
         const payload = {
@@ -131,11 +139,12 @@ export default function MitraEventTicketCreate({ ticket, events }: Props) {
                         <div>
                             <label className="text-xs font-semibold uppercase text-slate-500">Harga</label>
                             <input
-                                type="number"
-                                min={0}
-                                value={form.data.price}
-                                onChange={(e) => form.setData('price', e.target.value)}
+                                type="text"
+                                inputMode="numeric"
+                                value={priceDisplay}
+                                onChange={(e) => handlePriceChange(e.target.value)}
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="10.000"
                             />
                             <InputError message={form.errors.price} />
                         </div>
