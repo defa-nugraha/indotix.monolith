@@ -72,7 +72,7 @@ export default function SouvenirProductsIndex({ products, categories, filters }:
     const generateSku = () => {
         const timestamp = new Date().toISOString().replace(/[-:.TZ]/g, '').slice(0, 14);
         const random = Math.random().toString(36).slice(2, 6).toUpperCase();
-        return `SOUV-${timestamp}-${random}`;
+        return `RETAIL-${timestamp}-${random}`;
     };
 
     const openCreateModal = () => {
