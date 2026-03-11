@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import SouvenirAdminMenu from '@/components/souvenir-admin-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { formatCurrencyInput, parseCurrencyToInteger } from '@/lib/currency';
 
 type Product = { id: number; name: string };
 
@@ -38,7 +39,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
         variant_type: 'size',
         name: '',
         sku: '',
-        additional_price: 0,
+        additional_price: '',
         stock: 0,
         is_active: true,
     });
@@ -54,7 +55,11 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
     };
 
     const submitCreate = () => {
-        form.post('/admin/souvenir/variants', {
+        const payload = {
+            ...form.data,
+            additional_price: form.data.additional_price === '' ? null : form.data.additional_price,
+        };
+        router.post('/admin/souvenir/variants', payload, {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
@@ -104,7 +109,11 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
 
     const submitEdit = () => {
         if (!editingId) return;
-        updateVariant(editingId, editData);
+        const payload = {
+            ...editData,
+            additional_price: editData.additional_price === '' ? null : editData.additional_price,
+        };
+        updateVariant(editingId, payload);
         setIsEditOpen(false);
     };
 
@@ -251,13 +260,14 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold uppercase text-slate-500">Harga Tambahan</label>
+                                <label className="text-xs font-semibold uppercase text-slate-500">Harga Tambahan (Rp)</label>
                                 <input
-                                    type="number"
+                                    type="text"
+                                    inputMode="numeric"
                                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     placeholder="Harga tambahan"
-                                    value={editData.additional_price ?? 0}
-                                    onChange={(event) => setEditData({ ...editData, additional_price: Number(event.target.value) })}
+                                    value={formatCurrencyInput(editData.additional_price ?? '')}
+                                    onChange={(event) => setEditData({ ...editData, additional_price: parseCurrencyToInteger(event.target.value) })}
                                 />
                             </div>
                             <div className="space-y-1">
@@ -347,13 +357,14 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                                 />
                             </div>
                             <div className="space-y-1">
-                                <label className="text-xs font-semibold uppercase text-slate-500">Harga Tambahan</label>
+                                <label className="text-xs font-semibold uppercase text-slate-500">Harga Tambahan (Rp)</label>
                                 <input
-                                    type="number"
+                                    type="text"
+                                    inputMode="numeric"
                                     className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     placeholder="Harga tambahan"
-                                    value={form.data.additional_price}
-                                    onChange={(event) => form.setData('additional_price', Number(event.target.value))}
+                                    value={formatCurrencyInput(form.data.additional_price)}
+                                    onChange={(event) => form.setData('additional_price', parseCurrencyToInteger(event.target.value))}
                                 />
                             </div>
                             <div className="space-y-1">
