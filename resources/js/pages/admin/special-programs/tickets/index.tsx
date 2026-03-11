@@ -137,9 +137,10 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                                         <td className="px-4 py-3 font-semibold text-slate-900">{ticket.name}</td>
                                         <td className="px-4 py-3">{ticket.event?.title ?? '-'}</td>
                                         <td className="px-4 py-3">
-                                            {ticket.price
-                                                ? `Rp ${ticket.price.toLocaleString('id-ID')}`
-                                                : 'Rp 0'}
+                                            {(() => {
+                                                const priceValue = Number(ticket.price ?? 0);
+                                                return `Rp ${Number.isFinite(priceValue) ? priceValue.toLocaleString('id-ID') : '0'}`;
+                                            })()}
                                         </td>
                                         <td className="px-4 py-3">
                                             <form
