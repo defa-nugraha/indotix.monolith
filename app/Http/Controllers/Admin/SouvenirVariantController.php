@@ -73,22 +73,36 @@ class SouvenirVariantController extends Controller
     public function update(Request $request, SouvenirVariant $variant): RedirectResponse
     {
         $data = $request->validate([
-            'variant_type' => ['required', 'string', 'max:50'],
-            'name' => ['required', 'string', 'max:100'],
-            'sku' => ['nullable', 'string', 'max:50'],
-            'additional_price' => ['nullable', 'integer'],
-            'stock' => ['nullable', 'integer'],
-            'is_active' => ['nullable', 'boolean'],
+            'variant_type' => ['sometimes', 'string', 'max:50'],
+            'name' => ['sometimes', 'string', 'max:100'],
+            'sku' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'additional_price' => ['sometimes', 'nullable', 'integer'],
+            'stock' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'is_active' => ['sometimes', 'boolean'],
         ]);
 
-        $variant->update([
-            'variant_type' => $data['variant_type'],
-            'name' => $data['name'],
-            'sku' => $data['sku'] ?? null,
-            'additional_price' => $data['additional_price'] ?? 0,
-            'stock' => $data['stock'] ?? $variant->stock,
-            'is_active' => (bool) ($data['is_active'] ?? true),
-        ]);
+        $payload = [
+            'variant_type' => $data['variant_type'] ?? $variant->variant_type,
+            'name' => $data['name'] ?? $variant->name,
+        ];
+
+        if (array_key_exists('sku', $data)) {
+            $payload['sku'] = $data['sku'];
+        }
+
+        if (array_key_exists('additional_price', $data)) {
+            $payload['additional_price'] = $data['additional_price'] ?? 0;
+        }
+
+        if (array_key_exists('stock', $data)) {
+            $payload['stock'] = $data['stock'] ?? 0;
+        }
+
+        if (array_key_exists('is_active', $data)) {
+            $payload['is_active'] = (bool) $data['is_active'];
+        }
+
+        $variant->update($payload);
 
         $this->logAudit($request, 'variant_updated', 'Variasi souvenir diperbarui.', [
             'variant_id' => $variant->id,
