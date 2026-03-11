@@ -43,6 +43,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
         is_active: true,
     });
 
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editData, setEditData] = useState<Record<string, any>>({});
@@ -57,6 +58,7 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
             preserveScroll: true,
             onSuccess: () => {
                 form.reset();
+                setIsCreateOpen(false);
                 Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Variasi ditambahkan.' });
             },
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Periksa data variasi.' }),
@@ -115,57 +117,9 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                     <p className="text-sm text-slate-500">Kelola ukuran, warna, bahan, atau variasi lain.</p>
                     <SouvenirAdminMenu className="mt-4" />
 
-                    <div className="mt-6 grid gap-3 md:grid-cols-4">
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.product_id}
-                            onChange={(event) => form.setData('product_id', event.target.value)}
-                        >
-                            <option value="">Pilih produk</option>
-                            {products.map((product) => (
-                                <option key={product.id} value={product.id}>
-                                    {product.name}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.variant_type}
-                            onChange={(event) => form.setData('variant_type', event.target.value)}
-                        >
-                            <option value="size">Ukuran</option>
-                            <option value="color">Warna</option>
-                            <option value="material">Bahan</option>
-                            <option value="other">Lainnya</option>
-                        </select>
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Nama variasi"
-                            value={form.data.name}
-                            onChange={(event) => form.setData('name', event.target.value)}
-                        />
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="SKU variasi"
-                            value={form.data.sku}
-                            onChange={(event) => form.setData('sku', event.target.value)}
-                        />
-                        <input
-                            type="number"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Harga tambahan"
-                            value={form.data.additional_price}
-                            onChange={(event) => form.setData('additional_price', Number(event.target.value))}
-                        />
-                        <input
-                            type="number"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Stok"
-                            value={form.data.stock}
-                            onChange={(event) => form.setData('stock', Number(event.target.value))}
-                        />
-                        <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={submitCreate}>
-                            Simpan Variasi
+                    <div className="mt-6 flex justify-end">
+                        <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={() => setIsCreateOpen(true)}>
+                            Tambah Variasi
                         </Button>
                     </div>
                 </section>
@@ -265,50 +219,68 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                             <DialogDescription>Perbarui detail variasi retail shop.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 md:grid-cols-2">
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.variant_type ?? 'size'}
-                                onChange={(event) => setEditData({ ...editData, variant_type: event.target.value })}
-                            >
-                                <option value="size">Ukuran</option>
-                                <option value="color">Warna</option>
-                                <option value="material">Bahan</option>
-                                <option value="other">Lainnya</option>
-                            </select>
-                            <input
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Nama variasi"
-                                value={editData.name ?? ''}
-                                onChange={(event) => setEditData({ ...editData, name: event.target.value })}
-                            />
-                            <input
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="SKU variasi"
-                                value={editData.sku ?? ''}
-                                onChange={(event) => setEditData({ ...editData, sku: event.target.value })}
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Harga tambahan"
-                                value={editData.additional_price ?? 0}
-                                onChange={(event) => setEditData({ ...editData, additional_price: Number(event.target.value) })}
-                            />
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Stok"
-                                value={editData.stock ?? 0}
-                                onChange={(event) => setEditData({ ...editData, stock: Number(event.target.value) })}
-                            />
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.is_active ? 'active' : 'inactive'}
-                                onChange={(event) => setEditData({ ...editData, is_active: event.target.value === 'active' })}
-                            >
-                                <option value="active">Aktif</option>
-                                <option value="inactive">Nonaktif</option>
-                            </select>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Tipe Variasi</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.variant_type ?? 'size'}
+                                    onChange={(event) => setEditData({ ...editData, variant_type: event.target.value })}
+                                >
+                                    <option value="size">Ukuran</option>
+                                    <option value="color">Warna</option>
+                                    <option value="material">Bahan</option>
+                                    <option value="other">Lainnya</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Nama Variasi</label>
+                                <input
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Nama variasi"
+                                    value={editData.name ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, name: event.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">SKU Variasi</label>
+                                <input
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="SKU variasi"
+                                    value={editData.sku ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, sku: event.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Harga Tambahan</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Harga tambahan"
+                                    value={editData.additional_price ?? 0}
+                                    onChange={(event) => setEditData({ ...editData, additional_price: Number(event.target.value) })}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Stok</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Stok"
+                                    value={editData.stock ?? 0}
+                                    onChange={(event) => setEditData({ ...editData, stock: Number(event.target.value) })}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Status</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.is_active ? 'active' : 'inactive'}
+                                    onChange={(event) => setEditData({ ...editData, is_active: event.target.value === 'active' })}
+                                >
+                                    <option value="active">Aktif</option>
+                                    <option value="inactive">Nonaktif</option>
+                                </select>
+                            </div>
                         </div>
                         <DialogFooter className="gap-2">
                             <Button variant="outline" type="button" onClick={() => setIsEditOpen(false)}>
@@ -316,6 +288,102 @@ export default function SouvenirVariantsIndex({ variants, products, filters }: P
                             </Button>
                             <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={submitEdit}>
                                 Simpan Perubahan
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Tambah Variasi Produk</DialogTitle>
+                            <DialogDescription>Isi data variasi untuk produk retail shop.</DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-1 md:col-span-2">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Produk</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={form.data.product_id}
+                                    onChange={(event) => form.setData('product_id', event.target.value)}
+                                >
+                                    <option value="">Pilih produk</option>
+                                    {products.map((product) => (
+                                        <option key={product.id} value={product.id}>
+                                            {product.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Tipe Variasi</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={form.data.variant_type}
+                                    onChange={(event) => form.setData('variant_type', event.target.value)}
+                                >
+                                    <option value="size">Ukuran</option>
+                                    <option value="color">Warna</option>
+                                    <option value="material">Bahan</option>
+                                    <option value="other">Lainnya</option>
+                                </select>
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Nama Variasi</label>
+                                <input
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Nama variasi"
+                                    value={form.data.name}
+                                    onChange={(event) => form.setData('name', event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">SKU Variasi</label>
+                                <input
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="SKU variasi"
+                                    value={form.data.sku}
+                                    onChange={(event) => form.setData('sku', event.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Harga Tambahan</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Harga tambahan"
+                                    value={form.data.additional_price}
+                                    onChange={(event) => form.setData('additional_price', Number(event.target.value))}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Stok</label>
+                                <input
+                                    type="number"
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Stok"
+                                    value={form.data.stock}
+                                    onChange={(event) => form.setData('stock', Number(event.target.value))}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Status</label>
+                                <select
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={form.data.is_active ? 'active' : 'inactive'}
+                                    onChange={(event) => form.setData('is_active', event.target.value === 'active')}
+                                >
+                                    <option value="active">Aktif</option>
+                                    <option value="inactive">Nonaktif</option>
+                                </select>
+                            </div>
+                        </div>
+                        <DialogFooter className="gap-2">
+                            <Button variant="outline" type="button" onClick={() => setIsCreateOpen(false)}>
+                                Batal
+                            </Button>
+                            <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={submitCreate}>
+                                Simpan Variasi
                             </Button>
                         </DialogFooter>
                     </DialogContent>
