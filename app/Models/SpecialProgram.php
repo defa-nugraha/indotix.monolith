@@ -8,9 +8,18 @@ use Illuminate\Support\Str;
 
 class SpecialProgram extends Model
 {
+    protected $attributes = [
+        'program_type' => 'package',
+    ];
+
     protected $fillable = [
         'name',
         'slug',
+        'category',
+        'description',
+        'base_price',
+        'capacity',
+        'image_path',
         'program_type',
         'description_internal',
         'starts_at',
@@ -34,6 +43,8 @@ class SpecialProgram extends Model
         'starts_at' => 'date',
         'ends_at' => 'date',
         'is_active' => 'boolean',
+        'base_price' => 'integer',
+        'capacity' => 'integer',
         'scope' => 'array',
         'rules' => 'array',
         'discount' => 'array',
@@ -80,5 +91,20 @@ class SpecialProgram extends Model
     public function items(): HasMany
     {
         return $this->hasMany(SpecialProgramItem::class);
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(SpecialProgramVariant::class);
+    }
+
+    public function facilities(): HasMany
+    {
+        return $this->hasMany(SpecialProgramFacility::class);
+    }
+
+    public function bookings(): HasMany
+    {
+        return $this->hasMany(SpecialProgramBooking::class);
     }
 }

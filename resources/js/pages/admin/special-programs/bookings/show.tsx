@@ -1,29 +1,37 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 type BookingDetail = {
     id: number;
-    booking_code: string;
     status: string;
     quantity: number;
-    total_price: number;
+    visit_date?: string | null;
+    notes?: string | null;
     guest_name?: string | null;
     guest_email?: string | null;
     guest_phone?: string | null;
-    event?: { title?: string | null };
-    ticket?: { name?: string | null };
-    scans?: Array<{ id: number; scanned_at?: string | null; officer_name?: string | null; location?: string | null; is_anomaly: boolean }>;
+    program?: { name?: string | null };
+    variant?: { name?: string | null };
+    user?: { name?: string | null };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Special Program', href: '/admin/special-programs' },
-    { title: 'Booking Special Program', href: '/admin/special-programs/bookings' },
+    {
+        title: 'Booking Special Program',
+        href: '/admin/special-programs/bookings',
+    },
     { title: 'Detail', href: '#' },
 ];
 
-export default function EventBookingShow({ booking }: { booking: BookingDetail }) {
+export default function EventBookingShow({
+    booking,
+}: {
+    booking: BookingDetail;
+}) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Detail Booking Special Program" />
@@ -31,49 +39,76 @@ export default function EventBookingShow({ booking }: { booking: BookingDetail }
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-slate-900">{booking.booking_code}</h1>
-                            <p className="text-sm text-slate-500">{booking.event?.title ?? '-'}</p>
+                            <h1 className="text-2xl font-semibold text-slate-900">
+                                {booking.program?.name ?? '-'}
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                Variant: {booking.variant?.name ?? '-'}
+                            </p>
                         </div>
-                        <Badge className="bg-slate-100 text-slate-600">{booking.status}</Badge>
+                        <Badge className="bg-slate-100 text-slate-600">
+                            {booking.status}
+                        </Badge>
                     </div>
                 </section>
 
                 <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Data Pemesan</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Data Pemesan
+                        </h2>
                         <div className="mt-3 space-y-2 text-sm text-slate-600">
-                            <div>Nama: {booking.guest_name ?? '-'}</div>
+                            <div>
+                                Nama:{' '}
+                                {booking.guest_name ??
+                                    booking.user?.name ??
+                                    '-'}
+                            </div>
                             <div>Email: {booking.guest_email ?? '-'}</div>
                             <div>Telepon: {booking.guest_phone ?? '-'}</div>
                         </div>
                     </div>
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Ringkasan Tiket</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Ringkasan Booking
+                        </h2>
                         <div className="mt-3 space-y-2 text-sm text-slate-600">
-                            <div>Tiket: {booking.ticket?.name ?? '-'}</div>
-                            <div>Qty: {booking.quantity}</div>
-                                <div>Total: Rp {booking.total_price.toLocaleString('id-ID')}</div>
+                            <div>Jumlah orang: {booking.quantity}</div>
+                            <div>Tanggal: {booking.visit_date ?? '-'}</div>
+                            <div>Catatan: {booking.notes ?? '-'}</div>
                         </div>
                     </div>
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-slate-900">Riwayat Scan</h2>
-                    <div className="mt-4 space-y-2 text-sm text-slate-600">
-                        {booking.scans?.map((scan) => (
-                            <div key={scan.id} className="flex items-center justify-between rounded-lg border border-slate-100 px-4 py-2">
-                                <div>
-                                    <div>Waktu: {scan.scanned_at ?? '-'}</div>
-                                    <div className="text-xs text-slate-400">Petugas: {scan.officer_name ?? '-'}</div>
-                                </div>
-                                <Badge className={scan.is_anomaly ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700'}>
-                                    {scan.is_anomaly ? 'Double' : 'Normal'}
-                                </Badge>
-                            </div>
+                    <h2 className="text-lg font-semibold text-slate-900">
+                        Update Status
+                    </h2>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                        {['pending', 'confirmed', 'cancelled'].map((status) => (
+                            <Button
+                                key={status}
+                                type="button"
+                                variant={
+                                    status === 'confirmed'
+                                        ? 'default'
+                                        : 'outline'
+                                }
+                                className={
+                                    status === 'confirmed'
+                                        ? 'bg-sky-600 text-white hover:bg-sky-700'
+                                        : ''
+                                }
+                                onClick={() =>
+                                    router.post(
+                                        `/admin/special-programs/bookings/${booking.id}/status`,
+                                        { status },
+                                    )
+                                }
+                            >
+                                {status}
+                            </Button>
                         ))}
-                        {(!booking.scans || booking.scans.length === 0) && (
-                            <div className="text-sm text-slate-500">Belum ada scan.</div>
-                        )}
                     </div>
                 </section>
             </div>

@@ -11,6 +11,7 @@ class SpecialProgramBooking extends Model
     protected $fillable = [
         'user_id',
         'special_program_id',
+        'special_program_variant_id',
         'item_type',
         'item_id',
         'item_name',
@@ -26,6 +27,7 @@ class SpecialProgramBooking extends Model
         'guest_name',
         'guest_email',
         'guest_phone',
+        'notes',
         'midtrans_order_id',
     ];
 
@@ -37,6 +39,11 @@ class SpecialProgramBooking extends Model
     public function program(): BelongsTo
     {
         return $this->belongsTo(SpecialProgram::class, 'special_program_id');
+    }
+
+    public function variant(): BelongsTo
+    {
+        return $this->belongsTo(SpecialProgramVariant::class, 'special_program_variant_id');
     }
 
     public function user(): BelongsTo

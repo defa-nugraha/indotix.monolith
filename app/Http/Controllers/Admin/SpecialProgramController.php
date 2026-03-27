@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Event;
-use App\Models\EventAuditLog;
-use App\Models\EventOrganizer;
+use App\Models\SpecialProgram;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,222 +16,233 @@ class SpecialProgramController extends Controller
     public function index(Request $request): Response
     {
         $status = $request->string('status')->toString();
-        $query = Event::query()
-            ->where('event_type', 'special_program')
-            ->latest();
+        $category = $request->string('category')->toString();
+        $query = SpecialProgram::query()->latest();
         if ($status) {
-            $query->where('status', $status);
+            $query->where('is_active', $status === 'published');
+        }
+        if ($category) {
+            $query->where('category', $category);
         }
 
         return Inertia::render('admin/special-programs/index', [
             'programs' => $query->paginate(20)->withQueryString(),
             'filters' => [
                 'status' => $status,
+                'category' => $category,
             ],
         ]);
     }
 
     public function create(): Response
     {
-        $organizer = $this->resolveOrganizer();
-
         return Inertia::render('admin/special-programs/create', [
-            'organizer' => [
-                'id' => $organizer->id,
-                'name' => $organizer->name,
-            ],
-            'cityOptions' => $this->cityOptions(),
-            'event' => null,
+            'program' => null,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        $organizer = $this->resolveOrganizer();
+        $data = $this->validateProgram($request, true);
 
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'city_code' => ['nullable', 'string', 'max:10'],
-            'location' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'start_at' => ['required', 'date'],
-            'end_at' => ['required', 'date', 'after_or_equal:start_at'],
-            'capacity_total' => ['required', 'integer', 'min:0'],
-        ]);
+        return DB::transaction(function () use ($request, $data) {
+            $program = new SpecialProgram();
+            $program->fill([
+                'name' => $data['name'],
+                'program_type' => 'package',
+                'category' => $data['category'],
+                'description' => $data['description'] ?? null,
+                'base_price' => (int) ($data['base_price'] ?? 0),
+                'capacity' => $data['capacity'] ?? null,
+                'is_active' => (bool) ($data['is_active'] ?? false),
+                'status' => ($data['is_active'] ?? false) ? 'published' : 'draft',
+            ]);
 
-        $event = Event::create([
-            'event_organizer_id' => $organizer->id,
-            'event_type' => 'special_program',
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'city_code' => $data['city_code'] ?? null,
-            'location' => $data['location'] ?? null,
-            'address' => $data['address'] ?? null,
-            'start_at' => $data['start_at'],
-            'end_at' => $data['end_at'],
-            'capacity_total' => $data['capacity_total'],
-            'capacity_sold' => 0,
-            'sales_stopped' => false,
-            'status' => 'draft',
-        ]);
+            if ($request->hasFile('image')) {
+                $program->image_path = $request->file('image')->store('special-programs', 'public');
+            }
 
-        EventAuditLog::create([
-            'admin_id' => $request->user()->id,
-            'action' => 'special_program_created',
-            'subject_type' => Event::class,
-            'subject_id' => $event->id,
-            'metadata' => $data,
-        ]);
+            $program->save();
+            $this->syncVariants($program, $data['variants'] ?? []);
+            $this->syncFacilities($program, $data['facilities'] ?? []);
 
-        return redirect()->route('admin.special-programs.show', $event)->with('status', 'special-program-created');
+            return redirect()
+                ->route('admin.special-programs.show', $program)
+                ->with('status', 'special-program-created');
+        });
     }
 
-    public function edit(Event $event): Response
+    public function edit(SpecialProgram $program): Response
     {
-        abort_unless($event->event_type === 'special_program', 404);
-
-        $organizer = $this->resolveOrganizer();
+        $program->load(['variants', 'facilities']);
 
         return Inertia::render('admin/special-programs/create', [
-            'organizer' => [
-                'id' => $organizer->id,
-                'name' => $organizer->name,
-            ],
-            'cityOptions' => $this->cityOptions(),
-            'event' => [
-                'id' => $event->id,
-                'title' => $event->title,
-                'description' => $event->description,
-                'city_code' => $event->city_code,
-                'location' => $event->location,
-                'address' => $event->address,
-                'start_at' => $event->start_at?->format('Y-m-d\\TH:i'),
-                'end_at' => $event->end_at?->format('Y-m-d\\TH:i'),
-                'capacity_total' => $event->capacity_total,
-                'status' => $event->status,
+            'program' => [
+                'id' => $program->id,
+                'name' => $program->name,
+                'category' => $program->category,
+                'description' => $program->description,
+                'base_price' => $program->base_price,
+                'capacity' => $program->capacity,
+                'is_active' => $program->is_active,
+                'image_url' => $program->image_path ? Storage::url($program->image_path) : null,
+                'variants' => $program->variants
+                    ->sortBy('sort_order')
+                    ->values()
+                    ->map(fn ($variant) => [
+                        'id' => $variant->id,
+                        'name' => $variant->name,
+                        'price' => $variant->price,
+                        'capacity' => $variant->capacity,
+                    ])
+                    ->all(),
+                'facilities' => $program->facilities
+                    ->sortBy('sort_order')
+                    ->values()
+                    ->pluck('content')
+                    ->all(),
             ],
         ]);
     }
 
-    public function update(Request $request, Event $event): RedirectResponse
+    public function update(Request $request, SpecialProgram $program): RedirectResponse
     {
-        abort_unless($event->event_type === 'special_program', 404);
+        $data = $this->validateProgram($request, false);
 
-        $data = $request->validate([
-            'title' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
-            'city_code' => ['nullable', 'string', 'max:10'],
-            'location' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string', 'max:255'],
-            'start_at' => ['required', 'date'],
-            'end_at' => ['required', 'date', 'after_or_equal:start_at'],
-            'capacity_total' => ['required', 'integer', 'min:0'],
-        ]);
+        return DB::transaction(function () use ($request, $program, $data) {
+            $program->fill([
+                'name' => $data['name'],
+                'program_type' => 'package',
+                'category' => $data['category'],
+                'description' => $data['description'] ?? null,
+                'base_price' => (int) ($data['base_price'] ?? 0),
+                'capacity' => $data['capacity'] ?? null,
+                'is_active' => (bool) ($data['is_active'] ?? false),
+                'status' => ($data['is_active'] ?? false) ? 'published' : 'draft',
+            ]);
 
-        $event->update([
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'city_code' => $data['city_code'] ?? null,
-            'location' => $data['location'] ?? null,
-            'address' => $data['address'] ?? null,
-            'start_at' => $data['start_at'],
-            'end_at' => $data['end_at'],
-            'capacity_total' => $data['capacity_total'],
-        ]);
+            if ($request->hasFile('image')) {
+                if ($program->image_path) {
+                    Storage::disk('public')->delete($program->image_path);
+                }
+                $program->image_path = $request->file('image')->store('special-programs', 'public');
+            }
 
-        EventAuditLog::create([
-            'admin_id' => $request->user()->id,
-            'action' => 'special_program_updated',
-            'subject_type' => Event::class,
-            'subject_id' => $event->id,
-            'metadata' => $data,
-        ]);
+            $program->save();
+            $this->syncVariants($program, $data['variants'] ?? []);
+            $this->syncFacilities($program, $data['facilities'] ?? []);
 
-        return back()->with('status', 'special-program-updated');
+            return back()->with('status', 'special-program-updated');
+        });
     }
 
-    public function show(Event $event): Response
+    public function show(SpecialProgram $program): Response
     {
-        abort_unless($event->event_type === 'special_program', 404);
-        $event->load('tickets');
+        $program->load(['variants', 'facilities']);
 
         return Inertia::render('admin/special-programs/show', [
-            'event' => $event,
+            'program' => [
+                'id' => $program->id,
+                'name' => $program->name,
+                'category' => $program->category,
+                'description' => $program->description,
+                'base_price' => $program->base_price,
+                'capacity' => $program->capacity,
+                'is_active' => $program->is_active,
+                'image_url' => $program->image_path ? Storage::url($program->image_path) : null,
+                'variants' => $program->variants
+                    ->sortBy('sort_order')
+                    ->values()
+                    ->map(fn ($variant) => [
+                        'id' => $variant->id,
+                        'name' => $variant->name,
+                        'price' => $variant->price,
+                        'capacity' => $variant->capacity,
+                    ])
+                    ->all(),
+                'facilities' => $program->facilities
+                    ->sortBy('sort_order')
+                    ->values()
+                    ->pluck('content')
+                    ->all(),
+            ],
         ]);
     }
 
-    public function updateStatus(Request $request, Event $event): RedirectResponse
+    public function destroy(SpecialProgram $program): RedirectResponse
     {
-        abort_unless($event->event_type === 'special_program', 404);
+        if ($program->image_path) {
+            Storage::disk('public')->delete($program->image_path);
+        }
+        $program->delete();
 
+        return redirect()->route('admin.special-programs.index');
+    }
+
+    public function updateStatus(Request $request, SpecialProgram $program): RedirectResponse
+    {
         $data = $request->validate([
-            'status' => ['required', 'in:draft,pending_review,published,postponed,cancelled,completed'],
-            'status_reason' => ['nullable', 'string'],
+            'is_active' => ['required', 'boolean'],
         ]);
 
-        $event->update([
-            'status' => $data['status'],
-            'status_reason' => $data['status_reason'] ?? $event->status_reason,
-            'published_at' => $data['status'] === 'published' ? now() : $event->published_at,
-        ]);
-
-        EventAuditLog::create([
-            'admin_id' => $request->user()->id,
-            'action' => 'special_program_status_updated',
-            'subject_type' => Event::class,
-            'subject_id' => $event->id,
-            'metadata' => $data,
+        $program->update([
+            'is_active' => (bool) $data['is_active'],
+            'status' => (bool) $data['is_active'] ? 'published' : 'draft',
         ]);
 
         return back();
     }
 
-    public function updateCapacity(Request $request, Event $event): RedirectResponse
+    private function validateProgram(Request $request, bool $isCreate): array
     {
-        abort_unless($event->event_type === 'special_program', 404);
+        $imageRule = $isCreate ? ['required', 'image', 'max:4096'] : ['nullable', 'image', 'max:4096'];
 
-        $data = $request->validate([
-            'capacity_total' => ['required', 'integer', 'min:0'],
-            'sales_stopped' => ['required', 'boolean'],
+        return $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'in:meeting,wedding,travel'],
+            'base_price' => ['required', 'integer', 'min:0'],
+            'description' => ['nullable', 'string'],
+            'capacity' => ['nullable', 'integer', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+            'image' => $imageRule,
+            'variants' => ['nullable', 'array'],
+            'variants.*.name' => ['nullable', 'string', 'max:255'],
+            'variants.*.price' => ['nullable', 'integer', 'min:0'],
+            'variants.*.capacity' => ['nullable', 'integer', 'min:0'],
+            'facilities' => ['nullable', 'array'],
+            'facilities.*' => ['nullable', 'string', 'max:255'],
         ]);
-
-        $event->update($data);
-
-        EventAuditLog::create([
-            'admin_id' => $request->user()->id,
-            'action' => 'special_program_capacity_updated',
-            'subject_type' => Event::class,
-            'subject_id' => $event->id,
-            'metadata' => $data,
-        ]);
-
-        return back();
     }
 
-    private function resolveOrganizer(): EventOrganizer
+    private function syncVariants(SpecialProgram $program, array $variants): void
     {
-        return EventOrganizer::query()->firstOrCreate(
-            ['user_id' => null, 'name' => 'Indotix Special Program'],
-            [
-                'email' => null,
-                'phone' => null,
-                'status' => 'verified',
-                'notes' => 'Organizer internal untuk special program.',
-            ]
-        );
+        $program->variants()->delete();
+
+        collect($variants)
+            ->filter(fn ($variant) => filled($variant['name'] ?? null))
+            ->values()
+            ->each(function (array $variant, int $index) use ($program) {
+                $program->variants()->create([
+                    'name' => $variant['name'],
+                    'price' => $variant['price'] !== null && $variant['price'] !== '' ? (int) $variant['price'] : null,
+                    'capacity' => $variant['capacity'] !== null && $variant['capacity'] !== '' ? (int) $variant['capacity'] : null,
+                    'sort_order' => $index,
+                ]);
+            });
     }
 
-    private function cityOptions(): array
+    private function syncFacilities(SpecialProgram $program, array $facilities): void
     {
-        return DB::table('regencies')
-            ->select('code', 'name', 'type')
-            ->orderBy('name')
-            ->get()
-            ->map(fn ($row) => [
-                'code' => $row->code,
-                'label' => trim(sprintf('%s %s', $row->type ?? 'Kabupaten', $row->name)),
-            ])
-            ->all();
+        $program->facilities()->delete();
+
+        collect($facilities)
+            ->filter(fn ($facility) => filled($facility))
+            ->values()
+            ->each(function (string $facility, int $index) use ($program) {
+                $program->facilities()->create([
+                    'content' => $facility,
+                    'sort_order' => $index,
+                ]);
+            });
     }
 }

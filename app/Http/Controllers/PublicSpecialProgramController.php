@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Event;
-use App\Models\EventTicket;
-use App\Services\ProductReviewService;
+use App\Models\SpecialProgram;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,45 +16,41 @@ class PublicSpecialProgramController extends Controller
     {
         $payload = [
             'q' => $request->input('q'),
+            'category' => $request->input('category'),
         ];
 
         $data = validator($payload, [
             'q' => ['nullable', 'string', 'max:255'],
+            'category' => ['nullable', 'in:meeting,wedding,travel'],
         ])->validate();
 
-        $programs = Event::query()
-            ->where('event_type', 'special_program')
-            ->where('status', 'published')
-            ->when($data['q'] ?? null, fn ($query, $term) => $query->where('title', 'like', "%{$term}%"))
-            ->orderByDesc('start_at')
+        $programs = SpecialProgram::query()
+            ->where('is_active', true)
+            ->when($data['q'] ?? null, fn ($query, $term) => $query->where('name', 'like', "%{$term}%"))
+            ->when($data['category'] ?? null, fn ($query, $category) => $query->where('category', $category))
+            ->with('variants')
+            ->latest()
             ->get();
 
-        $tickets = EventTicket::query()
-            ->whereIn('event_id', $programs->pluck('id'))
-            ->where('is_active', true)
-            ->get()
-            ->groupBy('event_id');
-
-        $results = $programs->map(function (Event $program) use ($tickets) {
-            $ticketRows = $tickets->get($program->id, collect());
-            $minPrice = $ticketRows->min('price');
+        $results = $programs->map(function (SpecialProgram $program) {
+            $variantMin = $program->variants->whereNotNull('price')->min('price');
+            $minPrice = $variantMin !== null ? (int) $variantMin : (int) $program->base_price;
 
             return [
                 'id' => $program->id,
                 'encrypted_id' => Crypt::encryptString((string) $program->id),
                 'slug' => $program->slug,
-                'title' => $program->title,
-                'city_name' => $this->resolveCityName($program->city_code),
-                'location' => $program->location,
-                'start_at' => $program->start_at?->toDateString(),
-                'min_price' => $minPrice ? (int) $minPrice : null,
-                'image_url' => null,
+                'name' => $program->name,
+                'category' => $program->category,
+                'min_price' => $minPrice > 0 ? $minPrice : null,
+                'image_url' => $program->image_path ? Storage::url($program->image_path) : null,
             ];
         });
 
         return Inertia::render('public/special-programs/search', [
             'filters' => [
                 'q' => $data['q'] ?? null,
+                'category' => $data['category'] ?? null,
             ],
             'programs' => $results,
         ]);
@@ -64,18 +58,16 @@ class PublicSpecialProgramController extends Controller
 
     public function show(Request $request, string $program): Response|RedirectResponse
     {
-        $programModel = Event::query()
-            ->where('event_type', 'special_program')
-            ->where('status', 'published')
+        $programModel = SpecialProgram::query()
+            ->where('is_active', true)
             ->where('slug', $program)
             ->first();
 
         if (! $programModel) {
             try {
                 $programId = Crypt::decryptString($program);
-                $programModel = Event::query()
-                    ->where('event_type', 'special_program')
-                    ->where('status', 'published')
+                $programModel = SpecialProgram::query()
+                    ->where('is_active', true)
                     ->where('id', $programId)
                     ->first();
             } catch (\Throwable $exception) {
@@ -92,57 +84,35 @@ class PublicSpecialProgramController extends Controller
         }
 
         $program = $programModel;
-
-        $tickets = EventTicket::query()
-            ->where('event_id', $program->id)
-            ->where('is_active', true)
-            ->get()
-            ->map(function (EventTicket $ticket) {
-                return [
-                    'id' => $ticket->id,
-                    'name' => $ticket->name,
-                    'description' => $ticket->description,
-                    'price' => $ticket->price,
-                    'quota' => $ticket->quota,
-                    'sold_count' => $ticket->sold_count,
-                    'available' => max(0, (int) $ticket->quota - (int) $ticket->sold_count),
-                ];
-            });
-
-        $userId = $request->user()?->id;
-        $userReview = ProductReviewService::userReview($userId, 'special_program', $program->id);
-        $canReview = $userId
-            ? (ProductReviewService::hasUsedBooking($userId, 'special_program', $program->id) || (bool) $userReview)
-            : false;
+        $program->load(['variants', 'facilities']);
 
         return Inertia::render('public/special-programs/show', [
             'program' => [
                 'id' => $program->id,
                 'encrypted_id' => Crypt::encryptString((string) $program->id),
                 'slug' => $program->slug,
-                'title' => $program->title,
+                'name' => $program->name,
+                'category' => $program->category,
                 'description' => $program->description,
-                'city_name' => $this->resolveCityName($program->city_code),
-                'location' => $program->location,
-                'address' => $program->address,
-                'start_at' => $program->start_at?->toDateTimeString(),
-                'end_at' => $program->end_at?->toDateTimeString(),
-                'capacity_total' => $program->capacity_total,
-                'capacity_sold' => $program->capacity_sold,
+                'base_price' => $program->base_price,
+                'capacity' => $program->capacity,
+                'image_url' => $program->image_path ? Storage::url($program->image_path) : null,
+                'variants' => $program->variants
+                    ->sortBy('sort_order')
+                    ->values()
+                    ->map(fn ($variant) => [
+                        'id' => $variant->id,
+                        'name' => $variant->name,
+                        'price' => $variant->price,
+                        'capacity' => $variant->capacity,
+                    ])
+                    ->all(),
+                'facilities' => $program->facilities
+                    ->sortBy('sort_order')
+                    ->values()
+                    ->pluck('content')
+                    ->all(),
             ],
-            'tickets' => $tickets,
-            'reviews' => ProductReviewService::publicReviews('special_program', $program->id),
-            'userReview' => $userReview,
-            'canReview' => $canReview,
         ]);
-    }
-
-    private function resolveCityName(?string $cityCode): ?string
-    {
-        if (! $cityCode) {
-            return null;
-        }
-
-        return DB::table('regencies')->where('code', $cityCode)->value('name');
     }
 }

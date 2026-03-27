@@ -1,27 +1,32 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
-import Select from 'react-select';
+
+type VariantForm = {
+    name: string;
+    price: string | number;
+    capacity: string | number;
+};
 
 type ProgramForm = {
     id?: number;
-    title: string;
+    name: string;
+    category: string;
+    base_price: number | string;
     description: string;
-    city_code: string;
-    location: string;
-    address: string;
-    start_at: string;
-    end_at: string;
-    capacity_total: number | string;
+    capacity: number | string;
+    is_active: boolean;
+    image: File | null;
+    variants: VariantForm[];
+    facilities: string[];
+    image_url?: string | null;
 };
 
 type Props = {
-    organizer: { id: number; name?: string | null };
-    event: ProgramForm | null;
-    cityOptions: Array<{ code: string; label: string }>;
+    program: ProgramForm | null;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -29,56 +34,104 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Form Special Program', href: '#' },
 ];
 
-type CitySelectOption = { value: string; label: string };
+const categoryOptions = [
+    { value: 'meeting', label: 'Meeting' },
+    { value: 'wedding', label: 'Wedding' },
+    { value: 'travel', label: 'Travel' },
+];
 
-export default function SpecialProgramCreate({ organizer, event, cityOptions }: Props) {
+export default function SpecialProgramCreate({ program }: Props) {
     const form = useForm<ProgramForm>({
-        title: event?.title ?? '',
-        description: event?.description ?? '',
-        city_code: event?.city_code ?? '',
-        location: event?.location ?? '',
-        address: event?.address ?? '',
-        start_at: event?.start_at ?? '',
-        end_at: event?.end_at ?? '',
-        capacity_total: event?.capacity_total ?? 0,
+        name: program?.name ?? '',
+        category: program?.category ?? '',
+        base_price: program?.base_price ?? '',
+        description: program?.description ?? '',
+        capacity: program?.capacity ?? '',
+        is_active: program?.is_active ?? false,
+        image: null,
+        variants: program?.variants ?? [],
+        facilities: program?.facilities ?? [],
+        image_url: program?.image_url ?? null,
     });
 
-    const citySelectOptions: CitySelectOption[] = cityOptions.map((city) => ({
-        value: city.code,
-        label: city.label,
-    }));
-    const selectedCity = citySelectOptions.find((option) => option.value === form.data.city_code) ?? null;
-    const selectStyles = {
-        control: (base: any) => ({
-            ...base,
-            minHeight: '40px',
-            borderColor: '#e2e8f0',
-            boxShadow: 'none',
-            ':hover': { borderColor: '#94a3b8' },
-        }),
-        valueContainer: (base: any) => ({ ...base, padding: '0 12px' }),
-        input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
-        indicatorSeparator: () => ({ display: 'none' }),
-        dropdownIndicator: (base: any) => ({ ...base, padding: '0 8px' }),
-        menu: (base: any) => ({ ...base, zIndex: 50 }),
-    };
-
     const submit = () => {
-        const payload = {
-            ...form.data,
-            capacity_total: Number(form.data.capacity_total || 0),
-        };
-        if (event?.id) {
-            router.put(`/admin/special-programs/${event.id}`, payload, {
-                onSuccess: () => Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Special program diperbarui.' }),
-                onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Periksa data form.' }),
-            });
+        if (program?.id) {
+            form.transform((data) => ({ ...data, _method: 'PUT' })).post(
+                `/admin/special-programs/${program.id}`,
+                {
+                    forceFormData: true,
+                    onSuccess: () =>
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Tersimpan',
+                            text: 'Paket diperbarui.',
+                        }),
+                    onError: () =>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: 'Periksa data form.',
+                        }),
+                },
+            );
             return;
         }
         form.post('/admin/special-programs', {
-            onSuccess: () => Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Special program dibuat.' }),
-            onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Periksa data form.' }),
+            forceFormData: true,
+            onSuccess: () =>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Tersimpan',
+                    text: 'Paket dibuat.',
+                }),
+            onError: () =>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Periksa data form.',
+                }),
         });
+    };
+
+    const addVariant = () => {
+        form.setData('variants', [
+            ...form.data.variants,
+            { name: '', price: '', capacity: '' },
+        ]);
+    };
+
+    const updateVariant = (
+        index: number,
+        field: keyof VariantForm,
+        value: string,
+    ) => {
+        const updated = [...form.data.variants];
+        updated[index] = { ...updated[index], [field]: value };
+        form.setData('variants', updated);
+    };
+
+    const removeVariant = (index: number) => {
+        form.setData(
+            'variants',
+            form.data.variants.filter((_, idx) => idx !== index),
+        );
+    };
+
+    const addFacility = () => {
+        form.setData('facilities', [...form.data.facilities, '']);
+    };
+
+    const updateFacility = (index: number, value: string) => {
+        const updated = [...form.data.facilities];
+        updated[index] = value;
+        form.setData('facilities', updated);
+    };
+
+    const removeFacility = (index: number) => {
+        form.setData(
+            'facilities',
+            form.data.facilities.filter((_, idx) => idx !== index),
+        );
     };
 
     return (
@@ -86,12 +139,15 @@ export default function SpecialProgramCreate({ organizer, event, cityOptions }: 
             <Head title="Form Special Program" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Special Program</p>
+                    <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                        Special Program
+                    </p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-                        {event ? 'Edit Special Program' : 'Buat Special Program'} - {organizer.name ?? 'Indotix'}
+                        {program ? 'Edit Paket' : 'Buat Paket'}
                     </h1>
                     <p className="text-sm text-slate-500">
-                        Program ini dikelola admin internal dan akan ditampilkan sebagai special program di publik.
+                        Kelola paket special program untuk ditampilkan di
+                        publik.
                     </p>
                     <form
                         className="mt-6 grid gap-4 md:grid-cols-2"
@@ -101,88 +157,261 @@ export default function SpecialProgramCreate({ organizer, event, cityOptions }: 
                         }}
                     >
                         <div className="md:col-span-2">
-                            <label className="text-xs font-semibold uppercase text-slate-500">Judul Program</label>
+                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                Nama Paket
+                            </label>
                             <input
-                                value={form.data.title}
-                                onChange={(e) => form.setData('title', e.target.value)}
+                                value={form.data.name}
+                                onChange={(e) =>
+                                    form.setData('name', e.target.value)
+                                }
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
-                            <InputError message={form.errors.title} />
+                            <InputError message={form.errors.name} />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                Kategori
+                            </label>
+                            <select
+                                value={form.data.category}
+                                onChange={(e) =>
+                                    form.setData('category', e.target.value)
+                                }
+                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Pilih kategori</option>
+                                {categoryOptions.map((option) => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={form.errors.category} />
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                Harga Dasar
+                            </label>
+                            <input
+                                type="number"
+                                min={0}
+                                value={form.data.base_price}
+                                onChange={(e) =>
+                                    form.setData('base_price', e.target.value)
+                                }
+                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                            <InputError message={form.errors.base_price} />
                         </div>
                         <div className="md:col-span-2">
-                            <label className="text-xs font-semibold uppercase text-slate-500">Deskripsi</label>
+                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                Deskripsi
+                            </label>
                             <textarea
                                 value={form.data.description}
-                                onChange={(e) => form.setData('description', e.target.value)}
+                                onChange={(e) =>
+                                    form.setData('description', e.target.value)
+                                }
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 rows={4}
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-semibold uppercase text-slate-500">Kota/Kabupaten</label>
-                            <div className="mt-2">
-                                <Select
-                                    inputId="city_code"
-                                    instanceId="city_code"
-                                    options={citySelectOptions}
-                                    value={selectedCity}
-                                    placeholder="Pilih kota/kabupaten"
-                                    onChange={(option) => form.setData('city_code', option?.value ?? '')}
-                                    styles={selectStyles}
-                                />
-                            </div>
-                            <InputError message={form.errors.city_code} />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold uppercase text-slate-500">Lokasi</label>
-                            <input
-                                value={form.data.location}
-                                onChange={(e) => form.setData('location', e.target.value)}
-                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                        </div>
-                        <div className="md:col-span-2">
-                            <label className="text-xs font-semibold uppercase text-slate-500">Alamat</label>
-                            <input
-                                value={form.data.address}
-                                onChange={(e) => form.setData('address', e.target.value)}
-                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold uppercase text-slate-500">Mulai</label>
-                            <input
-                                type="datetime-local"
-                                value={form.data.start_at}
-                                onChange={(e) => form.setData('start_at', e.target.value)}
-                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <InputError message={form.errors.start_at} />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold uppercase text-slate-500">Selesai</label>
-                            <input
-                                type="datetime-local"
-                                value={form.data.end_at}
-                                onChange={(e) => form.setData('end_at', e.target.value)}
-                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <InputError message={form.errors.end_at} />
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold uppercase text-slate-500">Kapasitas</label>
+                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                Kapasitas
+                            </label>
                             <input
                                 type="number"
                                 min={0}
-                                value={form.data.capacity_total}
-                                onChange={(e) => form.setData('capacity_total', e.target.value)}
+                                value={form.data.capacity}
+                                onChange={(e) =>
+                                    form.setData('capacity', e.target.value)
+                                }
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
-                            <InputError message={form.errors.capacity_total} />
+                            <InputError message={form.errors.capacity} />
                         </div>
-                        <div className="md:col-span-2 flex justify-end">
-                            <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
-                                {event ? 'Simpan Perubahan' : 'Simpan Program'}
+                        <div>
+                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                Publish
+                            </label>
+                            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
+                                <input
+                                    type="checkbox"
+                                    checked={form.data.is_active}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'is_active',
+                                            e.target.checked,
+                                        )
+                                    }
+                                />
+                                Tampilkan di publik
+                            </label>
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                Gambar
+                            </label>
+                            {form.data.image_url && (
+                                <img
+                                    src={form.data.image_url}
+                                    alt={form.data.name}
+                                    className="mt-2 h-32 rounded-xl border border-slate-100 object-cover"
+                                />
+                            )}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) =>
+                                    form.setData(
+                                        'image',
+                                        e.target.files?.[0] ?? null,
+                                    )
+                                }
+                                className="mt-2 block w-full text-sm"
+                            />
+                            <InputError message={form.errors.image} />
+                        </div>
+
+                        <div className="mt-4 md:col-span-2">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-500 uppercase">
+                                    Variant
+                                </h3>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={addVariant}
+                                >
+                                    Tambah Variant
+                                </Button>
+                            </div>
+                            <div className="mt-3 grid gap-3">
+                                {form.data.variants.map((variant, index) => (
+                                    <div
+                                        key={index}
+                                        className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-4"
+                                    >
+                                        <input
+                                            value={variant.name}
+                                            onChange={(e) =>
+                                                updateVariant(
+                                                    index,
+                                                    'name',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                            placeholder="Nama variant"
+                                        />
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={variant.price}
+                                            onChange={(e) =>
+                                                updateVariant(
+                                                    index,
+                                                    'price',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                            placeholder="Harga override"
+                                        />
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={variant.capacity}
+                                            onChange={(e) =>
+                                                updateVariant(
+                                                    index,
+                                                    'capacity',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                            placeholder="Kapasitas"
+                                        />
+                                        <div className="flex items-center justify-end">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                onClick={() =>
+                                                    removeVariant(index)
+                                                }
+                                            >
+                                                Hapus
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ))}
+                                {form.data.variants.length === 0 && (
+                                    <p className="text-sm text-slate-500">
+                                        Belum ada variant.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mt-4 md:col-span-2">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-semibold text-slate-500 uppercase">
+                                    Fasilitas
+                                </h3>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={addFacility}
+                                >
+                                    Tambah Fasilitas
+                                </Button>
+                            </div>
+                            <div className="mt-3 grid gap-3">
+                                {form.data.facilities.map((facility, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center gap-3"
+                                    >
+                                        <input
+                                            value={facility}
+                                            onChange={(e) =>
+                                                updateFacility(
+                                                    index,
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                            placeholder="Contoh: 1x meal, hotel, dll"
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={() =>
+                                                removeFacility(index)
+                                            }
+                                        >
+                                            Hapus
+                                        </Button>
+                                    </div>
+                                ))}
+                                {form.data.facilities.length === 0 && (
+                                    <p className="text-sm text-slate-500">
+                                        Belum ada fasilitas.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex justify-end md:col-span-2">
+                            <Button
+                                type="submit"
+                                className="bg-sky-600 text-white hover:bg-sky-700"
+                            >
+                                {program ? 'Simpan Perubahan' : 'Simpan Paket'}
                             </Button>
                         </div>
                     </form>

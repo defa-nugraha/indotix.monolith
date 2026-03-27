@@ -14,6 +14,7 @@ use App\Models\PromoVideo;
 use App\Models\PublicBanner;
 use App\Models\PublicContact;
 use App\Models\PublicPartner;
+use App\Models\SpecialProgram;
 use App\Models\SouvenirProduct;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -112,31 +113,26 @@ class PublicHomeController extends Controller
                 ];
             });
 
-        $specialPrograms = Event::query()
-            ->where('event_type', 'special_program')
-            ->where('status', 'published')
-            ->latest('start_at')
+        $specialPrograms = SpecialProgram::query()
+            ->where('is_active', true)
+            ->with('variants')
+            ->latest()
             ->take(6)
             ->get();
 
-        $specialTickets = EventTicket::query()
-            ->whereIn('event_id', $specialPrograms->pluck('id'))
-            ->select('event_id', DB::raw('MIN(price) as min_price'))
-            ->groupBy('event_id')
-            ->pluck('min_price', 'event_id');
+        $specialProgramItemsMapped = $specialPrograms->map(function (SpecialProgram $program) {
+            $variantMin = $program->variants->whereNotNull('price')->min('price');
+            $minPrice = $variantMin !== null ? (int) $variantMin : (int) $program->base_price;
 
-        $specialProgramItemsMapped = $specialPrograms->map(function (Event $program) use ($specialTickets) {
             return [
                 'type' => 'special_program',
                 'id' => $program->id,
                 'encrypted_id' => Crypt::encryptString((string) $program->id),
                 'slug' => $program->slug,
-                'title' => $program->title,
-                'city_name' => DB::table('regencies')
-                    ->where('code', $program->city_code)
-                    ->value('name'),
-                'image_url' => null,
-                'price' => isset($specialTickets[$program->id]) ? (int) $specialTickets[$program->id] : null,
+                'name' => $program->name,
+                'category' => $program->category,
+                'image_url' => $program->image_path ? Storage::url($program->image_path) : null,
+                'price' => $minPrice > 0 ? $minPrice : null,
             ];
         });
 

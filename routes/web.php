@@ -23,56 +23,22 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.special-programs.create');
     Route::post('admin/special-programs', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'store'])
         ->name('admin.special-programs.store');
-    Route::get('admin/special-programs/tickets', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'index'])
-        ->name('admin.special-programs.tickets.index');
-    Route::post('admin/special-programs/tickets', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'store'])
-        ->name('admin.special-programs.tickets.store');
-    Route::post('admin/special-programs/tickets/{ticket}', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'update'])
-        ->name('admin.special-programs.tickets.update');
     Route::get('admin/special-programs/bookings', [\App\Http\Controllers\Admin\SpecialProgramBookingController::class, 'index'])
         ->name('admin.special-programs.bookings.index');
     Route::get('admin/special-programs/bookings/{booking}', [\App\Http\Controllers\Admin\SpecialProgramBookingController::class, 'show'])
         ->name('admin.special-programs.bookings.show');
-    Route::get('admin/special-programs/attendees', [\App\Http\Controllers\Admin\SpecialProgramAttendeeController::class, 'index'])
-        ->name('admin.special-programs.attendees.index');
-    Route::get('admin/special-programs/scans', [\App\Http\Controllers\Admin\SpecialProgramScanController::class, 'index'])
-        ->name('admin.special-programs.scans.index');
-    Route::get('admin/special-programs/content', [\App\Http\Controllers\Admin\SpecialProgramContentController::class, 'index'])
-        ->name('admin.special-programs.content.index');
-    Route::get('admin/special-programs/reviews', [\App\Http\Controllers\Admin\SpecialProgramReviewController::class, 'index'])
-        ->name('admin.special-programs.reviews.index');
-    Route::get('admin/special-programs/exceptions', [\App\Http\Controllers\Admin\SpecialProgramExceptionController::class, 'index'])
-        ->name('admin.special-programs.exceptions.index');
-    Route::post('admin/special-programs/{event}/exception', [\App\Http\Controllers\Admin\SpecialProgramExceptionController::class, 'updateEvent'])
-        ->name('admin.special-programs.exceptions.update');
-    Route::post('admin/special-programs/bookings/{booking}/refund', [\App\Http\Controllers\Admin\SpecialProgramExceptionController::class, 'refund'])
-        ->name('admin.special-programs.exceptions.refund');
-    Route::get('admin/special-programs/finance/commissions', [\App\Http\Controllers\Admin\SpecialProgramFinanceController::class, 'commissions'])
-        ->name('admin.special-programs.finance.commissions');
-    Route::post('admin/special-programs/finance/commissions', [\App\Http\Controllers\Admin\SpecialProgramFinanceController::class, 'storeCommission'])
-        ->name('admin.special-programs.finance.commissions.store');
-    Route::get('admin/special-programs/finance/settlements', [\App\Http\Controllers\Admin\SpecialProgramFinanceController::class, 'settlements'])
-        ->name('admin.special-programs.finance.settlements');
-    Route::post('admin/special-programs/finance/settlements', [\App\Http\Controllers\Admin\SpecialProgramFinanceController::class, 'createSettlement'])
-        ->name('admin.special-programs.finance.settlements.store');
-    Route::get('admin/special-programs/finance/reports', [\App\Http\Controllers\Admin\SpecialProgramFinanceController::class, 'reports'])
-        ->name('admin.special-programs.finance.reports');
-    Route::get('admin/special-programs/system/audit-logs', [\App\Http\Controllers\Admin\SpecialProgramAuditController::class, 'index'])
-        ->name('admin.special-programs.system.audit');
-    Route::get('admin/special-programs/system/settings', [\App\Http\Controllers\Admin\SpecialProgramSettingController::class, 'index'])
-        ->name('admin.special-programs.system.settings');
-    Route::post('admin/special-programs/system/settings', [\App\Http\Controllers\Admin\SpecialProgramSettingController::class, 'update'])
-        ->name('admin.special-programs.system.settings.update');
-    Route::get('admin/special-programs/{event}/edit', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'edit'])
+    Route::post('admin/special-programs/bookings/{booking}/status', [\App\Http\Controllers\Admin\SpecialProgramBookingController::class, 'updateStatus'])
+        ->name('admin.special-programs.bookings.status');
+    Route::get('admin/special-programs/{program}/edit', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'edit'])
         ->name('admin.special-programs.edit');
-    Route::put('admin/special-programs/{event}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'update'])
+    Route::put('admin/special-programs/{program}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'update'])
         ->name('admin.special-programs.update');
-    Route::get('admin/special-programs/{event}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'show'])
+    Route::delete('admin/special-programs/{program}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'destroy'])
+        ->name('admin.special-programs.destroy');
+    Route::get('admin/special-programs/{program}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'show'])
         ->name('admin.special-programs.show');
-    Route::post('admin/special-programs/{event}/status', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'updateStatus'])
+    Route::post('admin/special-programs/{program}/status', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'updateStatus'])
         ->name('admin.special-programs.status');
-    Route::post('admin/special-programs/{event}/capacity', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'updateCapacity'])
-        ->name('admin.special-programs.capacity');
 
     Route::get('admin/retail-shop/products', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'index'])
         ->name('admin.souvenir.products.index');
@@ -936,8 +902,8 @@ Route::post('/events/booking/prepare', [\App\Http\Controllers\EventPublicBooking
     ->name('events.booking.prepare');
 Route::post('/academy/booking/prepare', [\App\Http\Controllers\AcademyPublicBookingController::class, 'prepare'])
     ->name('academy.booking.prepare');
-Route::post('/special-programs/booking/prepare', [\App\Http\Controllers\SpecialProgramBookingController::class, 'prepare'])
-    ->name('special-programs.booking.prepare');
+Route::post('/special-programs/booking', [\App\Http\Controllers\SpecialProgramBookingController::class, 'store'])
+    ->name('special-programs.booking.store');
 Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingController::class, 'prepare'])
     ->name('wisata.booking.prepare');
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
@@ -1048,19 +1014,6 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('academy.booking.ticket');
     Route::get('/academy/booking/{booking}', [\App\Http\Controllers\AcademyPublicBookingController::class, 'show'])
         ->name('academy.booking.show');
-
-    Route::get('/special-programs/booking/review', [\App\Http\Controllers\SpecialProgramBookingController::class, 'review'])
-        ->name('special-programs.booking.review');
-    Route::post('/special-programs/booking/confirm', [\App\Http\Controllers\SpecialProgramBookingController::class, 'confirm'])
-        ->name('special-programs.booking.confirm');
-    Route::get('/special-programs/booking/{booking}/payment', [\App\Http\Controllers\SpecialProgramBookingController::class, 'payment'])
-        ->name('special-programs.booking.payment');
-    Route::post('/special-programs/booking/{booking}/payment', [\App\Http\Controllers\SpecialProgramBookingController::class, 'pay'])
-        ->name('special-programs.booking.pay');
-    Route::get('/special-programs/booking/{booking}/ticket', [\App\Http\Controllers\SpecialProgramBookingController::class, 'ticket'])
-        ->name('special-programs.booking.ticket');
-    Route::get('/special-programs/booking/{booking}', [\App\Http\Controllers\SpecialProgramBookingController::class, 'show'])
-        ->name('special-programs.booking.show');
 
     Route::get('/wisata/booking/review', [\App\Http\Controllers\WisataBookingController::class, 'review'])
         ->name('wisata.booking.review');

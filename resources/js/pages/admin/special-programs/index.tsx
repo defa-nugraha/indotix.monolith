@@ -6,15 +6,19 @@ import { Button } from '@/components/ui/button';
 
 type EventRow = {
     id: number;
-    title: string;
-    status: string;
-    capacity_total: number;
-    capacity_sold: number;
+    name: string;
+    category: string | null;
+    base_price: number;
+    capacity: number | null;
+    is_active: boolean;
 };
 
 type Props = {
-    programs: { data: EventRow[]; links: Array<{ url: string | null; label: string; active: boolean }> };
-    filters: { status?: string };
+    programs: {
+        data: EventRow[];
+        links: Array<{ url: string | null; label: string; active: boolean }>;
+    };
+    filters: { status?: string; category?: string };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -30,14 +34,18 @@ export default function SpecialProgramsIndex({ programs, filters }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <h1 className="text-2xl font-semibold text-slate-900">Manajemen Special Program</h1>
-                            <p className="text-sm text-slate-500">Approval, status program, dan kontrol kapasitas.</p>
+                            <h1 className="text-2xl font-semibold text-slate-900">
+                                Manajemen Special Program
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                Kelola paket, harga, dan publikasi.
+                            </p>
                         </div>
                         <Link
                             href="/admin/special-programs/create"
                             className="inline-flex items-center rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
                         >
-                            Buat Special Program
+                            Buat Paket
                         </Link>
                     </div>
                     <form
@@ -45,19 +53,36 @@ export default function SpecialProgramsIndex({ programs, filters }: Props) {
                         onSubmit={(event) => {
                             event.preventDefault();
                             const data = new FormData(event.currentTarget);
-                            router.get('/admin/special-programs', Object.fromEntries(data.entries()), { preserveState: true });
+                            router.get(
+                                '/admin/special-programs',
+                                Object.fromEntries(data.entries()),
+                                { preserveState: true },
+                            );
                         }}
                     >
-                        <select name="status" defaultValue={filters.status ?? ''} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                        <select
+                            name="status"
+                            defaultValue={filters.status ?? ''}
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        >
                             <option value="">Semua status</option>
-                            <option value="draft">Draft</option>
-                            <option value="pending_review">Pending Review</option>
                             <option value="published">Published</option>
-                            <option value="postponed">Postponed</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="completed">Completed</option>
+                            <option value="draft">Unpublished</option>
                         </select>
-                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                        <select
+                            name="category"
+                            defaultValue={filters.category ?? ''}
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        >
+                            <option value="">Semua kategori</option>
+                            <option value="meeting">Meeting</option>
+                            <option value="wedding">Wedding</option>
+                            <option value="travel">Travel</option>
+                        </select>
+                        <Button
+                            type="submit"
+                            className="bg-sky-600 text-white hover:bg-sky-700"
+                        >
                             Filter
                         </Button>
                     </form>
@@ -66,28 +91,63 @@ export default function SpecialProgramsIndex({ programs, filters }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-hidden rounded-2xl border border-slate-100">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
-                                    <th className="px-4 py-3 text-left">Special Program</th>
-                                    <th className="px-4 py-3 text-left">Kapasitas</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
-                                    <th className="px-4 py-3 text-left">Aksi</th>
+                                    <th className="px-4 py-3 text-left">
+                                        Paket
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Kategori
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Harga
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Status
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {programs.data.map((item) => (
-                                    <tr key={item.id} className="border-t border-slate-100">
+                                    <tr
+                                        key={item.id}
+                                        className="border-t border-slate-100"
+                                    >
                                         <td className="px-4 py-3">
-                                            <div className="font-semibold text-slate-900">{item.title}</div>
+                                            <div className="font-semibold text-slate-900">
+                                                {item.name}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            {item.capacity_sold}/{item.capacity_total}
+                                            {item.category ?? '-'}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge className="bg-slate-100 text-slate-600">{item.status}</Badge>
+                                            Rp{' '}
+                                            {Number(
+                                                item.base_price ?? 0,
+                                            ).toLocaleString('id-ID')}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Link href={`/admin/special-programs/${item.id}`} className="text-sky-600 hover:underline">
+                                            <Badge
+                                                className={
+                                                    item.is_active
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-slate-100 text-slate-600'
+                                                }
+                                            >
+                                                {item.is_active
+                                                    ? 'published'
+                                                    : 'draft'}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Link
+                                                href={`/admin/special-programs/${item.id}`}
+                                                className="text-sky-600 hover:underline"
+                                            >
                                                 Detail
                                             </Link>
                                         </td>
@@ -95,7 +155,10 @@ export default function SpecialProgramsIndex({ programs, filters }: Props) {
                                 ))}
                                 {programs.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td
+                                            colSpan={5}
+                                            className="px-4 py-8 text-center text-sm text-slate-500"
+                                        >
                                             Belum ada special program.
                                         </td>
                                     </tr>
