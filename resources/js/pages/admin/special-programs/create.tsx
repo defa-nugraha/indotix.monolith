@@ -443,8 +443,13 @@ export default function SpecialProgramCreate({ program }: Props) {
                             <Button
                                 type="submit"
                                 className="bg-sky-600 text-white hover:bg-sky-700"
+                                disabled={form.processing}
                             >
-                                {program ? 'Simpan Perubahan' : 'Simpan Paket'}
+                                {form.processing
+                                    ? 'Menyimpan...'
+                                    : program
+                                      ? 'Simpan Perubahan'
+                                      : 'Simpan Paket'}
                             </Button>
                         </div>
                     </form>
