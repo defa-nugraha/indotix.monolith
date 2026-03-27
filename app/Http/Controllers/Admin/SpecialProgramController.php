@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SpecialProgram;
+use App\Models\SpecialProgramVariant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -53,7 +54,7 @@ class SpecialProgramController extends Controller
                 'category' => $data['category'],
                 'description' => $data['description'] ?? null,
                 'base_price' => (int) ($data['base_price'] ?? 0),
-                'capacity' => $data['capacity'] ?? null,
+                'capacity' => isset($data['capacity']) ? (int) $data['capacity'] : 0,
                 'is_active' => (bool) ($data['is_active'] ?? false),
                 'status' => ($data['is_active'] ?? false) ? 'published' : 'draft',
             ]);
@@ -65,6 +66,7 @@ class SpecialProgramController extends Controller
             $program->save();
             $this->syncVariants($program, $data['variants'] ?? []);
             $this->syncFacilities($program, $data['facilities'] ?? []);
+            $this->syncInventories($program, $data['inventories'] ?? [], $data['category'] ?? null);
 
             return redirect()
                 ->route('admin.special-programs.show', $program)
@@ -74,7 +76,7 @@ class SpecialProgramController extends Controller
 
     public function edit(SpecialProgram $program): Response
     {
-        $program->load(['variants', 'facilities']);
+        $program->load(['variants.facilities', 'facilities', 'inventories']);
 
         return Inertia::render('admin/special-programs/create', [
             'program' => [
@@ -83,7 +85,7 @@ class SpecialProgramController extends Controller
                 'category' => $program->category,
                 'description' => $program->description,
                 'base_price' => $program->base_price,
-                'capacity' => $program->capacity,
+                'capacity' => $program->capacity ?? 0,
                 'is_active' => $program->is_active,
                 'image_url' => $program->image_path ? Storage::url($program->image_path) : null,
                 'variants' => $program->variants
@@ -93,13 +95,26 @@ class SpecialProgramController extends Controller
                         'id' => $variant->id,
                         'name' => $variant->name,
                         'price' => $variant->price,
-                        'capacity' => $variant->capacity,
+                        'capacity' => $variant->capacity ?? 0,
+                        'facilities' => $variant->facilities
+                            ->sortBy('sort_order')
+                            ->values()
+                            ->pluck('content')
+                            ->all(),
                     ])
                     ->all(),
                 'facilities' => $program->facilities
                     ->sortBy('sort_order')
                     ->values()
                     ->pluck('content')
+                    ->all(),
+                'inventories' => $program->inventories
+                    ->sortBy('date')
+                    ->values()
+                    ->map(fn ($inventory) => [
+                        'date' => $inventory->date?->format('Y-m-d'),
+                        'capacity' => $inventory->capacity ?? 0,
+                    ])
                     ->all(),
             ],
         ]);
@@ -116,7 +131,7 @@ class SpecialProgramController extends Controller
                 'category' => $data['category'],
                 'description' => $data['description'] ?? null,
                 'base_price' => (int) ($data['base_price'] ?? 0),
-                'capacity' => $data['capacity'] ?? null,
+                'capacity' => isset($data['capacity']) ? (int) $data['capacity'] : 0,
                 'is_active' => (bool) ($data['is_active'] ?? false),
                 'status' => ($data['is_active'] ?? false) ? 'published' : 'draft',
             ]);
@@ -131,6 +146,7 @@ class SpecialProgramController extends Controller
             $program->save();
             $this->syncVariants($program, $data['variants'] ?? []);
             $this->syncFacilities($program, $data['facilities'] ?? []);
+            $this->syncInventories($program, $data['inventories'] ?? [], $data['category'] ?? null);
 
             return back()->with('status', 'special-program-updated');
         });
@@ -138,7 +154,7 @@ class SpecialProgramController extends Controller
 
     public function show(SpecialProgram $program): Response
     {
-        $program->load(['variants', 'facilities']);
+        $program->load(['variants.facilities', 'facilities', 'inventories']);
 
         return Inertia::render('admin/special-programs/show', [
             'program' => [
@@ -147,7 +163,7 @@ class SpecialProgramController extends Controller
                 'category' => $program->category,
                 'description' => $program->description,
                 'base_price' => $program->base_price,
-                'capacity' => $program->capacity,
+                'capacity' => $program->capacity ?? 0,
                 'is_active' => $program->is_active,
                 'image_url' => $program->image_path ? Storage::url($program->image_path) : null,
                 'variants' => $program->variants
@@ -157,13 +173,26 @@ class SpecialProgramController extends Controller
                         'id' => $variant->id,
                         'name' => $variant->name,
                         'price' => $variant->price,
-                        'capacity' => $variant->capacity,
+                        'capacity' => $variant->capacity ?? 0,
+                        'facilities' => $variant->facilities
+                            ->sortBy('sort_order')
+                            ->values()
+                            ->pluck('content')
+                            ->all(),
                     ])
                     ->all(),
                 'facilities' => $program->facilities
                     ->sortBy('sort_order')
                     ->values()
                     ->pluck('content')
+                    ->all(),
+                'inventories' => $program->inventories
+                    ->sortBy('date')
+                    ->values()
+                    ->map(fn ($inventory) => [
+                        'date' => $inventory->date?->format('Y-m-d'),
+                        'capacity' => $inventory->capacity ?? 0,
+                    ])
                     ->all(),
             ],
         ]);
@@ -209,8 +238,13 @@ class SpecialProgramController extends Controller
             'variants.*.name' => ['nullable', 'string', 'max:255'],
             'variants.*.price' => ['nullable', 'integer', 'min:0'],
             'variants.*.capacity' => ['nullable', 'integer', 'min:0'],
+            'variants.*.facilities' => ['nullable', 'array'],
+            'variants.*.facilities.*' => ['nullable', 'string', 'max:255'],
             'facilities' => ['nullable', 'array'],
             'facilities.*' => ['nullable', 'string', 'max:255'],
+            'inventories' => ['nullable', 'array'],
+            'inventories.*.date' => ['required_with:inventories', 'date'],
+            'inventories.*.capacity' => ['nullable', 'integer', 'min:0'],
         ]);
     }
 
@@ -222,10 +256,27 @@ class SpecialProgramController extends Controller
             ->filter(fn ($variant) => filled($variant['name'] ?? null))
             ->values()
             ->each(function (array $variant, int $index) use ($program) {
-                $program->variants()->create([
+                $created = $program->variants()->create([
                     'name' => $variant['name'],
-                    'price' => $variant['price'] !== null && $variant['price'] !== '' ? (int) $variant['price'] : null,
-                    'capacity' => $variant['capacity'] !== null && $variant['capacity'] !== '' ? (int) $variant['capacity'] : null,
+                    'price' => $this->normalizeNullableInteger($variant['price'] ?? null),
+                    'capacity' => isset($variant['capacity']) ? (int) $variant['capacity'] : 0,
+                    'sort_order' => $index,
+                ]);
+
+                $this->syncVariantFacilities($created, $variant['facilities'] ?? []);
+            });
+    }
+
+    private function syncVariantFacilities(SpecialProgramVariant $variant, array $facilities): void
+    {
+        $variant->facilities()->delete();
+
+        collect($facilities)
+            ->filter(fn ($facility) => filled($facility))
+            ->values()
+            ->each(function (string $facility, int $index) use ($variant) {
+                $variant->facilities()->create([
+                    'content' => $facility,
                     'sort_order' => $index,
                 ]);
             });
@@ -244,5 +295,38 @@ class SpecialProgramController extends Controller
                     'sort_order' => $index,
                 ]);
             });
+    }
+
+    private function syncInventories(
+        SpecialProgram $program,
+        array $inventories,
+        ?string $category,
+    ): void {
+        if ($category !== 'travel') {
+            $program->inventories()->delete();
+            return;
+        }
+
+        $program->inventories()->delete();
+
+        collect($inventories)
+            ->filter(fn ($inventory) => filled($inventory['date'] ?? null))
+            ->unique('date')
+            ->values()
+            ->each(function (array $inventory) use ($program) {
+                $program->inventories()->create([
+                    'date' => $inventory['date'],
+                    'capacity' => isset($inventory['capacity']) ? (int) $inventory['capacity'] : 0,
+                ]);
+            });
+    }
+
+    private function normalizeNullableInteger(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) $value;
     }
 }

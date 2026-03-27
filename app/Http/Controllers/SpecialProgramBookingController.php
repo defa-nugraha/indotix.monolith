@@ -47,8 +47,49 @@ class SpecialProgramBookingController extends Controller
             }
         }
 
+        $inventory = null;
+        if ($program->category === 'travel') {
+            $inventory = $program->inventories()
+                ->whereDate('date', $data['date'])
+                ->first();
+
+            if (! $inventory) {
+                return back()->withErrors(['date' => 'Tanggal belum tersedia.']);
+            }
+        }
+
+        $bookingQuery = SpecialProgramBooking::query()
+            ->where('special_program_id', $program->id)
+            ->whereDate('visit_date', $data['date'])
+            ->where('status', '!=', 'cancelled');
+
+        $pax = (int) $data['pax'];
+
+        if ($program->capacity > 0) {
+            $totalBooked = (clone $bookingQuery)->sum('quantity');
+            if ($totalBooked + $pax > $program->capacity) {
+                return back()->withErrors(['pax' => 'Kapasitas paket sudah penuh.']);
+            }
+        }
+
+        if ($inventory && $inventory->capacity > 0) {
+            $totalBooked = (clone $bookingQuery)->sum('quantity');
+            if ($totalBooked + $pax > $inventory->capacity) {
+                return back()->withErrors(['pax' => 'Kapasitas tanggal sudah penuh.']);
+            }
+        }
+
+        if ($variant && $variant->capacity > 0) {
+            $variantBooked = (clone $bookingQuery)
+                ->where('special_program_variant_id', $variant->id)
+                ->sum('quantity');
+            if ($variantBooked + $pax > $variant->capacity) {
+                return back()->withErrors(['pax' => 'Kapasitas variant sudah penuh.']);
+            }
+        }
+
         $unitPrice = $variant?->price ?? $program->base_price;
-        $totalPrice = (int) $unitPrice * (int) $data['pax'];
+        $totalPrice = (int) $unitPrice * $pax;
 
         SpecialProgramBooking::create([
             'user_id' => $request->user()->id,

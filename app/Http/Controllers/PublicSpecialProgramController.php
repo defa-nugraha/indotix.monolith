@@ -84,7 +84,7 @@ class PublicSpecialProgramController extends Controller
         }
 
         $program = $programModel;
-        $program->load(['variants', 'facilities']);
+        $program->load(['variants.facilities', 'facilities', 'inventories']);
 
         return Inertia::render('public/special-programs/show', [
             'program' => [
@@ -95,7 +95,7 @@ class PublicSpecialProgramController extends Controller
                 'category' => $program->category,
                 'description' => $program->description,
                 'base_price' => $program->base_price,
-                'capacity' => $program->capacity,
+                'capacity' => $program->capacity ?? 0,
                 'image_url' => $program->image_path ? Storage::url($program->image_path) : null,
                 'variants' => $program->variants
                     ->sortBy('sort_order')
@@ -104,13 +104,26 @@ class PublicSpecialProgramController extends Controller
                         'id' => $variant->id,
                         'name' => $variant->name,
                         'price' => $variant->price,
-                        'capacity' => $variant->capacity,
+                        'capacity' => $variant->capacity ?? 0,
+                        'facilities' => $variant->facilities
+                            ->sortBy('sort_order')
+                            ->values()
+                            ->pluck('content')
+                            ->all(),
                     ])
                     ->all(),
                 'facilities' => $program->facilities
                     ->sortBy('sort_order')
                     ->values()
                     ->pluck('content')
+                    ->all(),
+                'inventories' => $program->inventories
+                    ->sortBy('date')
+                    ->values()
+                    ->map(fn ($inventory) => [
+                        'date' => $inventory->date?->format('Y-m-d'),
+                        'capacity' => $inventory->capacity ?? 0,
+                    ])
                     ->all(),
             ],
         ]);
