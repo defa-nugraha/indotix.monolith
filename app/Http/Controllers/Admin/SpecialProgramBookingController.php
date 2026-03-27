@@ -31,8 +31,30 @@ class SpecialProgramBookingController extends Controller
             $query->whereDate('visit_date', $date);
         }
 
+        $bookings = $query->paginate(20)
+            ->withQueryString()
+            ->through(function (SpecialProgramBooking $booking) {
+                return [
+                    'id' => $booking->id,
+                    'status' => $booking->status,
+                    'quantity' => $booking->quantity,
+                    'visit_date' => $booking->visit_date?->toDateString(),
+                    'guest_name' => $booking->guest_name,
+                    'guest_phone' => $booking->guest_phone,
+                    'program' => [
+                        'name' => $booking->program?->name,
+                    ],
+                    'variant' => [
+                        'name' => $booking->variant?->name,
+                    ],
+                    'user' => [
+                        'name' => $booking->user?->name,
+                    ],
+                ];
+            });
+
         return Inertia::render('admin/special-programs/bookings/index', [
-            'bookings' => $query->paginate(20)->withQueryString(),
+            'bookings' => $bookings,
             'programs' => SpecialProgram::query()
                 ->select('id', 'name')
                 ->orderBy('name')
@@ -50,7 +72,28 @@ class SpecialProgramBookingController extends Controller
         $booking->load(['program', 'variant', 'user']);
 
         return Inertia::render('admin/special-programs/bookings/show', [
-            'booking' => $booking,
+            'booking' => [
+                'id' => $booking->id,
+                'status' => $booking->status,
+                'payment_status' => $booking->payment_status,
+                'quantity' => $booking->quantity,
+                'visit_date' => $booking->visit_date?->toDateString(),
+                'unit_price' => $booking->unit_price,
+                'total_price' => $booking->total_price,
+                'notes' => $booking->notes,
+                'guest_name' => $booking->guest_name,
+                'guest_email' => $booking->guest_email,
+                'guest_phone' => $booking->guest_phone,
+                'program' => [
+                    'name' => $booking->program?->name,
+                ],
+                'variant' => [
+                    'name' => $booking->variant?->name,
+                ],
+                'user' => [
+                    'name' => $booking->user?->name,
+                ],
+            ],
         ]);
     }
 
