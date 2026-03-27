@@ -715,28 +715,28 @@ export default function Welcome({
                                         {promoVideoData.image_path ? (
                                             <video
                                                 src={`/storage/${promoVideoData.image_path}`}
-                                                className="aspect-video w-full object-cover"
+                                                className="aspect-[19/9] w-full bg-white object-contain"
                                                 autoPlay
                                                 muted
                                                 loop
                                                 playsInline
                                             />
                                         ) : (
-                                            <div className="aspect-[19/9] w-full bg-slate-100" />
+                                            <div className="aspect-[19/9] w-full bg-white" />
                                         )}
                                     </div>
                                     <div className="overflow-hidden rounded-2xl bg-slate-100">
                                         {promoVideoData.secondary_video_path ? (
                                             <video
                                                 src={`/storage/${promoVideoData.secondary_video_path}`}
-                                                className="aspect-video w-full object-cover"
+                                                className="aspect-[19/9] w-full bg-white object-contain"
                                                 autoPlay
                                                 muted
                                                 loop
                                                 playsInline
                                             />
                                         ) : (
-                                            <div className="aspect-[19/9] w-full bg-slate-100" />
+                                            <div className="aspect-[19/9] w-full bg-white" />
                                         )}
                                     </div>
                                 </div>
