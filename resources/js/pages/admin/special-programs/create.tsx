@@ -86,6 +86,7 @@ export default function SpecialProgramCreate({ program }: Props) {
         const normalizePayload = (data: ProgramForm) => ({
             ...data,
             base_price: parseCurrencyToInteger(data.base_price),
+            facilities: data.variants.length > 0 ? [] : data.facilities,
             variants: data.variants.map((variant) => ({
                 ...variant,
                 price: parseCurrencyToInteger(variant.price),
