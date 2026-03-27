@@ -710,8 +710,8 @@ export default function Welcome({
 
                         <section className="mt-8 grid gap-8 md:grid-cols-[1.1fr_1fr] md:items-start">
                             <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
-                                <div className="grid gap-4 p-4">
-                                    <div className="overflow-hidden rounded-2xl bg-slate-100">
+                                <div className="flex gap-4 overflow-x-auto p-4 md:grid md:overflow-visible">
+                                    <div className="min-w-[85vw] overflow-hidden rounded-2xl bg-slate-100 md:min-w-0">
                                         {promoVideoData.image_path ? (
                                             <video
                                                 src={`/storage/${promoVideoData.image_path}`}
@@ -725,7 +725,7 @@ export default function Welcome({
                                             <div className="aspect-video w-full bg-white" />
                                         )}
                                     </div>
-                                    <div className="overflow-hidden rounded-2xl bg-slate-100">
+                                    <div className="min-w-[85vw] overflow-hidden rounded-2xl bg-slate-100 md:min-w-0">
                                         {promoVideoData.secondary_video_path ? (
                                             <video
                                                 src={`/storage/${promoVideoData.secondary_video_path}`}
