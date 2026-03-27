@@ -10,6 +10,7 @@ class SpecialProgram extends Model
 {
     protected $attributes = [
         'program_type' => 'package',
+        'capacity' => 0,
     ];
 
     protected $fillable = [
@@ -101,6 +102,11 @@ class SpecialProgram extends Model
     public function facilities(): HasMany
     {
         return $this->hasMany(SpecialProgramFacility::class);
+    }
+
+    public function inventories(): HasMany
+    {
+        return $this->hasMany(SpecialProgramInventory::class);
     }
 
     public function bookings(): HasMany
