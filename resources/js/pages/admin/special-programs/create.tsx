@@ -4,6 +4,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
+import { formatCurrencyInput, parseCurrencyToInteger } from '@/lib/currency';
 
 type VariantForm = {
     name: string;
@@ -41,56 +42,83 @@ const categoryOptions = [
 ];
 
 export default function SpecialProgramCreate({ program }: Props) {
+    const formatRupiah = (value: string | number | null | undefined) =>
+        formatCurrencyInput(value);
+
+    const initialVariants =
+        program?.variants?.map((variant) => ({
+            ...variant,
+            price:
+                variant.price === null || variant.price === undefined
+                    ? ''
+                    : formatRupiah(variant.price),
+        })) ?? [];
+
     const form = useForm<ProgramForm>({
         name: program?.name ?? '',
         category: program?.category ?? '',
-        base_price: program?.base_price ?? '',
+        base_price:
+            program?.base_price === null || program?.base_price === undefined
+                ? ''
+                : formatRupiah(program.base_price),
         description: program?.description ?? '',
         capacity: program?.capacity ?? '',
         is_active: program?.is_active ?? false,
         image: null,
-        variants: program?.variants ?? [],
+        variants: initialVariants,
         facilities: program?.facilities ?? [],
         image_url: program?.image_url ?? null,
     });
 
     const submit = () => {
+        const normalizePayload = (data: ProgramForm) => ({
+            ...data,
+            base_price: parseCurrencyToInteger(data.base_price),
+            variants: data.variants.map((variant) => ({
+                ...variant,
+                price: parseCurrencyToInteger(variant.price),
+            })),
+        });
+
         if (program?.id) {
-            form.transform((data) => ({ ...data, _method: 'PUT' })).post(
-                `/admin/special-programs/${program.id}`,
-                {
-                    forceFormData: true,
-                    onSuccess: () =>
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Tersimpan',
-                            text: 'Paket diperbarui.',
-                        }),
-                    onError: () =>
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal',
-                            text: 'Periksa data form.',
-                        }),
-                },
-            );
+            form.transform((data) => ({
+                ...normalizePayload(data),
+                _method: 'PUT',
+            })).post(`/admin/special-programs/${program.id}`, {
+                forceFormData: true,
+                onSuccess: () =>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tersimpan',
+                        text: 'Paket diperbarui.',
+                    }),
+                onError: () =>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Periksa data form.',
+                    }),
+            });
             return;
         }
-        form.post('/admin/special-programs', {
-            forceFormData: true,
-            onSuccess: () =>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Tersimpan',
-                    text: 'Paket dibuat.',
-                }),
-            onError: () =>
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: 'Periksa data form.',
-                }),
-        });
+        form.transform((data) => normalizePayload(data)).post(
+            '/admin/special-programs',
+            {
+                forceFormData: true,
+                onSuccess: () =>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tersimpan',
+                        text: 'Paket dibuat.',
+                    }),
+                onError: () =>
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Periksa data form.',
+                    }),
+            },
+        );
     };
 
     const addVariant = () => {
@@ -197,12 +225,15 @@ export default function SpecialProgramCreate({ program }: Props) {
                                 Harga Dasar
                             </label>
                             <input
-                                type="number"
-                                min={0}
                                 value={form.data.base_price}
                                 onChange={(e) =>
-                                    form.setData('base_price', e.target.value)
+                                    form.setData(
+                                        'base_price',
+                                        formatRupiah(e.target.value),
+                                    )
                                 }
+                                inputMode="numeric"
+                                autoComplete="off"
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
                             <InputError message={form.errors.base_price} />
@@ -310,16 +341,18 @@ export default function SpecialProgramCreate({ program }: Props) {
                                             placeholder="Nama variant"
                                         />
                                         <input
-                                            type="number"
-                                            min={0}
                                             value={variant.price}
                                             onChange={(e) =>
                                                 updateVariant(
                                                     index,
                                                     'price',
-                                                    e.target.value,
+                                                    formatRupiah(
+                                                        e.target.value,
+                                                    ),
                                                 )
                                             }
+                                            inputMode="numeric"
+                                            autoComplete="off"
                                             className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                             placeholder="Harga override"
                                         />
