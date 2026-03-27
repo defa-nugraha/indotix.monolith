@@ -715,7 +715,7 @@ export default function Welcome({
                                         {promoVideoData.image_path ? (
                                             <video
                                                 src={`/storage/${promoVideoData.image_path}`}
-                                                className="aspect-[19/9] w-full object-cover"
+                                                className="aspect-video w-full object-cover"
                                                 autoPlay
                                                 muted
                                                 loop
@@ -729,7 +729,7 @@ export default function Welcome({
                                         {promoVideoData.secondary_video_path ? (
                                             <video
                                                 src={`/storage/${promoVideoData.secondary_video_path}`}
-                                                className="aspect-[19/9] w-full object-cover"
+                                                className="aspect-video w-full object-cover"
                                                 autoPlay
                                                 muted
                                                 loop

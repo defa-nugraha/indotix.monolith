@@ -67,7 +67,7 @@ export default function PromoVideoIndex({ videos }: { videos: PromoVideo[] }) {
                                 Update video dan CTA promo.
                             </p>
                             <p className="text-xs text-slate-500">
-                                Video utama 1280 × 720 px (16:9), video bawah 960 × 540 px (16:9).
+                                Video utama 1280 × 720 px (16:9), video bawah 1280 × 720 px (16:9).
                             </p>
                         </div>
                         <Button
