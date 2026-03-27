@@ -1,5 +1,4 @@
 import { Head, useForm } from '@inertiajs/react';
-import { useRef } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,6 @@ const categoryOptions = [
 export default function SpecialProgramCreate({ program }: Props) {
     const formatRupiah = (value: string | number | null | undefined) =>
         formatCurrencyInput(value);
-    const isLoadingRef = useRef(false);
 
     const initialVariants =
         program?.variants?.map((variant) => ({
@@ -82,25 +80,6 @@ export default function SpecialProgramCreate({ program }: Props) {
             })),
         });
 
-        const startLoading = () => {
-            isLoadingRef.current = true;
-            Swal.fire({
-                title: 'Menyimpan...',
-                text: 'Sedang memproses paket.',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                },
-            });
-        };
-
-        const stopLoading = () => {
-            if (!isLoadingRef.current) return;
-            isLoadingRef.current = false;
-            Swal.close();
-        };
-
         const getFirstError = (errors: Record<string, string>) =>
             Object.values(errors)[0] ?? 'Periksa data form.';
 
@@ -111,9 +90,7 @@ export default function SpecialProgramCreate({ program }: Props) {
             }));
             form.post(`/admin/special-programs/${program.id}`, {
                 forceFormData: true,
-                onStart: startLoading,
                 onSuccess: () => {
-                    stopLoading();
                     Swal.fire({
                         icon: 'success',
                         title: 'Tersimpan',
@@ -121,7 +98,6 @@ export default function SpecialProgramCreate({ program }: Props) {
                     });
                 },
                 onError: (errors) => {
-                    stopLoading();
                     Swal.fire({
                         icon: 'error',
                         title: 'Gagal',
@@ -134,9 +110,7 @@ export default function SpecialProgramCreate({ program }: Props) {
         form.transform((data) => normalizePayload(data));
         form.post('/admin/special-programs', {
             forceFormData: true,
-            onStart: startLoading,
             onSuccess: () => {
-                stopLoading();
                 Swal.fire({
                     icon: 'success',
                     title: 'Tersimpan',
@@ -144,7 +118,6 @@ export default function SpecialProgramCreate({ program }: Props) {
                 });
             },
             onError: (errors) => {
-                stopLoading();
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal',

@@ -3,6 +3,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '../css/app.css';
+import GlobalProcessingOverlay from './components/global-processing-overlay';
 import { initializeTheme } from './hooks/use-appearance';
 import './lib/echo';
 
@@ -21,6 +22,7 @@ createInertiaApp({
         root.render(
             <StrictMode>
                 <App {...props} />
+                <GlobalProcessingOverlay />
             </StrictMode>,
         );
     },

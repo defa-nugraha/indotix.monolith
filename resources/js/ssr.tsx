@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import createServer from '@inertiajs/react/server';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import ReactDOMServer from 'react-dom/server';
+import GlobalProcessingOverlay from './components/global-processing-overlay';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Indotix';
 
@@ -16,7 +17,12 @@ createServer((page) =>
                 import.meta.glob('./pages/**/*.tsx'),
             ),
         setup: ({ App, props }) => {
-            return <App {...props} />;
+            return (
+                <>
+                    <App {...props} />
+                    <GlobalProcessingOverlay />
+                </>
+            );
         },
     }),
 );
