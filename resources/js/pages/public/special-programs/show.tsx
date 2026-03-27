@@ -18,6 +18,7 @@ type VariantItem = {
     name: string;
     price?: number | null;
     capacity?: number | null;
+    facilities?: string[];
 };
 
 type ProgramDetail = {
@@ -32,6 +33,10 @@ type ProgramDetail = {
     image_url?: string | null;
     variants: VariantItem[];
     facilities: string[];
+    inventories: Array<{
+        date: string;
+        capacity: number;
+    }>;
 };
 
 export default function SpecialProgramShow({
@@ -50,13 +55,19 @@ export default function SpecialProgramShow({
     const userName = (auth?.user as any)?.name ?? '';
     const userPhone = (auth?.user as any)?.phone ?? '';
     const hasVariants = program.variants.length > 0;
+    const isTravel = program.category === 'travel';
+    const inventoryDates = program.inventories ?? [];
+    const defaultDate =
+        isTravel && inventoryDates.length > 0
+            ? inventoryDates[0].date
+            : new Date().toISOString().slice(0, 10);
 
     const form = useForm({
         program_id: program.id,
         variant_id: hasVariants ? (program.variants[0]?.id ?? '') : '',
         name: userName,
         phone: userPhone,
-        date: new Date().toISOString().slice(0, 10),
+        date: defaultDate,
         pax: 1,
         notes: '',
     });
@@ -71,6 +82,13 @@ export default function SpecialProgramShow({
     }, [form.data.variant_id, program.variants]);
 
     const displayPrice = selectedVariant?.price ?? program.base_price;
+    const displayFacilities =
+        selectedVariant?.facilities && selectedVariant.facilities.length > 0
+            ? selectedVariant.facilities
+            : program.facilities;
+    const displayCapacity = selectedVariant?.capacity ?? program.capacity ?? 0;
+    const formatCapacity = (value: number) =>
+        value > 0 ? value : 'Tidak terbatas';
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
@@ -153,7 +171,7 @@ export default function SpecialProgramShow({
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <Users className="h-4 w-4 text-sky-500" />
-                                    Kapasitas {program.capacity ?? '-'}
+                                    Kapasitas {formatCapacity(displayCapacity)}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <CalendarCheck className="h-4 w-4 text-sky-500" />
@@ -169,10 +187,10 @@ export default function SpecialProgramShow({
                                 Fasilitas
                             </h2>
                             <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-600">
-                                {program.facilities.map((facility, index) => (
+                                {displayFacilities.map((facility, index) => (
                                     <li key={index}>{facility}</li>
                                 ))}
-                                {program.facilities.length === 0 && (
+                                {displayFacilities.length === 0 && (
                                     <li className="list-none text-sm text-slate-500">
                                         Belum ada fasilitas.
                                     </li>
@@ -223,14 +241,47 @@ export default function SpecialProgramShow({
                                 <label className="text-xs font-semibold text-slate-600">
                                     Tanggal
                                 </label>
-                                <input
-                                    type="date"
-                                    value={form.data.date}
-                                    onChange={(event) =>
-                                        form.setData('date', event.target.value)
-                                    }
-                                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                />
+                                {isTravel && inventoryDates.length > 0 ? (
+                                    <select
+                                        className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                        value={form.data.date}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'date',
+                                                event.target.value,
+                                            )
+                                        }
+                                    >
+                                        {inventoryDates.map((inventory) => (
+                                            <option
+                                                key={inventory.date}
+                                                value={inventory.date}
+                                            >
+                                                {inventory.date} · Kapasitas{' '}
+                                                {formatCapacity(
+                                                    inventory.capacity ?? 0,
+                                                )}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : (
+                                    <input
+                                        type="date"
+                                        value={form.data.date}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'date',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    />
+                                )}
+                                {isTravel && inventoryDates.length === 0 && (
+                                    <p className="mt-2 text-xs text-slate-500">
+                                        Tanggal belum tersedia untuk paket ini.
+                                    </p>
+                                )}
                             </div>
                             <div>
                                 <label className="text-xs font-semibold text-slate-600">

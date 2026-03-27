@@ -19,8 +19,13 @@ type ProgramDetail = {
         name: string;
         price: number | null;
         capacity: number | null;
+        facilities: string[];
     }>;
     facilities: string[];
+    inventories: Array<{
+        date: string;
+        capacity: number;
+    }>;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -34,6 +39,9 @@ export default function SpecialProgramShow({
 }: {
     program: ProgramDetail;
 }) {
+    const formatCapacity = (value?: number | null) =>
+        value && value > 0 ? value : 'Tidak terbatas';
+
     const handleDelete = () => {
         Swal.fire({
             icon: 'warning',
@@ -108,7 +116,9 @@ export default function SpecialProgramShow({
                                     'id-ID',
                                 )}
                             </div>
-                            <div>Kapasitas: {program.capacity ?? '-'}</div>
+                            <div>
+                                Kapasitas: {formatCapacity(program.capacity)}
+                            </div>
                         </div>
                         <div className="mt-4 flex flex-wrap gap-2">
                             <Button
@@ -164,8 +174,22 @@ export default function SpecialProgramShow({
                                             : 'Ikuti harga dasar'}
                                     </div>
                                     <div className="text-xs text-slate-500">
-                                        Kapasitas: {variant.capacity ?? '-'}
+                                        Kapasitas:{' '}
+                                        {formatCapacity(variant.capacity)}
                                     </div>
+                                    {variant.facilities.length > 0 && (
+                                        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-slate-600">
+                                            {variant.facilities.map(
+                                                (facility, facilityIndex) => (
+                                                    <li
+                                                        key={`${variant.id}-${facilityIndex}`}
+                                                    >
+                                                        {facility}
+                                                    </li>
+                                                ),
+                                            )}
+                                        </ul>
+                                    )}
                                 </div>
                             ))}
                             {program.variants.length === 0 && (
@@ -191,6 +215,32 @@ export default function SpecialProgramShow({
                         </ul>
                     </div>
                 </section>
+                {program.category === 'travel' && (
+                    <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Inventory Tanggal
+                        </h2>
+                        <div className="mt-4 grid gap-3 text-sm text-slate-600">
+                            {program.inventories.map((inventory, index) => (
+                                <div
+                                    key={`${inventory.date}-${index}`}
+                                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-100 px-4 py-2"
+                                >
+                                    <span>{inventory.date}</span>
+                                    <span>
+                                        Kapasitas:{' '}
+                                        {formatCapacity(inventory.capacity)}
+                                    </span>
+                                </div>
+                            ))}
+                            {program.inventories.length === 0 && (
+                                <p className="text-sm text-slate-500">
+                                    Belum ada inventory tanggal.
+                                </p>
+                            )}
+                        </div>
+                    </section>
+                )}
             </div>
         </AppLayout>
     );

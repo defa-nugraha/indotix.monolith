@@ -10,6 +10,12 @@ type VariantForm = {
     name: string;
     price: string | number;
     capacity: string | number;
+    facilities: string[];
+};
+
+type InventoryForm = {
+    date: string;
+    capacity: string | number;
 };
 
 type ProgramForm = {
@@ -23,6 +29,7 @@ type ProgramForm = {
     image: File | null;
     variants: VariantForm[];
     facilities: string[];
+    inventories: InventoryForm[];
     image_url?: string | null;
 };
 
@@ -52,6 +59,8 @@ export default function SpecialProgramCreate({ program }: Props) {
                 variant.price === null || variant.price === undefined
                     ? ''
                     : formatRupiah(variant.price),
+            capacity: variant.capacity ?? 0,
+            facilities: variant.facilities ?? [],
         })) ?? [];
 
     const form = useForm<ProgramForm>({
@@ -62,13 +71,16 @@ export default function SpecialProgramCreate({ program }: Props) {
                 ? ''
                 : formatRupiah(program.base_price),
         description: program?.description ?? '',
-        capacity: program?.capacity ?? '',
+        capacity: program?.capacity ?? 0,
         is_active: program?.is_active ?? false,
         image: null,
         variants: initialVariants,
         facilities: program?.facilities ?? [],
+        inventories: program?.inventories ?? [],
         image_url: program?.image_url ?? null,
     });
+
+    const showProgramFacilities = form.data.variants.length === 0;
 
     const submit = () => {
         const normalizePayload = (data: ProgramForm) => ({
@@ -128,10 +140,14 @@ export default function SpecialProgramCreate({ program }: Props) {
     };
 
     const addVariant = () => {
-        form.setData('variants', [
+        const nextVariants = [
             ...form.data.variants,
-            { name: '', price: '', capacity: '' },
-        ]);
+            { name: '', price: '', capacity: 0, facilities: [] },
+        ];
+        form.setData('variants', nextVariants);
+        if (form.data.variants.length === 0) {
+            form.setData('facilities', []);
+        }
     };
 
     const updateVariant = (
@@ -151,6 +167,37 @@ export default function SpecialProgramCreate({ program }: Props) {
         );
     };
 
+    const addVariantFacility = (variantIndex: number) => {
+        const updated = [...form.data.variants];
+        const facilities = [...(updated[variantIndex]?.facilities ?? []), ''];
+        updated[variantIndex] = { ...updated[variantIndex], facilities };
+        form.setData('variants', updated);
+    };
+
+    const updateVariantFacility = (
+        variantIndex: number,
+        facilityIndex: number,
+        value: string,
+    ) => {
+        const updated = [...form.data.variants];
+        const facilities = [...(updated[variantIndex]?.facilities ?? [])];
+        facilities[facilityIndex] = value;
+        updated[variantIndex] = { ...updated[variantIndex], facilities };
+        form.setData('variants', updated);
+    };
+
+    const removeVariantFacility = (
+        variantIndex: number,
+        facilityIndex: number,
+    ) => {
+        const updated = [...form.data.variants];
+        const facilities = [
+            ...(updated[variantIndex]?.facilities ?? []),
+        ].filter((_, idx) => idx !== facilityIndex);
+        updated[variantIndex] = { ...updated[variantIndex], facilities };
+        form.setData('variants', updated);
+    };
+
     const addFacility = () => {
         form.setData('facilities', [...form.data.facilities, '']);
     };
@@ -165,6 +212,30 @@ export default function SpecialProgramCreate({ program }: Props) {
         form.setData(
             'facilities',
             form.data.facilities.filter((_, idx) => idx !== index),
+        );
+    };
+
+    const addInventory = () => {
+        form.setData('inventories', [
+            ...form.data.inventories,
+            { date: '', capacity: 0 },
+        ]);
+    };
+
+    const updateInventory = (
+        index: number,
+        field: keyof InventoryForm,
+        value: string,
+    ) => {
+        const updated = [...form.data.inventories];
+        updated[index] = { ...updated[index], [field]: value };
+        form.setData('inventories', updated);
+    };
+
+    const removeInventory = (index: number) => {
+        form.setData(
+            'inventories',
+            form.data.inventories.filter((_, idx) => idx !== index),
         );
     };
 
@@ -209,9 +280,13 @@ export default function SpecialProgramCreate({ program }: Props) {
                             </label>
                             <select
                                 value={form.data.category}
-                                onChange={(e) =>
-                                    form.setData('category', e.target.value)
-                                }
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    form.setData('category', value);
+                                    if (value !== 'travel') {
+                                        form.setData('inventories', []);
+                                    }
+                                }}
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             >
                                 <option value="">Pilih kategori</option>
@@ -270,6 +345,9 @@ export default function SpecialProgramCreate({ program }: Props) {
                                 }
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
+                            <p className="mt-1 text-xs text-slate-500">
+                                Isi 0 untuk kapasitas tidak terbatas.
+                            </p>
                             <InputError message={form.errors.capacity} />
                         </div>
                         <div>
@@ -387,6 +465,74 @@ export default function SpecialProgramCreate({ program }: Props) {
                                                 Hapus
                                             </Button>
                                         </div>
+                                        <p className="text-xs text-slate-500 md:col-span-4">
+                                            Isi 0 untuk kapasitas tidak
+                                            terbatas.
+                                        </p>
+                                        <div className="md:col-span-4">
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-xs font-semibold text-slate-500 uppercase">
+                                                    Fasilitas Variant
+                                                </p>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        addVariantFacility(
+                                                            index,
+                                                        )
+                                                    }
+                                                >
+                                                    Tambah Fasilitas
+                                                </Button>
+                                            </div>
+                                            <div className="mt-3 grid gap-2">
+                                                {(variant.facilities ?? []).map(
+                                                    (
+                                                        facility,
+                                                        facilityIndex,
+                                                    ) => (
+                                                        <div
+                                                            key={facilityIndex}
+                                                            className="flex items-center gap-3"
+                                                        >
+                                                            <input
+                                                                value={facility}
+                                                                onChange={(e) =>
+                                                                    updateVariantFacility(
+                                                                        index,
+                                                                        facilityIndex,
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                                placeholder="Contoh: 1x meal, hotel, dll"
+                                                            />
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                onClick={() =>
+                                                                    removeVariantFacility(
+                                                                        index,
+                                                                        facilityIndex,
+                                                                    )
+                                                                }
+                                                            >
+                                                                Hapus
+                                                            </Button>
+                                                        </div>
+                                                    ),
+                                                )}
+                                                {(variant.facilities ?? [])
+                                                    .length === 0 && (
+                                                    <p className="text-sm text-slate-500">
+                                                        Belum ada fasilitas
+                                                        variant.
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                                 {form.data.variants.length === 0 && (
@@ -398,53 +544,139 @@ export default function SpecialProgramCreate({ program }: Props) {
                         </div>
 
                         <div className="mt-4 md:col-span-2">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-sm font-semibold text-slate-500 uppercase">
-                                    Fasilitas
-                                </h3>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={addFacility}
-                                >
-                                    Tambah Fasilitas
-                                </Button>
-                            </div>
-                            <div className="mt-3 grid gap-3">
-                                {form.data.facilities.map((facility, index) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center gap-3"
-                                    >
-                                        <input
-                                            value={facility}
-                                            onChange={(e) =>
-                                                updateFacility(
-                                                    index,
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                            placeholder="Contoh: 1x meal, hotel, dll"
-                                        />
+                            {showProgramFacilities ? (
+                                <>
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-sm font-semibold text-slate-500 uppercase">
+                                            Fasilitas Paket
+                                        </h3>
                                         <Button
                                             type="button"
-                                            variant="ghost"
-                                            onClick={() =>
-                                                removeFacility(index)
-                                            }
+                                            variant="outline"
+                                            onClick={addFacility}
                                         >
-                                            Hapus
+                                            Tambah Fasilitas
                                         </Button>
                                     </div>
-                                ))}
-                                {form.data.facilities.length === 0 && (
-                                    <p className="text-sm text-slate-500">
-                                        Belum ada fasilitas.
-                                    </p>
-                                )}
-                            </div>
+                                    <div className="mt-3 grid gap-3">
+                                        {form.data.facilities.map(
+                                            (facility, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-center gap-3"
+                                                >
+                                                    <input
+                                                        value={facility}
+                                                        onChange={(e) =>
+                                                            updateFacility(
+                                                                index,
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                        placeholder="Contoh: 1x meal, hotel, dll"
+                                                    />
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            removeFacility(
+                                                                index,
+                                                            )
+                                                        }
+                                                    >
+                                                        Hapus
+                                                    </Button>
+                                                </div>
+                                            ),
+                                        )}
+                                        {form.data.facilities.length === 0 && (
+                                            <p className="text-sm text-slate-500">
+                                                Belum ada fasilitas.
+                                            </p>
+                                        )}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                                    Fasilitas diatur pada masing-masing variant.
+                                </div>
+                            )}
                         </div>
+                        {form.data.category === 'travel' && (
+                            <div className="mt-4 md:col-span-2">
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-sm font-semibold text-slate-500 uppercase">
+                                        Inventory Tanggal (Travel)
+                                    </h3>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={addInventory}
+                                    >
+                                        Tambah Tanggal
+                                    </Button>
+                                </div>
+                                <p className="mt-2 text-xs text-slate-500">
+                                    Isi 0 untuk kapasitas tidak terbatas.
+                                </p>
+                                <div className="mt-3 grid gap-3">
+                                    {form.data.inventories.map(
+                                        (inventory, index) => (
+                                            <div
+                                                key={index}
+                                                className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-[1fr_160px_auto]"
+                                            >
+                                                <input
+                                                    type="date"
+                                                    value={inventory.date}
+                                                    onChange={(e) =>
+                                                        updateInventory(
+                                                            index,
+                                                            'date',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                />
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    value={inventory.capacity}
+                                                    onChange={(e) =>
+                                                        updateInventory(
+                                                            index,
+                                                            'capacity',
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                    placeholder="Kapasitas"
+                                                />
+                                                <div className="flex items-center justify-end">
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        onClick={() =>
+                                                            removeInventory(
+                                                                index,
+                                                            )
+                                                        }
+                                                    >
+                                                        Hapus
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        ),
+                                    )}
+                                    {form.data.inventories.length === 0 && (
+                                        <p className="text-sm text-slate-500">
+                                            Belum ada inventory tanggal.
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                         <div className="flex justify-end md:col-span-2">
                             <Button
                                 type="submit"
