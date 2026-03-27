@@ -108,7 +108,8 @@ export default function SpecialProgramCreate({ program }: Props) {
             form.transform((data) => ({
                 ...normalizePayload(data),
                 _method: 'PUT',
-            })).post(`/admin/special-programs/${program.id}`, {
+            }));
+            form.post(`/admin/special-programs/${program.id}`, {
                 forceFormData: true,
                 onStart: startLoading,
                 onSuccess: () => {
@@ -130,29 +131,27 @@ export default function SpecialProgramCreate({ program }: Props) {
             });
             return;
         }
-        form.transform((data) => normalizePayload(data)).post(
-            '/admin/special-programs',
-            {
-                forceFormData: true,
-                onStart: startLoading,
-                onSuccess: () => {
-                    stopLoading();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Tersimpan',
-                        text: 'Paket dibuat.',
-                    });
-                },
-                onError: (errors) => {
-                    stopLoading();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: getFirstError(errors),
-                    });
-                },
+        form.transform((data) => normalizePayload(data));
+        form.post('/admin/special-programs', {
+            forceFormData: true,
+            onStart: startLoading,
+            onSuccess: () => {
+                stopLoading();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Tersimpan',
+                    text: 'Paket dibuat.',
+                });
             },
-        );
+            onError: (errors) => {
+                stopLoading();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: getFirstError(errors),
+                });
+            },
+        });
     };
 
     const addVariant = () => {
