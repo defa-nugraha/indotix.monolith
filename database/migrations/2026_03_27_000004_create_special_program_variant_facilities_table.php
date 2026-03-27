@@ -9,12 +9,15 @@ return new class extends Migration {
     {
         Schema::create('special_program_variant_facilities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('special_program_variant_id')
-                ->constrained('special_program_variants')
-                ->cascadeOnDelete();
+            $table->unsignedBigInteger('special_program_variant_id');
             $table->text('content');
             $table->unsignedInteger('sort_order')->default(0);
             $table->timestamps();
+
+            $table->foreign(
+                'special_program_variant_id',
+                'sp_variant_facilities_variant_fk',
+            )->references('id')->on('special_program_variants')->cascadeOnDelete();
         });
     }
 
