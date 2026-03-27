@@ -48,8 +48,6 @@ export default function SpecialProgramShow({
         auth?: { user?: any };
     };
     const role = (auth?.user as any)?.role as string | undefined;
-    const userName = (auth?.user as any)?.name ?? '';
-    const userPhone = (auth?.user as any)?.phone ?? '';
     const hasVariants = program.variants.length > 0;
     const isTravel = program.category === 'travel';
     const inventoryDates = program.inventories ?? [];
@@ -61,11 +59,8 @@ export default function SpecialProgramShow({
     const form = useForm({
         program_id: program.id,
         variant_id: hasVariants ? (program.variants[0]?.id ?? '') : '',
-        name: userName,
-        phone: userPhone,
         date: defaultDate,
-        pax: 1,
-        notes: '',
+        quantity: 1,
     });
 
     const selectedVariant = useMemo(() => {
@@ -85,6 +80,8 @@ export default function SpecialProgramShow({
     const displayCapacity = selectedVariant?.capacity ?? program.capacity ?? 0;
     const formatCapacity = (value: number) =>
         value > 0 ? value : 'Tidak terbatas';
+    const isBookingDisabled =
+        form.processing || (isTravel && inventoryDates.length === 0);
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
@@ -103,25 +100,16 @@ export default function SpecialProgramShow({
         if (guardPurchaseByRole(role)) {
             return;
         }
-        form.post('/special-programs/booking', {
+        form.post('/special-programs/booking/prepare', {
             preserveScroll: true,
-            onSuccess: () => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Terkirim',
-                    text: 'Booking kamu sudah tersimpan. Tim kami akan menghubungi untuk konfirmasi.',
-                    confirmButtonText: 'OK',
-                });
-            },
             onError: (errors) => {
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal',
                     text:
-                        errors.name ??
-                        errors.phone ??
                         errors.date ??
-                        errors.pax ??
+                        errors.variant_id ??
+                        errors.quantity ??
                         'Tidak dapat memproses booking.',
                     confirmButtonText: 'OK',
                 });
@@ -286,68 +274,29 @@ export default function SpecialProgramShow({
                                 <input
                                     type="number"
                                     min={1}
-                                    value={form.data.pax}
+                                    value={form.data.quantity}
                                     onChange={(event) =>
                                         form.setData(
-                                            'pax',
+                                            'quantity',
                                             Number(event.target.value),
                                         )
                                     }
                                     className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
                             </div>
-                            <div>
-                                <label className="text-xs font-semibold text-slate-600">
-                                    Nama
-                                </label>
-                                <input
-                                    value={form.data.name}
-                                    onChange={(event) =>
-                                        form.setData('name', event.target.value)
-                                    }
-                                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                    placeholder="Nama pemesan"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-semibold text-slate-600">
-                                    No. HP
-                                </label>
-                                <input
-                                    value={form.data.phone}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'phone',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                    placeholder="Nomor yang bisa dihubungi"
-                                />
-                            </div>
-                            <div>
-                                <label className="text-xs font-semibold text-slate-600">
-                                    Catatan
-                                </label>
-                                <textarea
-                                    value={form.data.notes}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'notes',
-                                            event.target.value,
-                                        )
-                                    }
-                                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                    rows={3}
-                                    placeholder="Catatan tambahan (opsional)"
-                                />
-                            </div>
                             <button
                                 type="button"
                                 onClick={submitBooking}
-                                className="w-full rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
+                                disabled={isBookingDisabled}
+                                className={`w-full rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-sm transition ${
+                                    isBookingDisabled
+                                        ? 'bg-slate-300'
+                                        : 'bg-sky-600 hover:bg-sky-700'
+                                }`}
                             >
-                                Booking Sekarang
+                                {isBookingDisabled
+                                    ? 'Tanggal Belum Tersedia'
+                                    : 'Lanjutkan Pemesanan'}
                             </button>
                         </div>
                     </section>

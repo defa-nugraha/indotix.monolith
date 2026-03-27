@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\EventBooking;
 use App\Models\WisataBooking;
+use App\Models\SpecialProgramBooking;
 use App\Models\SouvenirOrder;
 use App\Models\AcademyBooking;
 use App\Services\ProductReviewService;
@@ -144,28 +145,27 @@ class PublicHistoryController extends Controller
                 ];
             });
 
-        $specialProgramBookings = EventBooking::query()
+        $specialProgramBookings = SpecialProgramBooking::query()
             ->where('user_id', $request->user()->id)
-            ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
-            ->with(['event', 'ticket'])
+            ->with(['program', 'variant'])
             ->latest()
             ->get()
-            ->map(function (EventBooking $booking) use ($userId) {
-                $event = $booking->event;
+            ->map(function (SpecialProgramBooking $booking) {
+                $program = $booking->program;
 
                 return [
                     'id' => $booking->id,
                     'encrypted_id' => Crypt::encryptString((string) $booking->id),
                     'type' => 'special_program',
-                    'title' => $event?->title ?? 'Special Program',
-                    'city_name' => $event?->location,
-                    'address' => $event?->address,
+                    'title' => $program?->name ?? 'Special Program',
+                    'city_name' => null,
+                    'address' => null,
                     'check_in' => null,
                     'check_out' => null,
                     'nights' => null,
                     'rooms_count' => null,
                     'guests_count' => null,
-                    'visit_date' => $event?->start_at?->toDateString(),
+                    'visit_date' => $booking->visit_date?->toDateString(),
                     'quantity' => $booking->quantity,
                     'total' => $booking->total_price,
                     'status' => $booking->status,
@@ -178,13 +178,9 @@ class PublicHistoryController extends Controller
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'payment_url' => route('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                    'review_url' => $booking->event_id
-                        ? '/special-programs/'.$event?->slug
-                        : null,
-                    'can_review' => $booking->event_id
-                        ? ProductReviewService::hasUsedBooking($userId, 'special_program', (int) $booking->event_id)
-                        : false,
-                    'ticket_name' => $booking->ticket?->name,
+                    'review_url' => $program?->slug ? '/special-programs/'.$program->slug : null,
+                    'can_review' => false,
+                    'ticket_name' => $booking->variant?->name,
                 ];
             });
 

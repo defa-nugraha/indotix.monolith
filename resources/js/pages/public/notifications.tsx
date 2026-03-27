@@ -310,7 +310,7 @@ export default function Notifications({
                                                                 : item.data
                                                                         ?.category ===
                                                                     'special_program'
-                                                                  ? '/special-programs'
+                                                                  ? `/special-programs/booking/${item.data.booking_id}`
                                                                   : `/booking/${item.data.booking_id}`
                                                     }
                                                     className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"

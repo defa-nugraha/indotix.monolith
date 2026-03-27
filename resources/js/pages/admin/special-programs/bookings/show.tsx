@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/button';
 type BookingDetail = {
     id: number;
     status: string;
+    payment_status?: string | null;
     quantity: number;
     visit_date?: string | null;
+    unit_price?: number | null;
+    total_price?: number | null;
     notes?: string | null;
     guest_name?: string | null;
     guest_email?: string | null;
@@ -25,6 +28,23 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/admin/special-programs/bookings',
     },
     { title: 'Detail', href: '#' },
+];
+
+const statusTone = (status?: string) => {
+    if (status === 'paid') return 'bg-emerald-50 text-emerald-700';
+    if (status === 'pending_payment') return 'bg-amber-50 text-amber-700';
+    if (status === 'cancelled') return 'bg-red-50 text-red-700';
+    if (status === 'expired') return 'bg-slate-100 text-slate-600';
+    if (status === 'completed') return 'bg-blue-50 text-blue-700';
+    return 'bg-slate-50 text-slate-600';
+};
+
+const statusOptions = [
+    { value: 'pending_payment', label: 'Pending Payment' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+    { value: 'expired', label: 'Expired' },
 ];
 
 export default function EventBookingShow({
@@ -46,7 +66,7 @@ export default function EventBookingShow({
                                 Variant: {booking.variant?.name ?? '-'}
                             </p>
                         </div>
-                        <Badge className="bg-slate-100 text-slate-600">
+                        <Badge className={statusTone(booking.status)}>
                             {booking.status}
                         </Badge>
                     </div>
@@ -75,6 +95,26 @@ export default function EventBookingShow({
                         <div className="mt-3 space-y-2 text-sm text-slate-600">
                             <div>Jumlah orang: {booking.quantity}</div>
                             <div>Tanggal: {booking.visit_date ?? '-'}</div>
+                            {booking.unit_price !== null && (
+                                <div>
+                                    Harga per orang: Rp{' '}
+                                    {Number(
+                                        booking.unit_price ?? 0,
+                                    ).toLocaleString('id-ID')}
+                                </div>
+                            )}
+                            {booking.total_price !== null && (
+                                <div>
+                                    Total: Rp{' '}
+                                    {Number(
+                                        booking.total_price ?? 0,
+                                    ).toLocaleString('id-ID')}
+                                </div>
+                            )}
+                            <div>
+                                Status pembayaran:{' '}
+                                {booking.payment_status ?? 'pending'}
+                            </div>
                             <div>Catatan: {booking.notes ?? '-'}</div>
                         </div>
                     </div>
@@ -85,28 +125,28 @@ export default function EventBookingShow({
                         Update Status
                     </h2>
                     <div className="mt-4 flex flex-wrap gap-2">
-                        {['pending', 'confirmed', 'cancelled'].map((status) => (
+                        {statusOptions.map((status) => (
                             <Button
-                                key={status}
+                                key={status.value}
                                 type="button"
                                 variant={
-                                    status === 'confirmed'
+                                    booking.status === status.value
                                         ? 'default'
                                         : 'outline'
                                 }
                                 className={
-                                    status === 'confirmed'
+                                    booking.status === status.value
                                         ? 'bg-sky-600 text-white hover:bg-sky-700'
                                         : ''
                                 }
                                 onClick={() =>
                                     router.post(
                                         `/admin/special-programs/bookings/${booking.id}/status`,
-                                        { status },
+                                        { status: status.value },
                                     )
                                 }
                             >
-                                {status}
+                                {status.label}
                             </Button>
                         ))}
                     </div>

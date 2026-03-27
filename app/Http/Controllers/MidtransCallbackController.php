@@ -11,6 +11,8 @@ use App\Models\AcademyBooking;
 use App\Models\AcademyPayment;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
+use App\Models\SpecialProgramBooking;
+use App\Models\SpecialProgramPayment;
 use App\Models\WisataAffiliateCommissionItem;
 use App\Models\SouvenirOrder;
 use App\Services\BookingService;
@@ -44,6 +46,8 @@ class MidtransCallbackController extends Controller
         $eventBooking = null;
         $academyPayment = null;
         $academyBooking = null;
+        $specialPayment = null;
+        $specialBooking = null;
         $souvenirOrder = null;
         if (! $booking) {
             $wisataPayment = WisataPayment::query()->where('order_id', $orderId)->latest()->first();
@@ -58,10 +62,14 @@ class MidtransCallbackController extends Controller
             $academyBooking = $academyPayment?->booking ?? AcademyBooking::query()->where('midtrans_order_id', $orderId)->first();
         }
         if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking) {
+            $specialPayment = SpecialProgramPayment::query()->where('order_id', $orderId)->latest()->first();
+            $specialBooking = $specialPayment?->booking ?? SpecialProgramBooking::query()->where('midtrans_order_id', $orderId)->first();
+        }
+        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking && ! $specialBooking) {
             $souvenirOrder = SouvenirOrder::query()->where('midtrans_order_id', $orderId)->first();
         }
 
-        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking && ! $souvenirOrder) {
+        if (! $booking && ! $wisataBooking && ! $eventBooking && ! $academyBooking && ! $specialBooking && ! $souvenirOrder) {
             return response('Booking not found', 404);
         }
 
@@ -287,6 +295,38 @@ class MidtransCallbackController extends Controller
             );
         }
 
+        if ($specialBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $specialBooking->update([
+                'status' => 'paid',
+                'payment_status' => $status,
+            ]);
+
+            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id);
+            UserNotification::create([
+                'user_id' => $specialBooking->user_id,
+                'title' => 'Pembayaran special program berhasil',
+                'message' => 'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
+                'type' => 'special_program_payment_paid',
+                'data' => [
+                    'booking_id' => $encryptedId,
+                    'type' => 'special_program',
+                    'category' => 'special_program',
+                ],
+            ]);
+
+            $this->sendPaymentPush(
+                $specialBooking->user_id,
+                'Pembayaran special program berhasil',
+                'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
+                [
+                    'booking_id' => $encryptedId,
+                    'type' => 'special_program',
+                    'category' => 'special_program',
+                    'notification_type' => 'special_program_payment_paid',
+                ]
+            );
+        }
+
         if ($souvenirOrder && in_array($status, ['settlement', 'capture', 'success'], true)) {
             $souvenirOrder->update([
                 'status' => 'paid',
@@ -441,6 +481,27 @@ class MidtransCallbackController extends Controller
                     'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id),
                     'type' => $category,
                     'category' => $category,
+                ],
+            ]);
+        }
+
+        if ($specialBooking && in_array($status, ['cancel', 'expire', 'deny'], true)) {
+            if ($specialBooking->status === 'pending_payment') {
+                $specialBooking->update([
+                    'status' => 'expired',
+                    'payment_status' => $status,
+                ]);
+            }
+
+            UserNotification::create([
+                'user_id' => $specialBooking->user_id,
+                'title' => 'Pembayaran special program gagal',
+                'message' => 'Pembayaran special program tidak berhasil atau kedaluwarsa.',
+                'type' => 'special_program_booking_expired',
+                'data' => [
+                    'booking_id' => \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id),
+                    'type' => 'special_program',
+                    'category' => 'special_program',
                 ],
             ]);
         }

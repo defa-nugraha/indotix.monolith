@@ -33,6 +33,15 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const statusTone = (status?: string) => {
+    if (status === 'paid') return 'bg-emerald-50 text-emerald-700';
+    if (status === 'pending_payment') return 'bg-amber-50 text-amber-700';
+    if (status === 'cancelled') return 'bg-red-50 text-red-700';
+    if (status === 'expired') return 'bg-slate-100 text-slate-600';
+    if (status === 'completed') return 'bg-blue-50 text-blue-700';
+    return 'bg-slate-50 text-slate-600';
+};
+
 export default function EventBookingsIndex({
     bookings,
     programs,
@@ -79,9 +88,13 @@ export default function EventBookingsIndex({
                             className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                         >
                             <option value="">Semua status</option>
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
+                            <option value="pending_payment">
+                                Pending Payment
+                            </option>
+                            <option value="paid">Paid</option>
+                            <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
+                            <option value="expired">Expired</option>
                         </select>
                         <input
                             type="date"
@@ -148,7 +161,11 @@ export default function EventBookingsIndex({
                                             {item.quantity}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge className="bg-slate-100 text-slate-600">
+                                            <Badge
+                                                className={statusTone(
+                                                    item.status,
+                                                )}
+                                            >
                                                 {item.status}
                                             </Badge>
                                         </td>

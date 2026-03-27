@@ -57,7 +57,7 @@ class SpecialProgramBookingController extends Controller
     public function updateStatus(Request $request, SpecialProgramBooking $booking): RedirectResponse
     {
         $data = $request->validate([
-            'status' => ['required', 'in:pending,confirmed,cancelled'],
+            'status' => ['required', 'in:pending_payment,paid,completed,cancelled,expired'],
         ]);
 
         $booking->update([
