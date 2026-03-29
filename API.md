@@ -2,6 +2,36 @@
 
 Dokumen ini mencatat perubahan API agar selaras dengan alur WEB saat ini.
 
+## Changelog Per Versi
+| Versi | Tanggal | Ringkasan |
+| --- | --- | --- |
+| 2026.03.29 | 2026-03-29 | Sinkronisasi payload API dengan WEB untuk special program, booking, history, reviews, dan hotel pricing. |
+
+## Changelog Per Endpoint
+| Endpoint | Perubahan Utama |
+| --- | --- |
+| `GET /api/products/special-programs` | Pindah ke model `SpecialProgram`, field `name`, `category`, `min_price`, `image_url`. |
+| `GET /api/products/special-programs/{program}` | Detail memakai `name`, `category`, `base_price`, `capacity`, `variants`, `facilities`, `inventories`. |
+| `POST /api/special-programs/bookings/quote` | Input `program_id`, `variant_id`, `date`, `quantity`; keluaran pricing sesuai web. |
+| `POST /api/special-programs/bookings` | Booking payload pakai `program`, `variant`, `unit_price`, `visit_date`. |
+| `POST /api/special-programs/bookings/{booking}/pay` | Pembayaran Midtrans Snap sesuai flow web. |
+| `GET /api/history` | Tambah `review_url` dan `can_review` untuk semua tipe. |
+| `GET /api/history/hotel/{booking}` | Tambah `service_fee`, `tax_total`, `taxes`. |
+| `GET /api/products/events` | Tambah `slug`. |
+| `GET /api/products/events/{event}` | Tambah `slug`, `reviews`, `user_review`, `can_review`. |
+| `GET /api/products/academy` | Tambah `slug`. |
+| `GET /api/products/academy/{class}` | Tambah `slug`, `reviews`, `user_review`, `can_review`. |
+| `GET /api/products/souvenirs` | Tambah `slug`, casting `price`, `stock` ke integer. |
+| `GET /api/products/souvenirs/{product}` | Tambah `slug`, `reviews`, `user_review`, `can_review`, casting `additional_price` & `stock`. |
+| `GET /api/products/wisata/{destination}` | Tambah `photo_other_urls` dan `maps_pin_url`. |
+| `GET /api/products/hotels` | Tambah `recommendations`. |
+| `POST /api/hotel/bookings/quote` | Tambah `service_fee`, `tax_total`, `taxes`. |
+| `POST /api/hotel/bookings` | `guest_phone` dari profil; hitung pajak + service fee. |
+| `POST /api/wisata/bookings` | `guest_phone` dari profil. |
+| `POST /api/events/bookings` | `guest_phone` dari profil. |
+| `POST /api/academy/bookings` | `guest_phone` dari profil. |
+| `POST /api/souvenir/orders` | `guest_phone` & `shipping_address` dari profil; `shipping_method` set `delivery`. |
+
 ## 2026-03-29
 1. Special Program API disesuaikan penuh ke model `SpecialProgram`.
    - Endpoint: `GET /api/products/special-programs`, `GET /api/products/special-programs/{program}`.
