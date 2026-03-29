@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcademyBooking;
 use App\Models\Booking;
 use App\Models\EventBooking;
+use App\Models\SpecialProgramBooking;
 use App\Models\SouvenirOrder;
 use App\Models\WisataBooking;
 use Illuminate\Http\JsonResponse;
@@ -165,30 +166,29 @@ class HistoryController extends Controller
 
         $specialProgramBookings = collect();
         if (! $type || $type === 'special_program') {
-            $specialProgramBookings = EventBooking::query()
+            $specialProgramBookings = SpecialProgramBooking::query()
                 ->where('user_id', $userId)
-                ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
-                ->with(['event', 'ticket'])
+                ->with(['program', 'variant'])
                 ->when($status, fn ($builder) => $builder->where('status', $status))
                 ->tap($applyDateFilter)
                 ->latest()
                 ->get()
-                ->map(function (EventBooking $booking) {
-                    $event = $booking->event;
+                ->map(function (SpecialProgramBooking $booking) {
+                    $program = $booking->program;
 
                     return [
                         'id' => $booking->id,
                         'encrypted_id' => Crypt::encryptString((string) $booking->id),
                         'type' => 'special_program',
-                        'title' => $event?->title ?? 'Special Program',
-                        'city_name' => $event?->location,
-                        'address' => $event?->address,
+                        'title' => $program?->name ?? 'Special Program',
+                        'city_name' => null,
+                        'address' => null,
                         'check_in' => null,
                         'check_out' => null,
                         'nights' => null,
                         'rooms_count' => null,
                         'guests_count' => null,
-                        'visit_date' => $event?->start_at?->toDateString(),
+                        'visit_date' => $booking->visit_date?->toDateString(),
                         'quantity' => $booking->quantity,
                         'total' => $booking->total_price,
                         'status' => $booking->status,
@@ -201,7 +201,7 @@ class HistoryController extends Controller
                         'midtrans_order_id' => $booking->midtrans_order_id,
                         'payment_url' => route('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'detail_url' => route('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                        'ticket_name' => $booking->ticket?->name,
+                        'ticket_name' => $booking->variant?->name,
                     ];
                 });
         }
