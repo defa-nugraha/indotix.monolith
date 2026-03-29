@@ -123,6 +123,7 @@ class HotelController extends Controller
                 'q' => $data['q'] ?? null,
             ],
             'hotels' => $results,
+            'recommendations' => $this->recommendations(),
         ]);
     }
 
@@ -273,5 +274,28 @@ class HotelController extends Controller
         }
 
         return sprintf('https://www.google.com/maps/search/?api=1&query=%s,%s', $latitude, $longitude);
+    }
+
+    private function recommendations(): array
+    {
+        return Hotel::query()
+            ->where('status', 'active')
+            ->with(['roomTypes', 'city', 'images'])
+            ->latest()
+            ->take(3)
+            ->get()
+            ->map(fn (Hotel $hotel) => [
+                'id' => $hotel->id,
+                'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'slug' => $hotel->slug,
+                'name' => $hotel->name,
+                'city_name' => $hotel->city?->name,
+                'star_rating' => $hotel->star_rating,
+                'min_price' => $hotel->roomTypes->min('base_price')
+                    ? (int) round($hotel->roomTypes->min('base_price'))
+                    : null,
+                'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
+            ])
+            ->all();
     }
 }
