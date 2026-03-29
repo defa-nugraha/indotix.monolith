@@ -80,8 +80,13 @@ class AcademyBookingController extends Controller
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
-            'guest_phone' => ['required', 'string', 'max:30'],
         ]);
+
+        $profilePhone = $request->user()?->phone;
+        if (! $profilePhone) {
+            return response()->json(['message' => 'Nomor HP belum diisi di profil.'], 422);
+        }
+        $data['guest_phone'] = $profilePhone;
 
         $class = AcademyClass::query()
             ->where('id', $data['class_id'])

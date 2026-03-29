@@ -100,11 +100,22 @@ class SouvenirBookingController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
-            'guest_phone' => ['required', 'string', 'max:30'],
-            'shipping_address' => ['required', 'string', 'max:500'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'shipping_method' => ['nullable', 'string', 'max:50'],
         ]);
+
+        $profilePhone = $request->user()?->phone;
+        if (! $profilePhone) {
+            return response()->json(['message' => 'Nomor HP belum diisi di profil.'], 422);
+        }
+
+        $shippingAddress = $request->user()?->defaultAddressString();
+        if (! $shippingAddress) {
+            return response()->json(['message' => 'Alamat utama belum diisi di profil.'], 422);
+        }
+
+        $data['guest_phone'] = $profilePhone;
+        $data['shipping_address'] = $shippingAddress;
 
         $items = collect($data['items'])->values();
         $productIds = $items->pluck('product_id')->unique()->all();
@@ -144,7 +155,7 @@ class SouvenirBookingController extends Controller
                     'status' => 'pending_payment',
                     'payment_status' => 'pending',
                     'total_price' => $total,
-                    'shipping_method' => $data['shipping_method'] ?? 'delivery',
+                    'shipping_method' => 'delivery',
                     'shipping_address' => $data['shipping_address'],
                     'notes' => $data['notes'] ?? null,
                     'shipping_cost' => 0,

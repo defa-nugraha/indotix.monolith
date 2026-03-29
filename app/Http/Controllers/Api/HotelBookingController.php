@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\BookingRoom;
+use App\Models\Hotel;
 use App\Models\Payment;
 use App\Models\RoomType;
+use App\Models\SystemSetting;
 use App\Models\UserNotification;
 use App\Models\Voucher;
 use App\Services\BookingService;
@@ -53,6 +55,8 @@ class HotelBookingController extends Controller
             return response()->json(['message' => 'Tipe kamar tidak sesuai hotel.'], 422);
         }
 
+        $hotel = Hotel::query()->with('taxes')->findOrFail($data['hotel_id']);
+
         try {
             $pricing = $bookingService->calculatePricing(
                 $roomType,
@@ -89,12 +93,20 @@ class HotelBookingController extends Controller
             ];
         }
 
+        $taxableSubtotal = max(0, $pricing['subtotal'] - $discountAmount);
+        [$taxItems, $taxTotal] = $this->buildTaxBreakdown($hotel, $taxableSubtotal);
+        $serviceFee = $this->resolveServiceFee();
+        $total = max(0, $taxableSubtotal + $taxTotal + $serviceFee);
+
         return response()->json([
             'pricing' => [
                 'nights' => $pricing['nights'],
                 'subtotal' => $pricing['subtotal'],
                 'discount_amount' => $discountAmount,
-                'total' => max(0, $pricing['subtotal'] - $discountAmount),
+                'service_fee' => $serviceFee,
+                'tax_total' => $taxTotal,
+                'taxes' => $taxItems,
+                'total' => $total,
             ],
             'voucher' => $voucherPayload,
         ]);
@@ -111,18 +123,25 @@ class HotelBookingController extends Controller
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
-            'guest_phone' => ['required', 'string', 'max:30'],
             'special_request' => ['nullable', 'string', 'max:1000'],
             'voucher_code' => ['nullable', 'string', 'max:50'],
         ]);
+
+        $profilePhone = $request->user()?->phone;
+        if (! $profilePhone) {
+            return response()->json(['message' => 'Nomor HP belum diisi di profil.'], 422);
+        }
+        $data['guest_phone'] = $profilePhone;
 
         $roomType = RoomType::query()->findOrFail($data['room_type_id']);
         if ((int) $roomType->hotel_id !== (int) $data['hotel_id']) {
             return response()->json(['message' => 'Tipe kamar tidak sesuai hotel.'], 422);
         }
 
+        $hotel = Hotel::query()->with('taxes')->findOrFail($data['hotel_id']);
+
         try {
-            $booking = DB::transaction(function () use ($request, $data, $roomType, $bookingService) {
+            $booking = DB::transaction(function () use ($request, $data, $roomType, $bookingService, $hotel) {
                 $pricing = $bookingService->calculatePricing(
                     $roomType,
                     $data['check_in'],
@@ -166,6 +185,11 @@ class HotelBookingController extends Controller
                     false
                 );
 
+                $taxableSubtotal = max(0, $pricing['subtotal'] - $discountAmount);
+                [$taxItems, $taxTotal] = $this->buildTaxBreakdown($hotel, $taxableSubtotal);
+                $serviceFee = $this->resolveServiceFee();
+                $total = max(0, $taxableSubtotal + $taxTotal + $serviceFee);
+
                 $booking = Booking::create([
                     'user_id' => $request->user()->id,
                     'hotel_id' => $data['hotel_id'],
@@ -180,7 +204,10 @@ class HotelBookingController extends Controller
                     'discount_type' => $voucher?->discount_type,
                     'discount_value' => $voucher?->discount_value,
                     'discount_amount' => $discountAmount > 0 ? $discountAmount : null,
-                    'total' => max(0, $pricing['subtotal'] - $discountAmount),
+                    'service_fee' => $serviceFee,
+                    'tax_total' => $taxTotal,
+                    'tax_details' => $taxItems,
+                    'total' => $total,
                     'status' => 'pending_payment',
                     'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
                     'guest_name' => $data['guest_name'],
@@ -414,6 +441,9 @@ class HotelBookingController extends Controller
             'total' => $booking->total,
             'subtotal' => $booking->subtotal,
             'discount_amount' => $booking->discount_amount,
+            'service_fee' => $booking->service_fee ?? 0,
+            'tax_total' => $booking->tax_total ?? 0,
+            'taxes' => $booking->tax_details ?? [],
             'voucher_code' => $booking->voucher_code,
             'guest_name' => $booking->guest_name,
             'guest_email' => $booking->guest_email,
@@ -456,6 +486,39 @@ class HotelBookingController extends Controller
                 ],
             ],
         ];
+    }
+
+    private function resolveServiceFee(): int
+    {
+        $value = SystemSetting::query()
+            ->where('key', 'service_fee')
+            ->value('value');
+
+        if ($value === null) {
+            return 0;
+        }
+
+        return (int) round((float) $value);
+    }
+
+    private function buildTaxBreakdown(Hotel $hotel, int $taxableSubtotal): array
+    {
+        $items = $hotel->taxes
+            ->map(function ($tax) use ($taxableSubtotal) {
+                $rate = (float) $tax->rate;
+                $amount = (int) round($taxableSubtotal * ($rate / 100));
+                return [
+                    'name' => $tax->name,
+                    'rate' => $rate,
+                    'amount' => $amount,
+                ];
+            })
+            ->values()
+            ->all();
+
+        $total = array_sum(array_map(fn ($item) => $item['amount'], $items));
+
+        return [$items, $total];
     }
 
     private function expireBooking(Booking $booking): void

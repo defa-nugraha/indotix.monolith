@@ -90,10 +90,15 @@ class WisataBookingController extends Controller
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
-            'guest_phone' => ['required', 'string', 'max:30'],
             'special_request' => ['nullable', 'string', 'max:1000'],
             'referral_code' => ['nullable', 'string', 'max:50'],
         ]);
+
+        $profilePhone = $request->user()?->phone;
+        if (! $profilePhone) {
+            return response()->json(['message' => 'Nomor HP belum diisi di profil.'], 422);
+        }
+        $data['guest_phone'] = $profilePhone;
 
         $destination = MitraWisataOnboarding::query()
             ->where('id', $data['destination_id'])
