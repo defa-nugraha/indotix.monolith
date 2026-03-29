@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventTicket;
+use App\Services\ProductReviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -42,6 +43,7 @@ class EventController extends Controller
             return [
                 'id' => $event->id,
                 'encrypted_id' => Crypt::encryptString((string) $event->id),
+                'slug' => $event->slug,
                 'title' => $event->title,
                 'city_name' => $this->resolveCityName($event->city_code),
                 'location' => $event->location,
@@ -86,10 +88,17 @@ class EventController extends Controller
                 ];
             });
 
+        $userId = $request->user('sanctum')?->id;
+        $userReview = $userId ? ProductReviewService::userReview($userId, 'event', $event->id) : null;
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'event', $event->id) || (bool) $userReview)
+            : false;
+
         return response()->json([
             'event' => [
                 'id' => $event->id,
                 'encrypted_id' => Crypt::encryptString((string) $event->id),
+                'slug' => $event->slug,
                 'title' => $event->title,
                 'description' => $event->description,
                 'city_name' => $this->resolveCityName($event->city_code),
@@ -102,6 +111,9 @@ class EventController extends Controller
                 'capacity_sold' => $event->capacity_sold,
             ],
             'tickets' => $tickets,
+            'reviews' => ProductReviewService::publicReviews('event', $event->id),
+            'user_review' => $userReview,
+            'can_review' => $canReview,
         ]);
     }
 

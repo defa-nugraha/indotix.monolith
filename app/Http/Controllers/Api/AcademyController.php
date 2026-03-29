@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\AcademyClass;
 use App\Models\AcademyTicket;
+use App\Services\ProductReviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -44,6 +45,7 @@ class AcademyController extends Controller
             return [
                 'id' => $class->id,
                 'encrypted_id' => Crypt::encryptString((string) $class->id),
+                'slug' => $class->slug,
                 'title' => $class->title,
                 'category' => $class->category,
                 'start_at' => $class->start_at?->toDateString(),
@@ -95,10 +97,17 @@ class AcademyController extends Controller
                 ];
             });
 
+        $userId = $request->user('sanctum')?->id;
+        $userReview = $userId ? ProductReviewService::userReview($userId, 'academy', $class->id) : null;
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'academy', $class->id) || (bool) $userReview)
+            : false;
+
         return response()->json([
             'class' => [
                 'id' => $class->id,
                 'encrypted_id' => Crypt::encryptString((string) $class->id),
+                'slug' => $class->slug,
                 'title' => $class->title,
                 'description' => $class->description,
                 'category' => $class->category,
@@ -113,6 +122,9 @@ class AcademyController extends Controller
                 'images' => $class->images->map(fn ($image) => Storage::url($image->image_path)),
             ],
             'tickets' => $tickets,
+            'reviews' => ProductReviewService::publicReviews('academy', $class->id),
+            'user_review' => $userReview,
+            'can_review' => $canReview,
         ]);
     }
 

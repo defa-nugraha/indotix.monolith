@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SouvenirCategory;
 use App\Models\SouvenirProduct;
+use App\Services\ProductReviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -33,9 +34,10 @@ class SouvenirController extends Controller
             return [
                 'id' => $product->id,
                 'encrypted_id' => Crypt::encryptString((string) $product->id),
+                'slug' => $product->slug,
                 'name' => $product->name,
-                'price' => $product->price,
-                'stock' => $product->stock,
+                'price' => (int) $product->price,
+                'stock' => (int) $product->stock,
                 'category' => $product->category?->name,
                 'image_url' => $product->images->first()?->image_url ? Storage::url($product->images->first()->image_url) : null,
             ];
@@ -66,14 +68,21 @@ class SouvenirController extends Controller
             ->where('is_active', true)
             ->findOrFail($productId);
 
+        $userId = request()->user('sanctum')?->id;
+        $userReview = $userId ? ProductReviewService::userReview($userId, 'souvenir', $product->id) : null;
+        $canReview = $userId
+            ? (ProductReviewService::hasUsedBooking($userId, 'souvenir', $product->id) || (bool) $userReview)
+            : false;
+
         return response()->json([
             'product' => [
                 'id' => $product->id,
                 'encrypted_id' => Crypt::encryptString((string) $product->id),
+                'slug' => $product->slug,
                 'name' => $product->name,
                 'description' => $product->description,
-                'price' => $product->price,
-                'stock' => $product->stock,
+                'price' => (int) $product->price,
+                'stock' => (int) $product->stock,
                 'category' => $product->category?->name,
                 'images' => $product->images
                     ->map(fn ($image) => $image->image_url ? Storage::url($image->image_url) : null)
@@ -89,6 +98,9 @@ class SouvenirController extends Controller
                     'is_active' => $variant->is_active,
                 ]),
             ],
+            'reviews' => ProductReviewService::publicReviews('souvenir', $product->id),
+            'user_review' => $userReview,
+            'can_review' => $canReview,
         ]);
     }
 
