@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Event;
-use App\Models\EventBooking;
-use App\Models\EventPayment;
-use App\Models\EventTicket;
+use App\Models\SpecialProgram;
+use App\Models\SpecialProgramBooking;
+use App\Models\SpecialProgramInventory;
+use App\Models\SpecialProgramPayment;
+use App\Models\SpecialProgramVariant;
 use App\Models\UserNotification;
 use App\Services\MidtransService;
 use Illuminate\Http\JsonResponse;
@@ -17,17 +18,16 @@ use RuntimeException;
 
 class SpecialProgramBookingController extends Controller
 {
-    private const PAYMENT_TTL_MINUTES = 1440;
+    private const PAYMENT_TTL_MINUTES = 15;
 
     public function index(Request $request): JsonResponse
     {
-        $bookings = EventBooking::query()
+        $bookings = SpecialProgramBooking::query()
             ->where('user_id', $request->user()->id)
-            ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
-            ->with(['event', 'ticket', 'payments'])
+            ->with(['program', 'variant', 'payments'])
             ->latest()
             ->get()
-            ->map(fn (EventBooking $booking) => $this->bookingPayload($booking));
+            ->map(fn (SpecialProgramBooking $booking) => $this->bookingPayload($booking));
 
         return response()->json([
             'bookings' => $bookings,
@@ -37,35 +37,52 @@ class SpecialProgramBookingController extends Controller
     public function quote(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'program_id' => ['required', 'integer', 'exists:events,id'],
-            'ticket_id' => ['required', 'integer', 'exists:event_tickets,id'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:20'],
+            'program_id' => ['required', 'integer', 'exists:special_programs,id'],
+            'variant_id' => ['nullable', 'integer', 'exists:special_program_variants,id'],
+            'date' => ['required', 'date'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
 
-        $program = Event::query()
+        $program = SpecialProgram::query()
             ->where('id', $data['program_id'])
-            ->where('event_type', 'special_program')
-            ->where('status', 'published')
+            ->where('is_active', true)
             ->firstOrFail();
 
-        $ticket = EventTicket::query()->findOrFail($data['ticket_id']);
-        if ((int) $ticket->event_id !== (int) $program->id) {
-            return response()->json(['message' => 'Tiket tidak sesuai program.'], 422);
+        $variant = null;
+        if ($data['variant_id'] ?? null) {
+            $variant = SpecialProgramVariant::query()
+                ->where('id', $data['variant_id'])
+                ->where('special_program_id', $program->id)
+                ->first();
+
+            if (! $variant) {
+                return response()->json(['message' => 'Variant tidak sesuai paket.'], 422);
+            }
         }
 
-        if (! $ticket->is_active) {
-            return response()->json(['message' => 'Tiket belum tersedia.'], 422);
+        $inventory = $this->resolveInventory($program, $data['date']);
+        if ($program->category === 'travel' && ! $inventory) {
+            return response()->json(['message' => 'Tanggal belum tersedia.'], 422);
         }
 
-        if ($this->availableTickets($ticket) < (int) $data['quantity']) {
-            return response()->json(['message' => 'Kuota tiket tidak mencukupi.'], 422);
+        try {
+            $this->ensureCapacity(
+                $program,
+                $variant,
+                $inventory,
+                $data['date'],
+                (int) $data['quantity'],
+            );
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
         }
 
-        $total = (int) $ticket->price * (int) $data['quantity'];
+        $unitPrice = (int) ($variant?->price ?? $program->base_price);
+        $total = $unitPrice * (int) $data['quantity'];
 
         return response()->json([
             'pricing' => [
-                'unit_price' => (int) $ticket->price,
+                'unit_price' => $unitPrice,
                 'quantity' => (int) $data['quantity'],
                 'total' => $total,
             ],
@@ -75,49 +92,78 @@ class SpecialProgramBookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'program_id' => ['required', 'integer', 'exists:events,id'],
-            'ticket_id' => ['required', 'integer', 'exists:event_tickets,id'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:20'],
+            'program_id' => ['required', 'integer', 'exists:special_programs,id'],
+            'variant_id' => ['nullable', 'integer', 'exists:special_program_variants,id'],
+            'date' => ['required', 'date'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
-            'guest_phone' => ['required', 'string', 'max:30'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        $program = Event::query()
-            ->where('id', $data['program_id'])
-            ->where('event_type', 'special_program')
-            ->where('status', 'published')
-            ->firstOrFail();
+        $profilePhone = $request->user()?->phone;
+        if (! $profilePhone) {
+            return response()->json(['message' => 'Nomor HP belum diisi di profil.'], 422);
+        }
+        $data['guest_phone'] = $profilePhone;
 
         try {
-            $booking = DB::transaction(function () use ($request, $data, $program) {
-                $ticket = EventTicket::query()->lockForUpdate()->findOrFail($data['ticket_id']);
-                if ((int) $ticket->event_id !== (int) $program->id) {
-                    throw new RuntimeException('Tiket tidak sesuai program.');
+            $booking = DB::transaction(function () use ($request, $data) {
+                $program = SpecialProgram::query()
+                    ->lockForUpdate()
+                    ->where('id', $data['program_id'])
+                    ->where('is_active', true)
+                    ->firstOrFail();
+
+                $variant = null;
+                if (! empty($data['variant_id'])) {
+                    $variant = SpecialProgramVariant::query()
+                        ->lockForUpdate()
+                        ->where('id', $data['variant_id'])
+                        ->where('special_program_id', $program->id)
+                        ->first();
+
+                    if (! $variant) {
+                        throw new RuntimeException('Variant tidak sesuai paket.');
+                    }
                 }
 
-                if (! $ticket->is_active) {
-                    throw new RuntimeException('Tiket belum tersedia.');
+                $inventory = $this->resolveInventory($program, $data['date'], true);
+                if ($program->category === 'travel' && ! $inventory) {
+                    throw new RuntimeException('Tanggal belum tersedia.');
                 }
 
-                $available = $this->availableTickets($ticket, true);
-                if ($available < (int) $data['quantity']) {
-                    throw new RuntimeException('Kuota tiket tidak mencukupi.');
-                }
+                $this->ensureCapacity(
+                    $program,
+                    $variant,
+                    $inventory,
+                    $data['date'],
+                    (int) $data['quantity'],
+                    true,
+                );
 
-                return EventBooking::create([
+                $unitPrice = (int) ($variant?->price ?? $program->base_price);
+                $totalPrice = $unitPrice * (int) $data['quantity'];
+
+                return SpecialProgramBooking::create([
                     'user_id' => $request->user()->id,
-                    'event_id' => $program->id,
-                    'event_ticket_id' => $ticket->id,
-                    'booking_code' => strtoupper('SPECIAL-'.$request->user()->id.'-'.now()->format('ymdHis')),
+                    'special_program_id' => $program->id,
+                    'special_program_variant_id' => $variant?->id,
+                    'item_type' => 'package',
+                    'item_id' => $program->id,
+                    'item_name' => $program->name,
+                    'ticket_name' => $variant?->name,
+                    'visit_date' => $data['date'],
                     'quantity' => $data['quantity'],
-                    'total_price' => $ticket->price * (int) $data['quantity'],
+                    'unit_price' => $unitPrice,
+                    'total_price' => $totalPrice,
                     'status' => 'pending_payment',
                     'payment_status' => 'pending',
                     'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
                     'guest_name' => $data['guest_name'],
                     'guest_email' => $data['guest_email'],
                     'guest_phone' => $data['guest_phone'],
+                    'notes' => $data['notes'] ?? null,
                 ]);
             });
         } catch (RuntimeException $exception) {
@@ -148,7 +194,7 @@ class SpecialProgramBookingController extends Controller
             ],
         ]);
 
-        $booking->load(['event', 'ticket', 'payments']);
+        $booking->load(['program', 'variant', 'payments']);
 
         return response()->json([
             'booking' => $this->bookingPayload($booking),
@@ -163,10 +209,7 @@ class SpecialProgramBookingController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
-        $booking->load(['event', 'ticket', 'payments']);
-        if ($booking->event?->event_type !== 'special_program') {
-            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
-        }
+        $booking->load(['program', 'variant', 'payments']);
 
         return response()->json([
             'booking' => $this->bookingPayload($booking),
@@ -181,18 +224,13 @@ class SpecialProgramBookingController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
-        $booking->loadMissing('event');
-        if ($booking->event?->event_type !== 'special_program') {
-            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
-        }
-
-        if ($booking->status === 'pending_payment' && $booking->payment_deadline && $booking->payment_deadline->isPast()) {
+        if ($this->isExpired($booking)) {
             $booking->update(['status' => 'expired', 'payment_status' => 'expired']);
             return response()->json(['message' => 'Booking sudah kedaluwarsa.'], 422);
         }
 
         if ($booking->status !== 'pending_payment') {
-            $booking->load(['event', 'ticket', 'payments']);
+            $booking->load(['program', 'variant', 'payments']);
 
             return response()->json([
                 'booking' => $this->bookingPayload($booking),
@@ -212,7 +250,7 @@ class SpecialProgramBookingController extends Controller
             ]);
         }
 
-        $orderId = sprintf('SPECIAL-%s-%s', $booking->id, now()->format('YmdHis'));
+        $orderId = sprintf('SPECIAL-PROGRAM-%s-%s', $booking->id, now()->format('YmdHis'));
         $payload = $this->buildSnapPayload($booking, $orderId);
 
         try {
@@ -221,8 +259,8 @@ class SpecialProgramBookingController extends Controller
             return response()->json(['message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.'], 500);
         }
 
-        $payment = EventPayment::create([
-            'event_booking_id' => $booking->id,
+        $payment = SpecialProgramPayment::create([
+            'special_program_booking_id' => $booking->id,
             'provider' => 'midtrans',
             'status' => 'pending',
             'gross_amount' => (int) $booking->total_price,
@@ -255,11 +293,6 @@ class SpecialProgramBookingController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
-        $booking->loadMissing('event');
-        if ($booking->event?->event_type !== 'special_program') {
-            return response()->json(['message' => 'Data tidak ditemukan.'], 404);
-        }
-
         if ($booking->status !== 'pending_payment') {
             return response()->json(['message' => 'Pesanan tidak dapat dibatalkan.'], 422);
         }
@@ -281,67 +314,113 @@ class SpecialProgramBookingController extends Controller
             ],
         ]);
 
-        $booking->load(['event', 'ticket', 'payments']);
+        $booking->load(['program', 'variant', 'payments']);
 
         return response()->json([
             'booking' => $this->bookingPayload($booking),
         ]);
     }
 
-    private function bookingPayload(EventBooking $booking): array
+    private function resolveInventory(
+        SpecialProgram $program,
+        string $date,
+        bool $useLock = false,
+    ): ?SpecialProgramInventory {
+        $query = $program->inventories()->whereDate('date', $date);
+        if ($useLock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
+    }
+
+    private function ensureCapacity(
+        SpecialProgram $program,
+        ?SpecialProgramVariant $variant,
+        ?SpecialProgramInventory $inventory,
+        string $date,
+        int $quantity,
+        bool $useLock = false,
+    ): void {
+        $statusScope = ['pending_payment', 'paid', 'completed'];
+
+        $programQuery = SpecialProgramBooking::query()
+            ->where('special_program_id', $program->id)
+            ->whereDate('visit_date', $date)
+            ->whereIn('status', $statusScope);
+
+        if ($useLock) {
+            $programQuery->lockForUpdate();
+        }
+
+        $programBooked = (int) $programQuery->sum('quantity');
+
+        if ($program->capacity > 0 && $programBooked + $quantity > $program->capacity) {
+            throw new RuntimeException('Kapasitas paket sudah penuh.');
+        }
+
+        if ($inventory && $inventory->capacity > 0 && $programBooked + $quantity > $inventory->capacity) {
+            throw new RuntimeException('Kapasitas tanggal sudah penuh.');
+        }
+
+        if ($variant && $variant->capacity > 0) {
+            $variantQuery = SpecialProgramBooking::query()
+                ->where('special_program_id', $program->id)
+                ->where('special_program_variant_id', $variant->id)
+                ->whereDate('visit_date', $date)
+                ->whereIn('status', $statusScope);
+
+            if ($useLock) {
+                $variantQuery->lockForUpdate();
+            }
+
+            $variantBooked = (int) $variantQuery->sum('quantity');
+            if ($variantBooked + $quantity > $variant->capacity) {
+                throw new RuntimeException('Kapasitas variant sudah penuh.');
+            }
+        }
+    }
+
+    private function bookingPayload(SpecialProgramBooking $booking): array
     {
-        $payment = $booking->payments()->latest()->first();
+        $latestPayment = $booking->payments()->latest()->first();
 
         return [
             'id' => $booking->id,
             'encrypted_id' => $this->encryptId($booking->id),
-            'booking_code' => $booking->booking_code,
+            'booking_code' => $booking->midtrans_order_id ?? (string) $booking->id,
+            'visit_date' => $booking->visit_date?->toDateString(),
             'quantity' => $booking->quantity,
+            'unit_price' => $booking->unit_price,
             'total' => $booking->total_price,
             'status' => $booking->status,
             'payment_status' => $booking->payment_status,
             'payment_deadline' => $booking->payment_deadline?->toIso8601String(),
-            'ticket' => [
-                'id' => $booking->ticket?->id,
-                'name' => $booking->ticket?->name,
-            ],
             'program' => [
-                'id' => $booking->event?->id,
-                'title' => $booking->event?->title,
-                'location' => $booking->event?->location,
-                'start_at' => $booking->event?->start_at?->toDateTimeString(),
+                'id' => $booking->program?->id,
+                'name' => $booking->program?->name,
+                'category' => $booking->program?->category,
             ],
+            'variant' => $booking->variant ? [
+                'id' => $booking->variant?->id,
+                'name' => $booking->variant?->name,
+            ] : null,
             'guest' => [
                 'name' => $booking->guest_name,
                 'email' => $booking->guest_email,
                 'phone' => $booking->guest_phone,
             ],
-            'qr_data' => $this->buildQrData('SPECIAL_PROGRAM', (string) $booking->booking_code),
-            'qr_url' => $this->buildQrUrl('SPECIAL_PROGRAM', (string) $booking->booking_code),
-            'payment' => $payment ? [
-                'status' => $payment->status,
-                'payment_type' => $payment->payment_type,
-                'payload' => $payment->payload,
+            'payment' => $latestPayment ? [
+                'status' => $latestPayment->status,
+                'payment_type' => $latestPayment->payment_type,
+                'payload' => $latestPayment->payload,
             ] : null,
+            'qr_data' => $this->buildQrData('SPECIAL_PROGRAM', (string) ($booking->midtrans_order_id ?? $booking->id)),
+            'qr_url' => $this->buildQrUrl('SPECIAL_PROGRAM', (string) ($booking->midtrans_order_id ?? $booking->id)),
         ];
     }
 
-    private function availableTickets(EventTicket $ticket, bool $useLock = false): int
-    {
-        $query = EventBooking::query()
-            ->where('event_ticket_id', $ticket->id)
-            ->whereIn('status', ['pending_payment', 'paid', 'completed']);
-
-        if ($useLock) {
-            $query->lockForUpdate();
-        }
-
-        $reserved = (int) $query->sum('quantity');
-
-        return max(0, (int) $ticket->quota - $reserved);
-    }
-
-    private function buildSnapPayload(EventBooking $booking, string $orderId): array
+    private function buildSnapPayload(SpecialProgramBooking $booking, string $orderId): array
     {
         return [
             'transaction_details' => [
@@ -350,10 +429,10 @@ class SpecialProgramBookingController extends Controller
             ],
             'item_details' => [
                 [
-                    'id' => (string) $booking->ticket?->id,
-                    'price' => (int) $booking->total_price / max(1, (int) $booking->quantity),
+                    'id' => (string) ($booking->special_program_variant_id ?? $booking->special_program_id),
+                    'price' => (int) $booking->unit_price,
                     'quantity' => (int) $booking->quantity,
-                    'name' => $booking->ticket?->name ?? 'Tiket Special Program',
+                    'name' => $booking->variant?->name ?? $booking->item_name ?? 'Special Program',
                 ],
             ],
             'customer_details' => [
@@ -364,7 +443,7 @@ class SpecialProgramBookingController extends Controller
         ];
     }
 
-    private function resolveBooking(string $booking): EventBooking
+    private function resolveBooking(string $booking): SpecialProgramBooking
     {
         if (ctype_digit($booking)) {
             $id = (int) $booking;
@@ -376,7 +455,7 @@ class SpecialProgramBookingController extends Controller
             }
         }
 
-        return EventBooking::query()->findOrFail($id);
+        return SpecialProgramBooking::query()->findOrFail($id);
     }
 
     private function encryptId(int $id): string
@@ -394,5 +473,12 @@ class SpecialProgramBookingController extends Controller
         $data = rawurlencode($this->buildQrData($type, $code));
 
         return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
+    }
+
+    private function isExpired(SpecialProgramBooking $booking): bool
+    {
+        return $booking->status === 'pending_payment'
+            && $booking->payment_deadline
+            && $booking->payment_deadline->isPast();
     }
 }
