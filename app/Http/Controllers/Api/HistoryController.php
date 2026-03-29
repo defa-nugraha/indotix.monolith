@@ -9,6 +9,7 @@ use App\Models\EventBooking;
 use App\Models\SpecialProgramBooking;
 use App\Models\SouvenirOrder;
 use App\Models\WisataBooking;
+use App\Services\ProductReviewService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -77,6 +78,12 @@ class HistoryController extends Controller
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'payment_url' => route('booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'detail_url' => route('booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'review_url' => $booking->hotel_id
+                        ? '/stay/hotels/'.$booking->hotel?->slug
+                        : null,
+                    'can_review' => $booking->hotel_id
+                        ? ProductReviewService::hasUsedBooking($userId, 'hotel', (int) $booking->hotel_id)
+                        : false,
                 ]);
         }
 
@@ -89,7 +96,7 @@ class HistoryController extends Controller
                 ->tap($applyDateFilter)
                 ->latest()
                 ->get()
-                ->map(function (WisataBooking $booking) {
+                ->map(function (WisataBooking $booking) use ($userId) {
                     $destination = $booking->destination;
 
                     return [
@@ -117,6 +124,12 @@ class HistoryController extends Controller
                         'midtrans_order_id' => $booking->midtrans_order_id,
                         'payment_url' => route('wisata.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'detail_url' => route('wisata.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'review_url' => $booking->mitra_wisata_onboarding_id
+                            ? '/wisata/'.$destination?->slug
+                            : null,
+                        'can_review' => $booking->mitra_wisata_onboarding_id
+                            ? ProductReviewService::hasUsedBooking($userId, 'wisata', (int) $booking->mitra_wisata_onboarding_id)
+                            : false,
                         'ticket_name' => $booking->ticket?->name,
                     ];
                 });
@@ -131,7 +144,7 @@ class HistoryController extends Controller
                 ->tap($applyDateFilter)
                 ->latest()
                 ->get()
-                ->map(function (EventBooking $booking) {
+                ->map(function (EventBooking $booking) use ($userId) {
                     $event = $booking->event;
 
                     return [
@@ -159,6 +172,12 @@ class HistoryController extends Controller
                         'midtrans_order_id' => $booking->midtrans_order_id,
                         'payment_url' => route('events.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'detail_url' => route('events.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'review_url' => $booking->event_id
+                            ? '/events/'.$event?->slug
+                            : null,
+                        'can_review' => $booking->event_id
+                            ? ProductReviewService::hasUsedBooking($userId, 'event', (int) $booking->event_id)
+                            : false,
                         'ticket_name' => $booking->ticket?->name,
                     ];
                 });
@@ -201,6 +220,8 @@ class HistoryController extends Controller
                         'midtrans_order_id' => $booking->midtrans_order_id,
                         'payment_url' => route('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'detail_url' => route('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'review_url' => $program?->slug ? '/special-programs/'.$program->slug : null,
+                        'can_review' => false,
                         'ticket_name' => $booking->variant?->name,
                     ];
                 });
@@ -216,6 +237,10 @@ class HistoryController extends Controller
                 ->latest()
                 ->get()
                 ->map(function (SouvenirOrder $order) {
+                    $shippingStatus = strtolower((string) ($order->shipping_status ?? ''));
+                    $arrivedStatuses = ['delivered', 'arrived', 'sampai', 'received', 'done'];
+                    $canReview = $order->status === 'completed' || in_array($shippingStatus, $arrivedStatuses, true);
+
                     return [
                         'id' => $order->id,
                         'encrypted_id' => Crypt::encryptString((string) $order->id),
@@ -241,6 +266,8 @@ class HistoryController extends Controller
                         'midtrans_order_id' => $order->midtrans_order_id,
                         'payment_url' => route('souvenir.booking.payment', ['order' => Crypt::encryptString((string) $order->id)]),
                         'detail_url' => route('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
+                        'review_url' => route('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
+                        'can_review' => $canReview,
                         'ticket_name' => null,
                     ];
                 });
@@ -255,7 +282,7 @@ class HistoryController extends Controller
                 ->tap($applyDateFilter)
                 ->latest()
                 ->get()
-                ->map(function (AcademyBooking $booking) {
+                ->map(function (AcademyBooking $booking) use ($userId) {
                     $class = $booking->academyClass;
                     $classAvailable = (bool) $class;
 
@@ -284,6 +311,10 @@ class HistoryController extends Controller
                         'midtrans_order_id' => $booking->midtrans_order_id,
                         'payment_url' => route('academy.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'detail_url' => route('academy.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'review_url' => $classAvailable ? '/academy/'.$class?->slug : null,
+                        'can_review' => $classAvailable
+                            ? ProductReviewService::hasUsedBooking($userId, 'academy', (int) $booking->academy_class_id)
+                            : false,
                         'ticket_name' => $booking->ticket?->name,
                     ];
                 });

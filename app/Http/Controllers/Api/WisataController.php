@@ -183,7 +183,12 @@ class WisataController extends Controller
                 'photo_gate_url' => $destination->photo_gate_path ? '/storage/'.$destination->photo_gate_path : null,
                 'photo_area_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
                 'photo_ticket_url' => $destination->photo_ticket_path ? '/storage/'.$destination->photo_ticket_path : null,
-                'maps_pin_url' => $mapsUrl ?? $destination->maps_pin_url,
+                'photo_other_urls' => collect($destination->photo_other_paths ?? [])
+                    ->filter()
+                    ->map(fn ($path) => '/storage/'.$path)
+                    ->values()
+                    ->all(),
+                'maps_pin_url' => $destination->maps_pin_url,
                 'maps_url' => $mapsUrl,
             ],
             'tickets' => $tickets,
