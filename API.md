@@ -1,105 +1,185 @@
-# API Change Log
+# INDOTIX API Documentation
 
-Dokumen ini mencatat perubahan API agar selaras dengan alur WEB saat ini.
+**Overview**
+Dokumentasi ini menjelaskan penggunaan seluruh endpoint API yang tersedia pada aplikasi INDOTIX. Gunakan bersama `docs/api-response-payloads.md` untuk contoh JSON lengkap per endpoint.
 
-## Changelog Per Versi
-| Versi | Tanggal | Ringkasan |
-| --- | --- | --- |
-| 2026.03.30 | 2026-03-30 | Penyelarasan media & peta untuk produk publik (hotel/wisata/event), plus alias camelCase untuk payload detail. |
-| 2026.03.29 | 2026-03-29 | Sinkronisasi payload API dengan WEB untuk special program, booking, history, reviews, dan hotel pricing. |
+**Base URL**
+`/api`
 
-## Changelog Per Endpoint
-| Endpoint | Perubahan Utama |
-| --- | --- |
-| `GET /api/products/special-programs` | Pindah ke model `SpecialProgram`, field `name`, `category`, `min_price`, `image_url`. |
-| `GET /api/products/special-programs/{program}` | Detail memakai `name`, `category`, `base_price`, `capacity`, `variants`, `facilities`, `inventories`. |
-| `POST /api/special-programs/bookings/quote` | Input `program_id`, `variant_id`, `date`, `quantity`; keluaran pricing sesuai web. |
-| `POST /api/special-programs/bookings` | Booking payload pakai `program`, `variant`, `unit_price`, `visit_date`. |
-| `POST /api/special-programs/bookings/{booking}/pay` | Pembayaran Midtrans Snap sesuai flow web. |
-| `GET /api/history` | Tambah `review_url` dan `can_review` untuk semua tipe. |
-| `GET /api/history/hotel/{booking}` | Tambah `service_fee`, `tax_total`, `taxes`. |
-| `GET /api/products/events` | Tambah `slug`, `image_url` fallback, dan `maps_url` lebih robust (alamat/lokasi/link peta). |
-| `GET /api/products/events/{event}` | Tambah `slug`, `image_url` fallback, `userReview`/`canReview` alias, `maps_url` lebih robust. |
-| `GET /api/products/academy` | Tambah `slug`. |
-| `GET /api/products/academy/{class}` | Tambah `slug`, `reviews`, `user_review`, `can_review`. |
-| `GET /api/products/souvenirs` | Tambah `slug`, casting `price`, `stock` ke integer. |
-| `GET /api/products/souvenirs/{product}` | Tambah `slug`, `reviews`, `user_review`, `can_review`, casting `additional_price` & `stock`. |
-| `GET /api/products/wisata` | `photo_url` memakai cover foto (area/gate/ticket/other) + fallback. |
-| `GET /api/products/wisata/{destination}` | Tambah `cover_photo_url`, `maps_embed_url`, `userReview`/`canReview` alias, `maps_url` fallback ke `maps_pin_url`. |
-| `GET /api/products/hotels` | Tambah `recommendations`, `image_url` fallback untuk list & rekomendasi, default tanggal saat kosong. |
-| `GET /api/products/hotels/{hotel}` | Tambah `roomTypes` alias + `userReview`/`canReview` alias. |
-| `POST /api/hotel/bookings/quote` | Tambah `service_fee`, `tax_total`, `taxes`. |
-| `POST /api/hotel/bookings` | `guest_phone` dari profil; hitung pajak + service fee. |
-| `POST /api/wisata/bookings` | `guest_phone` dari profil. |
-| `POST /api/events/bookings` | `guest_phone` dari profil. |
-| `POST /api/academy/bookings` | `guest_phone` dari profil. |
-| `POST /api/souvenir/orders` | `guest_phone` & `shipping_address` dari profil; `shipping_method` set `delivery`. |
+**Auth**
+Gunakan token Laravel Sanctum.
+Header: `Authorization: Bearer <token>`
+Header JSON: `Content-Type: application/json`, `Accept: application/json`
 
-## 2026-03-29
-1. Special Program API disesuaikan penuh ke model `SpecialProgram`.
-   - Endpoint: `GET /api/products/special-programs`, `GET /api/products/special-programs/{program}`.
-   - Perubahan: pakai field `name`, `category`, `base_price`, `capacity`, `image_url` + list `variants`, `facilities`, `inventories`.
+**Common Rules**
+- Format tanggal: `YYYY-MM-DD`.
+- Format tanggal & waktu: ISO 8601, contoh `2026-03-30T10:00:00`.
+- Beberapa endpoint menerima `{id}` atau `{encrypted_id}` pada path. Dukungan slug disebutkan per endpoint.
+- `guest_phone` untuk booking diambil dari profil user, tidak dikirim dari client.
+- Error umumnya mengembalikan `message` dan kadang `errors` pada status `4xx`.
 
-2. Special Program Booking API mengikuti flow pembayaran web.
-   - Endpoint: `POST /api/special-programs/bookings/quote`, `POST /api/special-programs/bookings`, `GET /api/special-programs/bookings`, `GET /api/special-programs/bookings/{booking}`, `POST /api/special-programs/bookings/{booking}/pay`, `POST /api/special-programs/bookings/{booking}/cancel`.
-   - Perubahan: field input memakai `program_id`, `variant_id`, `date`, `quantity` dan payload booking menampilkan `program`, `variant`, `unit_price`, `total`, `visit_date`, `booking_code`.
+**Response Examples**
+Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
 
-3. History API diselaraskan untuk Special Program.
-   - Endpoint: `GET /api/history`, `GET /api/history/{type}/{booking}`.
-   - Perubahan: history special program mengambil dari `SpecialProgramBooking`, bukan `EventBooking`.
+**Auth Endpoints**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/auth/register` | No | `name`, `email`, `password`, `role?` (`user|mitra`), `device_name?` | Mengembalikan token dan flag `requires_otp` bila email belum terverifikasi. |
+| POST | `/api/auth/login` | No | `email`, `password`, `device_name?` | Jika email belum terverifikasi, response berisi `requires_otp`. |
+| POST | `/api/auth/google` | No | `access_token`, `role?` (`user|mitra`), `device_name?` | Login via token Google. |
+| GET | `/api/auth/me` | Yes | - | Mengembalikan data user. |
+| POST | `/api/auth/logout` | Yes | - | Revoke token aktif. |
+| POST | `/api/auth/otp/verify` | Yes | `code` (6 digit) | Verifikasi OTP email. |
+| POST | `/api/auth/otp/resend` | Yes | - | Kirim ulang OTP. |
 
-4. History API menambahkan review info sesuai WEB.
-   - Endpoint: `GET /api/history`.
-   - Perubahan: menambahkan `review_url` dan `can_review` untuk semua tipe (hotel/wisata/event/special_program/souvenir/academy).
+**Products: Hotels**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/products/hotels` | No | Query: `city?` (kode regency 4 digit), `check_in?`, `check_out?`, `rooms?` (1-10), `guests?` (1-20), `q?` | Jika `check_in/check_out` kosong, otomatis pakai hari ini & besok. |
+| GET | `/api/products/hotels/{hotel}` | No | Path: `{hotel}` = id/encrypted_id. Query: `check_in?`, `check_out?`, `rooms?`, `guests?` | Default tanggal sama seperti list. |
 
-5. History detail hotel menyertakan detail pajak dan service fee.
-   - Endpoint: `GET /api/history/hotel/{booking}`.
-   - Perubahan: `service_fee`, `tax_total`, `taxes` ditambahkan.
+**Products: Wisata**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/products/wisata` | No | Query: `q?`, `visit_date?`, `quantity?` | Default `visit_date` = hari ini, `quantity` = 1. |
+| GET | `/api/products/wisata/{destination}` | No | Path: `{destination}` = slug atau id/encrypted_id. Query: `visit_date?`, `quantity?` | Default `visit_date` = hari ini, `quantity` = 1. |
 
-6. Event & Academy API menambahkan `slug` + review info.
-   - Endpoint: `GET /api/products/events`, `GET /api/products/events/{event}`, `GET /api/products/academy`, `GET /api/products/academy/{class}`.
-   - Perubahan: `slug` ditambahkan ke list & detail, serta `reviews`, `user_review`, `can_review` di detail.
+**Products: Events**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/products/events` | No | Query: `q?` | - |
+| GET | `/api/products/events/{event}` | No | Path: `{event}` = id/encrypted_id | Slug tidak didukung di API. |
 
-7. Souvenir API menambahkan `slug` + review info dan casting harga.
-   - Endpoint: `GET /api/products/souvenirs`, `GET /api/products/souvenirs/{product}`.
-   - Perubahan: `slug` ditambahkan, `reviews`, `user_review`, `can_review` ditambahkan, casting `price`, `stock`, `additional_price` ke integer.
+**Products: Academy**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/products/academy` | No | Query: `q?` | - |
+| GET | `/api/products/academy/{class}` | No | Path: `{class}` = id/encrypted_id | Slug tidak didukung di API. |
 
-8. Wisata detail API menambahkan media tambahan.
-   - Endpoint: `GET /api/products/wisata/{destination}`.
-   - Perubahan: `photo_other_urls` dan `maps_pin_url` ditampilkan.
+**Products: Souvenirs**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/products/souvenirs` | No | Query: `q?`, `category_id?`, `page?` | Pagination default 12 per halaman. |
+| GET | `/api/products/souvenirs/{product}` | No | Path: `{product}` = id/encrypted_id | - |
 
-9. Hotel API menambahkan rekomendasi.
-   - Endpoint: `GET /api/products/hotels`.
-   - Perubahan: field `recommendations` (3 hotel terbaru) ditambahkan.
+**Products: Special Programs**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/products/special-programs` | No | Query: `q?`, `category?` (`meeting|wedding|travel`) | - |
+| GET | `/api/products/special-programs/{program}` | No | Path: `{program}` = slug atau id/encrypted_id | - |
 
-10. Booking API memakai nomor HP dari profil (sesuai WEB).
-    - Endpoint: `POST /api/hotel/bookings`, `POST /api/wisata/bookings`, `POST /api/events/bookings`, `POST /api/academy/bookings`.
-    - Perubahan: `guest_phone` tidak lagi diinput client, diambil dari profil user.
+**Public Banners**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/banners` | No | - | Banner publik untuk homepage. |
 
-11. Souvenir booking memakai alamat utama profil.
-    - Endpoint: `POST /api/souvenir/orders`.
-    - Perubahan: `guest_phone` + `shipping_address` diambil dari profil user, `shipping_method` ditetapkan `delivery`.
+**Bookings: Hotel**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/hotel/bookings/quote` | Yes | `hotel_id`, `room_type_id`, `check_in`, `check_out`, `rooms` (1-10), `guests` (1-20), `voucher_code?` | Mengembalikan kalkulasi harga. |
+| POST | `/api/hotel/bookings` | Yes | `hotel_id`, `room_type_id`, `check_in`, `check_out`, `rooms`, `guests`, `guest_name`, `guest_email`, `special_request?`, `voucher_code?` | `guest_phone` diambil dari profil. |
+| GET | `/api/hotel/bookings` | Yes | - | List booking hotel user. |
+| GET | `/api/hotel/bookings/{booking}` | Yes | Path: `{booking}` = id/encrypted_id | Detail booking. |
+| POST | `/api/hotel/bookings/{booking}/pay` | Yes | - | Membuat pembayaran Midtrans Snap. |
+| POST | `/api/hotel/bookings/{booking}/cancel` | Yes | - | Hanya bisa saat `pending_payment`. |
+| GET | `/api/hotel/bookings/{booking}/invoice` | Yes | - | Mengunduh invoice PDF. |
 
-12. Hotel booking API menghitung pajak dan service fee seperti WEB.
-    - Endpoint: `POST /api/hotel/bookings/quote`, `POST /api/hotel/bookings`.
-    - Perubahan: menambahkan `service_fee`, `tax_total`, `taxes` pada response pricing dan payload booking.
+**Bookings: Wisata**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/wisata/bookings/quote` | Yes | `destination_id`, `ticket_id`, `visit_date`, `quantity` (1-20) | Kalkulasi harga. |
+| POST | `/api/wisata/bookings` | Yes | `destination_id`, `ticket_id`, `visit_date`, `quantity`, `guest_name`, `guest_email`, `special_request?`, `referral_code?` | `guest_phone` diambil dari profil. |
+| GET | `/api/wisata/bookings` | Yes | - | List booking wisata user. |
+| GET | `/api/wisata/bookings/{booking}` | Yes | Path: `{booking}` = id/encrypted_id | Detail booking. |
+| POST | `/api/wisata/bookings/{booking}/pay` | Yes | - | Membuat pembayaran Midtrans Snap. |
+| POST | `/api/wisata/bookings/{booking}/cancel` | Yes | - | - |
+| GET | `/api/wisata/bookings/{booking}/ticket` | Yes | - | Mengunduh tiket PDF. |
 
-## 2026-03-30
-1. Event API menyajikan gambar fallback + peta yang lebih robust.
-   - Endpoint: `GET /api/products/events`, `GET /api/products/events/{event}`.
-   - Perubahan: `image_url` fallback Unsplash, `maps_url` pakai `address`/`location`/`city` atau link peta langsung, alias `userReview`/`canReview`.
+**Bookings: Event**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/events/bookings/quote` | Yes | `event_id`, `ticket_id`, `quantity` (1-20) | Kalkulasi harga. |
+| POST | `/api/events/bookings` | Yes | `event_id`, `ticket_id`, `quantity`, `guest_name`, `guest_email` | `guest_phone` diambil dari profil. |
+| GET | `/api/events/bookings` | Yes | - | List booking event user. |
+| GET | `/api/events/bookings/{booking}` | Yes | Path: `{booking}` = id/encrypted_id | Detail booking. |
+| POST | `/api/events/bookings/{booking}/pay` | Yes | - | Membuat pembayaran Midtrans Snap. |
+| POST | `/api/events/bookings/{booking}/cancel` | Yes | - | - |
 
-2. Wisata API menambahkan cover photo dan embed map.
-   - Endpoint: `GET /api/products/wisata`, `GET /api/products/wisata/{destination}`.
-   - Perubahan: `photo_url` memilih cover foto pertama, `cover_photo_url` ditambahkan, `maps_embed_url` ditambahkan, `maps_url` fallback ke `maps_pin_url`, alias `userReview`/`canReview`.
+**Bookings: Special Programs**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/special-programs/bookings/quote` | Yes | `program_id`, `variant_id?`, `date`, `quantity` (1-999) | Kalkulasi harga. |
+| POST | `/api/special-programs/bookings` | Yes | `program_id`, `variant_id?`, `date`, `quantity`, `guest_name`, `guest_email`, `notes?` | `guest_phone` diambil dari profil. |
+| GET | `/api/special-programs/bookings` | Yes | - | List booking special program user. |
+| GET | `/api/special-programs/bookings/{booking}` | Yes | Path: `{booking}` = id/encrypted_id | Detail booking. |
+| POST | `/api/special-programs/bookings/{booking}/pay` | Yes | - | Membuat pembayaran Midtrans Snap. |
+| POST | `/api/special-programs/bookings/{booking}/cancel` | Yes | - | - |
 
-3. Hotel API menambahkan fallback gambar dan alias payload detail.
-   - Endpoint: `GET /api/products/hotels`, `GET /api/products/hotels/{hotel}`.
-   - Perubahan: `image_url` fallback Unsplash untuk list/rekomendasi, `roomTypes` alias, `userReview`/`canReview` alias.
+**Orders: Souvenir**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/souvenir/orders/quote` | Yes | `items` (array), `items.*.product_id`, `items.*.variant_id?`, `items.*.quantity` (1-999) | Kalkulasi harga. |
+| POST | `/api/souvenir/orders` | Yes | `items`, `guest_name`, `guest_email`, `notes?`, `shipping_method?` | `guest_phone` + alamat utama diambil dari profil. |
+| GET | `/api/souvenir/orders` | Yes | - | List order souvenir user. |
+| GET | `/api/souvenir/orders/{order}` | Yes | Path: `{order}` = id/encrypted_id | Detail order. |
+| POST | `/api/souvenir/orders/{order}/pay` | Yes | - | Membuat pembayaran Midtrans Snap. |
 
-4. Hotel API menambahkan fallback tanggal jika filter kosong.
-   - Endpoint: `GET /api/products/hotels`, `GET /api/products/hotels/{hotel}`.
-   - Perubahan: jika `check_in`/`check_out` kosong, otomatis pakai tanggal hari ini dan besok.
+**Bookings: Academy**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/academy/bookings/quote` | Yes | `class_id`, `ticket_id`, `quantity` (1-20) | Kalkulasi harga. |
+| POST | `/api/academy/bookings` | Yes | `class_id`, `ticket_id`, `quantity`, `guest_name`, `guest_email` | `guest_phone` diambil dari profil. |
+| GET | `/api/academy/bookings` | Yes | - | List booking academy user. |
+| GET | `/api/academy/bookings/{booking}` | Yes | Path: `{booking}` = id/encrypted_id | Detail booking. |
+| POST | `/api/academy/bookings/{booking}/pay` | Yes | - | Membuat pembayaran Midtrans Snap. |
+| POST | `/api/academy/bookings/{booking}/cancel` | Yes | - | - |
+| GET | `/api/academy/bookings/{booking}/ticket` | Yes | - | Mengunduh tiket PDF. |
+| GET | `/api/academy/bookings/{booking}/qr` | Yes | - | Mengunduh QR PDF. |
 
-## Referensi Payload
-- Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
+**History**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/history` | Yes | Query: `type?` atau `category?` (`hotel|wisata|event|special_program|souvenir|academy`), `status?`, `q?`, `date_from?`, `date_to?` | Menyatukan history semua tipe. |
+| GET | `/api/history/{type}/{booking}` | Yes | Path: `{type}` sama seperti di atas, `{booking}` = id/encrypted_id | Detail history per tipe. |
+
+**Reviews**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/reviews` | Yes | Query: `product_type`, `product_id` | `product_id` bisa id/encrypted_id. |
+| POST | `/api/reviews` | Yes | `product_type`, `product_id`, `rating` (1-5), `comment?` | Hanya bisa jika booking sudah digunakan/selesai. |
+
+**Notifications**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/notifications` | Yes | Query: `per_page?` (1-100), `status?` (`read|unread`), `type?` (comma list), `q?` | Pagination info ada di `meta`. |
+| GET | `/api/notifications/unread-count` | Yes | - | Jumlah notifikasi belum dibaca. |
+| POST | `/api/notifications/read-all` | Yes | - | Tandai semua sebagai dibaca. |
+| POST | `/api/notifications/{notification}/read` | Yes | Path: `{notification}` = id | Tandai satu notifikasi dibaca. |
+
+**Push Tokens**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/push/tokens` | Yes | `token`, `platform?`, `device_id?` | Simpan token push. |
+| POST | `/api/push/tokens/revoke` | Yes | `token?` atau `device_id?` | Salah satu wajib diisi. |
+
+**Souvenir Cart**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/souvenir/cart` | Yes | - | Ambil isi cart. |
+| POST | `/api/souvenir/cart/add` | Yes | `product_id`, `variant_id?`, `quantity` (1-20) | Tambah item ke cart. |
+| POST | `/api/souvenir/cart/update` | Yes | `product_id`, `variant_id?`, `quantity` (0-20) | `quantity=0` akan menghapus item. |
+| POST | `/api/souvenir/cart/remove` | Yes | `product_id`, `variant_id?` | Hapus item tertentu. |
+| POST | `/api/souvenir/cart/clear` | Yes | - | Kosongkan cart. |
+
+**Chat**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/chat/conversations` | Yes | - | List percakapan. |
+| POST | `/api/chat/start` | Yes | `type` (`wisata|hotel|souvenir|event|academy|special_program|admin`), `id?` | `id` wajib kecuali `admin`. |
+| GET | `/api/chat/conversations/{conversation}` | Yes | Path: `{conversation}` = id. Query: `per_page?` (1-100) | Detail + pesan awal. |
+| GET | `/api/chat/conversations/{conversation}/messages` | Yes | Query: `per_page?` (1-100), `after_id?` | Ambil pesan setelah id tertentu. |
+| POST | `/api/chat/conversations/{conversation}/messages` | Yes | `message` | Kirim pesan baru. |
+| POST | `/api/chat/conversations/{conversation}/read` | Yes | - | Tandai pesan sebagai sudah dibaca. |
+
+**Changelog**
+Perubahan historis dan contoh payload detail tersedia di `docs/api-response-payloads.md`.
