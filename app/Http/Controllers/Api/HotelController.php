@@ -20,10 +20,13 @@ class HotelController extends Controller
         $today = Carbon::today();
         $tomorrow = $today->copy()->addDay();
 
+        $checkIn = $request->input('check_in');
+        $checkOut = $request->input('check_out');
+
         $payload = [
             'city' => $request->input('city'),
-            'check_in' => $request->input('check_in') ?? $today->toDateString(),
-            'check_out' => $request->input('check_out') ?? $tomorrow->toDateString(),
+            'check_in' => $checkIn ?: $today->toDateString(),
+            'check_out' => $checkOut ?: $tomorrow->toDateString(),
             'rooms' => $request->input('rooms', 1),
             'guests' => $request->input('guests', 2),
             'q' => $request->input('q'),
@@ -139,9 +142,12 @@ class HotelController extends Controller
         }
 
         $today = Carbon::today();
+        $checkIn = $request->input('check_in');
+        $checkOut = $request->input('check_out');
+
         $payload = [
-            'check_in' => $request->input('check_in') ?? $today->toDateString(),
-            'check_out' => $request->input('check_out') ?? $today->copy()->addDay()->toDateString(),
+            'check_in' => $checkIn ?: $today->toDateString(),
+            'check_out' => $checkOut ?: $today->copy()->addDay()->toDateString(),
             'rooms' => $request->input('rooms', 1),
             'guests' => $request->input('guests', 2),
         ];

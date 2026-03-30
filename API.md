@@ -26,7 +26,7 @@ Dokumen ini mencatat perubahan API agar selaras dengan alur WEB saat ini.
 | `GET /api/products/souvenirs/{product}` | Tambah `slug`, `reviews`, `user_review`, `can_review`, casting `additional_price` & `stock`. |
 | `GET /api/products/wisata` | `photo_url` memakai cover foto (area/gate/ticket/other) + fallback. |
 | `GET /api/products/wisata/{destination}` | Tambah `cover_photo_url`, `maps_embed_url`, `userReview`/`canReview` alias, `maps_url` fallback ke `maps_pin_url`. |
-| `GET /api/products/hotels` | Tambah `recommendations`, `image_url` fallback untuk list & rekomendasi. |
+| `GET /api/products/hotels` | Tambah `recommendations`, `image_url` fallback untuk list & rekomendasi, default tanggal saat kosong. |
 | `GET /api/products/hotels/{hotel}` | Tambah `roomTypes` alias + `userReview`/`canReview` alias. |
 | `POST /api/hotel/bookings/quote` | Tambah `service_fee`, `tax_total`, `taxes`. |
 | `POST /api/hotel/bookings` | `guest_phone` dari profil; hitung pajak + service fee. |
@@ -96,6 +96,10 @@ Dokumen ini mencatat perubahan API agar selaras dengan alur WEB saat ini.
 3. Hotel API menambahkan fallback gambar dan alias payload detail.
    - Endpoint: `GET /api/products/hotels`, `GET /api/products/hotels/{hotel}`.
    - Perubahan: `image_url` fallback Unsplash untuk list/rekomendasi, `roomTypes` alias, `userReview`/`canReview` alias.
+
+4. Hotel API menambahkan fallback tanggal jika filter kosong.
+   - Endpoint: `GET /api/products/hotels`, `GET /api/products/hotels/{hotel}`.
+   - Perubahan: jika `check_in`/`check_out` kosong, otomatis pakai tanggal hari ini dan besok.
 
 ## Referensi Payload
 - Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
