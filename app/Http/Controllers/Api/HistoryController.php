@@ -76,13 +76,13 @@ class HistoryController extends Controller
                     'guest_phone' => $booking->guest_phone,
                     'created_at' => $booking->created_at?->toIso8601String(),
                     'midtrans_order_id' => $booking->midtrans_order_id,
-                    'payment_url' => route('booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                    'detail_url' => route('booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'payment_url' => $this->safeRoute('booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                    'detail_url' => $this->safeRoute('booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                     'review_url' => $booking->hotel_id
                         ? '/stay/hotels/'.$booking->hotel?->slug
                         : null,
                     'can_review' => $booking->hotel_id
-                        ? ProductReviewService::hasUsedBooking($userId, 'hotel', (int) $booking->hotel_id)
+                        ? $this->safeReviewCheck(fn () => ProductReviewService::hasUsedBooking($userId, 'hotel', (int) $booking->hotel_id))
                         : false,
                 ]);
         }
@@ -122,13 +122,13 @@ class HistoryController extends Controller
                         'guest_phone' => $booking->guest_phone,
                         'created_at' => $booking->created_at?->toIso8601String(),
                         'midtrans_order_id' => $booking->midtrans_order_id,
-                        'payment_url' => route('wisata.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                        'detail_url' => route('wisata.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'payment_url' => $this->safeRoute('wisata.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'detail_url' => $this->safeRoute('wisata.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'review_url' => $booking->mitra_wisata_onboarding_id
                             ? '/wisata/'.$destination?->slug
                             : null,
                         'can_review' => $booking->mitra_wisata_onboarding_id
-                            ? ProductReviewService::hasUsedBooking($userId, 'wisata', (int) $booking->mitra_wisata_onboarding_id)
+                            ? $this->safeReviewCheck(fn () => ProductReviewService::hasUsedBooking($userId, 'wisata', (int) $booking->mitra_wisata_onboarding_id))
                             : false,
                         'ticket_name' => $booking->ticket?->name,
                     ];
@@ -170,13 +170,13 @@ class HistoryController extends Controller
                         'guest_phone' => $booking->guest_phone,
                         'created_at' => $booking->created_at?->toIso8601String(),
                         'midtrans_order_id' => $booking->midtrans_order_id,
-                        'payment_url' => route('events.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                        'detail_url' => route('events.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'payment_url' => $this->safeRoute('events.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'detail_url' => $this->safeRoute('events.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'review_url' => $booking->event_id
                             ? '/events/'.$event?->slug
                             : null,
                         'can_review' => $booking->event_id
-                            ? ProductReviewService::hasUsedBooking($userId, 'event', (int) $booking->event_id)
+                            ? $this->safeReviewCheck(fn () => ProductReviewService::hasUsedBooking($userId, 'event', (int) $booking->event_id))
                             : false,
                         'ticket_name' => $booking->ticket?->name,
                     ];
@@ -218,8 +218,8 @@ class HistoryController extends Controller
                         'guest_phone' => $booking->guest_phone,
                         'created_at' => $booking->created_at?->toIso8601String(),
                         'midtrans_order_id' => $booking->midtrans_order_id,
-                        'payment_url' => route('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                        'detail_url' => route('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'payment_url' => $this->safeRoute('special-programs.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'detail_url' => $this->safeRoute('special-programs.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'review_url' => $program?->slug ? '/special-programs/'.$program->slug : null,
                         'can_review' => false,
                         'ticket_name' => $booking->variant?->name,
@@ -264,9 +264,9 @@ class HistoryController extends Controller
                         'guest_phone' => null,
                         'created_at' => $order->created_at?->toIso8601String(),
                         'midtrans_order_id' => $order->midtrans_order_id,
-                        'payment_url' => route('souvenir.booking.payment', ['order' => Crypt::encryptString((string) $order->id)]),
-                        'detail_url' => route('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
-                        'review_url' => route('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
+                        'payment_url' => $this->safeRoute('souvenir.booking.payment', ['order' => Crypt::encryptString((string) $order->id)]),
+                        'detail_url' => $this->safeRoute('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
+                        'review_url' => $this->safeRoute('souvenir.booking.show', ['order' => Crypt::encryptString((string) $order->id)]),
                         'can_review' => $canReview,
                         'ticket_name' => null,
                     ];
@@ -309,11 +309,11 @@ class HistoryController extends Controller
                         'guest_phone' => $booking->guest_phone,
                         'created_at' => $booking->created_at?->toIso8601String(),
                         'midtrans_order_id' => $booking->midtrans_order_id,
-                        'payment_url' => route('academy.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
-                        'detail_url' => route('academy.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'payment_url' => $this->safeRoute('academy.booking.payment', ['booking' => Crypt::encryptString((string) $booking->id)]),
+                        'detail_url' => $this->safeRoute('academy.booking.show', ['booking' => Crypt::encryptString((string) $booking->id)]),
                         'review_url' => $classAvailable ? '/academy/'.$class?->slug : null,
                         'can_review' => $classAvailable
-                            ? ProductReviewService::hasUsedBooking($userId, 'academy', (int) $booking->academy_class_id)
+                            ? $this->safeReviewCheck(fn () => ProductReviewService::hasUsedBooking($userId, 'academy', (int) $booking->academy_class_id))
                             : false,
                         'ticket_name' => $booking->ticket?->name,
                     ];
@@ -361,6 +361,31 @@ class HistoryController extends Controller
             return null;
         }
 
-        return DB::table('regencies')->where('code', $cityCode)->value('name');
+        try {
+            return DB::table('regencies')->where('code', $cityCode)->value('name');
+        } catch (\Throwable $exception) {
+            report($exception);
+            return null;
+        }
+    }
+
+    private function safeRoute(string $name, array $params = []): ?string
+    {
+        try {
+            return \Illuminate\Support\Facades\Route::has($name) ? route($name, $params) : null;
+        } catch (\Throwable $exception) {
+            report($exception);
+            return null;
+        }
+    }
+
+    private function safeReviewCheck(\Closure $callback): bool
+    {
+        try {
+            return (bool) $callback();
+        } catch (\Throwable $exception) {
+            report($exception);
+            return false;
+        }
     }
 }
