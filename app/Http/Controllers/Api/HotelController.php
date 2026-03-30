@@ -107,7 +107,9 @@ class HotelController extends Controller
                 'city_name' => $hotel->city?->name,
                 'min_price' => $minPrice,
                 'available_rooms' => $availableRoomTypes->sum('available_rooms'),
-                'image_url' => $coverImage?->image_url ? '/storage/'.$coverImage->image_url : null,
+                'image_url' => $coverImage?->image_url
+                    ? '/storage/'.$coverImage->image_url
+                    : $this->fallbackHotelImageUrl($hotel->id),
                 'breakfast_included' => $availableRoomTypes->contains('breakfast_included', true),
                 'smoking_allowed' => $availableRoomTypes->contains('smoking_allowed', true),
             ];
@@ -207,6 +209,9 @@ class HotelController extends Controller
 
         $userId = $request->user('sanctum')?->id;
 
+        $userReview = $userId ? ProductReviewService::userReview($userId, 'hotel', $hotel->id) : null;
+        $canReview = $userId ? ProductReviewService::hasUsedBooking($userId, 'hotel', $hotel->id) : false;
+
         return response()->json([
             'hotel' => [
                 'id' => $hotel->id,
@@ -229,6 +234,7 @@ class HotelController extends Controller
                 ])->filter(fn ($image) => $image['url'])->values(),
             ],
             'room_types' => $roomTypes,
+            'roomTypes' => $roomTypes,
             'filters' => [
                 'check_in' => $data['check_in'],
                 'check_out' => $data['check_out'],
@@ -236,8 +242,10 @@ class HotelController extends Controller
                 'guests' => $data['guests'],
             ],
             'reviews' => ProductReviewService::publicReviews('hotel', $hotel->id),
-            'user_review' => $userId ? ProductReviewService::userReview($userId, 'hotel', $hotel->id) : null,
-            'can_review' => $userId ? ProductReviewService::hasUsedBooking($userId, 'hotel', $hotel->id) : false,
+            'user_review' => $userReview,
+            'userReview' => $userReview,
+            'can_review' => $canReview,
+            'canReview' => $canReview,
         ]);
     }
 
@@ -276,6 +284,13 @@ class HotelController extends Controller
         return sprintf('https://www.google.com/maps/search/?api=1&query=%s,%s', $latitude, $longitude);
     }
 
+    private function fallbackHotelImageUrl(int $id, bool $withSignature = true): string
+    {
+        $base = 'https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop';
+
+        return $withSignature ? $base.'&sig='.$id : $base;
+    }
+
     private function recommendations(): array
     {
         return Hotel::query()
@@ -294,7 +309,9 @@ class HotelController extends Controller
                 'min_price' => $hotel->roomTypes->min('base_price')
                     ? (int) round($hotel->roomTypes->min('base_price'))
                     : null,
-                'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
+                'image_url' => $hotel->images->first()?->image_url
+                    ? '/storage/'.$hotel->images->first()->image_url
+                    : $this->fallbackHotelImageUrl($hotel->id, false),
             ])
             ->all();
     }

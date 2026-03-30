@@ -83,7 +83,7 @@ class WisataController extends Controller
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
                 'city_name' => $this->resolveCityName($destination->city_code),
-                'photo_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
+                'photo_url' => $this->resolveCoverPhotoUrl($destination),
                 'tickets' => $ticketRows,
             ];
         })->filter()->values();
@@ -156,8 +156,12 @@ class WisataController extends Controller
 
         $latitude = $this->extractLatitude($destination->maps_pin_url);
         $longitude = $this->extractLongitude($destination->maps_pin_url);
-        $mapsUrl = $this->buildMapsUrl($latitude, $longitude);
+        $mapsUrl = $this->buildMapsUrl($latitude, $longitude, $destination->maps_pin_url);
+        $mapsEmbedUrl = $this->buildMapsEmbedUrl($destination->maps_pin_url);
         $userId = $request->user('sanctum')?->id;
+        $userReview = $userId ? ProductReviewService::userReview($userId, 'wisata', $destination->id) : null;
+        $canReview = $userId ? ProductReviewService::hasUsedBooking($userId, 'wisata', $destination->id) : false;
+        $coverPhotoUrl = $this->resolveCoverPhotoUrl($destination);
 
         return response()->json([
             'filters' => [
@@ -165,6 +169,7 @@ class WisataController extends Controller
                 'quantity' => $data['quantity'],
             ],
             'destination' => [
+                'cover_photo_url' => $coverPhotoUrl,
                 'latitude' => $latitude,
                 'longitude' => $longitude,
                 'id' => $destination->id,
@@ -190,11 +195,14 @@ class WisataController extends Controller
                     ->all(),
                 'maps_pin_url' => $destination->maps_pin_url,
                 'maps_url' => $mapsUrl,
+                'maps_embed_url' => $mapsEmbedUrl,
             ],
             'tickets' => $tickets,
             'reviews' => ProductReviewService::publicReviews('wisata', $destination->id),
-            'user_review' => $userId ? ProductReviewService::userReview($userId, 'wisata', $destination->id) : null,
-            'can_review' => $userId ? ProductReviewService::hasUsedBooking($userId, 'wisata', $destination->id) : false,
+            'user_review' => $userReview,
+            'userReview' => $userReview,
+            'can_review' => $canReview,
+            'canReview' => $canReview,
         ]);
     }
 
@@ -256,12 +264,59 @@ class WisataController extends Controller
         return null;
     }
 
-    private function buildMapsUrl(?string $latitude, ?string $longitude): ?string
+    private function buildMapsUrl(?string $latitude, ?string $longitude, ?string $fallbackUrl = null): ?string
     {
         if (! $latitude || ! $longitude) {
-            return null;
+            return $fallbackUrl;
         }
 
         return sprintf('https://www.google.com/maps/search/?api=1&query=%s,%s', $latitude, $longitude);
+    }
+
+    private function buildMapsEmbedUrl(?string $mapsPinUrl): ?string
+    {
+        if (! $mapsPinUrl) {
+            return null;
+        }
+
+        if (str_contains($mapsPinUrl, 'output=embed')) {
+            return $mapsPinUrl;
+        }
+
+        if (str_contains($mapsPinUrl, 'google.com/maps')) {
+            return $mapsPinUrl.(str_contains($mapsPinUrl, '?') ? '&' : '?').'output=embed';
+        }
+
+        return null;
+    }
+
+    private function resolveCoverPhotoUrl(MitraWisataOnboarding $destination): string
+    {
+        $candidates = [
+            $destination->photo_area_path,
+            $destination->photo_gate_path,
+            $destination->photo_ticket_path,
+        ];
+
+        $photoOthers = $destination->photo_other_paths ?? [];
+        if (is_array($photoOthers) && count($photoOthers) > 0) {
+            $candidates[] = $photoOthers[0];
+        }
+
+        foreach ($candidates as $path) {
+            if ($path) {
+                return '/storage/'.$path;
+            }
+        }
+
+        return $this->fallbackImageUrl($destination->id);
+    }
+
+    private function fallbackImageUrl(int $id): string
+    {
+        return sprintf(
+            'https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=1200&auto=format&fit=crop&sig=%s',
+            $id
+        );
     }
 }

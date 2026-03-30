@@ -171,6 +171,22 @@ Catatan:
       "images": [{"id": 10, "url": "/storage/room.jpg"}]
     }
   ],
+  "roomTypes": [
+    {
+      "id": 1,
+      "name": "Deluxe",
+      "description": "...",
+      "max_guest": 2,
+      "bed_type": "Queen",
+      "base_price": 450000,
+      "strike_price": 500000,
+      "available_rooms": 5,
+      "total_price": 450000,
+      "breakfast_included": true,
+      "smoking_allowed": false,
+      "images": [{"id": 10, "url": "/storage/room.jpg"}]
+    }
+  ],
   "filters": {
     "check_in": "2026-04-01",
     "check_out": "2026-04-02",
@@ -179,7 +195,9 @@ Catatan:
   },
   "reviews": [],
   "user_review": null,
-  "can_review": false
+  "userReview": null,
+  "can_review": false,
+  "canReview": false
 }
 ```
 
@@ -217,6 +235,7 @@ Catatan:
     "quantity": 2
   },
   "destination": {
+    "cover_photo_url": "/storage/area.jpg",
     "latitude": "-8.7",
     "longitude": "115.2",
     "id": 5,
@@ -237,7 +256,8 @@ Catatan:
     "photo_ticket_url": "/storage/ticket.jpg",
     "photo_other_urls": ["/storage/other1.jpg"],
     "maps_pin_url": "https://maps.google.com/...",
-    "maps_url": "https://www.google.com/maps/search/?api=1&query=-8.7,115.2"
+    "maps_url": "https://www.google.com/maps/search/?api=1&query=-8.7,115.2",
+    "maps_embed_url": "https://maps.google.com/...&output=embed"
   },
   "tickets": [
     {
@@ -252,7 +272,9 @@ Catatan:
   ],
   "reviews": [],
   "user_review": null,
-  "can_review": false
+  "userReview": null,
+  "can_review": false,
+  "canReview": false
 }
 ```
 
@@ -272,7 +294,7 @@ Catatan:
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Stadion",
       "start_at": "2026-05-01",
       "min_price": 150000,
-      "image_url": null
+      "image_url": "https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=12"
     }
   ]
 }
@@ -291,6 +313,7 @@ Catatan:
     "location": "Stadion",
     "address": "Jl. Stadion",
     "maps_url": "https://www.google.com/maps/search/?api=1&query=Stadion",
+    "image_url": "https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=12",
     "start_at": "2026-05-01T18:00:00",
     "end_at": "2026-05-01T22:00:00",
     "capacity_total": 1000,
@@ -309,7 +332,9 @@ Catatan:
   ],
   "reviews": [],
   "user_review": null,
-  "can_review": false
+  "userReview": null,
+  "can_review": false,
+  "canReview": false
 }
 ```
 

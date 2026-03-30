@@ -40,6 +40,8 @@ class EventController extends Controller
             $ticketRows = $tickets->get($event->id, collect());
             $minPrice = $ticketRows->min('price');
 
+            $mapsQuery = $event->address ?? $event->location ?? $this->resolveCityName($event->city_code);
+
             return [
                 'id' => $event->id,
                 'encrypted_id' => Crypt::encryptString((string) $event->id),
@@ -47,10 +49,10 @@ class EventController extends Controller
                 'title' => $event->title,
                 'city_name' => $this->resolveCityName($event->city_code),
                 'location' => $event->location,
-                'maps_url' => $this->buildMapsUrl($event->location),
+                'maps_url' => $this->buildMapsUrl($mapsQuery),
                 'start_at' => $event->start_at?->toDateString(),
                 'min_price' => $minPrice ? (int) $minPrice : null,
-                'image_url' => null,
+                'image_url' => $this->resolveImageUrl($event),
             ];
         });
 
@@ -93,6 +95,7 @@ class EventController extends Controller
         $canReview = $userId
             ? (ProductReviewService::hasUsedBooking($userId, 'event', $event->id) || (bool) $userReview)
             : false;
+        $mapsQuery = $event->address ?? $event->location ?? $this->resolveCityName($event->city_code);
 
         return response()->json([
             'event' => [
@@ -104,7 +107,8 @@ class EventController extends Controller
                 'city_name' => $this->resolveCityName($event->city_code),
                 'location' => $event->location,
                 'address' => $event->address,
-                'maps_url' => $this->buildMapsUrl($event->address ?? $event->location),
+                'maps_url' => $this->buildMapsUrl($mapsQuery),
+                'image_url' => $this->resolveImageUrl($event),
                 'start_at' => $event->start_at?->toDateTimeString(),
                 'end_at' => $event->end_at?->toDateTimeString(),
                 'capacity_total' => $event->capacity_total,
@@ -113,7 +117,9 @@ class EventController extends Controller
             'tickets' => $tickets,
             'reviews' => ProductReviewService::publicReviews('event', $event->id),
             'user_review' => $userReview,
+            'userReview' => $userReview,
             'can_review' => $canReview,
+            'canReview' => $canReview,
         ]);
     }
 
@@ -147,10 +153,25 @@ class EventController extends Controller
             return null;
         }
 
-        $coordinates = $this->extractCoordinates($query);
-        $value = $coordinates ? $coordinates[0].','.$coordinates[1] : $query;
+        $value = trim($query);
+
+        if ($this->isMapsUrl($value)) {
+            return $value;
+        }
+
+        $coordinates = $this->extractCoordinates($value);
+        $value = $coordinates ? $coordinates[0].','.$coordinates[1] : $value;
 
         return 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($value);
+    }
+
+    private function isMapsUrl(string $value): bool
+    {
+        $value = strtolower($value);
+
+        return str_contains($value, 'google.com/maps')
+            || str_contains($value, 'maps.app.goo.gl')
+            || str_contains($value, 'goo.gl/maps');
     }
 
     private function extractCoordinates(string $value): ?array
@@ -160,5 +181,22 @@ class EventController extends Controller
         }
 
         return null;
+    }
+
+    private function resolveImageUrl(Event $event): string
+    {
+        if ($event->image_path ?? null) {
+            return '/storage/'.$event->image_path;
+        }
+
+        return $this->fallbackImageUrl($event->id);
+    }
+
+    private function fallbackImageUrl(int $id): string
+    {
+        return sprintf(
+            'https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=%s',
+            $id
+        );
     }
 }
