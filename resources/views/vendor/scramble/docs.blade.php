@@ -11,10 +11,12 @@
 
     <script>
         const originalFetch = window.fetch;
+        const TOKEN_STORAGE_KEY = 'scramble_auth_token';
+        const AUTH_HEADER_KEY = 'Authorization';
 
         // intercept TryIt requests and add the XSRF-TOKEN header,
         // which is necessary for Sanctum cookie-based authentication to work correctly
-        window.fetch = (url, options) => {
+        window.fetch = async (url, options) => {
             const CSRF_TOKEN_COOKIE_KEY = "XSRF-TOKEN";
             const CSRF_TOKEN_HEADER_KEY = "X-XSRF-TOKEN";
             const getCookieValue = (key) => {
@@ -35,17 +37,54 @@
                     headers[headerKey] = headerValue;
                 }
             };
+            const hasHeader = (headers, headerKey) => {
+                if (headers instanceof Headers) {
+                    return headers.has(headerKey);
+                }
+                if (Array.isArray(headers)) {
+                    return headers.some(([key]) => String(key).toLowerCase() === headerKey.toLowerCase());
+                }
+                return headers && Object.prototype.hasOwnProperty.call(headers, headerKey);
+            };
+            const { headers = new Headers() } = options || {};
+
             const csrfToken = getCookieValue(CSRF_TOKEN_COOKIE_KEY);
             if (csrfToken) {
-                const { headers = new Headers() } = options || {};
                 updateFetchHeaders(headers, CSRF_TOKEN_HEADER_KEY, decodeURIComponent(csrfToken));
-                return originalFetch(url, {
-                    ...options,
-                    headers,
-                });
             }
 
-            return originalFetch(url, options);
+            const savedToken = window.localStorage.getItem(TOKEN_STORAGE_KEY);
+            if (savedToken && !hasHeader(headers, AUTH_HEADER_KEY)) {
+                updateFetchHeaders(headers, AUTH_HEADER_KEY, `Bearer ${savedToken}`);
+            }
+
+            const response = await originalFetch(url, {
+                ...options,
+                headers,
+            });
+
+            try {
+                const normalizedUrl = typeof url === 'string' ? url : url?.url ?? '';
+                const isAuthEndpoint = normalizedUrl.includes('/api/auth/login')
+                    || normalizedUrl.includes('/api/auth/register')
+                    || normalizedUrl.includes('/api/auth/google');
+                const isLogoutEndpoint = normalizedUrl.includes('/api/auth/logout');
+
+                if (isAuthEndpoint) {
+                    const payload = await response.clone().json();
+                    if (payload?.token) {
+                        window.localStorage.setItem(TOKEN_STORAGE_KEY, payload.token);
+                    }
+                }
+
+                if (isLogoutEndpoint && response.ok) {
+                    window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+                }
+            } catch (error) {
+                // Ignore non-JSON responses.
+            }
+
+            return response;
         };
     </script>
 
