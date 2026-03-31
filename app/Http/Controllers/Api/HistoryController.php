@@ -320,12 +320,13 @@ class HistoryController extends Controller
                 });
         }
 
-        $bookings = $hotelBookings
-            ->merge($wisataBookings)
-            ->merge($eventBookings)
-            ->merge($specialProgramBookings)
-            ->merge($souvenirOrders)
-            ->merge($academyBookings);
+        $bookings = collect()
+            ->merge(collect($hotelBookings->all()))
+            ->merge(collect($wisataBookings->all()))
+            ->merge(collect($eventBookings->all()))
+            ->merge(collect($specialProgramBookings->all()))
+            ->merge(collect($souvenirOrders->all()))
+            ->merge(collect($academyBookings->all()));
 
         if ($query !== '') {
             $needle = mb_strtolower($query);
