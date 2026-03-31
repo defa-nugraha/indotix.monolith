@@ -91,6 +91,37 @@ Catatan:
 }
 ```
 
+## Profile (auth)
+1. `PUT /api/profile`
+```json
+{
+  "message": "Profil berhasil diperbarui.",
+  "user": {
+    "id": 1,
+    "name": "User",
+    "email": "user@mail.com",
+    "phone": "08123456789",
+    "gender": "male",
+    "role": "user"
+  }
+}
+```
+
+2. `POST /api/profile/password/otp`
+```json
+{
+  "message": "OTP untuk ganti password telah dikirim.",
+  "otp_expires_at": "2026-03-30T12:10:00+07:00"
+}
+```
+
+3. `PUT /api/profile/password`
+```json
+{
+  "message": "Password berhasil diperbarui."
+}
+```
+
 ## Products
 ### Hotels
 1. `GET /api/products/hotels`

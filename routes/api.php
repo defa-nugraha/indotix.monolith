@@ -58,6 +58,12 @@ Route::middleware('auth:sanctum')->prefix('push')->group(function () {
     Route::post('tokens/revoke', [\App\Http\Controllers\Api\PushTokenController::class, 'revoke']);
 });
 
+Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
+    Route::put('/', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
+    Route::post('password/otp', [\App\Http\Controllers\Api\ProfileController::class, 'sendPasswordOtp']);
+    Route::put('password', [\App\Http\Controllers\Api\ProfileController::class, 'updatePassword']);
+});
+
 Route::middleware('auth:sanctum')->prefix('reviews')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\ReviewController::class, 'index']);
     Route::post('/', [\App\Http\Controllers\Api\ReviewController::class, 'store']);

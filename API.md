@@ -32,6 +32,13 @@ Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
 | POST | `/api/auth/otp/verify` | Yes | `code` (6 digit) | Verifikasi OTP email. |
 | POST | `/api/auth/otp/resend` | Yes | - | Kirim ulang OTP. |
 
+**Profile**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| PUT | `/api/profile` | Yes | `name?`, `email?`, `phone?`, `gender?` (`male|female|other`) | Field opsional. Jika `email` berubah, `email_verified_at` direset. |
+| POST | `/api/profile/password/otp` | Yes | - | Kirim OTP untuk update password. |
+| PUT | `/api/profile/password` | Yes | `current_password`, `password`, `password_confirmation`, `code` (OTP 6 digit) | Wajib kirim OTP terlebih dahulu. |
+
 **Products: Hotels**
 | Method | Endpoint | Auth | Params/Body | Notes |
 | --- | --- | --- | --- | --- |
