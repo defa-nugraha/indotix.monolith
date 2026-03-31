@@ -38,6 +38,7 @@ Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
 | PUT | `/api/profile` | Yes | `name?`, `email?`, `phone?`, `gender?` (`male|female|other`) | Field opsional. Jika `email` berubah, `email_verified_at` direset. |
 | POST | `/api/profile/password/otp` | Yes | - | Kirim OTP untuk update password. |
 | PUT | `/api/profile/password` | Yes | `current_password`, `password`, `password_confirmation`, `code` (OTP 6 digit) | Wajib kirim OTP terlebih dahulu. |
+Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/profile/password` (sertakan `code` OTP).
 
 **Products: Hotels**
 | Method | Endpoint | Auth | Params/Body | Notes |
