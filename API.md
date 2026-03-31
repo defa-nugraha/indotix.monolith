@@ -35,7 +35,7 @@ Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
 **Products: Hotels**
 | Method | Endpoint | Auth | Params/Body | Notes |
 | --- | --- | --- | --- | --- |
-| GET | `/api/products/hotels` | No | Query: `city?` (kode regency 4 digit), `check_in?`, `check_out?`, `rooms?` (1-10), `guests?` (1-20), `q?` | Jika `check_in/check_out` kosong, otomatis pakai hari ini & besok. |
+| GET | `/api/products/hotels` | No | Query: `city?` (kode regency 4 digit), `check_in?`, `check_out?`, `rooms?` (1-10), `guests?` (1-20), `q?` | Jika `check_in/check_out` kosong, otomatis pakai hari ini & besok. Jika tidak ada filter (`q/city/check_in/check_out`) tampil 10 hotel acak. |
 | GET | `/api/products/hotels/{hotel}` | No | Path: `{hotel}` = id/encrypted_id. Query: `check_in?`, `check_out?`, `rooms?`, `guests?` | Default tanggal sama seperti list. |
 
 **Products: Wisata**
@@ -53,7 +53,7 @@ Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
 **Products: Academy**
 | Method | Endpoint | Auth | Params/Body | Notes |
 | --- | --- | --- | --- | --- |
-| GET | `/api/products/academy` | No | Query: `q?` | - |
+| GET | `/api/products/academy` | No | Query: `q?` | Jika `q` kosong, tampil 10 kelas acak. |
 | GET | `/api/products/academy/{class}` | No | Path: `{class}` = id/encrypted_id | Slug tidak didukung di API. |
 
 **Products: Souvenirs**

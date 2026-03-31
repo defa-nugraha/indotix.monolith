@@ -23,13 +23,22 @@ class AcademyController extends Controller
             'q' => ['nullable', 'string', 'max:255'],
         ])->validate();
 
-        $classes = AcademyClass::query()
+        $hasFilter = $request->filled('q');
+
+        $classesQuery = AcademyClass::query()
             ->where('is_active', true)
             ->whereIn('status', ['scheduled', 'open_for_sale'])
-            ->when($data['q'] ?? null, fn ($query, $term) => $query->where('title', 'like', "%{$term}%"))
-            ->with('images')
-            ->orderByDesc('start_at')
-            ->get();
+            ->with('images');
+
+        if (! $hasFilter) {
+            $classesQuery->inRandomOrder()->limit(10);
+        } else {
+            $classesQuery
+                ->when($data['q'] ?? null, fn ($query, $term) => $query->where('title', 'like', "%{$term}%"))
+                ->orderByDesc('start_at');
+        }
+
+        $classes = $classesQuery->get();
 
         $tickets = AcademyTicket::query()
             ->whereIn('academy_class_id', $classes->pluck('id'))

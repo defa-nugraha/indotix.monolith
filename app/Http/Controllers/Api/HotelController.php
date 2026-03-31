@@ -20,6 +20,63 @@ class HotelController extends Controller
         $today = Carbon::today();
         $tomorrow = $today->copy()->addDay();
 
+        $hasFilter = $request->filled('q')
+            || $request->filled('city')
+            || $request->filled('check_in')
+            || $request->filled('check_out');
+
+        if (! $hasFilter) {
+            $hotels = Hotel::query()
+                ->where('status', 'active')
+                ->with(['roomTypes' => function ($query) {
+                    $query->where('status', 'active');
+                }, 'city', 'images'])
+                ->inRandomOrder()
+                ->limit(10)
+                ->get();
+
+            $results = $hotels->map(function (Hotel $hotel) {
+                $roomTypes = $hotel->roomTypes;
+                if ($roomTypes->isEmpty()) {
+                    return null;
+                }
+
+                $minPrice = $roomTypes->min('base_price');
+                $coverImage = $hotel->images->first();
+                $availableRooms = (int) $roomTypes->sum('total_rooms');
+
+                return [
+                    'id' => $hotel->id,
+                    'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                    'slug' => $hotel->slug,
+                    'name' => $hotel->name,
+                    'address' => $hotel->address,
+                    'star_rating' => $hotel->star_rating,
+                    'city_name' => $hotel->city?->name,
+                    'min_price' => $minPrice ? (int) round($minPrice) : null,
+                    'available_rooms' => $availableRooms > 0 ? $availableRooms : null,
+                    'image_url' => $coverImage?->image_url
+                        ? '/storage/'.$coverImage->image_url
+                        : $this->fallbackHotelImageUrl($hotel->id),
+                    'breakfast_included' => false,
+                    'smoking_allowed' => false,
+                ];
+            })->filter()->values();
+
+            return response()->json([
+                'filters' => [
+                    'city' => null,
+                    'check_in' => null,
+                    'check_out' => null,
+                    'rooms' => null,
+                    'guests' => null,
+                    'q' => null,
+                ],
+                'hotels' => $results,
+                'recommendations' => $this->recommendations(),
+            ]);
+        }
+
         $checkIn = $request->input('check_in');
         $checkOut = $request->input('check_out');
 
