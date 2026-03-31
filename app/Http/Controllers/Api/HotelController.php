@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hotel;
+use App\Models\Regency;
 use App\Models\RoomInventory;
 use App\Models\RoomType;
 use App\Services\ProductReviewService;
@@ -90,7 +91,7 @@ class HotelController extends Controller
         ];
 
         $data = validator($payload, [
-            'city' => ['nullable', 'string', 'size:4'],
+            'city' => ['nullable', 'string', 'max:255'],
             'check_in' => ['required', 'date'],
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
@@ -98,11 +99,12 @@ class HotelController extends Controller
             'q' => ['nullable', 'string', 'max:255'],
         ])->validate();
 
+        $cityCodes = $this->resolveCityCodes($data['city'] ?? null);
         $dates = $this->dateRange($data['check_in'], $data['check_out']);
 
         $hotels = Hotel::query()
             ->where('status', 'active')
-            ->when($data['city'] ?? null, fn ($query) => $query->where('city_id', $data['city']))
+            ->when($cityCodes, fn ($query) => $query->whereIn('city_id', $cityCodes))
             ->when($data['q'] ?? null, fn ($query, $term) => $query->where('name', 'like', "%{$term}%"))
             ->with(['roomTypes' => function ($query) {
                 $query->where('status', 'active');
@@ -352,6 +354,29 @@ class HotelController extends Controller
         $base = 'https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop';
 
         return $withSignature ? $base.'&sig='.$id : $base;
+    }
+
+    private function resolveCityCodes(?string $city): ?array
+    {
+        if (! $city) {
+            return null;
+        }
+
+        $value = trim($city);
+        if ($value === '') {
+            return null;
+        }
+
+        if (ctype_digit($value) && strlen($value) === 4) {
+            return [$value];
+        }
+
+        $matches = Regency::query()
+            ->where('name', 'like', '%'.$value.'%')
+            ->pluck('code')
+            ->all();
+
+        return $matches ?: null;
     }
 
     private function recommendations(): array
