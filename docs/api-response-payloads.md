@@ -992,6 +992,36 @@ Content-Type: image/png
 }
 ```
 
+## Public Content
+1. `GET /api/faqs`
+```json
+{
+  "faqs": [
+    {
+      "id": 1,
+      "question": "Bagaimana cara booking?",
+      "answer": "Silakan pilih produk lalu lanjutkan ke pembayaran.",
+      "category": "booking",
+      "sort_order": 1
+    }
+  ]
+}
+```
+
+2. `GET /api/privacy-policy`
+```json
+{
+  "policy": {
+    "id": 1,
+    "title": "Kebijakan Privasi Indotix",
+    "content": "Isi kebijakan privasi...",
+    "terms_content": "Isi syarat dan ketentuan...",
+    "version": "1.0",
+    "effective_at": "2026-03-30"
+  }
+}
+```
+
 ## Chat (auth)
 1. `GET /api/chat/conversations`
 ```json

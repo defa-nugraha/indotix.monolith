@@ -119,6 +119,8 @@ Route::middleware('auth:sanctum')->prefix('academy/bookings')->group(function ()
 });
 
 Route::get('banners', [\App\Http\Controllers\Api\PublicBannerController::class, 'index']);
+Route::get('faqs', [\App\Http\Controllers\Api\PublicFaqController::class, 'index']);
+Route::get('privacy-policy', [\App\Http\Controllers\Api\PublicPrivacyPolicyController::class, 'show']);
 
 Route::middleware('auth:sanctum')->prefix('chat')->group(function () {
     Route::get('conversations', [\App\Http\Controllers\Api\ChatController::class, 'index']);

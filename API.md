@@ -73,6 +73,12 @@ Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
 | --- | --- | --- | --- | --- |
 | GET | `/api/banners` | No | - | Banner publik untuk homepage. |
 
+**Public Content**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| GET | `/api/faqs` | No | - | Mengembalikan FAQ aktif, urut `sort_order` lalu `id`. |
+| GET | `/api/privacy-policy` | No | - | Mengembalikan kebijakan privasi aktif terbaru (urut `effective_at` desc). Jika tidak ada, `policy` bernilai `null`. |
+
 **Bookings: Hotel**
 | Method | Endpoint | Auth | Params/Body | Notes |
 | --- | --- | --- | --- | --- |
