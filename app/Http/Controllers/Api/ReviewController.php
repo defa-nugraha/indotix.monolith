@@ -155,10 +155,6 @@ class ReviewController extends Controller
 
     private function resolveId(string $value): ?int
     {
-        if (ctype_digit($value)) {
-            return (int) $value;
-        }
-
         try {
             return (int) decrypt($value);
         } catch (\Throwable $exception) {

@@ -159,8 +159,8 @@ Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/p
 **Reviews**
 | Method | Endpoint | Auth | Params/Body | Notes |
 | --- | --- | --- | --- | --- |
-| GET | `/api/reviews` | Yes | Query: `product_type`, `product_id` | `product_id` bisa id/encrypted_id. |
-| POST | `/api/reviews` | Yes | `product_type`, `product_id`, `rating` (1-5), `comment?` | Hanya bisa jika booking sudah digunakan/selesai. |
+| GET | `/api/reviews` | Yes | Query: `product_type`, `product_id` | `product_id` **wajib encrypted_id**. |
+| POST | `/api/reviews` | Yes | `product_type`, `product_id`, `rating` (1-5), `comment?` | `product_id` **wajib encrypted_id**. Hanya bisa jika booking sudah digunakan/selesai. |
 
 **Notifications**
 | Method | Endpoint | Auth | Params/Body | Notes |

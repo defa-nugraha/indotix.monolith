@@ -990,6 +990,7 @@ Content-Type: image/png
 
 ## Reviews (auth)
 1. `GET /api/reviews`
+Catatan: `product_id` **wajib encrypted_id**.
 ```json
 {
   "reviews": [],
@@ -999,6 +1000,7 @@ Content-Type: image/png
 ```
 
 2. `POST /api/reviews`
+Catatan: `product_id` **wajib encrypted_id**.
 ```json
 {
   "message": "Ulasan berhasil dikirim.",
