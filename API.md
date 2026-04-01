@@ -195,5 +195,10 @@ Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/p
 | POST | `/api/chat/conversations/{conversation}/messages` | Yes | `message` | Kirim pesan baru. |
 | POST | `/api/chat/conversations/{conversation}/read` | Yes | - | Tandai pesan sebagai sudah dibaca. |
 
+**Admin: Push Notifications**
+| Method | Endpoint | Auth | Params/Body | Notes |
+| --- | --- | --- | --- | --- |
+| POST | `/api/admin/notifications` | Yes | `title`, `message`, `type`, `target?` (`all|roles|users`), `roles?` (array), `user_ids?` (array), `data?` (object) | Hanya role `admin`. Default target = `roles` dengan `roles=["user"]` jika tidak diisi. |
+
 **Changelog**
 Perubahan historis dan contoh payload detail tersedia di `docs/api-response-payloads.md`.

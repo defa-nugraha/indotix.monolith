@@ -64,6 +64,10 @@ Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::put('password', [\App\Http\Controllers\Api\ProfileController::class, 'updatePassword']);
 });
 
+Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+    Route::post('notifications', [\App\Http\Controllers\Api\AdminNotificationController::class, 'store']);
+});
+
 Route::middleware('auth:sanctum')->prefix('reviews')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\ReviewController::class, 'index']);
     Route::post('/', [\App\Http\Controllers\Api\ReviewController::class, 'store']);

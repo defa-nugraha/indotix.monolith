@@ -1100,3 +1100,21 @@ Catatan: `product_id` **wajib encrypted_id**.
 ```json
 {"updated": 3}
 ```
+
+## Admin: Push Notifications (auth)
+1. `POST /api/admin/notifications`
+```json
+{
+  "message": "Notifikasi berhasil dikirim.",
+  "target": {
+    "mode": "roles",
+    "roles": ["user"],
+    "user_ids": null
+  },
+  "stats": {
+    "total_recipients": 120,
+    "notifications_created": 120,
+    "push_sent": 87
+  }
+}
+```
