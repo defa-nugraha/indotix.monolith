@@ -27,23 +27,16 @@ type Trigger = {
     is_active: boolean;
 };
 
-type RoleOption = {
-    value: string;
-    label: string;
-};
-
 type Props = {
     templates: Template[];
     triggers: Trigger[];
     eventOptions: string[];
-    roleOptions: RoleOption[];
 };
 
 export default function NotificationControl({
     templates,
     triggers,
     eventOptions,
-    roleOptions,
 }: Props) {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [form, setForm] = useState({
@@ -57,9 +50,6 @@ export default function NotificationControl({
         title: '',
         message: '',
         type: 'info',
-        target: 'roles',
-        roles: ['user'],
-        userIds: '',
     });
 
     const startEdit = (template: Template) => {
@@ -89,9 +79,6 @@ export default function NotificationControl({
             title: '',
             message: '',
             type: 'info',
-            target: 'roles',
-            roles: ['user'],
-            userIds: '',
         });
     };
 
@@ -143,54 +130,30 @@ export default function NotificationControl({
 
     const submitBroadcast = (event: React.FormEvent) => {
         event.preventDefault();
-        const userIds = broadcastForm.userIds
-            .split(',')
-            .map((value) => parseInt(value.trim(), 10))
-            .filter((value) => Number.isFinite(value));
-
-        const payload: Record<string, any> = {
-            title: broadcastForm.title,
-            message: broadcastForm.message,
-            type: broadcastForm.type,
-            target: broadcastForm.target,
-        };
-
-        if (broadcastForm.target === 'roles') {
-            payload.roles = broadcastForm.roles;
-        }
-
-        if (broadcastForm.target === 'users') {
-            payload.user_ids = userIds;
-        }
-
-        router.post('/admin/system/notifications/broadcast', payload, {
-            onSuccess: () => {
-                Swal.fire({
-                    title: 'Berhasil',
-                    text: 'Notifikasi berhasil dikirim.',
-                    icon: 'success',
-                });
-                resetBroadcast();
+        router.post(
+            '/admin/system/notifications/broadcast',
+            {
+                title: broadcastForm.title,
+                message: broadcastForm.message,
+                type: broadcastForm.type,
             },
-            onError: () =>
-                Swal.fire({
-                    title: 'Gagal',
-                    text: 'Notifikasi gagal dikirim.',
-                    icon: 'error',
-                }),
-        });
-    };
-
-    const toggleRole = (role: string) => {
-        setBroadcastForm((prev) => {
-            const exists = prev.roles.includes(role);
-            return {
-                ...prev,
-                roles: exists
-                    ? prev.roles.filter((item) => item !== role)
-                    : [...prev.roles, role],
-            };
-        });
+            {
+                onSuccess: () => {
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: 'Notifikasi berhasil dikirim.',
+                        icon: 'success',
+                    });
+                    resetBroadcast();
+                },
+                onError: () =>
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: 'Notifikasi gagal dikirim.',
+                        icon: 'error',
+                    }),
+            },
+        );
     };
 
     const handleDelete = async (templateId: number) => {
@@ -317,20 +280,9 @@ export default function NotificationControl({
                             <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
                                 Target
                             </label>
-                            <select
-                                value={broadcastForm.target}
-                                onChange={(event) =>
-                                    setBroadcastForm((prev) => ({
-                                        ...prev,
-                                        target: event.target.value,
-                                    }))
-                                }
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            >
-                                <option value="roles">Berdasarkan role</option>
-                                <option value="users">User tertentu</option>
-                                <option value="all">Semua user</option>
-                            </select>
+                            <div className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600">
+                                Semua user (role user)
+                            </div>
                         </div>
                         <div className="grid gap-2 md:col-span-3">
                             <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
@@ -349,50 +301,6 @@ export default function NotificationControl({
                                 required
                             />
                         </div>
-                        {broadcastForm.target === 'roles' && (
-                            <div className="grid gap-3 md:col-span-3">
-                                <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                                    Pilih Role
-                                </label>
-                                <div className="flex flex-wrap gap-3">
-                                    {roleOptions.map((role) => (
-                                        <label
-                                            key={role.value}
-                                            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600"
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                checked={broadcastForm.roles.includes(
-                                                    role.value,
-                                                )}
-                                                onChange={() =>
-                                                    toggleRole(role.value)
-                                                }
-                                            />
-                                            {role.label}
-                                        </label>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        {broadcastForm.target === 'users' && (
-                            <div className="grid gap-2 md:col-span-3">
-                                <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                                    User ID (pisahkan dengan koma)
-                                </label>
-                                <input
-                                    value={broadcastForm.userIds}
-                                    onChange={(event) =>
-                                        setBroadcastForm((prev) => ({
-                                            ...prev,
-                                            userIds: event.target.value,
-                                        }))
-                                    }
-                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                                    placeholder="1, 12, 25"
-                                />
-                            </div>
-                        )}
                         <div className="flex items-end gap-3 md:col-span-3">
                             <Button
                                 type="submit"

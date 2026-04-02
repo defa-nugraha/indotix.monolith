@@ -121,53 +121,19 @@ class NotificationControlController extends Controller
 
     public function broadcast(Request $request): RedirectResponse
     {
-        $roles = collect(self::ROLE_OPTIONS)->pluck('value')->all();
-
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:1000'],
             'type' => ['required', 'string', 'max:50'],
-            'target' => ['nullable', Rule::in(['all', 'roles', 'users'])],
-            'roles' => ['nullable', 'array'],
-            'roles.*' => ['string', Rule::in($roles)],
-            'user_ids' => ['nullable', 'array'],
-            'user_ids.*' => ['integer', 'exists:users,id'],
         ]);
-
-        $target = $data['target'] ?? null;
-        $selectedRoles = $data['roles'] ?? [];
-        $userIds = $data['user_ids'] ?? [];
-
-        if (! $target) {
-            if ($userIds) {
-                $target = 'users';
-            } elseif ($selectedRoles) {
-                $target = 'roles';
-            } else {
-                $target = 'roles';
-                $selectedRoles = ['user'];
-            }
-        }
-
-        if ($target === 'roles' && ! $selectedRoles) {
-            return back()->withErrors([
-                'roles' => 'Roles wajib diisi.',
-            ]);
-        }
-
-        if ($target === 'users' && ! $userIds) {
-            return back()->withErrors([
-                'user_ids' => 'User ids wajib diisi.',
-            ]);
-        }
 
         app(AdminNotificationService::class)->broadcast(
             $data['title'],
             $data['message'],
             $data['type'],
-            $target,
-            $selectedRoles,
-            $userIds
+            'roles',
+            ['user'],
+            []
         );
 
         return back()->with('status', 'broadcast-sent');
