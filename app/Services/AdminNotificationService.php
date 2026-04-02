@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\UserNotification;
+use Illuminate\Validation\ValidationException;
 
 class AdminNotificationService
 {
@@ -16,6 +17,8 @@ class AdminNotificationService
         array $userIds = [],
         array $data = []
     ): array {
+        $this->assertFcmServiceAccountConfigured();
+
         $query = User::query();
         if ($target === 'roles') {
             $query->whereIn('role', $roles);
@@ -83,5 +86,35 @@ class AdminNotificationService
                 'push_sent' => $pushSent,
             ],
         ];
+    }
+
+    private function assertFcmServiceAccountConfigured(): void
+    {
+        $path = config('services.fcm.service_account');
+        if (! $path) {
+            throw ValidationException::withMessages([
+                'fcm' => 'FCM_SERVICE_ACCOUNT belum diatur.',
+            ]);
+        }
+
+        $resolved = $this->normalizePath($path);
+        if (! is_readable($resolved)) {
+            throw ValidationException::withMessages([
+                'fcm' => 'FCM_SERVICE_ACCOUNT tidak bisa dibaca.',
+            ]);
+        }
+    }
+
+    private function normalizePath(string $path): string
+    {
+        if (str_starts_with($path, DIRECTORY_SEPARATOR)) {
+            return $path;
+        }
+
+        if (preg_match('/^[A-Za-z]:\\\\/', $path) === 1) {
+            return $path;
+        }
+
+        return base_path($path);
     }
 }
