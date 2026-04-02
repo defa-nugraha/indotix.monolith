@@ -1121,6 +1121,7 @@ Catatan: `product_id` **wajib encrypted_id**.
 ```json
 {
   "message": "Notifikasi berhasil dikirim.",
+  "trace_id": "b1c3f2a8-4c3a-4ef8-9e5b-9f4b73b9b54a",
   "target": {
     "mode": "roles",
     "roles": ["user"],

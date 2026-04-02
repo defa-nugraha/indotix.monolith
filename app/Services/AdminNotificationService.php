@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\UserNotification;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AdminNotificationService
@@ -17,7 +19,8 @@ class AdminNotificationService
         array $userIds = [],
         array $data = []
     ): array {
-        $this->assertFcmServiceAccountConfigured();
+        $traceId = (string) Str::uuid();
+        $this->assertFcmServiceAccountConfigured($traceId);
 
         $query = User::query();
         if ($target === 'roles') {
@@ -36,6 +39,14 @@ class AdminNotificationService
         $pushSent = 0;
         $pushService = app(PushNotificationService::class);
 
+        Log::info('Admin push broadcast started', [
+            'trace_id' => $traceId,
+            'target' => $target,
+            'roles' => $roles,
+            'user_ids_count' => count($userIds),
+            'type' => $type,
+        ]);
+
         $query->select('id')->chunkById(500, function ($users) use (
             $title,
             $message,
@@ -43,6 +54,7 @@ class AdminNotificationService
             $payloadData,
             $pushData,
             $pushService,
+            $traceId,
             &$totalRecipients,
             &$notificationsCreated,
             &$pushSent
@@ -68,13 +80,23 @@ class AdminNotificationService
             $totalRecipients += $users->count();
 
             foreach ($users as $recipient) {
-                if ($pushService->sendToUser((int) $recipient->id, $title, $message, $pushData)) {
+                if ($pushService->sendToUser((int) $recipient->id, $title, $message, $pushData, [
+                    'trace_id' => $traceId,
+                ])) {
                     $pushSent++;
                 }
             }
         });
 
+        Log::info('Admin push broadcast completed', [
+            'trace_id' => $traceId,
+            'total_recipients' => $totalRecipients,
+            'notifications_created' => $notificationsCreated,
+            'push_sent' => $pushSent,
+        ]);
+
         return [
+            'trace_id' => $traceId,
             'target' => [
                 'mode' => $target,
                 'roles' => $roles ?: null,
@@ -88,10 +110,13 @@ class AdminNotificationService
         ];
     }
 
-    private function assertFcmServiceAccountConfigured(): void
+    private function assertFcmServiceAccountConfigured(string $traceId): void
     {
         $path = config('services.fcm.service_account');
         if (! $path) {
+            Log::warning('FCM_SERVICE_ACCOUNT missing for broadcast.', [
+                'trace_id' => $traceId,
+            ]);
             throw ValidationException::withMessages([
                 'fcm' => 'FCM_SERVICE_ACCOUNT belum diatur.',
             ]);
@@ -99,6 +124,10 @@ class AdminNotificationService
 
         $resolved = $this->normalizePath($path);
         if (! is_readable($resolved)) {
+            Log::warning('FCM service account not readable for broadcast.', [
+                'trace_id' => $traceId,
+                'path' => $resolved,
+            ]);
             throw ValidationException::withMessages([
                 'fcm' => 'FCM_SERVICE_ACCOUNT tidak bisa dibaca.',
             ]);

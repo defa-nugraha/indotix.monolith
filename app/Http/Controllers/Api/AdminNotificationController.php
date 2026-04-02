@@ -37,6 +37,7 @@ class AdminNotificationController extends Controller
 
         return response()->json([
             'message' => 'Notifikasi berhasil dikirim.',
+            'trace_id' => $broadcast['trace_id'] ?? null,
             'target' => $broadcast['target'],
             'stats' => $broadcast['stats'],
         ]);

@@ -13,18 +13,29 @@ class PushNotificationService
 {
     private const FCM_SCOPE = 'https://www.googleapis.com/auth/firebase.messaging';
 
-    public function sendToUser(int $userId, string $title, string $body, array $data = []): bool
+    public function sendToUser(
+        int $userId,
+        string $title,
+        string $body,
+        array $data = [],
+        array $context = []
+    ): bool
     {
+        $context = array_merge([
+            'user_id' => $userId,
+        ], $context);
+
         $serviceAccountPath = $this->resolveServiceAccountPath();
         $projectId = $serviceAccountPath ? $this->resolveProjectId($serviceAccountPath) : null;
 
         if (! $serviceAccountPath || ! $projectId) {
-            Log::warning('FCM service account not configured.');
+            Log::warning('FCM service account not configured.', $context);
             return false;
         }
 
         $accessToken = $this->getAccessToken($serviceAccountPath);
         if (! $accessToken) {
+            Log::warning('FCM access token missing.', $context);
             return false;
         }
 
@@ -35,6 +46,7 @@ class PushNotificationService
             ->values();
 
         if ($tokens->isEmpty()) {
+            Log::info('FCM no active device tokens.', $context);
             return false;
         }
 
@@ -43,7 +55,16 @@ class PushNotificationService
         $sentTokens = [];
         $payloadData = $this->normalizeData($data);
 
+        Log::info('FCM push started.', array_merge($context, [
+            'token_count' => $tokens->count(),
+            'project_id' => $projectId,
+        ]));
+
+        $failureCount = 0;
         foreach ($tokens->chunk(200) as $chunk) {
+            Log::info('FCM push chunk.', array_merge($context, [
+                'chunk_size' => $chunk->count(),
+            ]));
             foreach ($chunk as $token) {
                 $response = Http::withToken($accessToken)
                     ->post(sprintf('https://fcm.googleapis.com/v1/projects/%s/messages:send', $projectId), [
@@ -68,9 +89,13 @@ class PushNotificationService
                     $invalidTokens[] = $token;
                 }
 
+                $failureCount++;
                 Log::warning('FCM v1 push failed', [
+                    ...$context,
                     'status' => $response->status(),
                     'body' => $response->body(),
+                    'error_code' => $errorCode,
+                    'token_hint' => $this->maskToken($token),
                 ]);
             }
         }
@@ -86,6 +111,12 @@ class PushNotificationService
                 ->whereIn('token', array_values(array_unique($invalidTokens)))
                 ->update(['is_active' => false]);
         }
+
+        Log::info('FCM push completed.', array_merge($context, [
+            'sent_tokens' => count($sentTokens),
+            'invalid_tokens' => count($invalidTokens),
+            'failures' => $failureCount,
+        ]));
 
         return $success;
     }
@@ -127,6 +158,7 @@ class PushNotificationService
     {
         $path = config('services.fcm.service_account');
         if (! $path) {
+            Log::warning('FCM service account path empty.');
             return null;
         }
 
@@ -198,5 +230,13 @@ class PushNotificationService
         }
 
         return $payload;
+    }
+
+    private function maskToken(string $token): string
+    {
+        $suffix = substr($token, -8);
+        $hash = substr(sha1($token), 0, 8);
+
+        return sprintf('***%s(%s)', $suffix, $hash);
     }
 }
