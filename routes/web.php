@@ -483,6 +483,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.system.notifications.templates.destroy');
     Route::put('admin/system/notifications/triggers/{trigger}', [\App\Http\Controllers\Admin\NotificationControlController::class, 'updateTrigger'])
         ->name('admin.system.notifications.triggers.update');
+    Route::post('admin/system/notifications/broadcast', [\App\Http\Controllers\Admin\NotificationControlController::class, 'broadcast'])
+        ->name('admin.system.notifications.broadcast');
     Route::get('admin/system/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'index'])
         ->name('admin.system.roles.index');
     Route::put('admin/system/roles/{user}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'update'])

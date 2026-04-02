@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\NotificationTemplate;
 use App\Models\NotificationTrigger;
+use App\Services\AdminNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -19,6 +20,14 @@ class NotificationControlController extends Controller
         'booking_cancelled',
         'booking_expired',
         'payout_approved',
+    ];
+    private const ROLE_OPTIONS = [
+        ['value' => 'user', 'label' => 'User'],
+        ['value' => 'mitra', 'label' => 'Mitra'],
+        ['value' => 'admin', 'label' => 'Admin Utama'],
+        ['value' => 'admin_academy', 'label' => 'Admin Academy'],
+        ['value' => 'admin_retail', 'label' => 'Admin Retail Shop'],
+        ['value' => 'admin_special_program', 'label' => 'Admin Special Program'],
     ];
 
     public function index(): Response
@@ -57,6 +66,7 @@ class NotificationControlController extends Controller
             'templates' => $templates,
             'triggers' => $triggers,
             'eventOptions' => self::EVENTS,
+            'roleOptions' => self::ROLE_OPTIONS,
         ]);
     }
 
@@ -107,5 +117,59 @@ class NotificationControlController extends Controller
         $trigger->update($data);
 
         return back()->with('status', 'trigger-updated');
+    }
+
+    public function broadcast(Request $request): RedirectResponse
+    {
+        $roles = collect(self::ROLE_OPTIONS)->pluck('value')->all();
+
+        $data = $request->validate([
+            'title' => ['required', 'string', 'max:255'],
+            'message' => ['required', 'string', 'max:1000'],
+            'type' => ['required', 'string', 'max:50'],
+            'target' => ['nullable', Rule::in(['all', 'roles', 'users'])],
+            'roles' => ['nullable', 'array'],
+            'roles.*' => ['string', Rule::in($roles)],
+            'user_ids' => ['nullable', 'array'],
+            'user_ids.*' => ['integer', 'exists:users,id'],
+        ]);
+
+        $target = $data['target'] ?? null;
+        $selectedRoles = $data['roles'] ?? [];
+        $userIds = $data['user_ids'] ?? [];
+
+        if (! $target) {
+            if ($userIds) {
+                $target = 'users';
+            } elseif ($selectedRoles) {
+                $target = 'roles';
+            } else {
+                $target = 'roles';
+                $selectedRoles = ['user'];
+            }
+        }
+
+        if ($target === 'roles' && ! $selectedRoles) {
+            return back()->withErrors([
+                'roles' => 'Roles wajib diisi.',
+            ]);
+        }
+
+        if ($target === 'users' && ! $userIds) {
+            return back()->withErrors([
+                'user_ids' => 'User ids wajib diisi.',
+            ]);
+        }
+
+        app(AdminNotificationService::class)->broadcast(
+            $data['title'],
+            $data['message'],
+            $data['type'],
+            $target,
+            $selectedRoles,
+            $userIds
+        );
+
+        return back()->with('status', 'broadcast-sent');
     }
 }
