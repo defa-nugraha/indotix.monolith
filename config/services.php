@@ -46,7 +46,8 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI'),
     ],
     'fcm' => [
-        'server_key' => env('FCM_SERVER_KEY'),
+        'project_id' => env('FCM_PROJECT_ID'),
+        'service_account' => env('FCM_SERVICE_ACCOUNT'),
     ],
 
 ];
