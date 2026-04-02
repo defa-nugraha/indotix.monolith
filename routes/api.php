@@ -6,6 +6,8 @@ Route::prefix('auth')->group(function () {
     Route::post('register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
     Route::post('login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
     Route::post('google', [\App\Http\Controllers\Api\SocialAuthController::class, 'google']);
+    Route::post('password/forgot', [\App\Http\Controllers\Api\PasswordResetController::class, 'requestOtp']);
+    Route::post('password/reset', [\App\Http\Controllers\Api\PasswordResetController::class, 'reset']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [\App\Http\Controllers\Api\AuthController::class, 'me']);

@@ -51,7 +51,22 @@ Catatan:
 }
 ```
 
-4. `GET /api/auth/me`
+4. `POST /api/auth/password/forgot`
+```json
+{
+  "message": "OTP reset password telah dikirim.",
+  "otp_expires_at": "2026-04-02T12:10:00+07:00"
+}
+```
+
+5. `POST /api/auth/password/reset`
+```json
+{
+  "message": "Password berhasil direset."
+}
+```
+
+6. `GET /api/auth/me`
 ```json
 {
   "user": {
@@ -63,14 +78,14 @@ Catatan:
 }
 ```
 
-5. `POST /api/auth/logout`
+7. `POST /api/auth/logout`
 ```json
 {
   "message": "Logout berhasil."
 }
 ```
 
-6. `POST /api/auth/otp/verify`
+8. `POST /api/auth/otp/verify`
 ```json
 {
   "message": "OTP berhasil diverifikasi.",
@@ -83,7 +98,7 @@ Catatan:
 }
 ```
 
-7. `POST /api/auth/otp/resend`
+9. `POST /api/auth/otp/resend`
 ```json
 {
   "message": "OTP baru telah dikirim.",

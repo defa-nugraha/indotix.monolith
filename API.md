@@ -27,6 +27,8 @@ Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
 | POST | `/api/auth/register` | No | `name`, `email`, `password`, `role?` (`user|mitra`), `device_name?` | Mengembalikan token dan flag `requires_otp` bila email belum terverifikasi. |
 | POST | `/api/auth/login` | No | `email`, `password`, `device_name?` | Jika email belum terverifikasi, response berisi `requires_otp`. |
 | POST | `/api/auth/google` | No | `access_token`, `role?` (`user|mitra`), `device_name?` | Login via token Google. |
+| POST | `/api/auth/password/forgot` | No | `email` | Kirim OTP reset password. Jika email tidak terdaftar tetap mengembalikan pesan sukses. |
+| POST | `/api/auth/password/reset` | No | `email`, `code` (OTP 6 digit), `password`, `password_confirmation` | Wajib kirim OTP terlebih dahulu. |
 | GET | `/api/auth/me` | Yes | - | Mengembalikan data user. |
 | POST | `/api/auth/logout` | Yes | - | Revoke token aktif. |
 | POST | `/api/auth/otp/verify` | Yes | `code` (6 digit) | Verifikasi OTP email. |
