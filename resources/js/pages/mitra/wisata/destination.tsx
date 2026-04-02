@@ -1,11 +1,18 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
-import { Select as UiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    Select as UiSelect,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import Swal from 'sweetalert2';
 import Select from 'react-select';
 
@@ -32,6 +39,7 @@ type Destination = {
     photo_gate_path: string | null;
     photo_area_path: string | null;
     photo_ticket_path: string | null;
+    photo_other_paths?: string[] | null;
     is_temporarily_closed: boolean;
     closure_note: string | null;
 };
@@ -98,13 +106,29 @@ export default function MitraWisataDestination({
         photo_gate_file: null as File | null,
         photo_area_file: null as File | null,
         photo_ticket_file: null as File | null,
+        photo_other_files: [] as File[],
+        photo_other_remove: [] as string[],
     });
+
+    const [otherPhotos, setOtherPhotos] = useState<string[]>(
+        (destination.photo_other_paths ?? []).filter(Boolean) as string[],
+    );
+
+    const handleRemoveOtherPhoto = (path: string) => {
+        setOtherPhotos((prev) => prev.filter((item) => item !== path));
+        form.setData('photo_other_remove', [
+            ...new Set([...form.data.photo_other_remove, path]),
+        ]);
+    };
 
     const citySelectOptions: CitySelectOption[] = cities.map((city) => ({
         value: city.id,
         label: city.label,
     }));
-    const selectedCity = citySelectOptions.find((option) => option.value === form.data.city_code) ?? null;
+    const selectedCity =
+        citySelectOptions.find(
+            (option) => option.value === form.data.city_code,
+        ) ?? null;
     const selectStyles = {
         control: (base: any) => ({
             ...base,
@@ -138,7 +162,8 @@ export default function MitraWisataDestination({
         });
     };
 
-    const getPublicUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
+    const getPublicUrl = (path?: string | null) =>
+        path ? `/storage/${path}` : null;
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -146,12 +171,15 @@ export default function MitraWisataDestination({
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                        <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
                             Wisata
                         </p>
-                        <h1 className="mt-2 text-2xl font-semibold text-slate-900">Profil Destinasi</h1>
+                        <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                            Profil Destinasi
+                        </h1>
                         <p className="text-sm text-slate-500">
-                            Perbarui informasi destinasi agar tetap akurat di sistem.
+                            Perbarui informasi destinasi agar tetap akurat di
+                            sistem.
                         </p>
                     </div>
                 </section>
@@ -168,36 +196,55 @@ export default function MitraWisataDestination({
                             <Label>Nama Destinasi</Label>
                             <Input
                                 value={form.data.destination_name}
-                                onChange={(event) => form.setData('destination_name', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'destination_name',
+                                        event.target.value,
+                                    )
+                                }
                                 placeholder="Nama destinasi wisata"
                             />
-                            <InputError message={form.errors.destination_name} />
+                            <InputError
+                                message={form.errors.destination_name}
+                            />
                         </div>
                         <div className="grid gap-2">
                             <Label>Jenis Wisata</Label>
                             <UiSelect
                                 value={form.data.destination_type}
-                                onValueChange={(value) => form.setData('destination_type', value)}
+                                onValueChange={(value) =>
+                                    form.setData('destination_type', value)
+                                }
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih jenis" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {destinationTypes.map((item) => (
-                                        <SelectItem key={item.id} value={item.id}>
+                                        <SelectItem
+                                            key={item.id}
+                                            value={item.id}
+                                        >
                                             {item.label}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </UiSelect>
-                            <InputError message={form.errors.destination_type} />
+                            <InputError
+                                message={form.errors.destination_type}
+                            />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <Label>Deskripsi</Label>
                             <textarea
                                 className="min-h-[120px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.description}
-                                onChange={(event) => form.setData('description', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'description',
+                                        event.target.value,
+                                    )
+                                }
                             />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
@@ -205,21 +252,31 @@ export default function MitraWisataDestination({
                             <textarea
                                 className="min-h-[100px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.highlights}
-                                onChange={(event) => form.setData('highlights', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'highlights',
+                                        event.target.value,
+                                    )
+                                }
                             />
                         </div>
                         <div className="grid gap-2">
                             <Label>Provinsi</Label>
                             <UiSelect
                                 value={form.data.province_code}
-                                onValueChange={(value) => form.setData('province_code', value)}
+                                onValueChange={(value) =>
+                                    form.setData('province_code', value)
+                                }
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih provinsi" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {provinces.map((item) => (
-                                        <SelectItem key={item.id} value={item.id}>
+                                        <SelectItem
+                                            key={item.id}
+                                            value={item.id}
+                                        >
                                             {item.label}
                                         </SelectItem>
                                     ))}
@@ -235,7 +292,12 @@ export default function MitraWisataDestination({
                                 options={citySelectOptions}
                                 value={selectedCity}
                                 placeholder="Pilih kota/kabupaten"
-                                onChange={(option) => form.setData('city_code', option?.value ?? '')}
+                                onChange={(option) =>
+                                    form.setData(
+                                        'city_code',
+                                        option?.value ?? '',
+                                    )
+                                }
                                 styles={selectStyles}
                             />
                             <InputError message={form.errors.city_code} />
@@ -244,7 +306,12 @@ export default function MitraWisataDestination({
                             <Label>Alamat Lengkap</Label>
                             <Input
                                 value={form.data.address_full}
-                                onChange={(event) => form.setData('address_full', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'address_full',
+                                        event.target.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.address_full} />
                         </div>
@@ -252,24 +319,43 @@ export default function MitraWisataDestination({
                             <Label>Titik Google Maps</Label>
                             <Input
                                 value={form.data.maps_pin_url}
-                                onChange={(event) => form.setData('maps_pin_url', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'maps_pin_url',
+                                        event.target.value,
+                                    )
+                                }
                             />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <Label>Hari Buka</Label>
                             <div className="flex flex-wrap gap-3">
                                 {dayOptions.map((day) => (
-                                    <label key={day.id} className="inline-flex items-center gap-2 text-sm text-slate-600">
+                                    <label
+                                        key={day.id}
+                                        className="inline-flex items-center gap-2 text-sm text-slate-600"
+                                    >
                                         <input
                                             type="checkbox"
-                                            checked={form.data.open_days.includes(day.id)}
+                                            checked={form.data.open_days.includes(
+                                                day.id,
+                                            )}
                                             onChange={(event) => {
-                                                const checked = event.target.checked;
+                                                const checked =
+                                                    event.target.checked;
                                                 form.setData(
                                                     'open_days',
                                                     checked
-                                                        ? [...form.data.open_days, day.id]
-                                                        : form.data.open_days.filter((item) => item !== day.id)
+                                                        ? [
+                                                              ...form.data
+                                                                  .open_days,
+                                                              day.id,
+                                                          ]
+                                                        : form.data.open_days.filter(
+                                                              (item) =>
+                                                                  item !==
+                                                                  day.id,
+                                                          ),
                                                 );
                                             }}
                                         />
@@ -282,7 +368,12 @@ export default function MitraWisataDestination({
                             <Label>Jam Buka</Label>
                             <Input
                                 value={form.data.open_time}
-                                onChange={(event) => form.setData('open_time', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'open_time',
+                                        event.target.value,
+                                    )
+                                }
                                 placeholder="08:00"
                             />
                         </div>
@@ -290,7 +381,12 @@ export default function MitraWisataDestination({
                             <Label>Jam Tutup</Label>
                             <Input
                                 value={form.data.close_time}
-                                onChange={(event) => form.setData('close_time', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'close_time',
+                                        event.target.value,
+                                    )
+                                }
                                 placeholder="17:00"
                             />
                         </div>
@@ -298,24 +394,43 @@ export default function MitraWisataDestination({
                             <Label>Catatan Hari Libur</Label>
                             <Input
                                 value={form.data.holiday_notes}
-                                onChange={(event) => form.setData('holiday_notes', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'holiday_notes',
+                                        event.target.value,
+                                    )
+                                }
                             />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <Label>Fasilitas Wisata</Label>
                             <div className="flex flex-wrap gap-3">
                                 {facilityOptions.map((facility) => (
-                                    <label key={facility.id} className="inline-flex items-center gap-2 text-sm text-slate-600">
+                                    <label
+                                        key={facility.id}
+                                        className="inline-flex items-center gap-2 text-sm text-slate-600"
+                                    >
                                         <input
                                             type="checkbox"
-                                            checked={form.data.facilities.includes(facility.id)}
+                                            checked={form.data.facilities.includes(
+                                                facility.id,
+                                            )}
                                             onChange={(event) => {
-                                                const checked = event.target.checked;
+                                                const checked =
+                                                    event.target.checked;
                                                 form.setData(
                                                     'facilities',
                                                     checked
-                                                        ? [...form.data.facilities, facility.id]
-                                                        : form.data.facilities.filter((item) => item !== facility.id)
+                                                        ? [
+                                                              ...form.data
+                                                                  .facilities,
+                                                              facility.id,
+                                                          ]
+                                                        : form.data.facilities.filter(
+                                                              (item) =>
+                                                                  item !==
+                                                                  facility.id,
+                                                          ),
                                                 );
                                             }}
                                         />
@@ -324,15 +439,25 @@ export default function MitraWisataDestination({
                                 ))}
                             </div>
                         </div>
-                        <div className="grid gap-2 md:grid-cols-2 md:col-span-2">
+                        <div className="grid gap-2 md:col-span-2 md:grid-cols-2">
                             <Input
                                 value={form.data.contact_phone}
-                                onChange={(event) => form.setData('contact_phone', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'contact_phone',
+                                        event.target.value,
+                                    )
+                                }
                                 placeholder="Nomor petugas loket"
                             />
                             <Input
                                 value={form.data.contact_hours}
-                                onChange={(event) => form.setData('contact_hours', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'contact_hours',
+                                        event.target.value,
+                                    )
+                                }
                                 placeholder="Jam bisa dihubungi"
                             />
                         </div>
@@ -342,24 +467,40 @@ export default function MitraWisataDestination({
                                 <input
                                     type="checkbox"
                                     checked={form.data.is_temporarily_closed}
-                                    onChange={(event) => form.setData('is_temporarily_closed', event.target.checked)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'is_temporarily_closed',
+                                            event.target.checked,
+                                        )
+                                    }
                                 />
-                                <span className="text-sm text-slate-600">Tutup sementara</span>
+                                <span className="text-sm text-slate-600">
+                                    Tutup sementara
+                                </span>
                             </div>
                             {form.data.is_temporarily_closed && (
                                 <Input
                                     value={form.data.closure_note}
-                                    onChange={(event) => form.setData('closure_note', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'closure_note',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Catatan penutupan sementara"
                                 />
                             )}
                         </div>
-                        <div className="grid gap-4 md:grid-cols-3 md:col-span-2">
+                        <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
                             <div>
                                 <Label>Foto Gerbang</Label>
                                 {destination.photo_gate_path && (
                                     <img
-                                        src={getPublicUrl(destination.photo_gate_path) ?? ''}
+                                        src={
+                                            getPublicUrl(
+                                                destination.photo_gate_path,
+                                            ) ?? ''
+                                        }
                                         alt="Foto gerbang"
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
@@ -368,14 +509,23 @@ export default function MitraWisataDestination({
                                     type="file"
                                     accept="image/*"
                                     className="mt-2"
-                                    onChange={(event) => form.setData('photo_gate_file', event.target.files?.[0] ?? null)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'photo_gate_file',
+                                            event.target.files?.[0] ?? null,
+                                        )
+                                    }
                                 />
                             </div>
                             <div>
                                 <Label>Foto Area Utama</Label>
                                 {destination.photo_area_path && (
                                     <img
-                                        src={getPublicUrl(destination.photo_area_path) ?? ''}
+                                        src={
+                                            getPublicUrl(
+                                                destination.photo_area_path,
+                                            ) ?? ''
+                                        }
                                         alt="Foto area utama"
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
@@ -384,14 +534,23 @@ export default function MitraWisataDestination({
                                     type="file"
                                     accept="image/*"
                                     className="mt-2"
-                                    onChange={(event) => form.setData('photo_area_file', event.target.files?.[0] ?? null)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'photo_area_file',
+                                            event.target.files?.[0] ?? null,
+                                        )
+                                    }
                                 />
                             </div>
                             <div>
                                 <Label>Foto Loket/Validasi</Label>
                                 {destination.photo_ticket_path && (
                                     <img
-                                        src={getPublicUrl(destination.photo_ticket_path) ?? ''}
+                                        src={
+                                            getPublicUrl(
+                                                destination.photo_ticket_path,
+                                            ) ?? ''
+                                        }
                                         alt="Foto loket"
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
@@ -400,12 +559,63 @@ export default function MitraWisataDestination({
                                     type="file"
                                     accept="image/*"
                                     className="mt-2"
-                                    onChange={(event) => form.setData('photo_ticket_file', event.target.files?.[0] ?? null)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'photo_ticket_file',
+                                            event.target.files?.[0] ?? null,
+                                        )
+                                    }
                                 />
                             </div>
                         </div>
-                        <div className="md:col-span-2 flex justify-end">
-                            <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                        <div className="grid gap-2 md:col-span-2">
+                            <Label>Foto Lainnya (maksimal 5)</Label>
+                            {otherPhotos.length > 0 && (
+                                <div className="mt-2 grid gap-3 sm:grid-cols-2 md:grid-cols-5">
+                                    {otherPhotos.map((path, idx) => (
+                                        <div
+                                            key={`${path}-${idx}`}
+                                            className="relative"
+                                        >
+                                            <img
+                                                src={getPublicUrl(path) ?? ''}
+                                                alt={`Foto lainnya ${idx + 1}`}
+                                                className="h-24 w-full rounded-lg object-cover"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleRemoveOtherPhoto(path)
+                                                }
+                                                className="absolute top-2 right-2 rounded-full bg-rose-600 px-2 py-1 text-[10px] font-semibold text-white"
+                                            >
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                className="mt-2"
+                                onChange={(event) =>
+                                    form.setData(
+                                        'photo_other_files',
+                                        Array.from(event.target.files ?? []),
+                                    )
+                                }
+                            />
+                            <InputError
+                                message={form.errors.photo_other_files}
+                            />
+                        </div>
+                        <div className="flex justify-end md:col-span-2">
+                            <Button
+                                type="submit"
+                                className="bg-sky-600 text-white hover:bg-sky-700"
+                            >
                                 Simpan Perubahan
                             </Button>
                         </div>

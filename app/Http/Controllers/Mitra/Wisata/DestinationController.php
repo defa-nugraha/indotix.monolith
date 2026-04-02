@@ -70,6 +70,10 @@ class DestinationController extends Controller
             'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
             'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
             'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_other_files' => ['nullable', 'array', 'max:5'],
+            'photo_other_files.*' => ['file', 'mimes:jpg,jpeg,png'],
+            'photo_other_remove' => ['nullable', 'array', 'max:5'],
+            'photo_other_remove.*' => ['string'],
         ]);
 
         $destination->fill([
@@ -108,6 +112,41 @@ class DestinationController extends Controller
                     Storage::disk('public')->delete($old);
                 }
             }
+        }
+
+        $existingOthers = is_array($destination->photo_other_paths)
+            ? $destination->photo_other_paths
+            : [];
+        $removeOthers = $data['photo_other_remove'] ?? [];
+        $remainingOthers = array_values(array_filter(
+            $existingOthers,
+            fn ($path) => $path && ! in_array($path, $removeOthers, true),
+        ));
+        $newFiles = $request->file('photo_other_files', []);
+        if (! is_array($newFiles)) {
+            $newFiles = $newFiles ? [$newFiles] : [];
+        }
+        if (count($remainingOthers) + count($newFiles) > 5) {
+            return back()->withErrors([
+                'photo_other_files' => 'Maksimal 5 foto lainnya.',
+            ]);
+        }
+        foreach ($removeOthers as $oldPath) {
+            if (in_array($oldPath, $existingOthers, true)) {
+                Storage::disk('public')->delete($oldPath);
+            }
+        }
+        if ($newFiles !== []) {
+            $added = [];
+            foreach ($newFiles as $file) {
+                $added[] = $mediaCompression->store($file, $folder, 'public');
+            }
+            $remainingOthers = array_merge($remainingOthers, $added);
+        }
+        if ($removeOthers !== [] || $newFiles !== []) {
+            $destination->photo_other_paths = $remainingOthers !== []
+                ? array_values($remainingOthers)
+                : null;
         }
 
         $destination->save();

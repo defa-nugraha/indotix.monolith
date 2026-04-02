@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\RegionController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use App\Http\Controllers\Settings\UserAddressController;
 use Illuminate\Support\Facades\Route;
@@ -21,6 +22,9 @@ Route::middleware(['auth', 'user'])->group(function () {
         ->name('profile.addresses.default');
     Route::delete('settings/addresses/{address}', [UserAddressController::class, 'destroy'])
         ->name('profile.addresses.destroy');
+
+    Route::get('settings/regions/villages', [RegionController::class, 'villages'])
+        ->name('profile.regions.villages');
 });
 
 Route::middleware(['auth', 'verified', 'user'])->group(function () {

@@ -1,11 +1,36 @@
 import { Transition } from '@headlessui/react';
 import { Form, Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import InputError from '@/components/input-error';
-import { CheckCircle2, Mail, MapPinned, Pencil, Phone, Trash2, UserCircle } from 'lucide-react';
+import {
+    CheckCircle2,
+    Mail,
+    MapPinned,
+    Pencil,
+    Phone,
+    Trash2,
+    UserCircle,
+} from 'lucide-react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
+
+type SelectOption = {
+    value: string;
+    label: string;
+    province_code?: string;
+    city_code?: string;
+};
+
+type VillageOption = {
+    value: string;
+    label: string;
+    district_code?: string;
+    city_code?: string;
+    province_code?: string;
+};
 
 type Address = {
     id: number;
@@ -13,39 +38,213 @@ type Address = {
     recipient_name: string;
     phone: string;
     address_line: string;
+    village?: string | null;
+    village_code?: string | null;
     city?: string | null;
+    city_code?: string | null;
+    district?: string | null;
+    district_code?: string | null;
     province?: string | null;
+    province_code?: string | null;
     postal_code?: string | null;
     notes?: string | null;
     is_default: boolean;
 };
 
-function AddressCard({ address }: { address: Address }) {
+const selectStyles = {
+    control: (base: any) => ({
+        ...base,
+        minHeight: '44px',
+        borderColor: '#e2e8f0',
+        boxShadow: 'none',
+        borderRadius: '12px',
+        ':hover': { borderColor: '#94a3b8' },
+    }),
+    valueContainer: (base: any) => ({ ...base, padding: '0 12px' }),
+    input: (base: any) => ({ ...base, margin: 0, padding: 0 }),
+    indicatorSeparator: () => ({ display: 'none' }),
+    dropdownIndicator: (base: any) => ({ ...base, padding: '0 8px' }),
+    menu: (base: any) => ({ ...base, zIndex: 50 }),
+};
+
+const buildVillageLoader =
+    (districtCode?: string, cityCode?: string, provinceCode?: string) =>
+    async (inputValue: string): Promise<VillageOption[]> => {
+        if (!districtCode) {
+            return [];
+        }
+        const search = inputValue.trim();
+        if (search.length > 0 && search.length < 2) {
+            return [];
+        }
+
+        const params = new URLSearchParams();
+        if (search.length >= 2) {
+            params.set('search', search);
+        }
+        if (districtCode) {
+            params.set('district_code', districtCode);
+        }
+        if (cityCode) {
+            params.set('city_code', cityCode);
+        }
+        if (provinceCode) {
+            params.set('province_code', provinceCode);
+        }
+
+        try {
+            const response = await fetch(
+                `/settings/regions/villages?${params.toString()}`,
+                { headers: { 'X-Requested-With': 'XMLHttpRequest' } },
+            );
+
+            if (!response.ok) {
+                return [];
+            }
+
+            return (await response.json()) as VillageOption[];
+        } catch (error) {
+            return [];
+        }
+    };
+
+const villageNoOptionsMessage =
+    (districtCode?: string) =>
+    ({ inputValue }: { inputValue: string }) => {
+        if (!districtCode) {
+            return 'Pilih kecamatan dulu';
+        }
+        if (inputValue.trim().length === 0) {
+            return 'Desa tidak ditemukan';
+        }
+        if (inputValue.trim().length < 2) {
+            return 'Ketik minimal 2 huruf untuk mencari desa';
+        }
+        return 'Desa tidak ditemukan';
+    };
+
+function AddressCard({
+    address,
+    provinces,
+    cities,
+    districts,
+}: {
+    address: Address;
+    provinces: SelectOption[];
+    cities: SelectOption[];
+    districts: SelectOption[];
+}) {
     const [isEditing, setIsEditing] = useState(false);
+    const initialProvinceCode =
+        address.province_code ??
+        (address.province
+            ? (provinces.find((option) => option.label === address.province)
+                  ?.value ?? '')
+            : '');
+    const initialCityCode =
+        address.city_code ??
+        (address.city
+            ? (cities.find(
+                  (option) =>
+                      option.label === address.city &&
+                      (!initialProvinceCode ||
+                          option.province_code === initialProvinceCode),
+              )?.value ?? '')
+            : '');
+    const initialDistrictCode =
+        address.district_code ??
+        (address.district
+            ? (districts.find(
+                  (option) =>
+                      option.label === address.district &&
+                      (!initialCityCode ||
+                          option.city_code === initialCityCode),
+              )?.value ?? '')
+            : '');
+    const initialVillageOption = address.village_code
+        ? {
+              value: address.village_code,
+              label: address.village ?? address.village_code,
+              district_code:
+                  address.district_code || initialDistrictCode || undefined,
+              city_code: address.city_code || initialCityCode || undefined,
+              province_code:
+                  address.province_code || initialProvinceCode || undefined,
+          }
+        : null;
+    const [villageOption, setVillageOption] = useState<VillageOption | null>(
+        initialVillageOption,
+    );
     const form = useForm({
         label: address.label ?? '',
         recipient_name: address.recipient_name ?? '',
         phone: address.phone ?? '',
         address_line: address.address_line ?? '',
-        city: address.city ?? '',
-        province: address.province ?? '',
+        province_code: initialProvinceCode,
+        city_code: initialCityCode,
+        district_code: initialDistrictCode,
+        village_code: address.village_code ?? '',
         postal_code: address.postal_code ?? '',
         notes: address.notes ?? '',
         is_default: address.is_default ?? false,
     });
 
     const formattedAddress = useMemo(() => {
-        return [address.address_line, address.city, address.province, address.postal_code]
+        return [
+            address.address_line,
+            address.village,
+            address.district,
+            address.city,
+            address.province,
+            address.postal_code,
+        ]
             .filter((item) => Boolean(item && `${item}`.trim()))
             .join(', ');
-    }, [address.address_line, address.city, address.province, address.postal_code]);
+    }, [
+        address.address_line,
+        address.village,
+        address.district,
+        address.city,
+        address.province,
+        address.postal_code,
+    ]);
+
+    const provinceCodeValue = form.data.province_code ?? '';
+    const cityCodeValue = form.data.city_code ?? '';
+    const districtCodeValue = form.data.district_code ?? '';
+
+    const filteredCities = provinceCodeValue
+        ? cities.filter((option) => option.province_code === provinceCodeValue)
+        : [];
+
+    const filteredDistricts = cityCodeValue
+        ? districts.filter((option) => option.city_code === cityCodeValue)
+        : [];
+
+    const selectedProvince =
+        provinces.find((option) => option.value === provinceCodeValue) ??
+        (provinceCodeValue
+            ? { value: provinceCodeValue, label: provinceCodeValue }
+            : null);
+    const selectedCity =
+        filteredCities.find((option) => option.value === cityCodeValue) ??
+        (cityCodeValue ? { value: cityCodeValue, label: cityCodeValue } : null);
+    const selectedDistrict =
+        filteredDistricts.find(
+            (option) => option.value === districtCodeValue,
+        ) ??
+        (districtCodeValue
+            ? { value: districtCodeValue, label: districtCodeValue }
+            : null);
 
     return (
         <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
             <div className="flex items-start justify-between gap-4">
                 <div>
                     <div className="flex flex-wrap items-center gap-2">
-                        <div className="text-sm font-semibold text-slate-900">{address.label}</div>
+                        <div className="text-sm font-semibold text-slate-900">
+                            {address.label}
+                        </div>
                         {address.is_default && (
                             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700">
                                 <CheckCircle2 className="h-3 w-3" />
@@ -53,19 +252,33 @@ function AddressCard({ address }: { address: Address }) {
                             </span>
                         )}
                     </div>
-                    <div className="mt-2 text-sm font-semibold text-slate-800">{address.recipient_name}</div>
-                    <div className="mt-1 text-sm text-slate-600">{address.phone}</div>
+                    <div className="mt-2 text-sm font-semibold text-slate-800">
+                        {address.recipient_name}
+                    </div>
+                    <div className="mt-1 text-sm text-slate-600">
+                        {address.phone}
+                    </div>
                     <div className="mt-2 flex items-start gap-2 text-sm text-slate-600">
                         <MapPinned className="mt-0.5 h-4 w-4 text-sky-500" />
                         <span>{formattedAddress || '-'}</span>
                     </div>
-                    {address.notes && <div className="mt-2 text-xs text-slate-500">Catatan: {address.notes}</div>}
+                    {address.notes && (
+                        <div className="mt-2 text-xs text-slate-500">
+                            Catatan: {address.notes}
+                        </div>
+                    )}
                 </div>
                 <div className="flex shrink-0 flex-col gap-2">
                     {!address.is_default && (
                         <button
                             type="button"
-                            onClick={() => router.patch(`/settings/addresses/${address.id}/default`, {}, { preserveScroll: true })}
+                            onClick={() =>
+                                router.patch(
+                                    `/settings/addresses/${address.id}/default`,
+                                    {},
+                                    { preserveScroll: true },
+                                )
+                            }
                             className="rounded-lg border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50"
                         >
                             Jadikan utama
@@ -85,7 +298,10 @@ function AddressCard({ address }: { address: Address }) {
                         type="button"
                         onClick={() => {
                             if (confirm('Hapus alamat ini?')) {
-                                router.delete(`/settings/addresses/${address.id}`, { preserveScroll: true });
+                                router.delete(
+                                    `/settings/addresses/${address.id}`,
+                                    { preserveScroll: true },
+                                );
                             }
                         }}
                         className="rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50"
@@ -111,76 +327,257 @@ function AddressCard({ address }: { address: Address }) {
                 >
                     <div className="grid gap-4 md:grid-cols-2">
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Label</label>
+                            <label className="text-sm font-semibold text-slate-700">
+                                Label
+                            </label>
                             <input
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.label}
-                                onChange={(event) => form.setData('label', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('label', event.target.value)
+                                }
                                 placeholder="Rumah, Kantor, dll"
                             />
                             <InputError message={form.errors.label} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Nama Penerima</label>
+                            <label className="text-sm font-semibold text-slate-700">
+                                Nama Penerima
+                            </label>
                             <input
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.recipient_name}
-                                onChange={(event) => form.setData('recipient_name', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'recipient_name',
+                                        event.target.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.recipient_name} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                            <label className="text-sm font-semibold text-slate-700">
+                                Nomor HP
+                            </label>
                             <input
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.phone}
-                                onChange={(event) => form.setData('phone', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('phone', event.target.value)
+                                }
                             />
                             <InputError message={form.errors.phone} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Alamat Lengkap</label>
+                            <label className="text-sm font-semibold text-slate-700">
+                                Alamat Lengkap
+                            </label>
                             <input
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.address_line}
-                                onChange={(event) => form.setData('address_line', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'address_line',
+                                        event.target.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.address_line} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Kota</label>
-                            <input
-                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                value={form.data.city}
-                                onChange={(event) => form.setData('city', event.target.value)}
+                            <label className="text-sm font-semibold text-slate-700">
+                                Provinsi
+                            </label>
+                            <Select
+                                inputId={`address-province-${address.id}`}
+                                instanceId={`address-province-${address.id}`}
+                                options={provinces}
+                                value={selectedProvince}
+                                placeholder="Pilih provinsi"
+                                onChange={(option) => {
+                                    const nextProvince =
+                                        (option as SelectOption | null)
+                                            ?.value ?? '';
+                                    form.setData('province_code', nextProvince);
+                                    if (form.data.city_code) {
+                                        form.setData('city_code', '');
+                                    }
+                                    if (form.data.district_code) {
+                                        form.setData('district_code', '');
+                                    }
+                                    if (form.data.village_code) {
+                                        form.setData('village_code', '');
+                                    }
+                                    setVillageOption(null);
+                                }}
+                                styles={selectStyles}
                             />
-                            <InputError message={form.errors.city} />
+                            <InputError message={form.errors.province_code} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Provinsi</label>
-                            <input
-                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                value={form.data.province}
-                                onChange={(event) => form.setData('province', event.target.value)}
+                            <label className="text-sm font-semibold text-slate-700">
+                                Kota/Kabupaten
+                            </label>
+                            <Select
+                                inputId={`address-city-${address.id}`}
+                                instanceId={`address-city-${address.id}`}
+                                options={filteredCities}
+                                value={selectedCity}
+                                placeholder={
+                                    provinceCodeValue
+                                        ? 'Pilih kota/kabupaten'
+                                        : 'Pilih provinsi dulu'
+                                }
+                                isDisabled={!provinceCodeValue}
+                                onChange={(option) => {
+                                    const selected =
+                                        option as SelectOption | null;
+                                    const nextCity = selected?.value ?? '';
+                                    form.setData('city_code', nextCity);
+                                    if (form.data.district_code) {
+                                        form.setData('district_code', '');
+                                    }
+                                    if (form.data.village_code) {
+                                        form.setData('village_code', '');
+                                    }
+                                    if (selected?.province_code) {
+                                        form.setData(
+                                            'province_code',
+                                            selected.province_code,
+                                        );
+                                    }
+                                    setVillageOption(null);
+                                }}
+                                styles={selectStyles}
                             />
-                            <InputError message={form.errors.province} />
+                            <InputError message={form.errors.city_code} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Kode Pos</label>
+                            <label className="text-sm font-semibold text-slate-700">
+                                Kecamatan
+                            </label>
+                            <Select
+                                inputId={`address-district-${address.id}`}
+                                instanceId={`address-district-${address.id}`}
+                                options={filteredDistricts}
+                                value={selectedDistrict}
+                                placeholder={
+                                    cityCodeValue
+                                        ? 'Pilih kecamatan'
+                                        : 'Pilih kota dulu'
+                                }
+                                isDisabled={!cityCodeValue}
+                                onChange={(option) => {
+                                    const selected =
+                                        option as SelectOption | null;
+                                    const nextDistrict = selected?.value ?? '';
+                                    form.setData('district_code', nextDistrict);
+                                    if (form.data.village_code) {
+                                        form.setData('village_code', '');
+                                    }
+                                    if (selected?.city_code) {
+                                        form.setData(
+                                            'city_code',
+                                            selected.city_code,
+                                        );
+                                    }
+                                    if (selected?.province_code) {
+                                        form.setData(
+                                            'province_code',
+                                            selected.province_code,
+                                        );
+                                    }
+                                    setVillageOption(null);
+                                }}
+                                styles={selectStyles}
+                            />
+                            <InputError message={form.errors.district_code} />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">
+                                Desa
+                            </label>
+                            <AsyncSelect
+                                key={`address-village-${address.id}-${districtCodeValue || 'none'}`}
+                                inputId={`address-village-${address.id}`}
+                                instanceId={`address-village-${address.id}`}
+                                cacheOptions
+                                defaultOptions={Boolean(districtCodeValue)}
+                                loadOptions={buildVillageLoader(
+                                    districtCodeValue,
+                                    cityCodeValue,
+                                    provinceCodeValue,
+                                )}
+                                isClearable
+                                isDisabled={!districtCodeValue}
+                                noOptionsMessage={villageNoOptionsMessage(
+                                    districtCodeValue,
+                                )}
+                                value={villageOption}
+                                placeholder={
+                                    districtCodeValue
+                                        ? 'Ketik untuk cari desa'
+                                        : 'Pilih kecamatan dulu'
+                                }
+                                onChange={(option) => {
+                                    const selected =
+                                        option as VillageOption | null;
+                                    setVillageOption(selected);
+                                    form.setData(
+                                        'village_code',
+                                        selected?.value ?? '',
+                                    );
+                                    if (selected?.district_code) {
+                                        form.setData(
+                                            'district_code',
+                                            selected.district_code,
+                                        );
+                                    }
+                                    if (selected?.city_code) {
+                                        form.setData(
+                                            'city_code',
+                                            selected.city_code,
+                                        );
+                                    }
+                                    if (selected?.province_code) {
+                                        form.setData(
+                                            'province_code',
+                                            selected.province_code,
+                                        );
+                                    }
+                                }}
+                                styles={selectStyles}
+                            />
+                            <InputError message={form.errors.village_code} />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-semibold text-slate-700">
+                                Kode Pos
+                            </label>
                             <input
                                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.postal_code}
-                                onChange={(event) => form.setData('postal_code', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'postal_code',
+                                        event.target.value,
+                                    )
+                                }
                             />
                             <InputError message={form.errors.postal_code} />
                         </div>
                     </div>
                     <div className="grid gap-2">
-                        <label className="text-sm font-semibold text-slate-700">Catatan (opsional)</label>
+                        <label className="text-sm font-semibold text-slate-700">
+                            Catatan (opsional)
+                        </label>
                         <textarea
                             className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                             value={form.data.notes}
-                            onChange={(event) => form.setData('notes', event.target.value)}
+                            onChange={(event) =>
+                                form.setData('notes', event.target.value)
+                            }
                         />
                         <InputError message={form.errors.notes} />
                     </div>
@@ -188,7 +585,9 @@ function AddressCard({ address }: { address: Address }) {
                         <input
                             type="checkbox"
                             checked={Boolean(form.data.is_default)}
-                            onChange={(event) => form.setData('is_default', event.target.checked)}
+                            onChange={(event) =>
+                                form.setData('is_default', event.target.checked)
+                            }
                         />
                         Jadikan alamat utama
                     </label>
@@ -198,7 +597,9 @@ function AddressCard({ address }: { address: Address }) {
                             className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700"
                             disabled={form.processing}
                         >
-                            {form.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                            {form.processing
+                                ? 'Menyimpan...'
+                                : 'Simpan Perubahan'}
                         </button>
                         <button
                             type="button"
@@ -214,15 +615,34 @@ function AddressCard({ address }: { address: Address }) {
     );
 }
 
-export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: boolean; status?: string }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu, affiliate_status } = usePage().props as {
+export default function Profile({
+    mustVerifyEmail,
+    status,
+}: {
+    mustVerifyEmail: boolean;
+    status?: string;
+}) {
+    const {
+        auth,
+        unread_notifications,
+        souvenir_cart_count,
+        affiliate_menu,
+        affiliate_status,
+        addresses = [],
+        provinces = [],
+        cities = [],
+        districts = [],
+    } = usePage().props as {
         auth?: { user?: any };
         unread_notifications?: number;
         souvenir_cart_count?: number;
         affiliate_menu?: boolean;
         affiliate_status?: string | null;
+        addresses?: Address[];
+        provinces?: SelectOption[];
+        cities?: SelectOption[];
+        districts?: SelectOption[];
     };
-    const { addresses = [] } = usePage().props as { addresses?: Address[] };
     const [passwordOpen, setPasswordOpen] = useState(false);
     const passwordForm = useForm({
         current_password: '',
@@ -234,42 +654,105 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
         recipient_name: '',
         phone: '',
         address_line: '',
-        city: '',
-        province: '',
+        province_code: '',
+        city_code: '',
+        district_code: '',
+        village_code: '',
         postal_code: '',
         notes: '',
         is_default: false,
     });
+    const [newVillageOption, setNewVillageOption] =
+        useState<VillageOption | null>(null);
+
+    const newProvinceCodeValue = addressForm.data.province_code ?? '';
+    const newCityCodeValue = addressForm.data.city_code ?? '';
+    const newDistrictCodeValue = addressForm.data.district_code ?? '';
+
+    const filteredNewCities = newProvinceCodeValue
+        ? cities.filter(
+              (option) => option.province_code === newProvinceCodeValue,
+          )
+        : [];
+
+    const filteredNewDistricts = newCityCodeValue
+        ? districts.filter((option) => option.city_code === newCityCodeValue)
+        : [];
+
+    const selectedNewProvince =
+        provinces.find((option) => option.value === newProvinceCodeValue) ??
+        (newProvinceCodeValue
+            ? { value: newProvinceCodeValue, label: newProvinceCodeValue }
+            : null);
+
+    const selectedNewCity =
+        filteredNewCities.find((option) => option.value === newCityCodeValue) ??
+        (newCityCodeValue
+            ? { value: newCityCodeValue, label: newCityCodeValue }
+            : null);
+
+    const selectedNewDistrict =
+        filteredNewDistricts.find(
+            (option) => option.value === newDistrictCodeValue,
+        ) ??
+        (newDistrictCodeValue
+            ? { value: newDistrictCodeValue, label: newDistrictCodeValue }
+            : null);
 
     return (
         <PublicLayout showCategories={false} showChips={false}>
             <Head title="Profil Saya">
-                <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
+                <link
+                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
+                    rel="stylesheet"
+                />
             </Head>
 
-                        <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                     <div className="space-y-6">
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
-                            <h1 className="text-2xl font-semibold text-slate-900">Profil Saya</h1>
-                            <p className="mt-2 text-sm text-slate-500">Kelola informasi pribadi agar pemesanan kamu makin lancar.</p>
+                            <h1 className="text-2xl font-semibold text-slate-900">
+                                Profil Saya
+                            </h1>
+                            <p className="mt-2 text-sm text-slate-500">
+                                Kelola informasi pribadi agar pemesanan kamu
+                                makin lancar.
+                            </p>
                         </div>
 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Informasi Pribadi</h2>
-                            <p className="mt-2 text-sm text-slate-500">Update nama dan email yang akan digunakan untuk konfirmasi.</p>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Informasi Pribadi
+                            </h2>
+                            <p className="mt-2 text-sm text-slate-500">
+                                Update nama dan email yang akan digunakan untuk
+                                konfirmasi.
+                            </p>
 
-                            <Form {...ProfileController.update.form()} options={{ preserveScroll: true }} className="mt-6 grid gap-5">
-                                {({ processing, recentlySuccessful, errors }) => (
+                            <Form
+                                {...ProfileController.update.form()}
+                                options={{ preserveScroll: true }}
+                                className="mt-6 grid gap-5"
+                            >
+                                {({
+                                    processing,
+                                    recentlySuccessful,
+                                    errors,
+                                }) => (
                                     <>
                                         <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">Nama Lengkap</label>
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Nama Lengkap
+                                            </label>
                                             <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                                 <UserCircle className="h-4 w-4 text-slate-400" />
                                                 <input
                                                     name="name"
                                                     required
-                                                    defaultValue={auth?.user?.name ?? ''}
+                                                    defaultValue={
+                                                        auth?.user?.name ?? ''
+                                                    }
                                                     className="h-10 w-full bg-transparent text-sm outline-none"
                                                     placeholder="Nama lengkap"
                                                     autoComplete="name"
@@ -279,70 +762,104 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">Email</label>
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Email
+                                            </label>
                                             <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                                 <Mail className="h-4 w-4 text-slate-400" />
                                                 <input
                                                     name="email"
                                                     type="email"
                                                     required
-                                                    defaultValue={auth?.user?.email ?? ''}
+                                                    defaultValue={
+                                                        auth?.user?.email ?? ''
+                                                    }
                                                     className="h-10 w-full bg-transparent text-sm outline-none"
                                                     placeholder="Email aktif"
                                                     autoComplete="username"
                                                 />
                                             </div>
-                                            <InputError message={errors.email} />
+                                            <InputError
+                                                message={errors.email}
+                                            />
                                         </div>
 
                                         <div className="grid gap-2 md:grid-cols-2">
                                             <div className="grid gap-2">
-                                                <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Nomor HP
+                                                </label>
                                                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                                     <Phone className="h-4 w-4 text-slate-400" />
                                                     <input
                                                         name="phone"
-                                                        defaultValue={auth?.user?.phone ?? ''}
+                                                        defaultValue={
+                                                            auth?.user?.phone ??
+                                                            ''
+                                                        }
                                                         className="h-10 w-full bg-transparent text-sm outline-none"
                                                         placeholder="0812xxxxxxx"
                                                     />
                                                 </div>
-                                                <InputError message={errors.phone} />
+                                                <InputError
+                                                    message={errors.phone}
+                                                />
                                             </div>
                                             <div className="grid gap-2">
-                                                <label className="text-sm font-semibold text-slate-700">Jenis Kelamin</label>
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Jenis Kelamin
+                                                </label>
                                                 <select
                                                     name="gender"
-                                                    defaultValue={auth?.user?.gender ?? ''}
+                                                    defaultValue={
+                                                        auth?.user?.gender ?? ''
+                                                    }
                                                     className="h-12 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700"
                                                 >
-                                                    <option value="">Pilih</option>
-                                                    <option value="male">Laki-laki</option>
-                                                    <option value="female">Perempuan</option>
-                                                    <option value="other">Lainnya</option>
+                                                    <option value="">
+                                                        Pilih
+                                                    </option>
+                                                    <option value="male">
+                                                        Laki-laki
+                                                    </option>
+                                                    <option value="female">
+                                                        Perempuan
+                                                    </option>
+                                                    <option value="other">
+                                                        Lainnya
+                                                    </option>
                                                 </select>
-                                                <InputError message={errors.gender} />
+                                                <InputError
+                                                    message={errors.gender}
+                                                />
                                             </div>
                                         </div>
 
-                                        {mustVerifyEmail && auth?.user?.email_verified_at === null && (
-                                            <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
-                                                Email kamu belum terverifikasi.{' '}
-                                                <Link
-                                                    href="/email/verification-notification"
-                                                    method="post"
-                                                    as="button"
-                                                    className="font-semibold underline underline-offset-4"
-                                                >
-                                                    Klik untuk kirim ulang verifikasi
-                                                </Link>
-                                                {status === 'verification-link-sent' && (
-                                                    <div className="mt-2 text-sm font-semibold text-emerald-600">
-                                                        Tautan verifikasi baru sudah dikirim ke email kamu.
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
+                                        {mustVerifyEmail &&
+                                            auth?.user?.email_verified_at ===
+                                                null && (
+                                                <div className="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                                                    Email kamu belum
+                                                    terverifikasi.{' '}
+                                                    <Link
+                                                        href="/email/verification-notification"
+                                                        method="post"
+                                                        as="button"
+                                                        className="font-semibold underline underline-offset-4"
+                                                    >
+                                                        Klik untuk kirim ulang
+                                                        verifikasi
+                                                    </Link>
+                                                    {status ===
+                                                        'verification-link-sent' && (
+                                                        <div className="mt-2 text-sm font-semibold text-emerald-600">
+                                                            Tautan verifikasi
+                                                            baru sudah dikirim
+                                                            ke email kamu.
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
 
                                         <div className="flex items-center gap-3">
                                             <button
@@ -350,7 +867,9 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                                 disabled={processing}
                                                 className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
                                             >
-                                                {processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                                                {processing
+                                                    ? 'Menyimpan...'
+                                                    : 'Simpan Perubahan'}
                                             </button>
                                             <Transition
                                                 show={recentlySuccessful}
@@ -359,7 +878,9 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                                 leave="transition ease-in-out"
                                                 leaveTo="opacity-0"
                                             >
-                                                <span className="text-sm text-emerald-600">Perubahan tersimpan.</span>
+                                                <span className="text-sm text-emerald-600">
+                                                    Perubahan tersimpan.
+                                                </span>
                                             </Transition>
                                         </div>
                                     </>
@@ -370,17 +891,31 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <div className="flex items-center justify-between gap-4">
                                 <div>
-                                    <h2 className="text-lg font-semibold text-slate-900">Alamat Pengiriman</h2>
-                                    <p className="mt-2 text-sm text-slate-500">Kelola alamat utama untuk pengiriman pesanan.</p>
+                                    <h2 className="text-lg font-semibold text-slate-900">
+                                        Alamat Pengiriman
+                                    </h2>
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        Kelola alamat utama untuk pengiriman
+                                        pesanan.
+                                    </p>
                                 </div>
                             </div>
 
                             <div className="mt-5 grid gap-4">
                                 {addresses.length > 0 ? (
-                                    addresses.map((address) => <AddressCard key={address.id} address={address} />)
+                                    addresses.map((address) => (
+                                        <AddressCard
+                                            key={address.id}
+                                            address={address}
+                                            provinces={provinces}
+                                            cities={cities}
+                                            districts={districts}
+                                        />
+                                    ))
                                 ) : (
                                     <div className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-                                        Belum ada alamat tersimpan. Tambahkan alamat utama agar checkout lebih cepat.
+                                        Belum ada alamat tersimpan. Tambahkan
+                                        alamat utama agar checkout lebih cepat.
                                     </div>
                                 )}
                             </div>
@@ -391,91 +926,381 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                     event.preventDefault();
                                     addressForm.post('/settings/addresses', {
                                         preserveScroll: true,
-                                        onSuccess: () => addressForm.reset(),
+                                        onSuccess: () => {
+                                            addressForm.reset();
+                                            setNewVillageOption(null);
+                                        },
                                     });
                                 }}
                             >
-                                <h3 className="text-sm font-semibold text-slate-900">Tambah Alamat Baru</h3>
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    Tambah Alamat Baru
+                                </h3>
                                 <div className="grid gap-4 md:grid-cols-2">
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Label</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Label
+                                        </label>
                                         <input
                                             className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                             value={addressForm.data.label}
-                                            onChange={(event) => addressForm.setData('label', event.target.value)}
+                                            onChange={(event) =>
+                                                addressForm.setData(
+                                                    'label',
+                                                    event.target.value,
+                                                )
+                                            }
                                             placeholder="Rumah, Kantor, dll"
                                         />
-                                        <InputError message={addressForm.errors.label} />
+                                        <InputError
+                                            message={addressForm.errors.label}
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Nama Penerima</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Nama Penerima
+                                        </label>
                                         <input
                                             className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={addressForm.data.recipient_name}
-                                            onChange={(event) => addressForm.setData('recipient_name', event.target.value)}
+                                            value={
+                                                addressForm.data.recipient_name
+                                            }
+                                            onChange={(event) =>
+                                                addressForm.setData(
+                                                    'recipient_name',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={addressForm.errors.recipient_name} />
+                                        <InputError
+                                            message={
+                                                addressForm.errors
+                                                    .recipient_name
+                                            }
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Nomor HP
+                                        </label>
                                         <input
                                             className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                             value={addressForm.data.phone}
-                                            onChange={(event) => addressForm.setData('phone', event.target.value)}
+                                            onChange={(event) =>
+                                                addressForm.setData(
+                                                    'phone',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={addressForm.errors.phone} />
+                                        <InputError
+                                            message={addressForm.errors.phone}
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Alamat Lengkap</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Alamat Lengkap
+                                        </label>
                                         <input
                                             className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={addressForm.data.address_line}
-                                            onChange={(event) => addressForm.setData('address_line', event.target.value)}
+                                            value={
+                                                addressForm.data.address_line
+                                            }
+                                            onChange={(event) =>
+                                                addressForm.setData(
+                                                    'address_line',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={addressForm.errors.address_line} />
+                                        <InputError
+                                            message={
+                                                addressForm.errors.address_line
+                                            }
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Kota</label>
-                                        <input
-                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={addressForm.data.city}
-                                            onChange={(event) => addressForm.setData('city', event.target.value)}
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Provinsi
+                                        </label>
+                                        <Select
+                                            inputId="address-province-new"
+                                            instanceId="address-province-new"
+                                            options={provinces}
+                                            value={selectedNewProvince}
+                                            placeholder="Pilih provinsi"
+                                            onChange={(option) => {
+                                                const nextProvince =
+                                                    (
+                                                        option as SelectOption | null
+                                                    )?.value ?? '';
+                                                addressForm.setData(
+                                                    'province_code',
+                                                    nextProvince,
+                                                );
+                                                if (
+                                                    addressForm.data.city_code
+                                                ) {
+                                                    addressForm.setData(
+                                                        'city_code',
+                                                        '',
+                                                    );
+                                                }
+                                                if (
+                                                    addressForm.data
+                                                        .district_code
+                                                ) {
+                                                    addressForm.setData(
+                                                        'district_code',
+                                                        '',
+                                                    );
+                                                }
+                                                if (
+                                                    addressForm.data
+                                                        .village_code
+                                                ) {
+                                                    addressForm.setData(
+                                                        'village_code',
+                                                        '',
+                                                    );
+                                                }
+                                                setNewVillageOption(null);
+                                            }}
+                                            styles={selectStyles}
                                         />
-                                        <InputError message={addressForm.errors.city} />
+                                        <InputError
+                                            message={
+                                                addressForm.errors.province_code
+                                            }
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Provinsi</label>
-                                        <input
-                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={addressForm.data.province}
-                                            onChange={(event) => addressForm.setData('province', event.target.value)}
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Kota/Kabupaten
+                                        </label>
+                                        <Select
+                                            inputId="address-city-new"
+                                            instanceId="address-city-new"
+                                            options={filteredNewCities}
+                                            value={selectedNewCity}
+                                            placeholder={
+                                                newProvinceCodeValue
+                                                    ? 'Pilih kota/kabupaten'
+                                                    : 'Pilih provinsi dulu'
+                                            }
+                                            isDisabled={!newProvinceCodeValue}
+                                            onChange={(option) => {
+                                                const selected =
+                                                    option as SelectOption | null;
+                                                const nextCity =
+                                                    selected?.value ?? '';
+                                                addressForm.setData(
+                                                    'city_code',
+                                                    nextCity,
+                                                );
+                                                if (
+                                                    addressForm.data
+                                                        .district_code
+                                                ) {
+                                                    addressForm.setData(
+                                                        'district_code',
+                                                        '',
+                                                    );
+                                                }
+                                                if (
+                                                    addressForm.data
+                                                        .village_code
+                                                ) {
+                                                    addressForm.setData(
+                                                        'village_code',
+                                                        '',
+                                                    );
+                                                }
+                                                if (selected?.province_code) {
+                                                    addressForm.setData(
+                                                        'province_code',
+                                                        selected.province_code,
+                                                    );
+                                                }
+                                                setNewVillageOption(null);
+                                            }}
+                                            styles={selectStyles}
                                         />
-                                        <InputError message={addressForm.errors.province} />
+                                        <InputError
+                                            message={
+                                                addressForm.errors.city_code
+                                            }
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Kode Pos</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Kecamatan
+                                        </label>
+                                        <Select
+                                            inputId="address-district-new"
+                                            instanceId="address-district-new"
+                                            options={filteredNewDistricts}
+                                            value={selectedNewDistrict}
+                                            placeholder={
+                                                newCityCodeValue
+                                                    ? 'Pilih kecamatan'
+                                                    : 'Pilih kota dulu'
+                                            }
+                                            isDisabled={!newCityCodeValue}
+                                            onChange={(option) => {
+                                                const selected =
+                                                    option as SelectOption | null;
+                                                const nextDistrict =
+                                                    selected?.value ?? '';
+                                                addressForm.setData(
+                                                    'district_code',
+                                                    nextDistrict,
+                                                );
+                                                if (
+                                                    addressForm.data
+                                                        .village_code
+                                                ) {
+                                                    addressForm.setData(
+                                                        'village_code',
+                                                        '',
+                                                    );
+                                                }
+                                                if (selected?.city_code) {
+                                                    addressForm.setData(
+                                                        'city_code',
+                                                        selected.city_code,
+                                                    );
+                                                }
+                                                if (selected?.province_code) {
+                                                    addressForm.setData(
+                                                        'province_code',
+                                                        selected.province_code,
+                                                    );
+                                                }
+                                                setNewVillageOption(null);
+                                            }}
+                                            styles={selectStyles}
+                                        />
+                                        <InputError
+                                            message={
+                                                addressForm.errors.district_code
+                                            }
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Desa
+                                        </label>
+                                        <AsyncSelect
+                                            key={`address-village-new-${newDistrictCodeValue || 'none'}`}
+                                            inputId="address-village-new"
+                                            instanceId="address-village-new"
+                                            cacheOptions
+                                            defaultOptions={Boolean(
+                                                newDistrictCodeValue,
+                                            )}
+                                            loadOptions={buildVillageLoader(
+                                                newDistrictCodeValue,
+                                                newCityCodeValue,
+                                                newProvinceCodeValue,
+                                            )}
+                                            isClearable
+                                            isDisabled={!newDistrictCodeValue}
+                                            noOptionsMessage={villageNoOptionsMessage(
+                                                newDistrictCodeValue,
+                                            )}
+                                            value={newVillageOption}
+                                            placeholder={
+                                                newDistrictCodeValue
+                                                    ? 'Ketik untuk cari desa'
+                                                    : 'Pilih kecamatan dulu'
+                                            }
+                                            onChange={(option) => {
+                                                const selected =
+                                                    option as VillageOption | null;
+                                                setNewVillageOption(selected);
+                                                addressForm.setData(
+                                                    'village_code',
+                                                    selected?.value ?? '',
+                                                );
+                                                if (selected?.district_code) {
+                                                    addressForm.setData(
+                                                        'district_code',
+                                                        selected.district_code,
+                                                    );
+                                                }
+                                                if (selected?.city_code) {
+                                                    addressForm.setData(
+                                                        'city_code',
+                                                        selected.city_code,
+                                                    );
+                                                }
+                                                if (selected?.province_code) {
+                                                    addressForm.setData(
+                                                        'province_code',
+                                                        selected.province_code,
+                                                    );
+                                                }
+                                            }}
+                                            styles={selectStyles}
+                                        />
+                                        <InputError
+                                            message={
+                                                addressForm.errors.village_code
+                                            }
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Kode Pos
+                                        </label>
                                         <input
                                             className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                             value={addressForm.data.postal_code}
-                                            onChange={(event) => addressForm.setData('postal_code', event.target.value)}
+                                            onChange={(event) =>
+                                                addressForm.setData(
+                                                    'postal_code',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={addressForm.errors.postal_code} />
+                                        <InputError
+                                            message={
+                                                addressForm.errors.postal_code
+                                            }
+                                        />
                                     </div>
                                 </div>
                                 <div className="grid gap-2">
-                                    <label className="text-sm font-semibold text-slate-700">Catatan (opsional)</label>
+                                    <label className="text-sm font-semibold text-slate-700">
+                                        Catatan (opsional)
+                                    </label>
                                     <textarea
                                         className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
                                         value={addressForm.data.notes}
-                                        onChange={(event) => addressForm.setData('notes', event.target.value)}
+                                        onChange={(event) =>
+                                            addressForm.setData(
+                                                'notes',
+                                                event.target.value,
+                                            )
+                                        }
                                     />
-                                    <InputError message={addressForm.errors.notes} />
+                                    <InputError
+                                        message={addressForm.errors.notes}
+                                    />
                                 </div>
                                 <label className="flex items-center gap-2 text-sm text-slate-600">
                                     <input
                                         type="checkbox"
-                                        checked={Boolean(addressForm.data.is_default)}
-                                        onChange={(event) => addressForm.setData('is_default', event.target.checked)}
+                                        checked={Boolean(
+                                            addressForm.data.is_default,
+                                        )}
+                                        onChange={(event) =>
+                                            addressForm.setData(
+                                                'is_default',
+                                                event.target.checked,
+                                            )
+                                        }
                                     />
                                     Jadikan alamat utama
                                 </label>
@@ -484,14 +1309,20 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                     className="w-fit rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700"
                                     disabled={addressForm.processing}
                                 >
-                                    {addressForm.processing ? 'Menyimpan...' : 'Simpan Alamat'}
+                                    {addressForm.processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Alamat'}
                                 </button>
                             </form>
                         </div>
 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Akun & Keamanan</h2>
-                            <p className="mt-2 text-sm text-slate-500">Kelola kata sandi dan sesi akun kamu.</p>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Akun & Keamanan
+                            </h2>
+                            <p className="mt-2 text-sm text-slate-500">
+                                Kelola kata sandi dan sesi akun kamu.
+                            </p>
                             <div className="mt-4 flex flex-wrap gap-3">
                                 <button
                                     type="button"
@@ -519,18 +1350,30 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                                     <UserCircle className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <div className="text-sm font-semibold text-slate-900">{auth?.user?.name ?? 'User'}</div>
-                                    <div className="text-xs text-slate-500">{auth?.user?.email}</div>
+                                    <div className="text-sm font-semibold text-slate-900">
+                                        {auth?.user?.name ?? 'User'}
+                                    </div>
+                                    <div className="text-xs text-slate-500">
+                                        {auth?.user?.email}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="mt-4 text-xs text-slate-500">Terakhir diperbarui otomatis setelah kamu menyimpan perubahan.</div>
+                            <div className="mt-4 text-xs text-slate-500">
+                                Terakhir diperbarui otomatis setelah kamu
+                                menyimpan perubahan.
+                            </div>
                         </div>
 
                         {affiliate_menu && (
                             <div className="rounded-2xl bg-white p-6 shadow-sm">
-                                <h3 className="text-sm font-semibold text-slate-900">Afiliasi Wisata</h3>
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    Afiliasi Wisata
+                                </h3>
                                 <p className="mt-2 text-sm text-slate-600">
-                                    Status akun: <span className="font-semibold capitalize">{affiliate_status ?? 'pending'}</span>
+                                    Status akun:{' '}
+                                    <span className="font-semibold capitalize">
+                                        {affiliate_status ?? 'pending'}
+                                    </span>
                                 </p>
                                 <Link
                                     href="/affiliate"
@@ -542,8 +1385,12 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         )}
 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-900">Kontak Bantuan</h3>
-                            <p className="mt-2 text-sm text-slate-600">Butuh bantuan cepat? Hubungi tim INDOTIX.</p>
+                            <h3 className="text-sm font-semibold text-slate-900">
+                                Kontak Bantuan
+                            </h3>
+                            <p className="mt-2 text-sm text-slate-600">
+                                Butuh bantuan cepat? Hubungi tim INDOTIX.
+                            </p>
                             <div className="mt-4 space-y-2 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <Phone className="h-4 w-4 text-sky-500" />
@@ -557,110 +1404,167 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         </div>
                     </aside>
                 </div>
-            {passwordOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-                    <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <h3 className="text-lg font-semibold text-slate-900">Ubah Password</h3>
-                                <p className="mt-1 text-sm text-slate-500">Pastikan password baru aman dan mudah diingat.</p>
-                            </div>
-                            <button
-                                type="button"
-                                className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600 hover:bg-slate-200"
-                                onClick={() => {
-                                    setPasswordOpen(false);
-                                    passwordForm.reset();
-                                }}
-                            >
-                                Tutup
-                            </button>
-                        </div>
-
-                        <form
-                            className="mt-5 grid gap-4"
-                            onSubmit={(event) => {
-                                event.preventDefault();
-                                passwordForm.put('/settings/password', {
-                                    onSuccess: () => {
-                                        passwordForm.reset();
-                                        setPasswordOpen(false);
-                                    },
-                                });
-                            }}
-                        >
-                            <div className="grid gap-2">
-                                <label className="text-sm font-semibold text-slate-700">Password Saat Ini</label>
-                                <input
-                                    type="password"
-                                    value={passwordForm.data.current_password}
-                                    onChange={(event) => passwordForm.setData('current_password', event.target.value)}
-                                    className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
-                                    placeholder="Masukkan password lama"
-                                />
-                                <InputError message={passwordForm.errors.current_password} />
-                            </div>
-                            <div className="grid gap-2">
-                                <label className="text-sm font-semibold text-slate-700">Password Baru</label>
-                                <input
-                                    type="password"
-                                    value={passwordForm.data.password}
-                                    onChange={(event) => passwordForm.setData('password', event.target.value)}
-                                    className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
-                                    placeholder="Minimal 8 karakter"
-                                />
-                                <InputError message={passwordForm.errors.password} />
-                            </div>
-                            <div className="grid gap-2">
-                                <label className="text-sm font-semibold text-slate-700">Konfirmasi Password</label>
-                                <input
-                                    type="password"
-                                    value={passwordForm.data.password_confirmation}
-                                    onChange={(event) => passwordForm.setData('password_confirmation', event.target.value)}
-                                    className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
-                                    placeholder="Ulangi password baru"
-                                />
-                                <InputError message={passwordForm.errors.password_confirmation} />
-                            </div>
-                            <div className="flex items-center justify-end gap-2">
+                {passwordOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+                        <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-slate-900">
+                                        Ubah Password
+                                    </h3>
+                                    <p className="mt-1 text-sm text-slate-500">
+                                        Pastikan password baru aman dan mudah
+                                        diingat.
+                                    </p>
+                                </div>
                                 <button
                                     type="button"
-                                    className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                                    className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600 hover:bg-slate-200"
                                     onClick={() => {
                                         setPasswordOpen(false);
                                         passwordForm.reset();
                                     }}
                                 >
-                                    Batal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={passwordForm.processing}
-                                    className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
-                                >
-                                    {passwordForm.processing ? 'Menyimpan...' : 'Simpan Password'}
+                                    Tutup
                                 </button>
                             </div>
-                        </form>
+
+                            <form
+                                className="mt-5 grid gap-4"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    passwordForm.put('/settings/password', {
+                                        onSuccess: () => {
+                                            passwordForm.reset();
+                                            setPasswordOpen(false);
+                                        },
+                                    });
+                                }}
+                            >
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-semibold text-slate-700">
+                                        Password Saat Ini
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={
+                                            passwordForm.data.current_password
+                                        }
+                                        onChange={(event) =>
+                                            passwordForm.setData(
+                                                'current_password',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+                                        placeholder="Masukkan password lama"
+                                    />
+                                    <InputError
+                                        message={
+                                            passwordForm.errors.current_password
+                                        }
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-semibold text-slate-700">
+                                        Password Baru
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={passwordForm.data.password}
+                                        onChange={(event) =>
+                                            passwordForm.setData(
+                                                'password',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+                                        placeholder="Minimal 8 karakter"
+                                    />
+                                    <InputError
+                                        message={passwordForm.errors.password}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-semibold text-slate-700">
+                                        Konfirmasi Password
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={
+                                            passwordForm.data
+                                                .password_confirmation
+                                        }
+                                        onChange={(event) =>
+                                            passwordForm.setData(
+                                                'password_confirmation',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
+                                        placeholder="Ulangi password baru"
+                                    />
+                                    <InputError
+                                        message={
+                                            passwordForm.errors
+                                                .password_confirmation
+                                        }
+                                    />
+                                </div>
+                                <div className="flex items-center justify-end gap-2">
+                                    <button
+                                        type="button"
+                                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                                        onClick={() => {
+                                            setPasswordOpen(false);
+                                            passwordForm.reset();
+                                        }}
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={passwordForm.processing}
+                                        className="rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
+                                    >
+                                        {passwordForm.processing
+                                            ? 'Menyimpan...'
+                                            : 'Simpan Password'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
             </main>
 
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
+                        <Link href="/">
+                            <img
+                                src="/logo.png"
+                                alt="Indotix"
+                                className="h-11 w-36 object-contain"
+                            />
+                        </Link>
                         <p className="mt-3 text-sm text-slate-600">
-                            Neo Soho Capital 40th Floor<br />
+                            Neo Soho Capital 40th Floor
+                            <br />
                             Jl. Tanjung Duren Raya No 1<br />
                             Jakarta Barat, DKI Jakarta 11470
                         </p>
-                        <p className="mt-4 text-sm text-slate-600">0812 9205 9888</p>
-                        <p className="text-sm text-slate-600">info@indotix.co.id</p>
+                        <p className="mt-4 text-sm text-slate-600">
+                            0812 9205 9888
+                        </p>
+                        <p className="text-sm text-slate-600">
+                            info@indotix.co.id
+                        </p>
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Layanan</h4>
+                        <h4 className="text-sm font-semibold text-slate-900">
+                            Layanan
+                        </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>Wisata</li>
                             <li>Special Program</li>
@@ -670,19 +1574,41 @@ export default function Profile({ mustVerifyEmail, status }: { mustVerifyEmail: 
                         </ul>
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Perusahaan</h4>
+                        <h4 className="text-sm font-semibold text-slate-900">
+                            Perusahaan
+                        </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>
-                                <Link href="/about" className="transition hover:text-sky-600">Tentang Kami</Link>
+                                <Link
+                                    href="/about"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Tentang Kami
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/jelajah" className="transition hover:text-sky-600">Blog</Link>
+                                <Link
+                                    href="/jelajah"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Blog
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/faq" className="transition hover:text-sky-600">FAQ</Link>
+                                <Link
+                                    href="/faq"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    FAQ
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/privacy-policy" className="transition hover:text-sky-600">Kebijakan Privasi</Link>
+                                <Link
+                                    href="/privacy-policy"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Kebijakan Privasi
+                                </Link>
                             </li>
                         </ul>
                     </div>

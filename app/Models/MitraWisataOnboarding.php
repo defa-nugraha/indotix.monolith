@@ -42,6 +42,7 @@ class MitraWisataOnboarding extends Model
         'photo_gate_path',
         'photo_area_path',
         'photo_ticket_path',
+        'photo_other_paths',
         'contact_phone',
         'contact_hours',
         'ktp_path',
@@ -79,6 +80,7 @@ class MitraWisataOnboarding extends Model
         'photo_gate_hidden' => 'boolean',
         'photo_area_hidden' => 'boolean',
         'photo_ticket_hidden' => 'boolean',
+        'photo_other_paths' => 'array',
         'is_temporarily_closed' => 'boolean',
     ];
 

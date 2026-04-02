@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 
 type DestinationRow = {
     id: number;
+    encrypted_id: string;
     destination_name: string | null;
     destination_type: string | null;
     city_code: string | null;
@@ -42,12 +43,20 @@ const statusTone = (status?: string | null) => {
     return 'bg-slate-50 text-slate-600';
 };
 
-export default function AdminWisataDestinationsIndex({ destinations, cities, filters }: Props) {
+export default function AdminWisataDestinationsIndex({
+    destinations,
+    cities,
+    filters,
+}: Props) {
     const submitFilters = (form: HTMLFormElement) => {
         const data = new FormData(form);
-        router.get('/admin/wisata/destinations', Object.fromEntries(data.entries()), {
-            preserveState: true,
-        });
+        router.get(
+            '/admin/wisata/destinations',
+            Object.fromEntries(data.entries()),
+            {
+                preserveState: true,
+            },
+        );
     };
 
     return (
@@ -57,12 +66,15 @@ export default function AdminWisataDestinationsIndex({ destinations, cities, fil
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
                                 Wisata
                             </p>
-                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">Master Destinasi Wisata</h1>
+                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                                Master Destinasi Wisata
+                            </h1>
                             <p className="text-sm text-slate-500">
-                                Monitor destinasi, status live, dan tindakan admin.
+                                Monitor destinasi, status live, dan tindakan
+                                admin.
                             </p>
                         </div>
                     </div>
@@ -102,7 +114,10 @@ export default function AdminWisataDestinationsIndex({ destinations, cities, fil
                                 </option>
                             ))}
                         </select>
-                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                        <Button
+                            type="submit"
+                            className="bg-sky-600 text-white hover:bg-sky-700"
+                        >
                             Filter
                         </Button>
                     </form>
@@ -111,46 +126,77 @@ export default function AdminWisataDestinationsIndex({ destinations, cities, fil
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-hidden rounded-2xl border border-slate-100">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
-                                    <th className="px-4 py-3 text-left">Destinasi</th>
-                                    <th className="px-4 py-3 text-left">Mitra</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
-                                    <th className="px-4 py-3 text-left">Live</th>
-                                    <th className="px-4 py-3 text-left">Aksi</th>
+                                    <th className="px-4 py-3 text-left">
+                                        Destinasi
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Mitra
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Status
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Live
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {destinations.data.map((row) => (
-                                    <tr key={row.id} className="border-t border-slate-100">
+                                    <tr
+                                        key={row.id}
+                                        className="border-t border-slate-100"
+                                    >
                                         <td className="px-4 py-3">
                                             <div className="font-semibold text-slate-900">
-                                                {row.destination_name ?? 'Belum diisi'}
+                                                {row.destination_name ??
+                                                    'Belum diisi'}
                                             </div>
                                             <div className="text-xs text-slate-500">
-                                                {row.destination_type ?? '-'} · {row.city_code ?? '-'}
+                                                {row.destination_type ?? '-'} ·{' '}
+                                                {row.city_code ?? '-'}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="text-slate-900">{row.user?.name ?? '-'}</div>
-                                            <div className="text-xs text-slate-500">{row.user?.email ?? ''}</div>
+                                            <div className="text-slate-900">
+                                                {row.user?.name ?? '-'}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                {row.user?.email ?? ''}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge className={statusTone(row.verification_status)}>
+                                            <Badge
+                                                className={statusTone(
+                                                    row.verification_status,
+                                                )}
+                                            >
                                                 {row.verification_status}
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge className={row.is_live ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}>
+                                            <Badge
+                                                className={
+                                                    row.is_live
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-slate-50 text-slate-600'
+                                                }
+                                            >
                                                 {row.is_live ? 'Live' : 'Draft'}
                                             </Badge>
                                             {row.is_suspended && (
-                                                <Badge className="ml-2 bg-red-50 text-red-600">Suspended</Badge>
+                                                <Badge className="ml-2 bg-red-50 text-red-600">
+                                                    Suspended
+                                                </Badge>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
                                             <Link
-                                                href={`/admin/wisata/destinations/${row.id}`}
+                                                href={`/admin/wisata/destinations/${row.encrypted_id}`}
                                                 className="text-sm font-semibold text-sky-600 hover:underline"
                                             >
                                                 Detail
@@ -160,7 +206,10 @@ export default function AdminWisataDestinationsIndex({ destinations, cities, fil
                                 ))}
                                 {destinations.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td
+                                            colSpan={5}
+                                            className="px-4 py-8 text-center text-sm text-slate-500"
+                                        >
                                             Belum ada destinasi wisata.
                                         </td>
                                     </tr>

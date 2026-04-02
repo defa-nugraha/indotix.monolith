@@ -219,6 +219,11 @@ class PublicWisataController extends Controller
                 'photo_gate_url' => $destination->photo_gate_path ? '/storage/'.$destination->photo_gate_path : null,
                 'photo_area_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
                 'photo_ticket_url' => $destination->photo_ticket_path ? '/storage/'.$destination->photo_ticket_path : null,
+                'photo_other_urls' => collect($destination->photo_other_paths ?? [])
+                    ->filter()
+                    ->map(fn ($path) => '/storage/'.$path)
+                    ->values()
+                    ->all(),
                 'maps_pin_url' => $destination->maps_pin_url,
                 'latitude' => $this->extractLatitude($destination->maps_pin_url),
                 'longitude' => $this->extractLongitude($destination->maps_pin_url),

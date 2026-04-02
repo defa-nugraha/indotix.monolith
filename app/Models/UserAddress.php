@@ -12,8 +12,14 @@ class UserAddress extends Model
         'recipient_name',
         'phone',
         'address_line',
+        'village',
+        'village_code',
         'city',
+        'city_code',
+        'district',
+        'district_code',
         'province',
+        'province_code',
         'postal_code',
         'notes',
         'is_default',
@@ -32,6 +38,8 @@ class UserAddress extends Model
     {
         $parts = array_filter([
             $this->address_line,
+            $this->village,
+            $this->district,
             $this->city,
             $this->province,
             $this->postal_code,
