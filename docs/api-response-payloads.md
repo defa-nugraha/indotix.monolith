@@ -441,10 +441,10 @@ Catatan:
       "quota": 50,
       "sold_count": 10,
       "available": 40,
-      "ticket_type": "reguler",
+      "ticket_type": "regular",
       "refundable": false,
-      "sales_start_at": "2026-05-01",
-      "sales_end_at": "2026-05-09"
+      "sales_start_at": "2026-05-01T08:00:00+07:00",
+      "sales_end_at": "2026-05-09T23:59:59+07:00"
     }
   ],
   "reviews": [],

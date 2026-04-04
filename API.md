@@ -182,6 +182,7 @@ Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/p
 | POST | `/api/academy/bookings/{booking}/cancel` | Yes | Path: `{booking}` | - | `200`: `message` | - |
 | GET | `/api/academy/bookings/{booking}/ticket` | Yes | Path: `{booking}` | - | `200`: PDF | File PDF tiket. |
 | GET | `/api/academy/bookings/{booking}/qr` | Yes | Path: `{booking}` | - | `200`: PDF | File PDF QR. |
+Catatan: tiket hanya bisa di-quote/booking bila aktif dan berada dalam periode penjualan (`sales_start_at`/`sales_end_at`).
 
 **History**
 | Method | Endpoint | Auth | Required | Optional | Success Response | Notes |
