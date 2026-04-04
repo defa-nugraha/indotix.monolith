@@ -23,7 +23,8 @@ class AcademyController extends Controller
             'q' => ['nullable', 'string', 'max:255'],
         ])->validate();
 
-        $hasFilter = $request->filled('q');
+        $term = trim((string) ($data['q'] ?? ''));
+        $hasFilter = $term !== '' && ! in_array(strtolower($term), ['null', 'undefined'], true);
 
         $classesQuery = AcademyClass::query()
             ->where('is_active', true)
@@ -31,10 +32,10 @@ class AcademyController extends Controller
             ->with('images');
 
         if (! $hasFilter) {
-            $classesQuery->inRandomOrder()->limit(10);
+            $classesQuery->orderByDesc('start_at')->limit(10);
         } else {
             $classesQuery
-                ->when($data['q'] ?? null, fn ($query, $term) => $query->where('title', 'like', "%{$term}%"))
+                ->where('title', 'like', "%{$term}%")
                 ->orderByDesc('start_at');
         }
 
