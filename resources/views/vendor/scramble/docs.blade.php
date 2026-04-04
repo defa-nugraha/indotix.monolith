@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="color-scheme" content="{{ $config->get('ui.theme', 'light') }}">
     <title>{{ $config->get('ui.title') ?? config('app.name') . ' - API Docs' }}</title>
+    <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
 
     <script src="https://unpkg.com/@stoplight/elements@8.4.2/web-components.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements@8.4.2/styles.min.css">
