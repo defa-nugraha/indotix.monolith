@@ -45,6 +45,10 @@ class AcademyPublicBookingController extends Controller
             return back()->withErrors(['ticket_id' => 'Tiket belum tersedia.']);
         }
 
+        if (! $this->isTicketOnSale($ticket)) {
+            return back()->withErrors(['ticket_id' => 'Penjualan tiket belum dibuka atau sudah berakhir.']);
+        }
+
         if ($this->availableTickets($ticket) < (int) $data['quantity']) {
             return back()->withErrors(['quantity' => 'Kuota tiket tidak mencukupi.']);
         }
@@ -170,6 +174,9 @@ class AcademyPublicBookingController extends Controller
 
         $booking = DB::transaction(function () use ($draft, $data, $request) {
             $ticket = AcademyTicket::query()->lockForUpdate()->findOrFail($draft['ticket_id']);
+            if (! $this->isTicketOnSale($ticket)) {
+                throw new RuntimeException('Penjualan tiket belum dibuka atau sudah berakhir.');
+            }
             $available = $this->availableTickets($ticket, true);
             if ($available < (int) $draft['quantity']) {
                 throw new RuntimeException('Kuota tiket sudah habis.');
@@ -387,6 +394,21 @@ class AcademyPublicBookingController extends Controller
         $reserved = (int) $query->sum('quantity');
 
         return max(0, (int) $ticket->quota - $reserved);
+    }
+
+    private function isTicketOnSale(AcademyTicket $ticket): bool
+    {
+        $now = now();
+
+        if ($ticket->sales_start_at && $ticket->sales_start_at->isFuture()) {
+            return false;
+        }
+
+        if ($ticket->sales_end_at && $ticket->sales_end_at->isPast()) {
+            return false;
+        }
+
+        return true;
     }
 
     private function buildPaymentPayload(AcademyBooking $booking): array

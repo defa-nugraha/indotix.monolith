@@ -57,6 +57,10 @@ class AcademyBookingController extends Controller
             return response()->json(['message' => 'Tiket belum tersedia.'], 422);
         }
 
+        if (! $this->isTicketOnSale($ticket)) {
+            return response()->json(['message' => 'Penjualan tiket belum dibuka atau sudah berakhir.'], 422);
+        }
+
         if ($this->availableTickets($ticket) < (int) $data['quantity']) {
             return response()->json(['message' => 'Kuota tiket tidak mencukupi.'], 422);
         }
@@ -103,6 +107,10 @@ class AcademyBookingController extends Controller
 
                 if (! $ticket->is_active) {
                     throw new RuntimeException('Tiket belum tersedia.');
+                }
+
+                if (! $this->isTicketOnSale($ticket)) {
+                    throw new RuntimeException('Penjualan tiket belum dibuka atau sudah berakhir.');
                 }
 
                 if ($this->availableTickets($ticket, true) < (int) $data['quantity']) {
@@ -388,6 +396,21 @@ class AcademyBookingController extends Controller
         $reserved = (int) $query->sum('quantity');
 
         return max(0, (int) $ticket->quota - $reserved);
+    }
+
+    private function isTicketOnSale(AcademyTicket $ticket): bool
+    {
+        $now = now();
+
+        if ($ticket->sales_start_at && $ticket->sales_start_at->isFuture()) {
+            return false;
+        }
+
+        if ($ticket->sales_end_at && $ticket->sales_end_at->isPast()) {
+            return false;
+        }
+
+        return true;
     }
 
     private function buildSnapPayload(AcademyBooking $booking, string $orderId): array

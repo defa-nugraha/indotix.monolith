@@ -38,7 +38,7 @@ class TicketController extends Controller
             'ticket_type' => ['required', 'in:regular,early_bird,vip'],
             'refundable' => ['required', 'boolean'],
             'sales_start_at' => ['nullable', 'date'],
-            'sales_end_at' => ['nullable', 'date'],
+            'sales_end_at' => ['nullable', 'date', 'after_or_equal:sales_start_at'],
             'is_active' => ['required', 'boolean'],
         ]);
 
@@ -65,7 +65,7 @@ class TicketController extends Controller
             'ticket_type' => ['required', 'in:regular,early_bird,vip'],
             'refundable' => ['required', 'boolean'],
             'sales_start_at' => ['nullable', 'date'],
-            'sales_end_at' => ['nullable', 'date'],
+            'sales_end_at' => ['nullable', 'date', 'after_or_equal:sales_start_at'],
             'is_active' => ['required', 'boolean'],
         ]);
 

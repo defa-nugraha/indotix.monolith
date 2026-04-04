@@ -95,7 +95,7 @@ Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/p
 | Method | Endpoint | Auth | Required | Optional | Success Response | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | GET | `/api/products/academy` | No | - | `q` | `200`: `filters`, `classes` | Jika `q` kosong/`null`/`undefined`, tampil 10 kelas terbaru (urut `start_at` desc). |
-| GET | `/api/products/academy/{class}` | No | Path: `{class}` | - | `200`: `class`, `tickets`, `reviews` | `{class}` = slug atau id/encrypted_id. |
+| GET | `/api/products/academy/{class}` | No | Path: `{class}` | - | `200`: `class`, `tickets`, `reviews` | `{class}` = slug atau id/encrypted_id. Tiket yang dikembalikan hanya yang aktif dan berada dalam periode penjualan (`sales_start_at`/`sales_end_at`). |
 
 **Products: Souvenirs**
 | Method | Endpoint | Auth | Required | Optional | Success Response | Notes |

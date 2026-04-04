@@ -40,9 +40,18 @@ class AcademyController extends Controller
 
         $classes = $classesQuery->get();
 
+        $now = now();
         $tickets = AcademyTicket::query()
             ->whereIn('academy_class_id', $classes->pluck('id'))
             ->where('is_active', true)
+            ->where(function ($query) use ($now) {
+                $query->whereNull('sales_start_at')
+                    ->orWhere('sales_start_at', '<=', $now);
+            })
+            ->where(function ($query) use ($now) {
+                $query->whereNull('sales_end_at')
+                    ->orWhere('sales_end_at', '>=', $now);
+            })
             ->get()
             ->groupBy('academy_class_id');
 
@@ -91,9 +100,18 @@ class AcademyController extends Controller
         $class = $classModel;
         $class->load('images');
 
+        $now = now();
         $tickets = AcademyTicket::query()
             ->where('academy_class_id', $class->id)
             ->where('is_active', true)
+            ->where(function ($query) use ($now) {
+                $query->whereNull('sales_start_at')
+                    ->orWhere('sales_start_at', '<=', $now);
+            })
+            ->where(function ($query) use ($now) {
+                $query->whereNull('sales_end_at')
+                    ->orWhere('sales_end_at', '>=', $now);
+            })
             ->get()
             ->map(function (AcademyTicket $ticket) {
                 $quota = $ticket->quota ?? 0;
@@ -108,8 +126,8 @@ class AcademyController extends Controller
                     'available' => $available,
                     'ticket_type' => $ticket->ticket_type,
                     'refundable' => $ticket->refundable,
-                    'sales_start_at' => $ticket->sales_start_at?->toDateString(),
-                    'sales_end_at' => $ticket->sales_end_at?->toDateString(),
+                    'sales_start_at' => $ticket->sales_start_at?->toDateTimeString(),
+                    'sales_end_at' => $ticket->sales_end_at?->toDateTimeString(),
                 ];
             });
 
