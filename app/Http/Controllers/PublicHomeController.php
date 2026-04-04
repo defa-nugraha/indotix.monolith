@@ -156,17 +156,33 @@ class PublicHomeController extends Controller
                 ];
             });
 
+        $now = now();
         $academyCards = AcademyClass::query()
             ->where('is_active', true)
             ->with('images')
             ->latest('start_at')
             ->take(4)
             ->get()
-            ->map(function (AcademyClass $class) {
-                $minPrice = AcademyTicket::query()
+            ->map(function (AcademyClass $class) use ($now) {
+                $tickets = AcademyTicket::query()
                     ->where('academy_class_id', $class->id)
                     ->where('is_active', true)
-                    ->min('price');
+                    ->get();
+                $onSaleTickets = $tickets->filter(function (AcademyTicket $ticket) use ($now) {
+                    if ($ticket->sales_start_at && $ticket->sales_start_at->isFuture()) {
+                        return false;
+                    }
+                    if ($ticket->sales_end_at && $ticket->sales_end_at->isPast()) {
+                        return false;
+                    }
+                    return true;
+                });
+                $minPrice = $onSaleTickets->min('price') ?? $tickets->min('price');
+                $salesEndAt = $onSaleTickets->pluck('sales_end_at')->filter()->min();
+                $salesStartAt = $tickets
+                    ->filter(fn (AcademyTicket $ticket) => $ticket->sales_start_at && $ticket->sales_start_at->isFuture())
+                    ->pluck('sales_start_at')
+                    ->min();
                 $image = $class->images->first()?->image_path;
 
                 return [
@@ -178,6 +194,8 @@ class PublicHomeController extends Controller
                     'start_at' => $class->start_at?->toDateString(),
                     'min_price' => $minPrice ? (int) $minPrice : null,
                     'image_url' => $image ? Storage::url($image) : null,
+                    'sales_start_at' => $salesStartAt?->toDateTimeString(),
+                    'sales_end_at' => $salesEndAt?->toDateTimeString(),
                 ];
             });
 

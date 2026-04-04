@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
+import SaleCountdown from '@/components/sale-countdown';
 import {
     Bell,
     CalendarCheck,
@@ -72,6 +73,8 @@ type AcademyCard = {
     start_at?: string | null;
     min_price?: number | null;
     image_url?: string | null;
+    sales_start_at?: string | null;
+    sales_end_at?: string | null;
 };
 type SpecialProgramItem = {
     type: 'special_program';
@@ -363,6 +366,7 @@ export default function Welcome({
                       category: 'Hospitality',
                       start_at: '2026-03-10',
                       min_price: 350000,
+                      sales_end_at: null,
                   },
                   {
                       id: 1,
@@ -371,6 +375,7 @@ export default function Welcome({
                       category: 'Event',
                       start_at: '2026-03-20',
                       min_price: 400000,
+                      sales_end_at: null,
                   },
                   {
                       id: 2,
@@ -379,6 +384,7 @@ export default function Welcome({
                       category: 'Marketing',
                       start_at: '2026-04-02',
                       min_price: 250000,
+                      sales_end_at: null,
                   },
               ];
     const specialProgramProducts =
@@ -1083,7 +1089,7 @@ export default function Welcome({
                                         key={item.id}
                                         className="overflow-hidden rounded-2xl border border-slate-100 shadow-sm"
                                     >
-                                        <div className="h-40 overflow-hidden bg-gradient-to-br from-sky-500 to-indigo-600">
+                                        <div className="relative h-40 overflow-hidden bg-gradient-to-br from-sky-500 to-indigo-600">
                                             <img
                                                 src={
                                                     item.image_url ??
@@ -1092,6 +1098,50 @@ export default function Welcome({
                                                 alt={item.title}
                                                 className="h-full w-full object-cover"
                                             />
+                                            {(() => {
+                                                const now = new Date();
+                                                const endAt = item.sales_end_at
+                                                    ? new Date(
+                                                          item.sales_end_at.replace(
+                                                              ' ',
+                                                              'T',
+                                                          ),
+                                                      )
+                                                    : null;
+                                                const startAt =
+                                                    item.sales_start_at
+                                                        ? new Date(
+                                                              item.sales_start_at.replace(
+                                                                  ' ',
+                                                                  'T',
+                                                              ),
+                                                          )
+                                                        : null;
+                                                const target =
+                                                    endAt && endAt > now
+                                                        ? {
+                                                              label: 'Berakhir',
+                                                              value: item.sales_end_at,
+                                                          }
+                                                        : startAt &&
+                                                            startAt > now
+                                                          ? {
+                                                                label: 'Dibuka',
+                                                                value: item.sales_start_at,
+                                                            }
+                                                          : null;
+                                                return target ? (
+                                                    <div className="absolute top-3 right-3">
+                                                        <SaleCountdown
+                                                            target={
+                                                                target.value
+                                                            }
+                                                            label={target.label}
+                                                            compact
+                                                        />
+                                                    </div>
+                                                ) : null;
+                                            })()}
                                         </div>
                                         <div className="p-4">
                                             <h3 className="text-sm font-semibold text-slate-900">
