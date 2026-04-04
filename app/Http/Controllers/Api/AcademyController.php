@@ -28,7 +28,6 @@ class AcademyController extends Controller
 
         $classesQuery = AcademyClass::query()
             ->where('is_active', true)
-            ->whereIn('status', ['scheduled', 'open_for_sale'])
             ->with('images');
 
         if (! $hasFilter) {

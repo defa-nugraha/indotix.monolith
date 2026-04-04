@@ -158,7 +158,6 @@ class PublicHomeController extends Controller
 
         $academyCards = AcademyClass::query()
             ->where('is_active', true)
-            ->whereIn('status', ['scheduled', 'open_for_sale'])
             ->with('images')
             ->latest('start_at')
             ->take(4)

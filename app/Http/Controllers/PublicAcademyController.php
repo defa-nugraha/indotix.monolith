@@ -26,7 +26,6 @@ class PublicAcademyController extends Controller
 
         $classes = AcademyClass::query()
             ->where('is_active', true)
-            ->whereIn('status', ['scheduled', 'open_for_sale'])
             ->when($data['q'] ?? null, fn ($query, $term) => $query->where('title', 'like', "%{$term}%"))
             ->with('images')
             ->orderByDesc('start_at')
