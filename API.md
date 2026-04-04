@@ -37,6 +37,8 @@ curl -X POST "/api/auth/login" \
 - Dukungan slug disebutkan per endpoint.
 - `guest_phone` pada booking diambil dari profil user, tidak dikirim dari client.
 - Pagination bila tersedia: `page`, `per_page`, dan metadata `meta`/`links`.
+- Endpoint dengan Auth=Yes umumnya juga membutuhkan email terverifikasi (middleware `verified`).
+  Pengecualian: `/api/auth/me`, `/api/auth/logout`, `/api/auth/otp/verify`, `/api/auth/otp/resend`, dan seluruh endpoint `/api/profile`.
 
 **Status Codes**
 - `200` OK
@@ -55,7 +57,7 @@ Contoh payload lengkap per endpoint ada di `docs/api-response-payloads.md`.
 | Method | Endpoint | Auth | Required | Optional | Success Response | Notes | 
 | --- | --- | --- | --- | --- | --- | --- |
 | POST | `/api/auth/register` | No | `name`, `email`, `password` | `role` (`user|mitra`), `device_name` | `201`: `token`, `token_type`, `user`, `requires_otp`, `otp_expires_at` | `422` email sudah terdaftar; `500` gagal kirim OTP. |
-| POST | `/api/auth/login` | No | `email`, `password` | `device_name` | `200`: `token`, `token_type`, `user` | `403` bila belum verifikasi (`requires_otp`) atau akun disuspend; `422` kredensial salah. |
+| POST | `/api/auth/login` | No | `email`, `password` | `device_name` | `200`: `token`, `token_type`, `user` | `403` bila belum verifikasi (`requires_otp`) atau akun disuspend; `422` kredensial salah; `429` terlalu banyak percobaan (rate limit). |
 | POST | `/api/auth/google` | No | `access_token` | `role` (`user|mitra`), `device_name` | `200`: `token`, `token_type`, `user` | `422` token tidak valid; `403` akun disuspend. |
 | POST | `/api/auth/password/forgot` | No | `email` | - | `200`: `message`, `otp_expires_at?` | Jika email tidak terdaftar tetap `200` dengan pesan umum. |
 | POST | `/api/auth/password/reset` | No | `email`, `code`, `password`, `password_confirmation` | - | `200`: `message` | Wajib kirim OTP dulu; `422` OTP salah/kedaluwarsa. |

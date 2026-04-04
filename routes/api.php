@@ -4,7 +4,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
-    Route::post('login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
+    Route::post('login', [\App\Http\Controllers\Api\AuthController::class, 'login'])
+        ->middleware('throttle:5,1');
     Route::post('google', [\App\Http\Controllers\Api\SocialAuthController::class, 'google']);
     Route::post('password/forgot', [\App\Http\Controllers\Api\PasswordResetController::class, 'requestOtp']);
     Route::post('password/reset', [\App\Http\Controllers\Api\PasswordResetController::class, 'reset']);
@@ -37,7 +38,7 @@ Route::prefix('products')->group(function () {
     Route::get('special-programs/{program}', [\App\Http\Controllers\Api\SpecialProgramController::class, 'show']);
 });
 
-Route::middleware('auth:sanctum')->prefix('hotel/bookings')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('hotel/bookings')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\HotelBookingController::class, 'quote']);
     Route::post('/', [\App\Http\Controllers\Api\HotelBookingController::class, 'store']);
     Route::get('/', [\App\Http\Controllers\Api\HotelBookingController::class, 'index']);
@@ -47,15 +48,15 @@ Route::middleware('auth:sanctum')->prefix('hotel/bookings')->group(function () {
     Route::get('{booking}/invoice', [\App\Http\Controllers\Api\HotelBookingController::class, 'invoice']);
 });
 
-Route::middleware('auth:sanctum')->get('history', [\App\Http\Controllers\Api\HistoryController::class, 'index']);
-Route::middleware('auth:sanctum')->get('history/{type}/{booking}', [\App\Http\Controllers\Api\HistoryDetailController::class, 'show']);
-Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->get('history', [\App\Http\Controllers\Api\HistoryController::class, 'index']);
+Route::middleware(['auth:sanctum', 'verified'])->get('history/{type}/{booking}', [\App\Http\Controllers\Api\HistoryDetailController::class, 'show']);
+Route::middleware(['auth:sanctum', 'verified'])->prefix('notifications')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\NotificationController::class, 'index']);
     Route::get('unread-count', [\App\Http\Controllers\Api\NotificationController::class, 'unreadCount']);
     Route::post('read-all', [\App\Http\Controllers\Api\NotificationController::class, 'markAllRead']);
     Route::post('{notification}/read', [\App\Http\Controllers\Api\NotificationController::class, 'markRead']);
 });
-Route::middleware('auth:sanctum')->prefix('push')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('push')->group(function () {
     Route::post('tokens', [\App\Http\Controllers\Api\PushTokenController::class, 'store']);
     Route::post('tokens/revoke', [\App\Http\Controllers\Api\PushTokenController::class, 'revoke']);
 });
@@ -67,16 +68,16 @@ Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::delete('/', [\App\Http\Controllers\Api\ProfileController::class, 'destroy']);
 });
 
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('admin')->group(function () {
     Route::post('notifications', [\App\Http\Controllers\Api\AdminNotificationController::class, 'store']);
 });
 
-Route::middleware('auth:sanctum')->prefix('reviews')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('reviews')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\ReviewController::class, 'index']);
     Route::post('/', [\App\Http\Controllers\Api\ReviewController::class, 'store']);
 });
 
-Route::middleware('auth:sanctum')->prefix('wisata/bookings')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/bookings')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\WisataBookingController::class, 'quote']);
     Route::post('/', [\App\Http\Controllers\Api\WisataBookingController::class, 'store']);
     Route::get('/', [\App\Http\Controllers\Api\WisataBookingController::class, 'index']);
@@ -86,7 +87,7 @@ Route::middleware('auth:sanctum')->prefix('wisata/bookings')->group(function () 
     Route::get('{booking}/ticket', [\App\Http\Controllers\Api\WisataBookingController::class, 'ticket']);
 });
 
-Route::middleware('auth:sanctum')->prefix('events/bookings')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('events/bookings')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\EventBookingController::class, 'quote']);
     Route::post('/', [\App\Http\Controllers\Api\EventBookingController::class, 'store']);
     Route::get('/', [\App\Http\Controllers\Api\EventBookingController::class, 'index']);
@@ -95,7 +96,7 @@ Route::middleware('auth:sanctum')->prefix('events/bookings')->group(function () 
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\EventBookingController::class, 'cancel']);
 });
 
-Route::middleware('auth:sanctum')->prefix('special-programs/bookings')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('special-programs/bookings')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'quote']);
     Route::post('/', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'store']);
     Route::get('/', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'index']);
@@ -104,7 +105,7 @@ Route::middleware('auth:sanctum')->prefix('special-programs/bookings')->group(fu
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'cancel']);
 });
 
-Route::middleware('auth:sanctum')->prefix('souvenir/orders')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('souvenir/orders')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'quote']);
     Route::post('/', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'store']);
     Route::get('/', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'index']);
@@ -112,7 +113,7 @@ Route::middleware('auth:sanctum')->prefix('souvenir/orders')->group(function () 
     Route::post('{order}/pay', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'pay']);
 });
 
-Route::middleware('auth:sanctum')->prefix('souvenir/cart')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('souvenir/cart')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\SouvenirCartController::class, 'index']);
     Route::post('add', [\App\Http\Controllers\Api\SouvenirCartController::class, 'add']);
     Route::post('update', [\App\Http\Controllers\Api\SouvenirCartController::class, 'update']);
@@ -120,7 +121,7 @@ Route::middleware('auth:sanctum')->prefix('souvenir/cart')->group(function () {
     Route::post('clear', [\App\Http\Controllers\Api\SouvenirCartController::class, 'clear']);
 });
 
-Route::middleware('auth:sanctum')->prefix('academy/bookings')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('academy/bookings')->group(function () {
     Route::post('quote', [\App\Http\Controllers\Api\AcademyBookingController::class, 'quote']);
     Route::post('/', [\App\Http\Controllers\Api\AcademyBookingController::class, 'store']);
     Route::get('/', [\App\Http\Controllers\Api\AcademyBookingController::class, 'index']);
@@ -135,7 +136,7 @@ Route::get('banners', [\App\Http\Controllers\Api\PublicBannerController::class, 
 Route::get('faqs', [\App\Http\Controllers\Api\PublicFaqController::class, 'index']);
 Route::get('privacy-policy', [\App\Http\Controllers\Api\PublicPrivacyPolicyController::class, 'show']);
 
-Route::middleware('auth:sanctum')->prefix('chat')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('chat')->group(function () {
     Route::get('conversations', [\App\Http\Controllers\Api\ChatController::class, 'index']);
     Route::post('start', [\App\Http\Controllers\Api\ChatController::class, 'start']);
     Route::get('conversations/{conversation}', [\App\Http\Controllers\Api\ChatController::class, 'show']);
