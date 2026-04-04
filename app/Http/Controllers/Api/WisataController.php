@@ -314,9 +314,6 @@ class WisataController extends Controller
 
     private function fallbackImageUrl(int $id): string
     {
-        return sprintf(
-            'https://images.unsplash.com/photo-1506929562872-bb421503ef21?q=80&w=1200&auto=format&fit=crop&sig=%s',
-            $id
-        );
+        return '/images/placeholder-card.jpg';
     }
 }

@@ -347,7 +347,7 @@ Catatan:
       "maps_url": "https://www.google.com/maps/search/?api=1&query=Stadion",
       "start_at": "2026-05-01",
       "min_price": 150000,
-      "image_url": "https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=12"
+      "image_url": "/images/placeholder-card.jpg"
     }
   ]
 }
@@ -366,7 +366,7 @@ Catatan:
     "location": "Stadion",
     "address": "Jl. Stadion",
     "maps_url": "https://www.google.com/maps/search/?api=1&query=Stadion",
-    "image_url": "https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=12",
+    "image_url": "/images/placeholder-card.jpg",
     "start_at": "2026-05-01T18:00:00",
     "end_at": "2026-05-01T22:00:00",
     "capacity_total": 1000,

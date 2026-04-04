@@ -868,7 +868,7 @@ export default function Welcome({
                                                 <img
                                                     src={
                                                         item.image_url ??
-                                                        `https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=${item.id}`
+                                                        '/images/placeholder-card.jpg'
                                                     }
                                                     alt={item.name}
                                                     className="h-full w-full object-cover"
@@ -935,7 +935,7 @@ export default function Welcome({
                                             <img
                                                 src={
                                                     hotel.image_url ??
-                                                    `https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop&sig=${hotel.id}`
+                                                    '/images/placeholder-card.jpg'
                                                 }
                                                 alt={hotel.name}
                                                 className="h-full w-full object-cover"
@@ -1023,7 +1023,7 @@ export default function Welcome({
                                     >
                                         <div className="h-40 overflow-hidden bg-gradient-to-br from-indigo-600 to-sky-500">
                                             <img
-                                                src={`https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=${event.id}`}
+                                                src="/images/placeholder-card.jpg"
                                                 alt={event.title}
                                                 className="h-full w-full object-cover"
                                             />
@@ -1093,7 +1093,7 @@ export default function Welcome({
                                             <img
                                                 src={
                                                     item.image_url ??
-                                                    `https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop&sig=${item.id}`
+                                                    '/images/placeholder-card.jpg'
                                                 }
                                                 alt={item.title}
                                                 className="h-full w-full object-cover"
@@ -1206,7 +1206,7 @@ export default function Welcome({
                                             <img
                                                 src={
                                                     item.image_url ??
-                                                    `https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=1200&auto=format&fit=crop&sig=${item.id}`
+                                                    '/images/placeholder-card.jpg'
                                                 }
                                                 alt={item.name}
                                                 className="h-full w-full object-cover"
@@ -1279,7 +1279,7 @@ export default function Welcome({
                                                 <img
                                                     src={
                                                         item.image_url ??
-                                                        `https://images.unsplash.com/photo-1459257831348-f0cdd359235f?q=80&w=1200&auto=format&fit=crop&sig=${item.id}`
+                                                        '/images/placeholder-card.jpg'
                                                     }
                                                     alt={item.name}
                                                     className="h-full w-full object-cover"

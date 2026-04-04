@@ -125,7 +125,7 @@ export default function SpecialProgramSearch({
                                 <img
                                     src={
                                         fallbackImage ??
-                                        `https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=1920&auto=format&fit=crop`
+                                        '/images/placeholder-card.jpg'
                                     }
                                     alt="Special Program"
                                     className="h-44 w-full object-cover sm:h-56 md:h-72"
@@ -234,7 +234,7 @@ export default function SpecialProgramSearch({
                                                 src={
                                                     program.image_url ??
                                                     fallbackImage ??
-                                                    `https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=${program.id}`
+                                                    '/images/placeholder-card.jpg'
                                                 }
                                                 alt={program.name}
                                                 className="h-full w-full object-cover transition duration-500 group-hover:scale-105"

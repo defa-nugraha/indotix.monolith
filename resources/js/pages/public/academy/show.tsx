@@ -153,9 +153,7 @@ export default function AcademyShow({
     const gallery =
         academyClass.images && academyClass.images.length > 0
             ? academyClass.images
-            : [
-                  `https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=1200&auto=format&fit=crop&sig=${academyClass.id}`,
-              ];
+            : ['/images/placeholder-card.jpg'];
 
     return (
         <PublicLayout categories={categories}>

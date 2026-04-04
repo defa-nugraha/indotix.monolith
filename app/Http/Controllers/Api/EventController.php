@@ -194,9 +194,6 @@ class EventController extends Controller
 
     private function fallbackImageUrl(int $id): string
     {
-        return sprintf(
-            'https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=%s',
-            $id
-        );
+        return '/images/placeholder-card.jpg';
     }
 }

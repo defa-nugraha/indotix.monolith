@@ -351,9 +351,7 @@ class HotelController extends Controller
 
     private function fallbackHotelImageUrl(int $id, bool $withSignature = true): string
     {
-        $base = 'https://images.unsplash.com/photo-1501117716987-c8e005b2bcd4?q=80&w=1200&auto=format&fit=crop';
-
-        return $withSignature ? $base.'&sig='.$id : $base;
+        return '/images/placeholder-card.jpg';
     }
 
     private function resolveCityCodes(?string $city): ?array

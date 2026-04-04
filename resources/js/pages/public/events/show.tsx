@@ -1,6 +1,21 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, ShoppingCart, BadgePercent } from 'lucide-react';
+import {
+    CalendarCheck,
+    MapPinned,
+    ShoppingBag,
+    Star,
+    Ticket,
+    Bell,
+    MessageCircle,
+    History as HistoryIcon,
+    UserCircle,
+    MapPin,
+    Clock,
+    Users,
+    ShoppingCart,
+    BadgePercent,
+} from 'lucide-react';
 import Swal from 'sweetalert2';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
@@ -63,14 +78,17 @@ export default function EventShow({
     userReview?: UserReview | null;
     canReview?: boolean;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
-        auth?: { user?: any };
-        unread_notifications?: number;
-        souvenir_cart_count?: number;
-        affiliate_menu?: boolean;
-    };
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
+        usePage().props as {
+            auth?: { user?: any };
+            unread_notifications?: number;
+            souvenir_cart_count?: number;
+            affiliate_menu?: boolean;
+        };
     const role = (auth?.user as any)?.role as string | undefined;
-    const [selectedTicket, setSelectedTicket] = useState<string>(tickets[0]?.id?.toString() ?? '');
+    const [selectedTicket, setSelectedTicket] = useState<string>(
+        tickets[0]?.id?.toString() ?? '',
+    );
     const form = useForm({
         event_id: event.id,
         ticket_id: tickets[0]?.id ?? 0,
@@ -95,7 +113,10 @@ export default function EventShow({
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal',
-                    text: errors.quantity ?? errors.ticket_id ?? 'Tidak dapat melanjutkan pemesanan.',
+                    text:
+                        errors.quantity ??
+                        errors.ticket_id ??
+                        'Tidak dapat melanjutkan pemesanan.',
                     confirmButtonText: 'OK',
                 });
             },
@@ -105,41 +126,56 @@ export default function EventShow({
     return (
         <PublicLayout categories={categories}>
             <Head title={event.title}>
-                <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
+                <link
+                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
+                    rel="stylesheet"
+                />
             </Head>
-                        <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
                     <section className="rounded-3xl bg-white p-6 shadow-sm">
                         <div className="h-56 overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500">
                             <img
-                                src={`https://images.unsplash.com/photo-1472653431158-6364773b2a56?q=80&w=1200&auto=format&fit=crop&sig=${event.id}`}
+                                src="/images/placeholder-card.jpg"
                                 alt={event.title}
                                 className="h-full w-full object-cover"
                             />
                         </div>
                         <div className="mt-6">
-                            <h1 className="text-2xl font-semibold text-slate-900">{event.title}</h1>
-                            <p className="mt-2 text-sm text-slate-500">{event.description ?? 'Event pilihan Indotix.'}</p>
+                            <h1 className="text-2xl font-semibold text-slate-900">
+                                {event.title}
+                            </h1>
+                            <p className="mt-2 text-sm text-slate-500">
+                                {event.description ?? 'Event pilihan Indotix.'}
+                            </p>
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <MapPin className="h-4 w-4 text-sky-500" />
-                                    {event.location ?? event.address ?? 'Lokasi event'}
+                                    {event.location ??
+                                        event.address ??
+                                        'Lokasi event'}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <CalendarCheck className="h-4 w-4 text-sky-500" />
-                                    {event.start_at ?? '-'} {event.end_at ? `- ${event.end_at}` : ''}
+                                    {event.start_at ?? '-'}{' '}
+                                    {event.end_at ? `- ${event.end_at}` : ''}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Users className="h-4 w-4 text-sky-500" />
-                                    Kapasitas {event.capacity_total ?? 0} · Terjual {event.capacity_sold ?? 0}
+                                    Kapasitas {event.capacity_total ?? 0} ·
+                                    Terjual {event.capacity_sold ?? 0}
                                 </div>
                             </div>
                         </div>
                     </section>
 
                     <section className="rounded-3xl bg-white p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Pemesanan Tiket</h2>
-                        <p className="text-sm text-slate-500">Pilih tiket dan jumlah yang kamu inginkan.</p>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Pemesanan Tiket
+                        </h2>
+                        <p className="text-sm text-slate-500">
+                            Pilih tiket dan jumlah yang kamu inginkan.
+                        </p>
                         <div className="mt-4 space-y-3">
                             {tickets.length === 0 && (
                                 <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
@@ -147,30 +183,52 @@ export default function EventShow({
                                 </div>
                             )}
                             <div>
-                                <label className="text-xs font-semibold text-slate-600">Pilih Tiket</label>
+                                <label className="text-xs font-semibold text-slate-600">
+                                    Pilih Tiket
+                                </label>
                                 <select
                                     className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     value={selectedTicket}
                                     onChange={(event) => {
                                         setSelectedTicket(event.target.value);
-                                        form.setData('ticket_id', Number(event.target.value));
+                                        form.setData(
+                                            'ticket_id',
+                                            Number(event.target.value),
+                                        );
                                     }}
                                     disabled={tickets.length === 0}
                                 >
                                     {tickets.map((ticket) => (
-                                        <option key={ticket.id} value={ticket.id}>
-                                            {ticket.name} · Rp {ticket.price.toLocaleString('id-ID')} · Tersedia {ticket.available}
+                                        <option
+                                            key={ticket.id}
+                                            value={ticket.id}
+                                        >
+                                            {ticket.name} · Rp{' '}
+                                            {ticket.price.toLocaleString(
+                                                'id-ID',
+                                            )}{' '}
+                                            · Tersedia {ticket.available}
                                         </option>
                                     ))}
                                 </select>
                             </div>
                             <div>
-                                <label className="text-xs font-semibold text-slate-600">Jumlah Tiket</label>
+                                <label className="text-xs font-semibold text-slate-600">
+                                    Jumlah Tiket
+                                </label>
                                 <div className="mt-2 flex items-center gap-3 rounded-lg border border-slate-200 px-3 py-2 text-sm">
                                     <button
                                         type="button"
                                         className="h-8 w-8 rounded-full bg-slate-100 text-slate-600"
-                                        onClick={() => form.setData('quantity', Math.max(1, form.data.quantity - 1))}
+                                        onClick={() =>
+                                            form.setData(
+                                                'quantity',
+                                                Math.max(
+                                                    1,
+                                                    form.data.quantity - 1,
+                                                ),
+                                            )
+                                        }
                                         disabled={tickets.length === 0}
                                     >
                                         −
@@ -181,18 +239,33 @@ export default function EventShow({
                                         max={20}
                                         className="w-16 bg-transparent text-center outline-none"
                                         value={form.data.quantity}
-                                        onChange={(event) => form.setData('quantity', Number(event.target.value))}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'quantity',
+                                                Number(event.target.value),
+                                            )
+                                        }
                                         disabled={tickets.length === 0}
                                     />
                                     <button
                                         type="button"
                                         className="h-8 w-8 rounded-full bg-sky-100 text-sky-700"
-                                        onClick={() => form.setData('quantity', Math.min(20, form.data.quantity + 1))}
+                                        onClick={() =>
+                                            form.setData(
+                                                'quantity',
+                                                Math.min(
+                                                    20,
+                                                    form.data.quantity + 1,
+                                                ),
+                                            )
+                                        }
                                         disabled={tickets.length === 0}
                                     >
                                         +
                                     </button>
-                                    <span className="text-slate-500">tiket</span>
+                                    <span className="text-slate-500">
+                                        tiket
+                                    </span>
                                 </div>
                             </div>
                             <button
@@ -213,22 +286,41 @@ export default function EventShow({
                     </section>
                 </div>
 
-                <ReviewSection productType="event" productId={event.id} reviews={reviews} userReview={userReview} canReview={canReview} />
+                <ReviewSection
+                    productType="event"
+                    productId={event.id}
+                    reviews={reviews}
+                    userReview={userReview}
+                    canReview={canReview}
+                />
             </main>
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
+                        <Link href="/">
+                            <img
+                                src="/logo.png"
+                                alt="Indotix"
+                                className="h-11 w-36 object-contain"
+                            />
+                        </Link>
                         <p className="mt-3 text-sm text-slate-600">
-                            Neo Soho Capital 40th Floor<br />
+                            Neo Soho Capital 40th Floor
+                            <br />
                             Jl. Tanjung Duren Raya No 1<br />
                             Jakarta Barat, DKI Jakarta 11470
                         </p>
-                        <p className="mt-4 text-sm text-slate-600">0812 9205 9888</p>
-                        <p className="text-sm text-slate-600">info@indotix.co.id</p>
+                        <p className="mt-4 text-sm text-slate-600">
+                            0812 9205 9888
+                        </p>
+                        <p className="text-sm text-slate-600">
+                            info@indotix.co.id
+                        </p>
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Layanan</h4>
+                        <h4 className="text-sm font-semibold text-slate-900">
+                            Layanan
+                        </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>Wisata</li>
                             <li>Special Program</li>
@@ -238,19 +330,41 @@ export default function EventShow({
                         </ul>
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Perusahaan</h4>
+                        <h4 className="text-sm font-semibold text-slate-900">
+                            Perusahaan
+                        </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>
-                                <Link href="/about" className="transition hover:text-sky-600">Tentang Kami</Link>
+                                <Link
+                                    href="/about"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Tentang Kami
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/jelajah" className="transition hover:text-sky-600">Blog</Link>
+                                <Link
+                                    href="/jelajah"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Blog
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/faq" className="transition hover:text-sky-600">FAQ</Link>
+                                <Link
+                                    href="/faq"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    FAQ
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/privacy-policy" className="transition hover:text-sky-600">Kebijakan Privasi</Link>
+                                <Link
+                                    href="/privacy-policy"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Kebijakan Privasi
+                                </Link>
                             </li>
                         </ul>
                     </div>
