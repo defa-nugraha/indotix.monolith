@@ -33,7 +33,7 @@ class PushNotificationService
             return false;
         }
 
-        $accessToken = $this->getAccessToken($serviceAccountPath);
+        $accessToken = $this->getAccessToken($serviceAccountPath, $context);
         if (! $accessToken) {
             Log::warning('FCM access token missing.', $context);
             return false;
@@ -121,7 +121,7 @@ class PushNotificationService
         return $success;
     }
 
-    private function getAccessToken(string $serviceAccountPath): ?string
+    private function getAccessToken(string $serviceAccountPath, array $context = []): ?string
     {
         $cacheKey = 'fcm.access_token.' . sha1($serviceAccountPath);
         $cached = Cache::get($cacheKey);
@@ -144,6 +144,10 @@ class PushNotificationService
 
         $accessToken = $token['access_token'] ?? null;
         if (! $accessToken) {
+            Log::warning('FCM access token missing details.', array_merge($context, [
+                'error' => $token['error'] ?? null,
+                'error_description' => $token['error_description'] ?? null,
+            ]));
             return null;
         }
 
