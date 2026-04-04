@@ -75,13 +75,20 @@ class AcademyController extends Controller
 
     public function show(Request $request, string $class): JsonResponse
     {
-        $classId = $this->resolveId($class);
-
-        $class = AcademyClass::query()
+        $classModel = AcademyClass::query()
             ->where('is_active', true)
-            ->where('id', $classId)
-            ->firstOrFail();
+            ->where('slug', $class)
+            ->first();
 
+        if (! $classModel) {
+            $classId = $this->resolveId($class);
+            $classModel = AcademyClass::query()
+                ->where('is_active', true)
+                ->where('id', $classId)
+                ->firstOrFail();
+        }
+
+        $class = $classModel;
         $class->load('images');
 
         $tickets = AcademyTicket::query()

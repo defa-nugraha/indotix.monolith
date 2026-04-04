@@ -65,7 +65,7 @@ Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/p
 | Method | Endpoint | Auth | Params/Body | Notes |
 | --- | --- | --- | --- | --- |
 | GET | `/api/products/academy` | No | Query: `q?` | Jika `q` kosong/`null`/`undefined`, tampil 10 kelas terbaru (urut `start_at` desc). |
-| GET | `/api/products/academy/{class}` | No | Path: `{class}` = id/encrypted_id | Slug tidak didukung di API. |
+| GET | `/api/products/academy/{class}` | No | Path: `{class}` = slug atau id/encrypted_id | - |
 
 **Products: Souvenirs**
 | Method | Endpoint | Auth | Params/Body | Notes |
