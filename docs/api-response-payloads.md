@@ -137,6 +137,13 @@ Catatan:
 }
 ```
 
+4. `DELETE /api/profile`
+```json
+{
+  "message": "Akun berhasil dihapus."
+}
+```
+
 ## Products
 ### Hotels
 1. `GET /api/products/hotels`

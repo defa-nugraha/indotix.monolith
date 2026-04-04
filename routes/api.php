@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::put('/', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
     Route::post('password/otp', [\App\Http\Controllers\Api\ProfileController::class, 'sendPasswordOtp']);
     Route::put('password', [\App\Http\Controllers\Api\ProfileController::class, 'updatePassword']);
+    Route::delete('/', [\App\Http\Controllers\Api\ProfileController::class, 'destroy']);
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
