@@ -1130,7 +1130,7 @@ Catatan: `product_id` **wajib encrypted_id**.
   "stats": {
     "total_recipients": 120,
     "notifications_created": 120,
-    "push_sent": 87
+    "push_queued": 120
   }
 }
 ```

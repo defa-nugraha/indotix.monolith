@@ -200,7 +200,7 @@ Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/p
 **Admin: Push Notifications**
 | Method | Endpoint | Auth | Params/Body | Notes |
 | --- | --- | --- | --- | --- |
-| POST | `/api/admin/notifications` | Yes | `title`, `message`, `type`, `data?` (object) | Hanya role `admin`. Notifikasi selalu dikirim ke seluruh user dengan role `user`. Response menyertakan `trace_id` untuk korelasi log. |
+| POST | `/api/admin/notifications` | Yes | `title`, `message`, `type`, `data?` (object) | Hanya role `admin`. Notifikasi selalu dikirim ke seluruh user dengan role `user`. Push dikirim via queue (lihat `stats.push_queued`). Response menyertakan `trace_id` untuk korelasi log. |
 
 **Changelog**
 Perubahan historis dan contoh payload detail tersedia di `docs/api-response-payloads.md`.

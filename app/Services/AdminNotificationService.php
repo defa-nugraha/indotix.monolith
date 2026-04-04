@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Jobs\SendPushNotificationJob;
 use App\Models\User;
 use App\Models\UserNotification;
 use Illuminate\Support\Facades\Log;
@@ -36,8 +37,7 @@ class AdminNotificationService
 
         $totalRecipients = 0;
         $notificationsCreated = 0;
-        $pushSent = 0;
-        $pushService = app(PushNotificationService::class);
+        $pushQueued = 0;
 
         Log::info('Admin push broadcast started', [
             'trace_id' => $traceId,
@@ -53,11 +53,10 @@ class AdminNotificationService
             $type,
             $payloadData,
             $pushData,
-            $pushService,
             $traceId,
             &$totalRecipients,
             &$notificationsCreated,
-            &$pushSent
+            &$pushQueued
         ) {
             if ($users->isEmpty()) {
                 return;
@@ -80,11 +79,14 @@ class AdminNotificationService
             $totalRecipients += $users->count();
 
             foreach ($users as $recipient) {
-                if ($pushService->sendToUser((int) $recipient->id, $title, $message, $pushData, [
-                    'trace_id' => $traceId,
-                ])) {
-                    $pushSent++;
-                }
+                SendPushNotificationJob::dispatch(
+                    (int) $recipient->id,
+                    $title,
+                    $message,
+                    $pushData,
+                    ['trace_id' => $traceId]
+                )->onQueue('push');
+                $pushQueued++;
             }
         });
 
@@ -92,7 +94,7 @@ class AdminNotificationService
             'trace_id' => $traceId,
             'total_recipients' => $totalRecipients,
             'notifications_created' => $notificationsCreated,
-            'push_sent' => $pushSent,
+            'push_queued' => $pushQueued,
         ]);
 
         return [
@@ -105,7 +107,7 @@ class AdminNotificationService
             'stats' => [
                 'total_recipients' => $totalRecipients,
                 'notifications_created' => $notificationsCreated,
-                'push_sent' => $pushSent,
+                'push_queued' => $pushQueued,
             ],
         ];
     }

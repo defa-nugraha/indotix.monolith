@@ -85,9 +85,12 @@ class ProfileController extends Controller
         RateLimiter::hit($deviceKey, 300);
         RateLimiter::hit($ipKey, 300);
 
-        EmailOtp::query()->where('user_id', $user->id)->delete();
+        EmailOtp::query()
+            ->where('user_id', $user->id)
+            ->where('purpose', 'change_password')
+            ->delete();
 
-        $otp = $this->sendOtp($user->id, $user->email, $user->name);
+        $otp = $this->sendOtp($user->id, $user->email, $user->name, 'change_password');
 
         if (! $otp) {
             return response()->json([
@@ -125,6 +128,7 @@ class ProfileController extends Controller
 
         $otp = EmailOtp::query()
             ->where('user_id', $user->id)
+            ->where('purpose', 'change_password')
             ->latest()
             ->first();
 
@@ -158,7 +162,10 @@ class ProfileController extends Controller
             'password' => $data['password'],
         ]);
 
-        EmailOtp::query()->where('user_id', $user->id)->delete();
+        EmailOtp::query()
+            ->where('user_id', $user->id)
+            ->where('purpose', 'change_password')
+            ->delete();
         Cache::forget($this->passwordOtpCacheKey($user->id));
 
         return response()->json([
@@ -166,13 +173,14 @@ class ProfileController extends Controller
         ]);
     }
 
-    private function sendOtp(int $userId, string $email, string $name): ?EmailOtp
+    private function sendOtp(int $userId, string $email, string $name, string $purpose): ?EmailOtp
     {
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $otp = EmailOtp::create([
             'user_id' => $userId,
             'email' => $email,
+            'purpose' => $purpose,
             'code_hash' => Hash::make($code),
             'expires_at' => now()->addMinutes(self::OTP_TTL_MINUTES),
             'attempts' => 0,

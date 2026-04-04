@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Str;
 use Throwable;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -33,13 +32,14 @@ class EmailOtpController extends Controller
 
         $otp = EmailOtp::query()
             ->where('user_id', $user->id)
+            ->where('purpose', 'verify_email')
             ->latest()
             ->first();
 
         $status = $request->session()->get('status');
 
         if (! $otp || $otp->expires_at->isPast()) {
-            $otp = $this->sendOtp($user->id, $user->email, $user->name);
+            $otp = $this->sendOtp($user->id, $user->email, $user->name, 'verify_email');
             $status = $otp ? 'otp-sent' : 'otp-failed';
         }
 
@@ -76,6 +76,7 @@ class EmailOtpController extends Controller
 
         $otp = EmailOtp::query()
             ->where('user_id', $user->id)
+            ->where('purpose', 'verify_email')
             ->latest()
             ->first();
 
@@ -101,7 +102,10 @@ class EmailOtpController extends Controller
             'email_verified_at' => now(),
         ])->save();
 
-        EmailOtp::query()->where('user_id', $user->id)->delete();
+        EmailOtp::query()
+            ->where('user_id', $user->id)
+            ->where('purpose', 'verify_email')
+            ->delete();
         RateLimiter::clear($verifyKey);
 
         if ($user->is_suspended) {
@@ -159,7 +163,12 @@ class EmailOtpController extends Controller
         RateLimiter::hit($deviceKey, 300);
         RateLimiter::hit($ipKey, 300);
 
-        $otp = $this->sendOtp($user->id, $user->email, $user->name);
+        EmailOtp::query()
+            ->where('user_id', $user->id)
+            ->where('purpose', 'verify_email')
+            ->delete();
+
+        $otp = $this->sendOtp($user->id, $user->email, $user->name, 'verify_email');
         if (! $otp) {
             return back()->withErrors([
                 'code' => 'Gagal mengirim OTP. Silakan coba lagi.',
@@ -169,13 +178,14 @@ class EmailOtpController extends Controller
         return back()->with('status', 'otp-sent');
     }
 
-    private function sendOtp(int $userId, string $email, string $name): ?EmailOtp
+    private function sendOtp(int $userId, string $email, string $name, string $purpose): ?EmailOtp
     {
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $otp = EmailOtp::create([
             'user_id' => $userId,
             'email' => $email,
+            'purpose' => $purpose,
             'code_hash' => Hash::make($code),
             'expires_at' => now()->addMinutes(self::OTP_TTL_MINUTES),
             'attempts' => 0,

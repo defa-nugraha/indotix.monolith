@@ -33,7 +33,7 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Email sudah terdaftar.'], 422);
             }
 
-            $otp = $this->sendOtp($existingUser);
+            $otp = $this->sendOtp($existingUser, 'verify_email');
             if (! $otp) {
                 return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
             }
@@ -56,7 +56,7 @@ class AuthController extends Controller
             'role' => $data['role'] ?? 'user',
         ]);
 
-        $otp = $this->sendOtp($user);
+        $otp = $this->sendOtp($user, 'verify_email');
         if (! $otp) {
             $user->delete();
 
@@ -95,7 +95,7 @@ class AuthController extends Controller
             }
             RateLimiter::hit($limitKey, 300);
 
-            $otp = $this->sendOtp($user);
+            $otp = $this->sendOtp($user, 'verify_email');
             if (! $otp) {
                 return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
             }
@@ -136,13 +136,14 @@ class AuthController extends Controller
         ]);
     }
 
-    private function sendOtp(User $user): ?EmailOtp
+    private function sendOtp(User $user, string $purpose): ?EmailOtp
     {
         $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         $otp = EmailOtp::create([
             'user_id' => $user->id,
             'email' => $user->email,
+            'purpose' => $purpose,
             'code_hash' => Hash::make($code),
             'expires_at' => now()->addMinutes(10),
             'attempts' => 0,
