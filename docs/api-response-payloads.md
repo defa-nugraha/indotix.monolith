@@ -4,6 +4,7 @@ Catatan:
 - Semua contoh di bawah adalah **contoh JSON** dari response sukses.
 - Beberapa endpoint mengembalikan file (PDF/PNG); bagian itu ditandai.
 - Tanggal ISO umumnya berbentuk `YYYY-MM-DD`, sedangkan datetime berbentuk `YYYY-MM-DDTHH:mm:ss`.
+- Untuk response produk (list & detail), field `id` menggunakan ID terenkripsi (string).
 
 ## Auth
 1. `POST /api/auth/register`
@@ -159,7 +160,7 @@ Catatan:
   },
   "hotels": [
     {
-      "id": 10,
+      "id": "<encrypted>",
       "encrypted_id": "<encrypted>",
       "slug": "neo-hotel",
       "name": "Neo Hotel",
@@ -175,7 +176,7 @@ Catatan:
   ],
   "recommendations": [
     {
-      "id": 11,
+      "id": "<encrypted>",
       "encrypted_id": "<encrypted>",
       "slug": "prime-hotel",
       "name": "Prime Hotel",
@@ -192,7 +193,7 @@ Catatan:
 ```json
 {
   "hotel": {
-    "id": 10,
+    "id": "<encrypted>",
     "encrypted_id": "<encrypted>",
     "slug": "neo-hotel",
     "name": "Neo Hotel",
@@ -206,11 +207,11 @@ Catatan:
     "longitude": 106.8,
     "maps_url": "https://www.google.com/maps/search/?api=1&query=-6.2,106.8",
     "facilities": ["wifi", "pool"],
-    "images": [{"id": 1, "url": "/storage/hotel.jpg"}]
+    "images": [{"id": "<encrypted>", "url": "/storage/hotel.jpg"}]
   },
   "room_types": [
     {
-      "id": 1,
+      "id": "<encrypted>",
       "name": "Deluxe",
       "description": "...",
       "max_guest": 2,
@@ -221,12 +222,12 @@ Catatan:
       "total_price": 450000,
       "breakfast_included": true,
       "smoking_allowed": false,
-      "images": [{"id": 10, "url": "/storage/room.jpg"}]
+      "images": [{"id": "<encrypted>", "url": "/storage/room.jpg"}]
     }
   ],
   "roomTypes": [
     {
-      "id": 1,
+      "id": "<encrypted>",
       "name": "Deluxe",
       "description": "...",
       "max_guest": 2,
@@ -237,7 +238,7 @@ Catatan:
       "total_price": 450000,
       "breakfast_included": true,
       "smoking_allowed": false,
-      "images": [{"id": 10, "url": "/storage/room.jpg"}]
+      "images": [{"id": "<encrypted>", "url": "/storage/room.jpg"}]
     }
   ],
   "filters": {
@@ -265,7 +266,7 @@ Catatan:
   },
   "destinations": [
     {
-      "id": 5,
+      "id": "<encrypted>",
       "encrypted_id": "<encrypted>",
       "slug": "pantai-indah",
       "destination_name": "Pantai Indah",
@@ -273,7 +274,7 @@ Catatan:
       "city_name": "Bali",
       "photo_url": "/storage/pantai.jpg",
       "tickets": [
-        {"id": 10, "name": "Tiket Reguler", "price": 20000, "available": 100}
+        {"id": "<encrypted>", "name": "Tiket Reguler", "price": 20000, "available": 100}
       ]
     }
   ]
@@ -291,7 +292,7 @@ Catatan:
     "cover_photo_url": "/storage/area.jpg",
     "latitude": "-8.7",
     "longitude": "115.2",
-    "id": 5,
+    "id": "<encrypted>",
     "encrypted_id": "<encrypted>",
     "slug": "pantai-indah",
     "destination_name": "Pantai Indah",
@@ -314,7 +315,7 @@ Catatan:
   },
   "tickets": [
     {
-      "id": 10,
+      "id": "<encrypted>",
       "name": "Tiket Reguler",
       "description": "...",
       "price": 20000,
@@ -338,7 +339,7 @@ Catatan:
   "filters": {"q": "music"},
   "events": [
     {
-      "id": 12,
+      "id": "<encrypted>",
       "encrypted_id": "<encrypted>",
       "slug": "music-fest",
       "title": "Music Fest",
@@ -357,7 +358,7 @@ Catatan:
 ```json
 {
   "event": {
-    "id": 12,
+    "id": "<encrypted>",
     "encrypted_id": "<encrypted>",
     "slug": "music-fest",
     "title": "Music Fest",
@@ -374,7 +375,7 @@ Catatan:
   },
   "tickets": [
     {
-      "id": 21,
+      "id": "<encrypted>",
       "name": "VIP",
       "description": "...",
       "price": 300000,
@@ -398,7 +399,7 @@ Catatan:
   "filters": {"q": "design"},
   "classes": [
     {
-      "id": 9,
+      "id": "<encrypted>",
       "encrypted_id": "<encrypted>",
       "slug": "kelas-design",
       "title": "Kelas Design",
@@ -417,7 +418,7 @@ Catatan:
 ```json
 {
   "class": {
-    "id": 9,
+    "id": "<encrypted>",
     "encrypted_id": "<encrypted>",
     "slug": "kelas-design",
     "title": "Kelas Design",
@@ -435,7 +436,7 @@ Catatan:
   },
   "tickets": [
     {
-      "id": 44,
+      "id": "<encrypted>",
       "name": "Reguler",
       "price": 100000,
       "quota": 50,
@@ -461,7 +462,7 @@ Catatan:
   "products": {
     "data": [
       {
-        "id": 1,
+        "id": "<encrypted>",
         "encrypted_id": "<encrypted>",
         "slug": "kaos-indotix",
         "name": "Kaos Indotix",
@@ -481,7 +482,7 @@ Catatan:
 ```json
 {
   "product": {
-    "id": 1,
+    "id": "<encrypted>",
     "encrypted_id": "<encrypted>",
     "slug": "kaos-indotix",
     "name": "Kaos Indotix",
@@ -491,7 +492,7 @@ Catatan:
     "category": "Apparel",
     "images": ["/storage/kaos.jpg"],
     "variants": [
-      {"id": 10, "name": "M", "variant_type": "size", "sku": "KAOS-M", "additional_price": 0, "stock": 50, "is_active": true}
+      {"id": "<encrypted>", "name": "M", "variant_type": "size", "sku": "KAOS-M", "additional_price": 0, "stock": 50, "is_active": true}
     ]
   },
   "reviews": [],
@@ -507,7 +508,7 @@ Catatan:
   "filters": {"q": "wedding", "category": "wedding"},
   "programs": [
     {
-      "id": 7,
+      "id": "<encrypted>",
       "encrypted_id": "<encrypted>",
       "slug": "paket-wedding",
       "name": "Paket Wedding",
@@ -523,7 +524,7 @@ Catatan:
 ```json
 {
   "program": {
-    "id": 7,
+    "id": "<encrypted>",
     "encrypted_id": "<encrypted>",
     "slug": "paket-wedding",
     "name": "Paket Wedding",
@@ -534,7 +535,7 @@ Catatan:
     "image_url": "/storage/sp.jpg"
   },
   "variants": [
-    {"id": 1, "name": "Silver", "price": 2000000, "capacity": 0, "facilities": ["1x meal"]}
+    {"id": "<encrypted>", "name": "Silver", "price": 2000000, "capacity": 0, "facilities": ["1x meal"]}
   ],
   "facilities": ["1x meal"],
   "inventories": [

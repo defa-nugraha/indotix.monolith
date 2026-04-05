@@ -59,10 +59,11 @@ class AcademyController extends Controller
             $ticketRows = $tickets->get($class->id, collect());
             $minPrice = $ticketRows->min('price');
             $image = $class->images->first()?->image_path;
+            $encryptedId = Crypt::encryptString((string) $class->id);
 
             return [
-                'id' => $class->id,
-                'encrypted_id' => Crypt::encryptString((string) $class->id),
+                'id' => $encryptedId,
+                'encrypted_id' => $encryptedId,
                 'slug' => $class->slug,
                 'title' => $class->title,
                 'category' => $class->category,
@@ -118,7 +119,7 @@ class AcademyController extends Controller
                 $available = $ticket->quota === null ? 9999 : max(0, (int) $quota - (int) $ticket->sold_count);
 
                 return [
-                    'id' => $ticket->id,
+                    'id' => Crypt::encryptString((string) $ticket->id),
                     'name' => $ticket->name,
                     'price' => $ticket->price,
                     'quota' => $ticket->quota,
@@ -136,11 +137,12 @@ class AcademyController extends Controller
         $canReview = $userId
             ? (ProductReviewService::hasUsedBooking($userId, 'academy', $class->id) || (bool) $userReview)
             : false;
+        $encryptedClassId = Crypt::encryptString((string) $class->id);
 
         return response()->json([
             'class' => [
-                'id' => $class->id,
-                'encrypted_id' => Crypt::encryptString((string) $class->id),
+                'id' => $encryptedClassId,
+                'encrypted_id' => $encryptedClassId,
                 'slug' => $class->slug,
                 'title' => $class->title,
                 'description' => $class->description,

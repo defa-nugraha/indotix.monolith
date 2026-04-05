@@ -37,10 +37,21 @@ class EventBookingController extends Controller
     public function quote(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'event_id' => ['required', 'integer', 'exists:events,id'],
-            'ticket_id' => ['required', 'integer', 'exists:event_tickets,id'],
+            'event_id' => ['required', 'string'],
+            'ticket_id' => ['required', 'string'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
         ]);
+
+        $eventId = $this->resolveEntityId($data['event_id']);
+        if (! $eventId) {
+            return $this->invalidIdResponse('event_id');
+        }
+        $ticketId = $this->resolveEntityId($data['ticket_id']);
+        if (! $ticketId) {
+            return $this->invalidIdResponse('ticket_id');
+        }
+        $data['event_id'] = $eventId;
+        $data['ticket_id'] = $ticketId;
 
         $event = Event::query()
             ->where('id', $data['event_id'])
@@ -75,12 +86,23 @@ class EventBookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'event_id' => ['required', 'integer', 'exists:events,id'],
-            'ticket_id' => ['required', 'integer', 'exists:event_tickets,id'],
+            'event_id' => ['required', 'string'],
+            'ticket_id' => ['required', 'string'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
         ]);
+
+        $eventId = $this->resolveEntityId($data['event_id']);
+        if (! $eventId) {
+            return $this->invalidIdResponse('event_id');
+        }
+        $ticketId = $this->resolveEntityId($data['ticket_id']);
+        if (! $ticketId) {
+            return $this->invalidIdResponse('ticket_id');
+        }
+        $data['event_id'] = $eventId;
+        $data['ticket_id'] = $ticketId;
 
         $profilePhone = $request->user()?->phone;
         if (! $profilePhone) {
@@ -365,6 +387,29 @@ class EventBookingController extends Controller
                 'phone' => $booking->guest_phone,
             ],
         ];
+    }
+
+    private function resolveEntityId(string $value): ?int
+    {
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        try {
+            return (int) Crypt::decryptString($value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function invalidIdResponse(string $field): JsonResponse
+    {
+        return response()->json([
+            'message' => 'ID tidak valid.',
+            'errors' => [
+                $field => ['ID tidak valid.'],
+            ],
+        ], 422);
     }
 
     private function resolveBooking(string $booking): EventBooking

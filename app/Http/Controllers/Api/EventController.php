@@ -41,10 +41,11 @@ class EventController extends Controller
             $minPrice = $ticketRows->min('price');
 
             $mapsQuery = $event->address ?? $event->location ?? $this->resolveCityName($event->city_code);
+            $encryptedId = Crypt::encryptString((string) $event->id);
 
             return [
-                'id' => $event->id,
-                'encrypted_id' => Crypt::encryptString((string) $event->id),
+                'id' => $encryptedId,
+                'encrypted_id' => $encryptedId,
                 'slug' => $event->slug,
                 'title' => $event->title,
                 'city_name' => $this->resolveCityName($event->city_code),
@@ -80,7 +81,7 @@ class EventController extends Controller
             ->get()
             ->map(function (EventTicket $ticket) {
                 return [
-                    'id' => $ticket->id,
+                    'id' => Crypt::encryptString((string) $ticket->id),
                     'name' => $ticket->name,
                     'description' => $ticket->description,
                     'price' => $ticket->price,
@@ -96,11 +97,12 @@ class EventController extends Controller
             ? (ProductReviewService::hasUsedBooking($userId, 'event', $event->id) || (bool) $userReview)
             : false;
         $mapsQuery = $event->address ?? $event->location ?? $this->resolveCityName($event->city_code);
+        $encryptedEventId = Crypt::encryptString((string) $event->id);
 
         return response()->json([
             'event' => [
-                'id' => $event->id,
-                'encrypted_id' => Crypt::encryptString((string) $event->id),
+                'id' => $encryptedEventId,
+                'encrypted_id' => $encryptedEventId,
                 'slug' => $event->slug,
                 'title' => $event->title,
                 'description' => $event->description,

@@ -64,8 +64,9 @@ class WisataController extends Controller
                     return null;
                 }
 
+                $encryptedTicketId = Crypt::encryptString((string) $ticket->id);
                 return [
-                    'id' => $ticket->id,
+                    'id' => $encryptedTicketId,
                     'name' => $ticket->name,
                     'price' => $ticket->price,
                     'available' => $available,
@@ -76,9 +77,11 @@ class WisataController extends Controller
                 return null;
             }
 
+            $encryptedDestinationId = Crypt::encryptString((string) $destination->id);
+
             return [
-                'id' => $destination->id,
-                'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                'id' => $encryptedDestinationId,
+                'encrypted_id' => $encryptedDestinationId,
                 'slug' => $destination->slug,
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
@@ -144,7 +147,7 @@ class WisataController extends Controller
                 $available = max(0, $maxQuota - $reserved);
 
                 return [
-                    'id' => $ticket->id,
+                    'id' => Crypt::encryptString((string) $ticket->id),
                     'name' => $ticket->name,
                     'description' => $ticket->description,
                     'price' => $ticket->price,
@@ -162,6 +165,7 @@ class WisataController extends Controller
         $userReview = $userId ? ProductReviewService::userReview($userId, 'wisata', $destination->id) : null;
         $canReview = $userId ? ProductReviewService::hasUsedBooking($userId, 'wisata', $destination->id) : false;
         $coverPhotoUrl = $this->resolveCoverPhotoUrl($destination);
+        $encryptedDestinationId = Crypt::encryptString((string) $destination->id);
 
         return response()->json([
             'filters' => [
@@ -172,8 +176,8 @@ class WisataController extends Controller
                 'cover_photo_url' => $coverPhotoUrl,
                 'latitude' => $latitude,
                 'longitude' => $longitude,
-                'id' => $destination->id,
-                'encrypted_id' => Crypt::encryptString((string) $destination->id),
+                'id' => $encryptedDestinationId,
+                'encrypted_id' => $encryptedDestinationId,
                 'slug' => $destination->slug,
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,

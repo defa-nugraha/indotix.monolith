@@ -27,10 +27,24 @@ class SouvenirCartController extends Controller
     public function add(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:souvenir_products,id'],
-            'variant_id' => ['nullable', 'integer', 'exists:souvenir_variants,id'],
+            'product_id' => ['required', 'string'],
+            'variant_id' => ['nullable', 'string'],
             'quantity' => ['required', 'integer', 'min:1', 'max:'.self::MAX_QTY],
         ]);
+
+        $productId = $this->resolveEntityId($data['product_id']);
+        if (! $productId) {
+            return $this->invalidIdResponse('product_id');
+        }
+        $variantId = null;
+        if (! empty($data['variant_id'])) {
+            $variantId = $this->resolveEntityId($data['variant_id']);
+            if (! $variantId) {
+                return $this->invalidIdResponse('variant_id');
+            }
+        }
+        $data['product_id'] = $productId;
+        $data['variant_id'] = $variantId;
 
         $product = SouvenirProduct::query()
             ->where('id', $data['product_id'])
@@ -81,10 +95,24 @@ class SouvenirCartController extends Controller
     public function update(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:souvenir_products,id'],
-            'variant_id' => ['nullable', 'integer'],
+            'product_id' => ['required', 'string'],
+            'variant_id' => ['nullable', 'string'],
             'quantity' => ['required', 'integer', 'min:0', 'max:'.self::MAX_QTY],
         ]);
+
+        $productId = $this->resolveEntityId($data['product_id']);
+        if (! $productId) {
+            return $this->invalidIdResponse('product_id');
+        }
+        $variantId = null;
+        if (! empty($data['variant_id'])) {
+            $variantId = $this->resolveEntityId($data['variant_id']);
+            if (! $variantId) {
+                return $this->invalidIdResponse('variant_id');
+            }
+        }
+        $data['product_id'] = $productId;
+        $data['variant_id'] = $variantId;
 
         $cart = $this->getCart($request);
         $key = $this->itemKey((int) $data['product_id'], $data['variant_id'] ? (int) $data['variant_id'] : null);
@@ -129,9 +157,23 @@ class SouvenirCartController extends Controller
     public function remove(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'product_id' => ['required', 'integer'],
-            'variant_id' => ['nullable', 'integer'],
+            'product_id' => ['required', 'string'],
+            'variant_id' => ['nullable', 'string'],
         ]);
+
+        $productId = $this->resolveEntityId($data['product_id']);
+        if (! $productId) {
+            return $this->invalidIdResponse('product_id');
+        }
+        $variantId = null;
+        if (! empty($data['variant_id'])) {
+            $variantId = $this->resolveEntityId($data['variant_id']);
+            if (! $variantId) {
+                return $this->invalidIdResponse('variant_id');
+            }
+        }
+        $data['product_id'] = $productId;
+        $data['variant_id'] = $variantId;
 
         $cart = $this->getCart($request);
         $key = $this->itemKey((int) $data['product_id'], $data['variant_id'] ? (int) $data['variant_id'] : null);
@@ -152,6 +194,29 @@ class SouvenirCartController extends Controller
                 'total' => 0,
             ],
         ]);
+    }
+
+    private function resolveEntityId(string $value): ?int
+    {
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        try {
+            return (int) Crypt::decryptString($value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function invalidIdResponse(string $field): JsonResponse
+    {
+        return response()->json([
+            'message' => 'ID tidak valid.',
+            'errors' => [
+                $field => ['ID tidak valid.'],
+            ],
+        ], 422);
     }
 
     private function resolveCart(Request $request): array

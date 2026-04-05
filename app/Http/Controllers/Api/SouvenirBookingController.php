@@ -37,12 +37,16 @@ class SouvenirBookingController extends Controller
     {
         $data = $request->validate([
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:souvenir_products,id'],
-            'items.*.variant_id' => ['nullable', 'integer', 'exists:souvenir_variants,id'],
+            'items.*.product_id' => ['required', 'string'],
+            'items.*.variant_id' => ['nullable', 'string'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
 
-        $items = collect($data['items'])->values();
+        $resolvedItems = $this->resolveItemIds($data['items']);
+        if ($resolvedItems instanceof JsonResponse) {
+            return $resolvedItems;
+        }
+        $items = collect($resolvedItems)->values();
         $productIds = $items->pluck('product_id')->unique()->all();
         $variantIds = $items->pluck('variant_id')->filter()->unique()->all();
 
@@ -95,8 +99,8 @@ class SouvenirBookingController extends Controller
     {
         $data = $request->validate([
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'integer', 'exists:souvenir_products,id'],
-            'items.*.variant_id' => ['nullable', 'integer', 'exists:souvenir_variants,id'],
+            'items.*.product_id' => ['required', 'string'],
+            'items.*.variant_id' => ['nullable', 'string'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
@@ -117,7 +121,11 @@ class SouvenirBookingController extends Controller
         $data['guest_phone'] = $profilePhone;
         $data['shipping_address'] = $shippingAddress;
 
-        $items = collect($data['items'])->values();
+        $resolvedItems = $this->resolveItemIds($data['items']);
+        if ($resolvedItems instanceof JsonResponse) {
+            return $resolvedItems;
+        }
+        $items = collect($resolvedItems)->values();
         $productIds = $items->pluck('product_id')->unique()->all();
         $variantIds = $items->pluck('variant_id')->filter()->unique()->all();
 
@@ -327,6 +335,57 @@ class SouvenirBookingController extends Controller
                 'subtotal' => $item->subtotal,
             ]),
         ];
+    }
+
+    private function resolveItemIds(array $items): array|JsonResponse
+    {
+        $normalized = [];
+
+        foreach ($items as $index => $item) {
+            $productId = $this->resolveEntityId((string) $item['product_id']);
+            if (! $productId) {
+                return $this->invalidIdResponse("items.{$index}.product_id");
+            }
+
+            $variantId = null;
+            if (! empty($item['variant_id'])) {
+                $variantId = $this->resolveEntityId((string) $item['variant_id']);
+                if (! $variantId) {
+                    return $this->invalidIdResponse("items.{$index}.variant_id");
+                }
+            }
+
+            $normalized[] = [
+                'product_id' => $productId,
+                'variant_id' => $variantId,
+                'quantity' => $item['quantity'],
+            ];
+        }
+
+        return $normalized;
+    }
+
+    private function resolveEntityId(string $value): ?int
+    {
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        try {
+            return (int) Crypt::decryptString($value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function invalidIdResponse(string $field): JsonResponse
+    {
+        return response()->json([
+            'message' => 'ID tidak valid.',
+            'errors' => [
+                $field => ['ID tidak valid.'],
+            ],
+        ], 422);
     }
 
     private function resolveOrder(string $order): SouvenirOrder

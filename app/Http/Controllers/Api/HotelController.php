@@ -45,10 +45,11 @@ class HotelController extends Controller
                 $minPrice = $roomTypes->min('base_price');
                 $coverImage = $hotel->images->first();
                 $availableRooms = (int) $roomTypes->sum('total_rooms');
+                $encryptedId = Crypt::encryptString((string) $hotel->id);
 
                 return [
-                    'id' => $hotel->id,
-                    'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                    'id' => $encryptedId,
+                    'encrypted_id' => $encryptedId,
                     'slug' => $hotel->slug,
                     'name' => $hotel->name,
                     'address' => $hotel->address,
@@ -159,9 +160,10 @@ class HotelController extends Controller
             $minPrice = $availableRoomTypes->min('price_per_night');
 
             $coverImage = $hotel->images->first();
+            $encryptedId = Crypt::encryptString((string) $hotel->id);
             return [
-                'id' => $hotel->id,
-                'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'id' => $encryptedId,
+                'encrypted_id' => $encryptedId,
                 'slug' => $hotel->slug,
                 'name' => $hotel->name,
                 'address' => $hotel->address,
@@ -251,8 +253,9 @@ class HotelController extends Controller
                     $total += (int) round($price) * $data['rooms'];
                 }
 
+                $roomTypeId = Crypt::encryptString((string) $roomType->id);
                 return [
-                    'id' => $roomType->id,
+                    'id' => $roomTypeId,
                     'name' => $roomType->name,
                     'description' => $roomType->description,
                     'max_guest' => $roomType->max_guest,
@@ -264,7 +267,7 @@ class HotelController extends Controller
                     'breakfast_included' => $breakfastIncluded,
                     'smoking_allowed' => $smokingAllowed,
                     'images' => $roomType->images->map(fn ($image) => [
-                        'id' => $image->id,
+                        'id' => Crypt::encryptString((string) $image->id),
                         'url' => $image->image_url ? '/storage/'.$image->image_url : null,
                     ])->filter(fn ($image) => $image['url']),
                 ];
@@ -276,11 +279,12 @@ class HotelController extends Controller
 
         $userReview = $userId ? ProductReviewService::userReview($userId, 'hotel', $hotel->id) : null;
         $canReview = $userId ? ProductReviewService::hasUsedBooking($userId, 'hotel', $hotel->id) : false;
+        $encryptedHotelId = Crypt::encryptString((string) $hotel->id);
 
         return response()->json([
             'hotel' => [
-                'id' => $hotel->id,
-                'encrypted_id' => Crypt::encryptString((string) $hotel->id),
+                'id' => $encryptedHotelId,
+                'encrypted_id' => $encryptedHotelId,
                 'slug' => $hotel->slug,
                 'name' => $hotel->name,
                 'description' => $hotel->description,
@@ -294,7 +298,7 @@ class HotelController extends Controller
                 'maps_url' => $this->buildMapsUrl($hotel->latitude, $hotel->longitude),
                 'facilities' => $hotel->facilities->pluck('facility_code'),
                 'images' => $hotel->images->map(fn ($image) => [
-                    'id' => $image->id,
+                    'id' => Crypt::encryptString((string) $image->id),
                     'url' => $image->image_url ? '/storage/'.$image->image_url : null,
                 ])->filter(fn ($image) => $image['url'])->values(),
             ],
@@ -385,20 +389,24 @@ class HotelController extends Controller
             ->latest()
             ->take(3)
             ->get()
-            ->map(fn (Hotel $hotel) => [
-                'id' => $hotel->id,
-                'encrypted_id' => Crypt::encryptString((string) $hotel->id),
-                'slug' => $hotel->slug,
-                'name' => $hotel->name,
-                'city_name' => $hotel->city?->name,
-                'star_rating' => $hotel->star_rating,
-                'min_price' => $hotel->roomTypes->min('base_price')
-                    ? (int) round($hotel->roomTypes->min('base_price'))
-                    : null,
-                'image_url' => $hotel->images->first()?->image_url
-                    ? '/storage/'.$hotel->images->first()->image_url
-                    : $this->fallbackHotelImageUrl($hotel->id, false),
-            ])
+            ->map(function (Hotel $hotel) {
+                $encryptedId = Crypt::encryptString((string) $hotel->id);
+
+                return [
+                    'id' => $encryptedId,
+                    'encrypted_id' => $encryptedId,
+                    'slug' => $hotel->slug,
+                    'name' => $hotel->name,
+                    'city_name' => $hotel->city?->name,
+                    'star_rating' => $hotel->star_rating,
+                    'min_price' => $hotel->roomTypes->min('base_price')
+                        ? (int) round($hotel->roomTypes->min('base_price'))
+                        : null,
+                    'image_url' => $hotel->images->first()?->image_url
+                        ? '/storage/'.$hotel->images->first()->image_url
+                        : $this->fallbackHotelImageUrl($hotel->id, false),
+                ];
+            })
             ->all();
     }
 }

@@ -37,10 +37,21 @@ class AcademyBookingController extends Controller
     public function quote(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'class_id' => ['required', 'integer', 'exists:academy_classes,id'],
-            'ticket_id' => ['required', 'integer', 'exists:academy_tickets,id'],
+            'class_id' => ['required', 'string'],
+            'ticket_id' => ['required', 'string'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
         ]);
+
+        $classId = $this->resolveEntityId($data['class_id']);
+        if (! $classId) {
+            return $this->invalidIdResponse('class_id');
+        }
+        $ticketId = $this->resolveEntityId($data['ticket_id']);
+        if (! $ticketId) {
+            return $this->invalidIdResponse('ticket_id');
+        }
+        $data['class_id'] = $classId;
+        $data['ticket_id'] = $ticketId;
 
         $class = AcademyClass::query()
             ->where('id', $data['class_id'])
@@ -79,12 +90,23 @@ class AcademyBookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'class_id' => ['required', 'integer', 'exists:academy_classes,id'],
-            'ticket_id' => ['required', 'integer', 'exists:academy_tickets,id'],
+            'class_id' => ['required', 'string'],
+            'ticket_id' => ['required', 'string'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
         ]);
+
+        $classId = $this->resolveEntityId($data['class_id']);
+        if (! $classId) {
+            return $this->invalidIdResponse('class_id');
+        }
+        $ticketId = $this->resolveEntityId($data['ticket_id']);
+        if (! $ticketId) {
+            return $this->invalidIdResponse('ticket_id');
+        }
+        $data['class_id'] = $classId;
+        $data['ticket_id'] = $ticketId;
 
         $profilePhone = $request->user()?->phone;
         if (! $profilePhone) {
@@ -434,6 +456,29 @@ class AcademyBookingController extends Controller
                 'phone' => $booking->guest_phone,
             ],
         ];
+    }
+
+    private function resolveEntityId(string $value): ?int
+    {
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        try {
+            return (int) Crypt::decryptString($value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function invalidIdResponse(string $field): JsonResponse
+    {
+        return response()->json([
+            'message' => 'ID tidak valid.',
+            'errors' => [
+                $field => ['ID tidak valid.'],
+            ],
+        ], 422);
     }
 
     private function resolveBooking(string $booking): AcademyBooking

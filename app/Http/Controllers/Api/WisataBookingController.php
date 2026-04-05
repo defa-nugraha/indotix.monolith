@@ -41,11 +41,22 @@ class WisataBookingController extends Controller
     public function quote(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'destination_id' => ['required', 'integer', 'exists:mitra_wisata_onboardings,id'],
-            'ticket_id' => ['required', 'integer', 'exists:wisata_tickets,id'],
+            'destination_id' => ['required', 'string'],
+            'ticket_id' => ['required', 'string'],
             'visit_date' => ['required', 'date'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
         ]);
+
+        $destinationId = $this->resolveEntityId($data['destination_id']);
+        if (! $destinationId) {
+            return $this->invalidIdResponse('destination_id');
+        }
+        $ticketId = $this->resolveEntityId($data['ticket_id']);
+        if (! $ticketId) {
+            return $this->invalidIdResponse('ticket_id');
+        }
+        $data['destination_id'] = $destinationId;
+        $data['ticket_id'] = $ticketId;
 
         $destination = MitraWisataOnboarding::query()
             ->where('id', $data['destination_id'])
@@ -84,8 +95,8 @@ class WisataBookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'destination_id' => ['required', 'integer', 'exists:mitra_wisata_onboardings,id'],
-            'ticket_id' => ['required', 'integer', 'exists:wisata_tickets,id'],
+            'destination_id' => ['required', 'string'],
+            'ticket_id' => ['required', 'string'],
             'visit_date' => ['required', 'date'],
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
             'guest_name' => ['required', 'string', 'max:255'],
@@ -93,6 +104,17 @@ class WisataBookingController extends Controller
             'special_request' => ['nullable', 'string', 'max:1000'],
             'referral_code' => ['nullable', 'string', 'max:50'],
         ]);
+
+        $destinationId = $this->resolveEntityId($data['destination_id']);
+        if (! $destinationId) {
+            return $this->invalidIdResponse('destination_id');
+        }
+        $ticketId = $this->resolveEntityId($data['ticket_id']);
+        if (! $ticketId) {
+            return $this->invalidIdResponse('ticket_id');
+        }
+        $data['destination_id'] = $destinationId;
+        $data['ticket_id'] = $ticketId;
 
         $profilePhone = $request->user()?->phone;
         if (! $profilePhone) {
@@ -414,6 +436,29 @@ class WisataBookingController extends Controller
                 'phone' => $booking->guest_phone,
             ],
         ];
+    }
+
+    private function resolveEntityId(string $value): ?int
+    {
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        try {
+            return (int) Crypt::decryptString($value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function invalidIdResponse(string $field): JsonResponse
+    {
+        return response()->json([
+            'message' => 'ID tidak valid.',
+            'errors' => [
+                $field => ['ID tidak valid.'],
+            ],
+        ], 422);
     }
 
     private function resolveBooking(string $booking): WisataBooking

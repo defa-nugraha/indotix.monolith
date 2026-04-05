@@ -37,11 +37,25 @@ class SpecialProgramBookingController extends Controller
     public function quote(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'program_id' => ['required', 'integer', 'exists:special_programs,id'],
-            'variant_id' => ['nullable', 'integer', 'exists:special_program_variants,id'],
+            'program_id' => ['required', 'string'],
+            'variant_id' => ['nullable', 'string'],
             'date' => ['required', 'date'],
             'quantity' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
+
+        $programId = $this->resolveEntityId($data['program_id']);
+        if (! $programId) {
+            return $this->invalidIdResponse('program_id');
+        }
+        $variantId = null;
+        if (! empty($data['variant_id'])) {
+            $variantId = $this->resolveEntityId($data['variant_id']);
+            if (! $variantId) {
+                return $this->invalidIdResponse('variant_id');
+            }
+        }
+        $data['program_id'] = $programId;
+        $data['variant_id'] = $variantId;
 
         $program = SpecialProgram::query()
             ->where('id', $data['program_id'])
@@ -92,14 +106,28 @@ class SpecialProgramBookingController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'program_id' => ['required', 'integer', 'exists:special_programs,id'],
-            'variant_id' => ['nullable', 'integer', 'exists:special_program_variants,id'],
+            'program_id' => ['required', 'string'],
+            'variant_id' => ['nullable', 'string'],
             'date' => ['required', 'date'],
             'quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ]);
+
+        $programId = $this->resolveEntityId($data['program_id']);
+        if (! $programId) {
+            return $this->invalidIdResponse('program_id');
+        }
+        $variantId = null;
+        if (! empty($data['variant_id'])) {
+            $variantId = $this->resolveEntityId($data['variant_id']);
+            if (! $variantId) {
+                return $this->invalidIdResponse('variant_id');
+            }
+        }
+        $data['program_id'] = $programId;
+        $data['variant_id'] = $variantId;
 
         $profilePhone = $request->user()?->phone;
         if (! $profilePhone) {
@@ -441,6 +469,29 @@ class SpecialProgramBookingController extends Controller
                 'phone' => $booking->guest_phone,
             ],
         ];
+    }
+
+    private function resolveEntityId(string $value): ?int
+    {
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        try {
+            return (int) Crypt::decryptString($value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function invalidIdResponse(string $field): JsonResponse
+    {
+        return response()->json([
+            'message' => 'ID tidak valid.',
+            'errors' => [
+                $field => ['ID tidak valid.'],
+            ],
+        ], 422);
     }
 
     private function resolveBooking(string $booking): SpecialProgramBooking

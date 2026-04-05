@@ -34,10 +34,11 @@ class SpecialProgramController extends Controller
         $results = $programs->map(function (SpecialProgram $program) {
             $variantMin = $program->variants->whereNotNull('price')->min('price');
             $minPrice = $variantMin !== null ? (int) $variantMin : (int) $program->base_price;
+            $encryptedId = Crypt::encryptString((string) $program->id);
 
             return [
-                'id' => $program->id,
-                'encrypted_id' => Crypt::encryptString((string) $program->id),
+                'id' => $encryptedId,
+                'encrypted_id' => $encryptedId,
                 'slug' => $program->slug,
                 'name' => $program->name,
                 'category' => $program->category,
@@ -72,11 +73,12 @@ class SpecialProgramController extends Controller
 
         $program = $programModel;
         $program->load(['variants.facilities', 'facilities', 'inventories']);
+        $encryptedProgramId = Crypt::encryptString((string) $program->id);
 
         return response()->json([
             'program' => [
-                'id' => $program->id,
-                'encrypted_id' => Crypt::encryptString((string) $program->id),
+                'id' => $encryptedProgramId,
+                'encrypted_id' => $encryptedProgramId,
                 'slug' => $program->slug,
                 'name' => $program->name,
                 'category' => $program->category,
@@ -89,7 +91,7 @@ class SpecialProgramController extends Controller
                 ->sortBy('sort_order')
                 ->values()
                 ->map(fn ($variant) => [
-                    'id' => $variant->id,
+                    'id' => Crypt::encryptString((string) $variant->id),
                     'name' => $variant->name,
                     'price' => $variant->price,
                     'capacity' => $variant->capacity ?? 0,

@@ -41,14 +41,25 @@ class HotelBookingController extends Controller
     public function quote(Request $request, BookingService $bookingService): JsonResponse
     {
         $data = $request->validate([
-            'hotel_id' => ['required', 'integer', 'exists:hotels,id'],
-            'room_type_id' => ['required', 'integer', 'exists:room_types,id'],
+            'hotel_id' => ['required', 'string'],
+            'room_type_id' => ['required', 'string'],
             'check_in' => ['required', 'date'],
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
             'voucher_code' => ['nullable', 'string', 'max:50'],
         ]);
+
+        $hotelId = $this->resolveEntityId($data['hotel_id']);
+        if (! $hotelId) {
+            return $this->invalidIdResponse('hotel_id');
+        }
+        $roomTypeId = $this->resolveEntityId($data['room_type_id']);
+        if (! $roomTypeId) {
+            return $this->invalidIdResponse('room_type_id');
+        }
+        $data['hotel_id'] = $hotelId;
+        $data['room_type_id'] = $roomTypeId;
 
         $roomType = RoomType::query()->findOrFail($data['room_type_id']);
         if ((int) $roomType->hotel_id !== (int) $data['hotel_id']) {
@@ -115,8 +126,8 @@ class HotelBookingController extends Controller
     public function store(Request $request, BookingService $bookingService): JsonResponse
     {
         $data = $request->validate([
-            'hotel_id' => ['required', 'integer', 'exists:hotels,id'],
-            'room_type_id' => ['required', 'integer', 'exists:room_types,id'],
+            'hotel_id' => ['required', 'string'],
+            'room_type_id' => ['required', 'string'],
             'check_in' => ['required', 'date'],
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
@@ -126,6 +137,17 @@ class HotelBookingController extends Controller
             'special_request' => ['nullable', 'string', 'max:1000'],
             'voucher_code' => ['nullable', 'string', 'max:50'],
         ]);
+
+        $hotelId = $this->resolveEntityId($data['hotel_id']);
+        if (! $hotelId) {
+            return $this->invalidIdResponse('hotel_id');
+        }
+        $roomTypeId = $this->resolveEntityId($data['room_type_id']);
+        if (! $roomTypeId) {
+            return $this->invalidIdResponse('room_type_id');
+        }
+        $data['hotel_id'] = $hotelId;
+        $data['room_type_id'] = $roomTypeId;
 
         $profilePhone = $request->user()?->phone;
         if (! $profilePhone) {
@@ -563,6 +585,29 @@ class HotelBookingController extends Controller
         $data = rawurlencode($this->buildQrData($type, $code));
 
         return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
+    }
+
+    private function resolveEntityId(string $value): ?int
+    {
+        if (ctype_digit($value)) {
+            return (int) $value;
+        }
+
+        try {
+            return (int) Crypt::decryptString($value);
+        } catch (\Throwable $exception) {
+            return null;
+        }
+    }
+
+    private function invalidIdResponse(string $field): JsonResponse
+    {
+        return response()->json([
+            'message' => 'ID tidak valid.',
+            'errors' => [
+                $field => ['ID tidak valid.'],
+            ],
+        ], 422);
     }
 
     private function resolveBooking(string $encryptedId): Booking

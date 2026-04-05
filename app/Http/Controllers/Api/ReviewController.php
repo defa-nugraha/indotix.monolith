@@ -11,6 +11,7 @@ use App\Services\PushNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Crypt;
 
 class ReviewController extends Controller
 {
@@ -143,7 +144,7 @@ class ReviewController extends Controller
         return response()->json([
             'message' => $isNew ? 'Ulasan berhasil dikirim.' : 'Ulasan berhasil diperbarui.',
             'review' => [
-                'id' => $review->id,
+                'id' => Crypt::encryptString((string) $review->id),
                 'rating' => $review->rating,
                 'comment' => $review->comment,
                 'status' => $review->status,
@@ -156,7 +157,11 @@ class ReviewController extends Controller
     private function resolveId(string $value): ?int
     {
         try {
-            return (int) decrypt($value);
+            if (ctype_digit($value)) {
+                return (int) $value;
+            }
+
+            return (int) Crypt::decryptString($value);
         } catch (\Throwable $exception) {
             return null;
         }

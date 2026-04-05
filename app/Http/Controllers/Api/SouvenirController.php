@@ -31,9 +31,11 @@ class SouvenirController extends Controller
 
         $products = $query->latest()->paginate(12)->withQueryString();
         $products->getCollection()->transform(function (SouvenirProduct $product) {
+            $encryptedId = Crypt::encryptString((string) $product->id);
+
             return [
-                'id' => $product->id,
-                'encrypted_id' => Crypt::encryptString((string) $product->id),
+                'id' => $encryptedId,
+                'encrypted_id' => $encryptedId,
                 'slug' => $product->slug,
                 'name' => $product->name,
                 'price' => (int) $product->price,
@@ -73,11 +75,12 @@ class SouvenirController extends Controller
         $canReview = $userId
             ? (ProductReviewService::hasUsedBooking($userId, 'souvenir', $product->id) || (bool) $userReview)
             : false;
+        $encryptedProductId = Crypt::encryptString((string) $product->id);
 
         return response()->json([
             'product' => [
-                'id' => $product->id,
-                'encrypted_id' => Crypt::encryptString((string) $product->id),
+                'id' => $encryptedProductId,
+                'encrypted_id' => $encryptedProductId,
                 'slug' => $product->slug,
                 'name' => $product->name,
                 'description' => $product->description,
@@ -89,7 +92,7 @@ class SouvenirController extends Controller
                     ->filter()
                     ->values(),
                 'variants' => $product->variants->map(fn ($variant) => [
-                    'id' => $variant->id,
+                    'id' => Crypt::encryptString((string) $variant->id),
                     'name' => $variant->name,
                     'variant_type' => $variant->variant_type,
                     'sku' => $variant->sku,

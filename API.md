@@ -39,6 +39,7 @@ curl -X POST "/api/auth/login" \
 - Pagination bila tersedia: `page`, `per_page`, dan metadata `meta`/`links`.
 - Endpoint dengan Auth=Yes umumnya juga membutuhkan email terverifikasi (middleware `verified`).
   Pengecualian: `/api/auth/me`, `/api/auth/logout`, `/api/auth/otp/verify`, `/api/auth/otp/resend`, dan seluruh endpoint `/api/profile`.
+- Seluruh field `id` pada response produk (list & detail) menggunakan ID terenkripsi (string). Gunakan nilai tersebut saat booking/review/cart. Endpoint menerima ID terenkripsi (disarankan) atau numeric untuk kompatibilitas.
 
 **Status Codes**
 - `200` OK

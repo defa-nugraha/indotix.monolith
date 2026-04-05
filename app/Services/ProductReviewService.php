@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\WisataBooking;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Crypt;
 
 class ProductReviewService
 {
@@ -130,7 +131,7 @@ class ProductReviewService
             ->latest('id')
             ->get()
             ->map(fn (ProductReview $review) => [
-                'id' => $review->id,
+                'id' => Crypt::encryptString((string) $review->id),
                 'rating' => $review->rating,
                 'comment' => $review->comment,
                 'user_name' => $review->user?->name ?? 'User',
@@ -161,7 +162,7 @@ class ProductReviewService
         }
 
         return [
-            'id' => $review->id,
+            'id' => Crypt::encryptString((string) $review->id),
             'rating' => $review->rating,
             'comment' => $review->comment,
             'created_at' => $review->created_at?->toDateTimeString(),
