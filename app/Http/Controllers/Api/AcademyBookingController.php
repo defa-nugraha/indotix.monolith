@@ -57,7 +57,11 @@ class AcademyBookingController extends Controller
             ->where('id', $data['class_id'])
             ->where('is_active', true)
             ->whereIn('status', ['scheduled', 'open_for_sale'])
-            ->firstOrFail();
+            ->first();
+
+        if (! $class) {
+            return response()->json(['message' => 'Class tidak tersedia.'], 422);
+        }
 
         $ticket = AcademyTicket::query()->findOrFail($data['ticket_id']);
         if ((int) $ticket->academy_class_id !== (int) $class->id) {
@@ -118,7 +122,11 @@ class AcademyBookingController extends Controller
             ->where('id', $data['class_id'])
             ->where('is_active', true)
             ->whereIn('status', ['scheduled', 'open_for_sale'])
-            ->firstOrFail();
+            ->first();
+
+        if (! $class) {
+            return response()->json(['message' => 'Class tidak tersedia.'], 422);
+        }
 
         try {
             $booking = DB::transaction(function () use ($request, $data, $class) {
