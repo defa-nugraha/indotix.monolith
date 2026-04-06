@@ -62,6 +62,9 @@ class EventBookingController extends Controller
         if (! $event) {
             return response()->json(['message' => 'Event tidak tersedia.'], 422);
         }
+        if ($this->isScheduleEnded($event->end_at, $event->start_at)) {
+            return response()->json(['message' => 'Event sudah berakhir.'], 422);
+        }
 
         $ticket = EventTicket::query()->find($data['ticket_id']);
         if (! $ticket) {
@@ -125,6 +128,9 @@ class EventBookingController extends Controller
 
         if (! $event) {
             return response()->json(['message' => 'Event tidak tersedia.'], 422);
+        }
+        if ($this->isScheduleEnded($event->end_at, $event->start_at)) {
+            return response()->json(['message' => 'Event sudah berakhir.'], 422);
         }
 
         try {
@@ -444,6 +450,16 @@ class EventBookingController extends Controller
     private function encryptId(int $id): string
     {
         return Crypt::encryptString((string) $id);
+    }
+
+    private function isScheduleEnded($endAt, $startAt): bool
+    {
+        $scheduleEnd = $endAt ?? $startAt;
+        if (! $scheduleEnd) {
+            return false;
+        }
+
+        return $scheduleEnd->isPast();
     }
 
     private function buildQrData(string $type, string $code): string

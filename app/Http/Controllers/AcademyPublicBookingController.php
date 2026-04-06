@@ -35,6 +35,9 @@ class AcademyPublicBookingController extends Controller
             ->where('is_active', true)
             ->whereIn('status', ['scheduled', 'open_for_sale'])
             ->firstOrFail();
+        if ($this->isScheduleEnded($class->end_at, $class->start_at)) {
+            return back()->withErrors(['class_id' => 'Kelas sudah berakhir.']);
+        }
 
         $ticket = AcademyTicket::query()->where('id', $data['ticket_id'])->firstOrFail();
         if ((int) $ticket->academy_class_id !== (int) $class->id) {
@@ -80,6 +83,9 @@ class AcademyPublicBookingController extends Controller
         }
 
         $class = AcademyClass::query()->findOrFail($draft['class_id']);
+        if ($this->isScheduleEnded($class->end_at, $class->start_at)) {
+            return redirect()->route('academy.search')->withErrors(['booking' => 'Kelas sudah berakhir.']);
+        }
         $ticket = AcademyTicket::query()->findOrFail($draft['ticket_id']);
 
         $total = (int) $ticket->price * (int) $draft['quantity'];
@@ -127,6 +133,11 @@ class AcademyPublicBookingController extends Controller
         }
         $data['guest_phone'] = $profilePhone;
 
+        $class = AcademyClass::query()->findOrFail($draft['class_id']);
+        if ($this->isScheduleEnded($class->end_at, $class->start_at)) {
+            return back()->withErrors(['booking' => 'Kelas sudah berakhir.']);
+        }
+
         $existingBookingId = $request->session()->get('academy_booking_pending');
         if ($existingBookingId) {
             $existingBooking = AcademyBooking::query()->find($existingBookingId);
@@ -141,7 +152,6 @@ class AcademyPublicBookingController extends Controller
                     ]);
                 }
 
-                $class = AcademyClass::query()->findOrFail($draft['class_id']);
                 $ticket = AcademyTicket::query()->findOrFail($draft['ticket_id']);
                 $total = (int) $ticket->price * (int) $draft['quantity'];
                 $snap = $this->createSnapPayment($existingBooking, $midtransService);
@@ -460,5 +470,15 @@ class AcademyPublicBookingController extends Controller
         $data = rawurlencode($this->buildQrData($type, $code));
 
         return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
+    }
+
+    private function isScheduleEnded($endAt, $startAt): bool
+    {
+        $scheduleEnd = $endAt ?? $startAt;
+        if (! $scheduleEnd) {
+            return false;
+        }
+
+        return $scheduleEnd->isPast();
     }
 }

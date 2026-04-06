@@ -62,6 +62,9 @@ class AcademyBookingController extends Controller
         if (! $class) {
             return response()->json(['message' => 'Class tidak tersedia.'], 422);
         }
+        if ($this->isScheduleEnded($class->end_at, $class->start_at)) {
+            return response()->json(['message' => 'Kelas sudah berakhir.'], 422);
+        }
 
         $ticket = AcademyTicket::query()->findOrFail($data['ticket_id']);
         if ((int) $ticket->academy_class_id !== (int) $class->id) {
@@ -126,6 +129,9 @@ class AcademyBookingController extends Controller
 
         if (! $class) {
             return response()->json(['message' => 'Class tidak tersedia.'], 422);
+        }
+        if ($this->isScheduleEnded($class->end_at, $class->start_at)) {
+            return response()->json(['message' => 'Kelas sudah berakhir.'], 422);
         }
 
         try {
@@ -519,5 +525,15 @@ class AcademyBookingController extends Controller
         $data = rawurlencode($this->buildQrData($type, $code));
 
         return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
+    }
+
+    private function isScheduleEnded($endAt, $startAt): bool
+    {
+        $scheduleEnd = $endAt ?? $startAt;
+        if (! $scheduleEnd) {
+            return false;
+        }
+
+        return $scheduleEnd->isPast();
     }
 }

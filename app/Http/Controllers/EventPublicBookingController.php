@@ -35,6 +35,9 @@ class EventPublicBookingController extends Controller
             ->where('event_type', 'event')
             ->where('status', 'published')
             ->firstOrFail();
+        if ($this->isScheduleEnded($event->end_at, $event->start_at)) {
+            return back()->withErrors(['event_id' => 'Event sudah berakhir.']);
+        }
 
         $ticket = EventTicket::query()->where('id', $data['ticket_id'])->firstOrFail();
         if ((int) $ticket->event_id !== (int) $event->id) {
@@ -79,6 +82,9 @@ class EventPublicBookingController extends Controller
             ->where('event_type', 'event')
             ->where('id', $draft['event_id'])
             ->firstOrFail();
+        if ($this->isScheduleEnded($event->end_at, $event->start_at)) {
+            return redirect()->route('events.search')->withErrors(['booking' => 'Event sudah berakhir.']);
+        }
         $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
 
         $total = (int) $ticket->price * (int) $draft['quantity'];
@@ -126,6 +132,14 @@ class EventPublicBookingController extends Controller
         }
         $data['guest_phone'] = $profilePhone;
 
+        $event = Event::query()
+            ->where('event_type', 'event')
+            ->where('id', $draft['event_id'])
+            ->firstOrFail();
+        if ($this->isScheduleEnded($event->end_at, $event->start_at)) {
+            return back()->withErrors(['booking' => 'Event sudah berakhir.']);
+        }
+
         $existingBookingId = $request->session()->get('event_booking_pending');
         if ($existingBookingId) {
             $existingBooking = EventBooking::query()->find($existingBookingId);
@@ -140,10 +154,6 @@ class EventPublicBookingController extends Controller
                     ]);
                 }
 
-                $event = Event::query()
-                    ->where('event_type', 'event')
-                    ->where('id', $draft['event_id'])
-                    ->firstOrFail();
                 $ticket = EventTicket::query()->findOrFail($draft['ticket_id']);
                 $total = (int) $ticket->price * (int) $draft['quantity'];
                 $snap = $this->createSnapPayment($existingBooking, $midtransService);
@@ -528,5 +538,15 @@ class EventPublicBookingController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function isScheduleEnded($endAt, $startAt): bool
+    {
+        $scheduleEnd = $endAt ?? $startAt;
+        if (! $scheduleEnd) {
+            return false;
+        }
+
+        return $scheduleEnd->isPast();
     }
 }
