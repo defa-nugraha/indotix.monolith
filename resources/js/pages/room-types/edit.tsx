@@ -16,6 +16,12 @@ type RoomType = {
     name: string;
     description: string | null;
     max_guest: number | null;
+    included_adults?: number | null;
+    extra_bed_max?: number | null;
+    extra_bed_price?: string | null;
+    extra_adult_price?: string | null;
+    extra_child_price?: string | null;
+    child_age_max?: number | null;
     bed_type: string | null;
     base_price: string;
     strike_price?: string | null;
@@ -30,6 +36,12 @@ type FormData = {
     name: string;
     description: string;
     max_guest: string;
+    included_adults: string;
+    extra_bed_max: string;
+    extra_bed_price: string;
+    extra_adult_price: string;
+    extra_child_price: string;
+    child_age_max: string;
     bed_type: string;
     base_price: string;
     strike_price: string;
@@ -68,6 +80,21 @@ export default function EditRoomType({
         description: roomType.description ?? '',
         max_guest:
             roomType.max_guest !== null ? String(roomType.max_guest) : '',
+        included_adults:
+            roomType.included_adults !== null && roomType.included_adults !== undefined
+                ? String(roomType.included_adults)
+                : '2',
+        extra_bed_max:
+            roomType.extra_bed_max !== null && roomType.extra_bed_max !== undefined
+                ? String(roomType.extra_bed_max)
+                : '0',
+        extra_bed_price: roomType.extra_bed_price ?? '0',
+        extra_adult_price: roomType.extra_adult_price ?? '0',
+        extra_child_price: roomType.extra_child_price ?? '0',
+        child_age_max:
+            roomType.child_age_max !== null && roomType.child_age_max !== undefined
+                ? String(roomType.child_age_max)
+                : '12',
         bed_type: roomType.bed_type ?? '',
         base_price: roomType.base_price ?? '',
         strike_price: roomType.strike_price ?? '',
@@ -81,11 +108,25 @@ export default function EditRoomType({
     const [strikePriceDisplay, setStrikePriceDisplay] = useState(
         formatCurrencyInput(roomType.strike_price ?? ''),
     );
+    const [extraBedPriceDisplay, setExtraBedPriceDisplay] = useState(
+        formatCurrencyInput(roomType.extra_bed_price ?? '0'),
+    );
+    const [extraAdultPriceDisplay, setExtraAdultPriceDisplay] = useState(
+        formatCurrencyInput(roomType.extra_adult_price ?? '0'),
+    );
+    const [extraChildPriceDisplay, setExtraChildPriceDisplay] = useState(
+        formatCurrencyInput(roomType.extra_child_price ?? '0'),
+    );
 
     const handlePriceChange = (
         value: string,
         setter: (value: string) => void,
-        field: 'base_price' | 'strike_price',
+        field:
+            | 'base_price'
+            | 'strike_price'
+            | 'extra_bed_price'
+            | 'extra_adult_price'
+            | 'extra_child_price',
     ) => {
         setter(formatCurrencyInput(value));
         setData(field, parseCurrencyToDigits(value));
@@ -207,6 +248,105 @@ export default function EditRoomType({
                                 placeholder="2"
                             />
                             <InputError message={errors.max_guest} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="included_adults">Tamu dewasa termasuk</Label>
+                            <Input
+                                id="included_adults"
+                                type="number"
+                                value={data.included_adults}
+                                onChange={(event) =>
+                                    setData('included_adults', event.target.value)
+                                }
+                                placeholder="2"
+                            />
+                            <InputError message={errors.included_adults} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="child_age_max">Batas usia anak (tahun)</Label>
+                            <Input
+                                id="child_age_max"
+                                type="number"
+                                value={data.child_age_max}
+                                onChange={(event) =>
+                                    setData('child_age_max', event.target.value)
+                                }
+                                placeholder="12"
+                            />
+                            <InputError message={errors.child_age_max} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="extra_bed_max">Maks extra bed / kamar</Label>
+                            <Input
+                                id="extra_bed_max"
+                                type="number"
+                                value={data.extra_bed_max}
+                                onChange={(event) =>
+                                    setData('extra_bed_max', event.target.value)
+                                }
+                                placeholder="0"
+                            />
+                            <InputError message={errors.extra_bed_max} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="extra_bed_price">Harga extra bed</Label>
+                            <Input
+                                id="extra_bed_price"
+                                type="text"
+                                inputMode="numeric"
+                                value={extraBedPriceDisplay}
+                                onChange={(event) =>
+                                    handlePriceChange(
+                                        event.target.value,
+                                        setExtraBedPriceDisplay,
+                                        'extra_bed_price',
+                                    )
+                                }
+                                placeholder="0"
+                            />
+                            <InputError message={errors.extra_bed_price} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="extra_adult_price">Harga extra dewasa</Label>
+                            <Input
+                                id="extra_adult_price"
+                                type="text"
+                                inputMode="numeric"
+                                value={extraAdultPriceDisplay}
+                                onChange={(event) =>
+                                    handlePriceChange(
+                                        event.target.value,
+                                        setExtraAdultPriceDisplay,
+                                        'extra_adult_price',
+                                    )
+                                }
+                                placeholder="0"
+                            />
+                            <InputError message={errors.extra_adult_price} />
+                        </div>
+
+                        <div className="grid gap-2">
+                            <Label htmlFor="extra_child_price">Harga extra anak</Label>
+                            <Input
+                                id="extra_child_price"
+                                type="text"
+                                inputMode="numeric"
+                                value={extraChildPriceDisplay}
+                                onChange={(event) =>
+                                    handlePriceChange(
+                                        event.target.value,
+                                        setExtraChildPriceDisplay,
+                                        'extra_child_price',
+                                    )
+                                }
+                                placeholder="0"
+                            />
+                            <InputError message={errors.extra_child_price} />
                         </div>
 
                         <div className="grid gap-2">

@@ -80,7 +80,7 @@ Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/p
 | Method | Endpoint | Auth | Required | Optional | Success Response | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | GET | `/api/products/hotels` | No | - | `city`, `check_in`, `check_out`, `rooms`, `guests`, `q` | `200`: `filters`, `hotels`, `recommendations` | Jika `check_in/check_out` kosong, otomatis hari ini & besok. Jika tanpa filter, tampil 10 hotel acak. `city` dapat kode regency 4 digit atau nama kota. |
-| GET | `/api/products/hotels/{hotel}` | No | Path: `{hotel}` | Query: `check_in`, `check_out`, `rooms`, `guests` | `200`: `hotel`, `room_types`, `filters`, `reviews` | `{hotel}` = id/encrypted_id. Status hotel harus aktif. |
+| GET | `/api/products/hotels/{hotel}` | No | Path: `{hotel}` | Query: `check_in`, `check_out`, `rooms`, `guests` | `200`: `hotel`, `room_types`, `filters`, `reviews` | `{hotel}` = id/encrypted_id. Status hotel harus aktif. `room_types` memuat policy tamu (`included_adults`, `extra_bed_max`, `extra_*_price`, `child_age_max`). |
 
 **Products: Wisata**
 | Method | Endpoint | Auth | Required | Optional | Success Response | Notes |
@@ -126,8 +126,8 @@ Catatan: flow update password = `POST /api/profile/password/otp` → `PUT /api/p
 **Bookings: Hotel**
 | Method | Endpoint | Auth | Required | Optional | Success Response | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/api/hotel/bookings/quote` | Yes | `hotel_id`, `room_type_id`, `check_in`, `check_out`, `rooms`, `guests` | `voucher_code` | `200`: `pricing` | Kalkulasi harga sebelum booking. |
-| POST | `/api/hotel/bookings` | Yes | `hotel_id`, `room_type_id`, `check_in`, `check_out`, `rooms`, `guests`, `guest_name`, `guest_email` | `special_request`, `voucher_code` | `201`: `booking` | `guest_phone` diambil dari profil. |
+| POST | `/api/hotel/bookings/quote` | Yes | `hotel_id`, `room_type_id`, `check_in`, `check_out`, `rooms`, `guests` | `children`, `children_ages`, `voucher_code` | `200`: `pricing`, `guest_policy` | Kalkulasi harga sebelum booking. `children_ages` harus sama jumlah dengan `children`. Umur anak di atas `child_age_max` dihitung sebagai dewasa. Validasi `guests <= rooms * max_guest`. |
+| POST | `/api/hotel/bookings` | Yes | `hotel_id`, `room_type_id`, `check_in`, `check_out`, `rooms`, `guests`, `guest_name`, `guest_email` | `children`, `children_ages`, `special_request`, `voucher_code` | `201`: `booking` | `guest_phone` diambil dari profil. Menghitung extra adult/child/bed sesuai policy room. |
 | GET | `/api/hotel/bookings` | Yes | - | - | `200`: `bookings` | List booking hotel user. |
 | GET | `/api/hotel/bookings/{booking}` | Yes | Path: `{booking}` | - | `200`: `booking` | `{booking}` = id/encrypted_id. |
 | POST | `/api/hotel/bookings/{booking}/pay` | Yes | Path: `{booking}` | - | `200`: `payment` atau `booking` | Membuat pembayaran Midtrans Snap. |

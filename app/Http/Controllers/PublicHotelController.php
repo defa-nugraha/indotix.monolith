@@ -27,6 +27,7 @@ class PublicHotelController extends Controller
             'check_out' => $request->input('check_out') ?? $tomorrow->toDateString(),
             'rooms' => $request->input('rooms', 1),
             'guests' => $request->input('guests', 2),
+            'children' => $request->input('children', 0),
             'q' => $request->input('q'),
         ];
 
@@ -36,6 +37,7 @@ class PublicHotelController extends Controller
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
+            'children' => ['nullable', 'integer', 'min:0', 'max:20'],
             'q' => ['nullable', 'string', 'max:255'],
         ])->validate();
 
@@ -121,6 +123,7 @@ class PublicHotelController extends Controller
                 'check_out' => $data['check_out'],
                 'rooms' => $data['rooms'],
                 'guests' => $data['guests'],
+                'children' => $data['children'] ?? 0,
                 'q' => $data['q'] ?? null,
             ],
             'hotels' => $results,
@@ -135,6 +138,7 @@ class PublicHotelController extends Controller
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
+            'children' => ['nullable', 'integer', 'min:0', 'max:20'],
         ]);
 
         $hotelModel = Hotel::query()->where('slug', $hotel)->first();
@@ -200,10 +204,16 @@ class PublicHotelController extends Controller
                     'id' => $roomType->id,
                     'name' => $roomType->name,
                     'description' => $roomType->description,
-                    'max_guest' => $roomType->max_guest,
-                    'bed_type' => $roomType->bed_type,
-                    'base_price' => (int) round($roomType->base_price),
-                    'strike_price' => $roomType->strike_price ? (int) round($roomType->strike_price) : null,
+                'max_guest' => $roomType->max_guest,
+                'included_adults' => $roomType->included_adults,
+                'extra_bed_max' => $roomType->extra_bed_max,
+                'extra_bed_price' => $roomType->extra_bed_price ? (int) $roomType->extra_bed_price : 0,
+                'extra_adult_price' => $roomType->extra_adult_price ? (int) $roomType->extra_adult_price : 0,
+                'extra_child_price' => $roomType->extra_child_price ? (int) $roomType->extra_child_price : 0,
+                'child_age_max' => $roomType->child_age_max,
+                'bed_type' => $roomType->bed_type,
+                'base_price' => (int) round($roomType->base_price),
+                'strike_price' => $roomType->strike_price ? (int) round($roomType->strike_price) : null,
                     'available_rooms' => $minAvailable,
                     'total_price' => $total,
                     'breakfast_included' => $breakfastIncluded,
@@ -249,6 +259,7 @@ class PublicHotelController extends Controller
                 'check_out' => $data['check_out'],
                 'rooms' => $data['rooms'],
                 'guests' => $data['guests'],
+                'children' => $data['children'] ?? 0,
             ],
             'reviews' => ProductReviewService::publicReviews('hotel', $hotel->id),
             'userReview' => $userReview,

@@ -35,6 +35,9 @@ class BookingController extends Controller
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
+            'children' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'children_ages' => ['nullable', 'array'],
+            'children_ages.*' => ['integer', 'min:0', 'max:17'],
         ]);
 
         $roomType = RoomType::query()->where('id', $data['room_type_id'])->firstOrFail();
@@ -42,8 +45,19 @@ class BookingController extends Controller
             return back()->withErrors(['room_type_id' => 'Tipe kamar tidak sesuai hotel.']);
         }
 
+        $childrenCount = (int) ($data['children'] ?? 0);
+        $childrenAges = $data['children_ages'] ?? [];
+
         try {
-            $pricing = $bookingService->calculatePricing($roomType, $data['check_in'], $data['check_out'], $data['rooms']);
+            $pricing = $bookingService->calculatePricing(
+                $roomType,
+                $data['check_in'],
+                $data['check_out'],
+                $data['rooms'],
+                $data['guests'],
+                $childrenCount,
+                $childrenAges
+            );
         } catch (RuntimeException $exception) {
             return back()->withErrors(['rooms' => $exception->getMessage()]);
         }
@@ -55,6 +69,8 @@ class BookingController extends Controller
             'check_out' => $data['check_out'],
             'rooms' => (int) $data['rooms'],
             'guests' => (int) $data['guests'],
+            'children' => $childrenCount,
+            'children_ages' => $childrenAges,
             'nights' => $pricing['nights'],
         ];
 
@@ -86,7 +102,15 @@ class BookingController extends Controller
         }
 
         try {
-            $pricing = $bookingService->calculatePricing($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms']);
+            $pricing = $bookingService->calculatePricing(
+                $roomType,
+                $draft['check_in'],
+                $draft['check_out'],
+                $draft['rooms'],
+                $draft['guests'],
+                $draft['children'] ?? 0,
+                $draft['children_ages'] ?? []
+            );
         } catch (RuntimeException $exception) {
             $request->session()->forget('booking_draft');
 
@@ -138,6 +162,13 @@ class BookingController extends Controller
             ],
             'pricing' => [
                 'nights' => $pricing['nights'],
+                'base_subtotal' => $pricing['base_subtotal'] ?? $pricing['subtotal'],
+                'extra_adults' => $pricing['extra_adults'] ?? 0,
+                'extra_children' => $pricing['extra_children'] ?? 0,
+                'extra_beds' => $pricing['extra_beds'] ?? 0,
+                'extra_adult_fee' => $pricing['extra_adult_fee'] ?? 0,
+                'extra_child_fee' => $pricing['extra_child_fee'] ?? 0,
+                'extra_bed_fee' => $pricing['extra_bed_fee'] ?? 0,
                 'subtotal' => $pricing['subtotal'],
                 'discount_amount' => $discountAmount,
                 'service_fee' => $serviceFee,
@@ -170,7 +201,15 @@ class BookingController extends Controller
         $hotel = Hotel::query()->with('taxes')->findOrFail($draft['hotel_id']);
         try {
             $pricing = app(BookingService::class)
-                ->calculatePricing($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms']);
+                ->calculatePricing(
+                    $roomType,
+                    $draft['check_in'],
+                    $draft['check_out'],
+                    $draft['rooms'],
+                    $draft['guests'],
+                    $draft['children'] ?? 0,
+                    $draft['children_ages'] ?? []
+                );
         } catch (RuntimeException $exception) {
             return back()->withErrors(['voucher_code' => 'Voucher tidak bisa digunakan untuk tanggal ini.']);
         }
@@ -224,7 +263,15 @@ class BookingController extends Controller
 
         try {
             $booking = DB::transaction(function () use ($request, $draft, $roomType, $hotel, $data, $bookingService) {
-                $pricing = $bookingService->calculatePricing($roomType, $draft['check_in'], $draft['check_out'], $draft['rooms']);
+                $pricing = $bookingService->calculatePricing(
+                    $roomType,
+                    $draft['check_in'],
+                    $draft['check_out'],
+                    $draft['rooms'],
+                    $draft['guests'],
+                    $draft['children'] ?? 0,
+                    $draft['children_ages'] ?? []
+                );
                 $voucher = null;
                 $discountAmount = 0;
 
@@ -271,6 +318,14 @@ class BookingController extends Controller
                     'nights' => $pricing['nights'],
                     'rooms_count' => $draft['rooms'],
                     'guests_count' => $draft['guests'],
+                    'children_count' => $draft['children'] ?? 0,
+                    'children_ages' => $draft['children_ages'] ?? [],
+                    'extra_adults' => $pricing['extra_adults'] ?? 0,
+                    'extra_children' => $pricing['extra_children'] ?? 0,
+                    'extra_beds' => $pricing['extra_beds'] ?? 0,
+                    'extra_adult_fee' => $pricing['extra_adult_fee'] ?? 0,
+                    'extra_child_fee' => $pricing['extra_child_fee'] ?? 0,
+                    'extra_bed_fee' => $pricing['extra_bed_fee'] ?? 0,
                     'subtotal' => $pricing['subtotal'],
                     'discount_type' => $voucher?->discount_type,
                     'discount_value' => $voucher?->discount_value,
@@ -292,7 +347,7 @@ class BookingController extends Controller
                     'room_type_id' => $roomType->id,
                     'rooms_count' => $draft['rooms'],
                     'price_per_night' => (int) round($roomType->base_price),
-                    'subtotal' => $pricing['subtotal'],
+                    'subtotal' => $pricing['base_subtotal'] ?? $pricing['subtotal'],
                 ]);
 
                 return $booking;
@@ -520,6 +575,14 @@ class BookingController extends Controller
             'nights' => $booking->nights,
             'rooms_count' => $booking->rooms_count,
             'guests_count' => $booking->guests_count,
+            'children_count' => $booking->children_count ?? 0,
+            'children_ages' => $booking->children_ages ?? [],
+            'extra_adults' => $booking->extra_adults ?? 0,
+            'extra_children' => $booking->extra_children ?? 0,
+            'extra_beds' => $booking->extra_beds ?? 0,
+            'extra_adult_fee' => $booking->extra_adult_fee ?? 0,
+            'extra_child_fee' => $booking->extra_child_fee ?? 0,
+            'extra_bed_fee' => $booking->extra_bed_fee ?? 0,
             'total' => $booking->total,
             'subtotal' => $booking->subtotal,
             'discount_amount' => $booking->discount_amount,

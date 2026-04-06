@@ -12,6 +12,12 @@ type RoomType = {
     name: string;
     description: string | null;
     max_guest: number | null;
+    included_adults?: number | null;
+    extra_bed_max?: number | null;
+    extra_bed_price?: string | number | null;
+    extra_adult_price?: string | number | null;
+    extra_child_price?: string | number | null;
+    child_age_max?: number | null;
     bed_type: string | null;
     base_price: string;
     strike_price?: string | null;
@@ -114,6 +120,30 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                                     {roomType.bed_type ?? '-'}
                                 </p>
                             </div>
+                            <div>
+                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                    Dewasa termasuk
+                                </p>
+                                <p className="mt-2 text-lg font-semibold">
+                                    {roomType.included_adults ?? '-'}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                    Maks extra bed
+                                </p>
+                                <p className="mt-2 text-lg font-semibold">
+                                    {roomType.extra_bed_max ?? 0}
+                                </p>
+                            </div>
+                            <div>
+                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                    Batas usia anak
+                                </p>
+                                <p className="mt-2 text-lg font-semibold">
+                                    {roomType.child_age_max ?? 12} tahun
+                                </p>
+                            </div>
                         </div>
                         <div className="mt-6">
                             <p className="text-xs uppercase tracking-wider text-slate-400">
@@ -128,6 +158,16 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                                         Rp {Number(roomType.strike_price).toLocaleString('id-ID')}
                                     </span>
                                 )}
+                            </div>
+                        </div>
+                        <div className="mt-6">
+                            <p className="text-xs uppercase tracking-wider text-slate-400">
+                                Biaya Tambahan
+                            </p>
+                            <div className="mt-2 grid gap-2 text-sm text-slate-600">
+                                <div>Extra bed: Rp {Number(roomType.extra_bed_price ?? 0).toLocaleString('id-ID')}</div>
+                                <div>Extra dewasa: Rp {Number(roomType.extra_adult_price ?? 0).toLocaleString('id-ID')}</div>
+                                <div>Extra anak: Rp {Number(roomType.extra_child_price ?? 0).toLocaleString('id-ID')}</div>
                             </div>
                         </div>
                         <div className="mt-6">

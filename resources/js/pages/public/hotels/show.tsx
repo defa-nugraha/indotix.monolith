@@ -46,6 +46,7 @@ type Filters = {
     check_out: string;
     rooms: number;
     guests: number;
+    children?: number;
 };
 
 type ReviewItem = {
@@ -90,6 +91,7 @@ export default function HotelShow({
     const role = (auth?.user as any)?.role as string | undefined;
     const isUser = Boolean(role === 'user');
     const [isReady, setIsReady] = useState(false);
+    const initialChildren = Math.max(0, filters.children ?? 0);
     const form = useForm({
         hotel_id: hotel.id,
         room_type_id: '',
@@ -97,6 +99,8 @@ export default function HotelShow({
         check_out: filters.check_out,
         rooms: filters.rooms,
         guests: filters.guests,
+        children: initialChildren,
+        children_ages: [] as number[],
     });
     const reviewCount = reviews.length;
     const averageRating = reviewCount > 0
@@ -120,8 +124,8 @@ export default function HotelShow({
     const ratingCaption = reviewCount > 0 ? `${reviewCount} ulasan` : 'Belum ada ulasan';
     const [guestOpen, setGuestOpen] = useState(false);
     const [dateOpen, setDateOpen] = useState(false);
-    const [adults, setAdults] = useState(Math.max(1, Math.max(filters.guests - 0, 1)));
-    const [children, setChildren] = useState(0);
+    const [adults, setAdults] = useState(Math.max(1, Math.max((filters.guests ?? 1) - initialChildren, 1)));
+    const [children, setChildren] = useState(initialChildren);
     const [rooms, setRooms] = useState(filters.rooms ?? 1);
     const guestRef = useRef<HTMLDivElement | null>(null);
     const dateRef = useRef<HTMLDivElement | null>(null);
@@ -138,6 +142,10 @@ export default function HotelShow({
     useEffect(() => {
         form.setData('guests', adults + children);
     }, [adults, children]);
+
+    useEffect(() => {
+        form.setData('children', children);
+    }, [children]);
 
     useEffect(() => {
         form.setData('rooms', rooms);
@@ -321,6 +329,7 @@ export default function HotelShow({
                                     )}
                                     <input type="hidden" name="rooms" value={rooms} />
                                     <input type="hidden" name="guests" value={adults + children} />
+                                    <input type="hidden" name="children" value={children} />
                                 </div>
                                 <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
                                     Cari
@@ -502,6 +511,8 @@ export default function HotelShow({
                                             check_out: form.data.check_out,
                                             rooms: form.data.rooms,
                                             guests: form.data.guests,
+                                            children: form.data.children,
+                                            children_ages: form.data.children_ages,
                                         });
                                     }}
                                 >

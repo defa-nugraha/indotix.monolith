@@ -47,6 +47,9 @@ class HotelBookingController extends Controller
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
+            'children' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'children_ages' => ['nullable', 'array'],
+            'children_ages.*' => ['integer', 'min:0', 'max:17'],
             'voucher_code' => ['nullable', 'string', 'max:50'],
         ]);
 
@@ -61,6 +64,9 @@ class HotelBookingController extends Controller
         $data['hotel_id'] = $hotelId;
         $data['room_type_id'] = $roomTypeId;
 
+        $childrenCount = (int) ($data['children'] ?? 0);
+        $childrenAges = $data['children_ages'] ?? [];
+
         $roomType = RoomType::query()->findOrFail($data['room_type_id']);
         if ((int) $roomType->hotel_id !== (int) $data['hotel_id']) {
             return response()->json(['message' => 'Tipe kamar tidak sesuai hotel.'], 422);
@@ -73,7 +79,10 @@ class HotelBookingController extends Controller
                 $roomType,
                 $data['check_in'],
                 $data['check_out'],
-                (int) $data['rooms']
+                (int) $data['rooms'],
+                (int) $data['guests'],
+                $childrenCount,
+                $childrenAges
             );
         } catch (RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
@@ -112,12 +121,25 @@ class HotelBookingController extends Controller
         return response()->json([
             'pricing' => [
                 'nights' => $pricing['nights'],
+                'base_subtotal' => $pricing['base_subtotal'] ?? $pricing['subtotal'],
+                'extra_adults' => $pricing['extra_adults'] ?? 0,
+                'extra_children' => $pricing['extra_children'] ?? 0,
+                'extra_beds' => $pricing['extra_beds'] ?? 0,
+                'extra_adult_fee' => $pricing['extra_adult_fee'] ?? 0,
+                'extra_child_fee' => $pricing['extra_child_fee'] ?? 0,
+                'extra_bed_fee' => $pricing['extra_bed_fee'] ?? 0,
                 'subtotal' => $pricing['subtotal'],
                 'discount_amount' => $discountAmount,
                 'service_fee' => $serviceFee,
                 'tax_total' => $taxTotal,
                 'taxes' => $taxItems,
                 'total' => $total,
+            ],
+            'guest_policy' => [
+                'max_guest' => $pricing['max_guest'] ?? null,
+                'included_adults' => $pricing['included_adults'] ?? null,
+                'extra_bed_max' => $pricing['extra_bed_max'] ?? null,
+                'child_age_max' => $pricing['child_age_max'] ?? null,
             ],
             'voucher' => $voucherPayload,
         ]);
@@ -132,6 +154,9 @@ class HotelBookingController extends Controller
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
+            'children' => ['nullable', 'integer', 'min:0', 'max:20'],
+            'children_ages' => ['nullable', 'array'],
+            'children_ages.*' => ['integer', 'min:0', 'max:17'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
             'special_request' => ['nullable', 'string', 'max:1000'],
@@ -155,6 +180,9 @@ class HotelBookingController extends Controller
         }
         $data['guest_phone'] = $profilePhone;
 
+        $childrenCount = (int) ($data['children'] ?? 0);
+        $childrenAges = $data['children_ages'] ?? [];
+
         $roomType = RoomType::query()->findOrFail($data['room_type_id']);
         if ((int) $roomType->hotel_id !== (int) $data['hotel_id']) {
             return response()->json(['message' => 'Tipe kamar tidak sesuai hotel.'], 422);
@@ -163,12 +191,15 @@ class HotelBookingController extends Controller
         $hotel = Hotel::query()->with('taxes')->findOrFail($data['hotel_id']);
 
         try {
-            $booking = DB::transaction(function () use ($request, $data, $roomType, $bookingService, $hotel) {
+            $booking = DB::transaction(function () use ($request, $data, $roomType, $bookingService, $hotel, $childrenCount, $childrenAges) {
                 $pricing = $bookingService->calculatePricing(
                     $roomType,
                     $data['check_in'],
                     $data['check_out'],
-                    (int) $data['rooms']
+                    (int) $data['rooms'],
+                    (int) $data['guests'],
+                    $childrenCount,
+                    $childrenAges
                 );
 
                 $voucher = null;
@@ -222,6 +253,14 @@ class HotelBookingController extends Controller
                     'nights' => $pricing['nights'],
                     'rooms_count' => (int) $data['rooms'],
                     'guests_count' => (int) $data['guests'],
+                    'children_count' => $childrenCount,
+                    'children_ages' => $childrenAges,
+                    'extra_adults' => $pricing['extra_adults'] ?? 0,
+                    'extra_children' => $pricing['extra_children'] ?? 0,
+                    'extra_beds' => $pricing['extra_beds'] ?? 0,
+                    'extra_adult_fee' => $pricing['extra_adult_fee'] ?? 0,
+                    'extra_child_fee' => $pricing['extra_child_fee'] ?? 0,
+                    'extra_bed_fee' => $pricing['extra_bed_fee'] ?? 0,
                     'subtotal' => $pricing['subtotal'],
                     'discount_type' => $voucher?->discount_type,
                     'discount_value' => $voucher?->discount_value,
@@ -243,7 +282,7 @@ class HotelBookingController extends Controller
                     'room_type_id' => $roomType->id,
                     'rooms_count' => (int) $data['rooms'],
                     'price_per_night' => (int) round($roomType->base_price),
-                    'subtotal' => $pricing['subtotal'],
+                    'subtotal' => $pricing['base_subtotal'] ?? $pricing['subtotal'],
                 ]);
 
                 return $booking;
@@ -460,6 +499,14 @@ class HotelBookingController extends Controller
             'nights' => $booking->nights,
             'rooms_count' => $booking->rooms_count,
             'guests_count' => $booking->guests_count,
+            'children_count' => $booking->children_count ?? 0,
+            'children_ages' => $booking->children_ages ?? [],
+            'extra_adults' => $booking->extra_adults ?? 0,
+            'extra_children' => $booking->extra_children ?? 0,
+            'extra_beds' => $booking->extra_beds ?? 0,
+            'extra_adult_fee' => $booking->extra_adult_fee ?? 0,
+            'extra_child_fee' => $booking->extra_child_fee ?? 0,
+            'extra_bed_fee' => $booking->extra_bed_fee ?? 0,
             'total' => $booking->total,
             'subtotal' => $booking->subtotal,
             'discount_amount' => $booking->discount_amount,

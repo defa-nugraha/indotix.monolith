@@ -44,6 +44,7 @@ type Filters = {
     check_out?: string | null;
     rooms?: number;
     guests?: number;
+    children?: number;
     q?: string | null;
 };
 
@@ -87,13 +88,14 @@ export default function HotelSearch({
         check_out: filters.check_out ?? defaultCheckOut,
         rooms: filters.rooms ?? 1,
         guests: filters.guests ?? 2,
+        children: filters.children ?? 0,
     });
     const [guestOpen, setGuestOpen] = useState(false);
     const [dateOpen, setDateOpen] = useState(false);
+    const [children, setChildren] = useState(Math.max(0, filters.children ?? 0));
     const [adults, setAdults] = useState(
-        Math.max(1, filters.guests ? Math.max(filters.guests - 0, 1) : 2),
+        Math.max(1, (filters.guests ?? 2) - (filters.children ?? 0)),
     );
-    const [children, setChildren] = useState(0);
     const [rooms, setRooms] = useState(filters.rooms ?? 1);
     const guestRef = useRef<HTMLDivElement | null>(null);
     const dateRef = useRef<HTMLDivElement | null>(null);
@@ -116,7 +118,7 @@ export default function HotelSearch({
         const totalGuests = adults + children;
         router.get(
             '/stay',
-            { ...form, guests: totalGuests, rooms },
+            { ...form, guests: totalGuests, rooms, children },
             { preserveState: true, preserveScroll: true },
         );
     };
@@ -534,7 +536,7 @@ export default function HotelSearch({
                                         <Link
                                             href={
                                                 detailSlug
-                                                    ? `/stay/hotels/${detailSlug}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}`
+                                                    ? `/stay/hotels/${detailSlug}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}&children=${children}`
                                                     : '/stay'
                                             }
                                             className="relative block h-28 overflow-hidden"
@@ -598,7 +600,7 @@ export default function HotelSearch({
                                                 <Link
                                                     href={
                                                         detailSlug
-                                                            ? `/stay/hotels/${detailSlug}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}`
+                                                            ? `/stay/hotels/${detailSlug}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}&children=${children}`
                                                             : '/stay'
                                                     }
                                                     className="rounded-lg bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-sky-700"
@@ -696,7 +698,7 @@ export default function HotelSearch({
                                                     <Link
                                                         href={
                                                             detailSlug
-                                                                ? `/stay/hotels/${detailSlug}?check_in=${form.check_in || ''}&check_out=${form.check_out || ''}&rooms=${rooms}&guests=${adults + children}`
+                                                                ? `/stay/hotels/${detailSlug}?check_in=${form.check_in || ''}&check_out=${form.check_out || ''}&rooms=${rooms}&guests=${adults + children}&children=${children}`
                                                                 : '/stay'
                                                         }
                                                         className="mt-4 block w-full rounded-lg bg-sky-600 px-4 py-2 text-center text-xs font-semibold text-white"
