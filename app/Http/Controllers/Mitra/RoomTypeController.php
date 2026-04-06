@@ -44,8 +44,13 @@ class RoomTypeController extends Controller
             $roomTypesQuery->where('hotel_id', (int) $request->input('hotel_id'));
         }
 
+        $perPage = (int) $request->input('per_page', 10);
+        if (! in_array($perPage, [10, 25, 50, 100], true)) {
+            $perPage = 10;
+        }
+
         $roomTypes = $roomTypesQuery
-            ->paginate(10)
+            ->paginate($perPage)
             ->withQueryString()
             ->through(fn (RoomType $roomType) => $this->toPayload($roomType));
 
@@ -55,6 +60,7 @@ class RoomTypeController extends Controller
                 'search' => $request->input('search'),
                 'status' => $request->input('status'),
                 'hotel_id' => $request->input('hotel_id'),
+                'per_page' => $perPage,
             ],
             'statusOptions' => self::STATUSES,
             'hotelOptions' => $this->hotelOptions($user->id),

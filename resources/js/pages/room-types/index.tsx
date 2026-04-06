@@ -36,6 +36,7 @@ type RoomTypesPageProps = {
         search?: string;
         status?: string;
         hotel_id?: string;
+        per_page?: number;
     };
     statusOptions: string[];
     hotelOptions: Array<{ id: number; label: string }>;
@@ -135,7 +136,7 @@ export default function RoomTypeIndex({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form
                         onSubmit={applyFilters}
-                        className="grid gap-4 md:grid-cols-4"
+                        className="grid gap-4 md:grid-cols-5"
                     >
                         <div className="grid gap-2 md:col-span-2">
                             <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
@@ -178,6 +179,22 @@ export default function RoomTypeIndex({
                                 {hotelOptions.map((hotel) => (
                                     <option key={hotel.id} value={hotel.id}>
                                         {hotel.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                Tampilkan
+                            </label>
+                            <select
+                                name="per_page"
+                                defaultValue={filters.per_page ?? 10}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                            >
+                                {[10, 25, 50, 100].map((size) => (
+                                    <option key={size} value={size}>
+                                        {size} data
                                     </option>
                                 ))}
                             </select>
