@@ -57,9 +57,16 @@ class EventBookingController extends Controller
             ->where('id', $data['event_id'])
             ->where('event_type', 'event')
             ->where('status', 'published')
-            ->firstOrFail();
+            ->first();
 
-        $ticket = EventTicket::query()->findOrFail($data['ticket_id']);
+        if (! $event) {
+            return response()->json(['message' => 'Event tidak tersedia.'], 422);
+        }
+
+        $ticket = EventTicket::query()->find($data['ticket_id']);
+        if (! $ticket) {
+            return response()->json(['message' => 'Tiket tidak tersedia.'], 422);
+        }
         if ((int) $ticket->event_id !== (int) $event->id) {
             return response()->json(['message' => 'Tiket tidak sesuai event.'], 422);
         }
@@ -114,11 +121,18 @@ class EventBookingController extends Controller
             ->where('id', $data['event_id'])
             ->where('event_type', 'event')
             ->where('status', 'published')
-            ->firstOrFail();
+            ->first();
+
+        if (! $event) {
+            return response()->json(['message' => 'Event tidak tersedia.'], 422);
+        }
 
         try {
             $booking = DB::transaction(function () use ($request, $data, $event) {
-                $ticket = EventTicket::query()->lockForUpdate()->findOrFail($data['ticket_id']);
+                $ticket = EventTicket::query()->lockForUpdate()->find($data['ticket_id']);
+                if (! $ticket) {
+                    throw new RuntimeException('Tiket tidak tersedia.');
+                }
                 if ((int) $ticket->event_id !== (int) $event->id) {
                     throw new RuntimeException('Tiket tidak sesuai event.');
                 }

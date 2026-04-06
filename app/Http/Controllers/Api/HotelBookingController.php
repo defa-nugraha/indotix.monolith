@@ -67,12 +67,18 @@ class HotelBookingController extends Controller
         $childrenCount = (int) ($data['children'] ?? 0);
         $childrenAges = $data['children_ages'] ?? [];
 
-        $roomType = RoomType::query()->findOrFail($data['room_type_id']);
+        $roomType = RoomType::query()->find($data['room_type_id']);
+        if (! $roomType) {
+            return response()->json(['message' => 'Tipe kamar tidak tersedia.'], 422);
+        }
         if ((int) $roomType->hotel_id !== (int) $data['hotel_id']) {
             return response()->json(['message' => 'Tipe kamar tidak sesuai hotel.'], 422);
         }
 
-        $hotel = Hotel::query()->with('taxes')->findOrFail($data['hotel_id']);
+        $hotel = Hotel::query()->with('taxes')->find($data['hotel_id']);
+        if (! $hotel) {
+            return response()->json(['message' => 'Hotel tidak tersedia.'], 422);
+        }
 
         try {
             $pricing = $bookingService->calculatePricing(
@@ -183,12 +189,18 @@ class HotelBookingController extends Controller
         $childrenCount = (int) ($data['children'] ?? 0);
         $childrenAges = $data['children_ages'] ?? [];
 
-        $roomType = RoomType::query()->findOrFail($data['room_type_id']);
+        $roomType = RoomType::query()->find($data['room_type_id']);
+        if (! $roomType) {
+            return response()->json(['message' => 'Tipe kamar tidak tersedia.'], 422);
+        }
         if ((int) $roomType->hotel_id !== (int) $data['hotel_id']) {
             return response()->json(['message' => 'Tipe kamar tidak sesuai hotel.'], 422);
         }
 
-        $hotel = Hotel::query()->with('taxes')->findOrFail($data['hotel_id']);
+        $hotel = Hotel::query()->with('taxes')->find($data['hotel_id']);
+        if (! $hotel) {
+            return response()->json(['message' => 'Hotel tidak tersedia.'], 422);
+        }
 
         try {
             $booking = DB::transaction(function () use ($request, $data, $roomType, $bookingService, $hotel, $childrenCount, $childrenAges) {

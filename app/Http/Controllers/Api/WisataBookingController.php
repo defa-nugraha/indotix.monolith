@@ -62,13 +62,20 @@ class WisataBookingController extends Controller
             ->where('id', $data['destination_id'])
             ->where('verification_status', 'verified')
             ->where('is_suspended', false)
-            ->firstOrFail();
+            ->first();
+
+        if (! $destination) {
+            return response()->json(['message' => 'Destinasi tidak tersedia.'], 422);
+        }
 
         if ($destination->is_temporarily_closed) {
             return response()->json(['message' => 'Destinasi sedang tutup sementara.'], 422);
         }
 
-        $ticket = WisataTicket::query()->findOrFail($data['ticket_id']);
+        $ticket = WisataTicket::query()->find($data['ticket_id']);
+        if (! $ticket) {
+            return response()->json(['message' => 'Tiket tidak tersedia.'], 422);
+        }
         if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
             return response()->json(['message' => 'Tiket tidak sesuai destinasi.'], 422);
         }
@@ -126,7 +133,11 @@ class WisataBookingController extends Controller
             ->where('id', $data['destination_id'])
             ->where('verification_status', 'verified')
             ->where('is_suspended', false)
-            ->firstOrFail();
+            ->first();
+
+        if (! $destination) {
+            return response()->json(['message' => 'Destinasi tidak tersedia.'], 422);
+        }
 
         if ($destination->is_temporarily_closed) {
             return response()->json(['message' => 'Destinasi sedang tutup sementara.'], 422);
@@ -136,7 +147,10 @@ class WisataBookingController extends Controller
 
         try {
             $booking = DB::transaction(function () use ($request, $data, $destination, $link) {
-                $ticket = WisataTicket::query()->lockForUpdate()->findOrFail($data['ticket_id']);
+                $ticket = WisataTicket::query()->lockForUpdate()->find($data['ticket_id']);
+                if (! $ticket) {
+                    throw new RuntimeException('Tiket tidak tersedia.');
+                }
                 if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
                     throw new RuntimeException('Tiket tidak sesuai destinasi.');
                 }

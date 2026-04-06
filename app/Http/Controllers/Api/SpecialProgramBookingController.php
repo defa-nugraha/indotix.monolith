@@ -60,7 +60,11 @@ class SpecialProgramBookingController extends Controller
         $program = SpecialProgram::query()
             ->where('id', $data['program_id'])
             ->where('is_active', true)
-            ->firstOrFail();
+            ->first();
+
+        if (! $program) {
+            return response()->json(['message' => 'Program tidak tersedia.'], 422);
+        }
 
         $variant = null;
         if ($data['variant_id'] ?? null) {
@@ -141,7 +145,11 @@ class SpecialProgramBookingController extends Controller
                     ->lockForUpdate()
                     ->where('id', $data['program_id'])
                     ->where('is_active', true)
-                    ->firstOrFail();
+                    ->first();
+
+                if (! $program) {
+                    throw new RuntimeException('Program tidak tersedia.');
+                }
 
                 $variant = null;
                 if (! empty($data['variant_id'])) {
