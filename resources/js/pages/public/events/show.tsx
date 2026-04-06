@@ -89,6 +89,16 @@ export default function EventShow({
     const [selectedTicket, setSelectedTicket] = useState<string>(
         tickets[0]?.id?.toString() ?? '',
     );
+    const parseDateTime = (value?: string | null) =>
+        value ? new Date(value.replace(' ', 'T')) : null;
+    const scheduleEnd = parseDateTime(event.end_at ?? event.start_at);
+    const isEnded = scheduleEnd ? scheduleEnd.getTime() < Date.now() : false;
+    const formatRupiah = (value: number) =>
+        new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            maximumFractionDigits: 0,
+        }).format(value);
     const form = useForm({
         event_id: event.id,
         ticket_id: tickets[0]?.id ?? 0,
@@ -177,6 +187,11 @@ export default function EventShow({
                             Pilih tiket dan jumlah yang kamu inginkan.
                         </p>
                         <div className="mt-4 space-y-3">
+                            {isEnded && (
+                                <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                    Event sudah berakhir.
+                                </div>
+                            )}
                             {tickets.length === 0 && (
                                 <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                                     Tiket event belum tersedia.
@@ -196,18 +211,16 @@ export default function EventShow({
                                             Number(event.target.value),
                                         );
                                     }}
-                                    disabled={tickets.length === 0}
+                                    disabled={tickets.length === 0 || isEnded}
                                 >
                                     {tickets.map((ticket) => (
                                         <option
                                             key={ticket.id}
                                             value={ticket.id}
                                         >
-                                            {ticket.name} · Rp{' '}
-                                            {ticket.price.toLocaleString(
-                                                'id-ID',
-                                            )}{' '}
-                                            · Tersedia {ticket.available}
+                                            {ticket.name} ·{' '}
+                                            {formatRupiah(ticket.price)} ·
+                                            Tersedia {ticket.available}
                                         </option>
                                     ))}
                                 </select>
@@ -229,7 +242,7 @@ export default function EventShow({
                                                 ),
                                             )
                                         }
-                                        disabled={tickets.length === 0}
+                                        disabled={tickets.length === 0 || isEnded}
                                     >
                                         −
                                     </button>
@@ -245,7 +258,7 @@ export default function EventShow({
                                                 Number(event.target.value),
                                             )
                                         }
-                                        disabled={tickets.length === 0}
+                                        disabled={tickets.length === 0 || isEnded}
                                     />
                                     <button
                                         type="button"
@@ -259,7 +272,7 @@ export default function EventShow({
                                                 ),
                                             )
                                         }
-                                        disabled={tickets.length === 0}
+                                        disabled={tickets.length === 0 || isEnded}
                                     >
                                         +
                                     </button>
@@ -272,9 +285,11 @@ export default function EventShow({
                                 type="button"
                                 onClick={submitBooking}
                                 className="mt-2 w-full rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                                disabled={tickets.length === 0}
+                                disabled={tickets.length === 0 || isEnded}
                             >
-                                Lanjutkan Pemesanan
+                                {isEnded
+                                    ? 'Event Sudah Berakhir'
+                                    : 'Lanjutkan Pemesanan'}
                             </button>
                             <Link
                                 href={`/chat/start/event/${event.id}`}

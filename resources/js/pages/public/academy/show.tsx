@@ -95,6 +95,18 @@ export default function AcademyShow({
     const [selectedTicket, setSelectedTicket] = useState<string>(
         tickets[0]?.id?.toString() ?? '',
     );
+    const parseDateTime = (value?: string | null) =>
+        value ? new Date(value.replace(' ', 'T')) : null;
+    const scheduleEnd = parseDateTime(
+        academyClass.end_at ?? academyClass.start_at,
+    );
+    const isEnded = scheduleEnd ? scheduleEnd.getTime() < Date.now() : false;
+    const formatRupiah = (value: number) =>
+        new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            maximumFractionDigits: 0,
+        }).format(value);
     const form = useForm({
         class_id: academyClass.id,
         ticket_id: tickets[0]?.id ?? 0,
@@ -107,10 +119,10 @@ export default function AcademyShow({
         if (!activeTicket) return null;
         const now = new Date();
         const endAt = activeTicket.sales_end_at
-            ? new Date(activeTicket.sales_end_at.replace(' ', 'T'))
+            ? parseDateTime(activeTicket.sales_end_at)
             : null;
         const startAt = activeTicket.sales_start_at
-            ? new Date(activeTicket.sales_start_at.replace(' ', 'T'))
+            ? parseDateTime(activeTicket.sales_start_at)
             : null;
         if (endAt && endAt > now) {
             return { label: 'Berakhir', value: activeTicket.sales_end_at };
@@ -245,6 +257,11 @@ export default function AcademyShow({
                                     className="w-fit"
                                 />
                             )}
+                            {isEnded && (
+                                <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                    Kelas sudah berakhir.
+                                </div>
+                            )}
                             {tickets.length === 0 && (
                                 <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                                     Tiket kelas belum tersedia.
@@ -264,18 +281,16 @@ export default function AcademyShow({
                                             Number(event.target.value),
                                         );
                                     }}
-                                    disabled={tickets.length === 0}
+                                    disabled={tickets.length === 0 || isEnded}
                                 >
                                     {tickets.map((ticket) => (
                                         <option
                                             key={ticket.id}
                                             value={ticket.id}
                                         >
-                                            {ticket.name} · Rp{' '}
-                                            {ticket.price.toLocaleString(
-                                                'id-ID',
-                                            )}{' '}
-                                            · Tersedia {ticket.available}
+                                            {ticket.name} ·{' '}
+                                            {formatRupiah(ticket.price)} ·
+                                            Tersedia {ticket.available}
                                         </option>
                                     ))}
                                 </select>
@@ -297,7 +312,7 @@ export default function AcademyShow({
                                                 ),
                                             )
                                         }
-                                        disabled={tickets.length === 0}
+                                        disabled={tickets.length === 0 || isEnded}
                                     >
                                         −
                                     </button>
@@ -313,7 +328,7 @@ export default function AcademyShow({
                                                 Number(event.target.value),
                                             )
                                         }
-                                        disabled={tickets.length === 0}
+                                        disabled={tickets.length === 0 || isEnded}
                                     />
                                     <button
                                         type="button"
@@ -327,7 +342,7 @@ export default function AcademyShow({
                                                 ),
                                             )
                                         }
-                                        disabled={tickets.length === 0}
+                                        disabled={tickets.length === 0 || isEnded}
                                     >
                                         +
                                     </button>
@@ -340,9 +355,11 @@ export default function AcademyShow({
                                 type="button"
                                 onClick={submitBooking}
                                 className="mt-2 w-full rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
-                                disabled={tickets.length === 0}
+                                disabled={tickets.length === 0 || isEnded}
                             >
-                                Lanjutkan Pemesanan
+                                {isEnded
+                                    ? 'Kelas Sudah Berakhir'
+                                    : 'Lanjutkan Pemesanan'}
                             </button>
                             <Link
                                 href={`/chat/start/academy/${academyClass.id}`}
