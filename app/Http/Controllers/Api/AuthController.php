@@ -100,8 +100,13 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
             }
 
+            $token = $user->createToken($data['device_name'] ?? 'mobile')->plainTextToken;
+
             return response()->json([
                 'message' => 'Email belum terverifikasi. OTP baru telah dikirim.',
+                'token' => $token,
+                'token_type' => 'Bearer',
+                'user' => $user,
                 'requires_otp' => true,
                 'otp_expires_at' => $otp->expires_at?->toIso8601String(),
             ], 403);
