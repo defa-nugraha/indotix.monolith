@@ -644,10 +644,15 @@ export default function Profile({
         districts?: SelectOption[];
     };
     const [passwordOpen, setPasswordOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
+    const [deleteConfirmed, setDeleteConfirmed] = useState(false);
     const passwordForm = useForm({
         current_password: '',
         password: '',
         password_confirmation: '',
+    });
+    const deleteForm = useForm({
+        password: '',
     });
     const addressForm = useForm({
         label: '',
@@ -1331,6 +1336,18 @@ export default function Profile({
                                 >
                                     Ubah Password
                                 </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        deleteForm.reset();
+                                        deleteForm.clearErrors();
+                                        setDeleteConfirmed(false);
+                                        setDeleteOpen(true);
+                                    }}
+                                    className="rounded-lg border border-rose-200 px-5 py-2 text-sm font-semibold text-rose-600 hover:border-rose-300"
+                                >
+                                    Hapus Akun
+                                </button>
                                 <Link
                                     href="/logout"
                                     method="post"
@@ -1530,6 +1547,120 @@ export default function Profile({
                                         {passwordForm.processing
                                             ? 'Menyimpan...'
                                             : 'Simpan Password'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+                {deleteOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+                        <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <h3 className="text-lg font-semibold text-slate-900">
+                                        Hapus Akun Permanen
+                                    </h3>
+                                    <p className="mt-1 text-sm text-slate-500">
+                                        Tindakan ini akan menghapus akun dan
+                                        data kamu secara permanen.
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600 hover:bg-slate-200"
+                                    onClick={() => {
+                                        setDeleteOpen(false);
+                                        deleteForm.reset();
+                                        deleteForm.clearErrors();
+                                        setDeleteConfirmed(false);
+                                    }}
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+
+                            <form
+                                className="mt-5 grid gap-4"
+                                onSubmit={(event) => {
+                                    event.preventDefault();
+                                    if (!deleteConfirmed) {
+                                        return;
+                                    }
+                                    deleteForm.delete('/settings/profile', {
+                                        preserveScroll: true,
+                                    });
+                                }}
+                            >
+                                <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                    Setelah akun dihapus, kamu tidak bisa
+                                    mengembalikannya. Pastikan semua transaksi
+                                    selesai sebelum melanjutkan.
+                                </div>
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-semibold text-slate-700">
+                                        Password Saat Ini
+                                    </label>
+                                    <input
+                                        type="password"
+                                        value={deleteForm.data.password}
+                                        onChange={(event) =>
+                                            deleteForm.setData(
+                                                'password',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="h-11 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-rose-400"
+                                        placeholder="Masukkan password"
+                                    />
+                                    <InputError
+                                        message={deleteForm.errors.password}
+                                    />
+                                    <InputError
+                                        message={deleteForm.errors.account}
+                                    />
+                                </div>
+                                <label className="flex items-start gap-3 text-sm text-slate-600">
+                                    <input
+                                        type="checkbox"
+                                        className="mt-1 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                                        checked={deleteConfirmed}
+                                        onChange={(event) =>
+                                            setDeleteConfirmed(
+                                                event.target.checked,
+                                            )
+                                        }
+                                    />
+                                    <span>
+                                        Saya memahami bahwa penghapusan akun
+                                        bersifat permanen dan tidak dapat
+                                        dibatalkan.
+                                    </span>
+                                </label>
+                                <div className="flex items-center justify-end gap-2">
+                                    <button
+                                        type="button"
+                                        className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700"
+                                        onClick={() => {
+                                            setDeleteOpen(false);
+                                            deleteForm.reset();
+                                            deleteForm.clearErrors();
+                                            setDeleteConfirmed(false);
+                                        }}
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={
+                                            deleteForm.processing ||
+                                            !deleteConfirmed
+                                        }
+                                        className="rounded-lg bg-rose-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-70"
+                                    >
+                                        {deleteForm.processing
+                                            ? 'Menghapus...'
+                                            : 'Hapus Akun'}
                                     </button>
                                 </div>
                             </form>
