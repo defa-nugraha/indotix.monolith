@@ -864,6 +864,8 @@ Route::get('/about', [\App\Http\Controllers\PublicAboutController::class, 'show'
     ->name('public.about');
 Route::get('/privacy-policy', [\App\Http\Controllers\PublicPrivacyPolicyController::class, 'show'])
     ->name('public.privacy-policy');
+Route::get('/delete-account', [\App\Http\Controllers\PublicDeleteAccountController::class, 'show'])
+    ->name('public.delete-account');
 
 Route::get('/retail-shop/cart', [\App\Http\Controllers\SouvenirCartController::class, 'index'])
     ->name('souvenir.cart');
