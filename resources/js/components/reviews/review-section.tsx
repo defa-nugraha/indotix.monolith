@@ -1,10 +1,17 @@
 import { useForm, usePage } from '@inertiajs/react';
 import { Star } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { SharedData } from '@/types';
 
-type ReviewItem = {
+type ReviewMedia = {
     id: number;
+    type: 'image' | 'video';
+    url: string;
+    thumbnail_url?: string | null;
+};
+
+type ReviewItem = {
+    id: string;
     rating: number;
     comment?: string | null;
     user_name: string;
@@ -13,10 +20,11 @@ type ReviewItem = {
     reply_by?: string | null;
     reply_at?: string | null;
     user_id?: number | null;
+    media?: ReviewMedia[];
 };
 
 type UserReview = {
-    id: number;
+    id: string;
     rating: number;
     comment?: string | null;
     created_at?: string | null;
@@ -33,12 +41,16 @@ type Props = {
 export default function ReviewSection({ productType, productId, reviews, userReview, canReview = false }: Props) {
     const { auth } = usePage<SharedData>().props;
     const canSubmitReview = Boolean(auth?.user) && (canReview || Boolean(userReview));
+    const [imageFiles, setImageFiles] = useState<File[]>([]);
+    const [videoFile, setVideoFile] = useState<File | null>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         product_type: productType,
         product_id: productId,
         rating: userReview?.rating ?? 5,
         comment: userReview?.comment ?? '',
+        images: [] as File[],
+        video: null as File | null,
     });
 
     useEffect(() => {
@@ -54,12 +66,31 @@ export default function ReviewSection({ productType, productId, reviews, userRev
         event.preventDefault();
         post('/reviews', {
             preserveScroll: true,
+            forceFormData: true,
             onSuccess: () => {
                 if (!userReview) {
                     reset('comment');
                 }
+                setImageFiles([]);
+                setVideoFile(null);
+                setData('images', []);
+                setData('video', null);
             },
         });
+    };
+
+    const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target.files ?? []);
+        const selected = files.slice(0, 5);
+        setImageFiles(selected);
+        setData('images', selected);
+    };
+
+    const handleVideoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target.files ?? []);
+        const selected = files.length > 0 ? files[0] : null;
+        setVideoFile(selected);
+        setData('video', selected);
     };
 
     return (
@@ -93,8 +124,41 @@ export default function ReviewSection({ productType, productId, reviews, userRev
                             />
                         </label>
                     </div>
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        <label className="text-sm font-semibold text-slate-700">
+                            Foto (maks 5)
+                            <input
+                                type="file"
+                                accept="image/*"
+                                multiple
+                                onChange={handleImagesChange}
+                                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                            />
+                            {imageFiles.length > 0 && (
+                                <p className="mt-1 text-xs text-slate-500">
+                                    {imageFiles.length} foto dipilih
+                                </p>
+                            )}
+                        </label>
+                        <label className="text-sm font-semibold text-slate-700">
+                            Video (maks 1)
+                            <input
+                                type="file"
+                                accept="video/*"
+                                onChange={handleVideoChange}
+                                className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm"
+                            />
+                            {videoFile && (
+                                <p className="mt-1 text-xs text-slate-500">
+                                    {videoFile.name}
+                                </p>
+                            )}
+                        </label>
+                    </div>
                     {errors.rating && <p className="mt-2 text-xs text-rose-500">{errors.rating}</p>}
                     {errors.comment && <p className="mt-1 text-xs text-rose-500">{errors.comment}</p>}
+                    {errors.images && <p className="mt-1 text-xs text-rose-500">{errors.images}</p>}
+                    {errors.video && <p className="mt-1 text-xs text-rose-500">{errors.video}</p>}
                     {errors.review && <p className="mt-1 text-xs text-rose-500">{errors.review}</p>}
                     <button
                         type="submit"
@@ -130,6 +194,27 @@ export default function ReviewSection({ productType, productId, reviews, userRev
                             </div>
                         </div>
                         {review.comment && <p className="mt-3 text-sm text-slate-600">{review.comment}</p>}
+                        {review.media && review.media.length > 0 && (
+                            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                {review.media.map((media) =>
+                                    media.type === 'image' ? (
+                                        <img
+                                            key={media.id}
+                                            src={media.url}
+                                            alt="Review media"
+                                            className="h-28 w-full rounded-lg object-cover"
+                                        />
+                                    ) : (
+                                        <video
+                                            key={media.id}
+                                            src={media.url}
+                                            controls
+                                            className="h-28 w-full rounded-lg object-cover"
+                                        />
+                                    )
+                                )}
+                            </div>
+                        )}
                         {review.reply && (
                             <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
                                 <p className="font-semibold text-slate-800">Balasan{review.reply_by ? ` dari ${review.reply_by}` : ''}</p>

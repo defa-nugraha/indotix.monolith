@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProductReview extends Model
 {
@@ -30,6 +31,13 @@ class ProductReview extends Model
         'removed_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $review) {
+            $review->media()->get()->each->delete();
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -38,5 +46,10 @@ class ProductReview extends Model
     public function replier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'replied_by');
+    }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(ProductReviewMedia::class)->orderBy('sort_order');
     }
 }

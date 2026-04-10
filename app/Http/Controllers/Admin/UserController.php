@@ -259,7 +259,7 @@ class UserController extends Controller
         UserDeviceToken::query()->where('user_id', $user->id)->delete();
         EmailOtp::query()->where('user_id', $user->id)->delete();
         ChatConversation::query()->where('user_id', $user->id)->delete();
-        ProductReview::query()->where('user_id', $user->id)->delete();
+        ProductReview::query()->where('user_id', $user->id)->get()->each->delete();
         WisataReview::query()->where('user_id', $user->id)->delete();
 
         $user->delete();

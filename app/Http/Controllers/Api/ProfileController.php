@@ -280,7 +280,7 @@ class ProfileController extends Controller
             UserNotification::query()->where('user_id', $user->id)->delete();
             UserDeviceToken::query()->where('user_id', $user->id)->delete();
             EmailOtp::query()->where('user_id', $user->id)->delete();
-            ProductReview::query()->where('user_id', $user->id)->delete();
+            ProductReview::query()->where('user_id', $user->id)->get()->each->delete();
             WisataReview::query()->where('user_id', $user->id)->delete();
 
             DB::table('sessions')->where('user_id', $user->id)->delete();

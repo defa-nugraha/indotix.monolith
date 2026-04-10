@@ -18,6 +18,7 @@ use App\Models\WisataBooking;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 
 class ProductReviewService
 {
@@ -127,7 +128,7 @@ class ProductReviewService
             ->where('product_type', $type)
             ->where('product_id', $productId)
             ->where('status', 'active')
-            ->with(['user:id,name', 'replier:id,name'])
+            ->with(['user:id,name', 'replier:id,name', 'media'])
             ->latest('id')
             ->get()
             ->map(fn (ProductReview $review) => [
@@ -140,6 +141,17 @@ class ProductReviewService
                 'reply_by' => $review->replier?->name,
                 'reply_at' => $review->replied_at?->toDateTimeString(),
                 'user_id' => $review->user_id,
+                'media' => $review->media
+                    ->map(fn ($media) => [
+                        'id' => $media->id,
+                        'type' => $media->type,
+                        'url' => Storage::url($media->path),
+                        'thumbnail_url' => $media->thumbnail_path
+                            ? Storage::url($media->thumbnail_path)
+                            : null,
+                    ])
+                    ->values()
+                    ->all(),
             ])
             ->values()
             ->all();
@@ -155,6 +167,7 @@ class ProductReviewService
             ->where('user_id', $userId)
             ->where('product_type', $type)
             ->where('product_id', $productId)
+            ->with('media')
             ->first();
 
         if (! $review) {
@@ -166,6 +179,17 @@ class ProductReviewService
             'rating' => $review->rating,
             'comment' => $review->comment,
             'created_at' => $review->created_at?->toDateTimeString(),
+            'media' => $review->media
+                ->map(fn ($media) => [
+                    'id' => $media->id,
+                    'type' => $media->type,
+                    'url' => Storage::url($media->path),
+                    'thumbnail_url' => $media->thumbnail_path
+                        ? Storage::url($media->thumbnail_path)
+                        : null,
+                ])
+                ->values()
+                ->all(),
         ];
     }
 

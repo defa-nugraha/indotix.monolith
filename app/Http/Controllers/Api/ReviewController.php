@@ -8,10 +8,12 @@ use App\Models\UserNotification;
 use App\Services\ChatService;
 use App\Services\ProductReviewService;
 use App\Services\PushNotificationService;
+use App\Services\ReviewMediaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Storage;
 
 class ReviewController extends Controller
 {
@@ -50,13 +52,16 @@ class ReviewController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, ReviewMediaService $reviewMedia): JsonResponse
     {
         $data = $request->validate([
             'product_type' => ['required', 'string', 'in:' . implode(',', ProductReviewService::TYPES)],
             'product_id' => ['required', 'string'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:1000'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['file', 'image'],
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime'],
         ]);
 
         $productId = $this->resolveId($data['product_id']);
@@ -100,6 +105,14 @@ class ReviewController extends Controller
         ]);
         $review->save();
 
+        if ($request->hasFile('images') || $request->hasFile('video')) {
+            $reviewMedia->sync(
+                $review,
+                $request->file('images', []),
+                $request->file('video')
+            );
+        }
+
         if ($isNew) {
             $ownerId = ProductReviewService::resolveOwnerId($data['product_type'], $productId);
             if (! $ownerId) {
@@ -141,6 +154,8 @@ class ReviewController extends Controller
             }
         }
 
+        $review->load('media');
+
         return response()->json([
             'message' => $isNew ? 'Ulasan berhasil dikirim.' : 'Ulasan berhasil diperbarui.',
             'review' => [
@@ -150,6 +165,17 @@ class ReviewController extends Controller
                 'status' => $review->status,
                 'created_at' => $review->created_at?->toDateTimeString(),
                 'updated_at' => $review->updated_at?->toDateTimeString(),
+                'media' => $review->media
+                    ->map(fn ($media) => [
+                        'id' => $media->id,
+                        'type' => $media->type,
+                        'url' => Storage::url($media->path),
+                        'thumbnail_url' => $media->thumbnail_path
+                            ? Storage::url($media->thumbnail_path)
+                            : null,
+                    ])
+                    ->values()
+                    ->all(),
             ],
         ]);
     }

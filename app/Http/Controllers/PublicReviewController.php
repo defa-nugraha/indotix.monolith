@@ -7,19 +7,23 @@ use App\Models\UserNotification;
 use App\Services\ProductReviewService;
 use App\Services\ChatService;
 use App\Services\PushNotificationService;
+use App\Services\ReviewMediaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PublicReviewController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, ReviewMediaService $reviewMedia): RedirectResponse
     {
         $data = $request->validate([
             'product_type' => ['required', 'string', 'in:' . implode(',', ProductReviewService::TYPES)],
             'product_id' => ['required', 'integer'],
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:1000'],
+            'images' => ['nullable', 'array', 'max:5'],
+            'images.*' => ['file', 'image'],
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime'],
         ]);
 
         $product = ProductReviewService::findProduct($data['product_type'], (int) $data['product_id']);
@@ -47,6 +51,14 @@ class PublicReviewController extends Controller
             'status' => 'active',
         ]);
         $review->save();
+
+        if ($request->hasFile('images') || $request->hasFile('video')) {
+            $reviewMedia->sync(
+                $review,
+                $request->file('images', []),
+                $request->file('video')
+            );
+        }
 
         if ($isNew) {
             $ownerId = ProductReviewService::resolveOwnerId($data['product_type'], (int) $data['product_id']);
