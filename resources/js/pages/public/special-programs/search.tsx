@@ -13,6 +13,14 @@ import {
     BadgePercent,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import {
+    ActiveFilterChips,
+    DiscoveryEmptyState,
+    DiscoveryInsightStrip,
+    DiscoverySearchField,
+    DiscoverySortSelect,
+    type DiscoverySuggestionGroup,
+} from '@/components/discovery/product-discovery';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
@@ -25,6 +33,31 @@ type ProgramCard = {
     category?: string | null;
     min_price?: number | null;
     image_url?: string | null;
+};
+
+const sortOptions = [
+    { value: 'recommended', label: 'Rekomendasi' },
+    { value: 'price_low', label: 'Harga termurah' },
+    { value: 'price_high', label: 'Harga termahal' },
+    { value: 'title', label: 'Nama A-Z' },
+];
+
+const sortPrograms = (items: ProgramCard[], sort: string) => {
+    const results = [...items];
+    if (sort === 'price_low') {
+        return results.sort(
+            (a, b) => Number(a.min_price ?? 0) - Number(b.min_price ?? 0),
+        );
+    }
+    if (sort === 'price_high') {
+        return results.sort(
+            (a, b) => Number(b.min_price ?? 0) - Number(a.min_price ?? 0),
+        );
+    }
+    if (sort === 'title') {
+        return results.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return results;
 };
 
 export default function SpecialProgramSearch({
@@ -46,6 +79,7 @@ export default function SpecialProgramSearch({
         q: filters.q ?? '',
         category: filters.category ?? '',
     });
+    const [sort, setSort] = useState('recommended');
 
     useEffect(() => {
         const timer = setTimeout(() => setIsReady(true), 400);
@@ -92,7 +126,60 @@ export default function SpecialProgramSearch({
         );
     };
 
-    const filtered = useMemo(() => programs, [programs]);
+    const applySuggestion = (value: string) => {
+        const next = { ...form, q: value };
+        setForm(next);
+        router.get('/special-programs', next, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const resetDiscovery = () => {
+        setForm({ q: '', category: '' });
+        setSort('recommended');
+        router.get(
+            '/special-programs',
+            {},
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
+        () => [
+            { label: 'Keyword populer', items: chips },
+            {
+                label: 'Program',
+                items: programs.map((program) => program.name).filter(Boolean),
+            },
+            {
+                label: 'Kategori',
+                items: programs
+                    .map((program) => program.category)
+                    .filter((item): item is string => Boolean(item)),
+            },
+        ],
+        [programs],
+    );
+
+    const activeFilters = useMemo(
+        () => [
+            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
+            ...(form.category ? [`Kategori: ${form.category}`] : []),
+            ...(sort !== 'recommended'
+                ? [
+                      sortOptions.find((item) => item.value === sort)?.label ??
+                          'Urutan aktif',
+                  ]
+                : []),
+        ],
+        [form.category, form.q, sort],
+    );
+
+    const filtered = useMemo(
+        () => sortPrograms(programs, sort),
+        [programs, sort],
+    );
     const fallbackImage = programs.find((item) => item.image_url)?.image_url;
 
     return (
@@ -153,23 +240,20 @@ export default function SpecialProgramSearch({
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
                                                 Nama program
                                             </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    🎤
-                                                </span>
-                                                <input
-                                                    className="w-full bg-transparent outline-none"
-                                                    placeholder="Cari nama program"
-                                                    value={form.q}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            q: event.target
-                                                                .value,
-                                                        }))
-                                                    }
-                                                />
-                                            </div>
+                                            <DiscoverySearchField
+                                                value={form.q}
+                                                onChange={(value) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        q: value,
+                                                    }))
+                                                }
+                                                onSuggestionSelect={
+                                                    applySuggestion
+                                                }
+                                                placeholder="Cari nama program"
+                                                suggestions={suggestionGroups}
+                                            />
                                         </div>
                                         <div className="grid gap-2">
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
@@ -210,9 +294,39 @@ export default function SpecialProgramSearch({
                                             Cari
                                         </button>
                                     </form>
-                                    <div className="mt-4 text-sm font-semibold text-sky-700">
-                                        Special program rekomendasi untukmu
+                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div className="text-sm font-semibold text-sky-700">
+                                            Special program rekomendasi untukmu
+                                        </div>
+                                        <DiscoverySortSelect
+                                            className="md:w-64"
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={setSort}
+                                        />
                                     </div>
+                                    <ActiveFilterChips
+                                        filters={activeFilters}
+                                        onReset={resetDiscovery}
+                                    />
+                                    <DiscoveryInsightStrip
+                                        tips={[
+                                            {
+                                                title: 'Cek benefit utama',
+                                                body: 'Program unggulan perlu mudah dibandingkan dari kategori dan value paketnya.',
+                                                icon: (
+                                                    <Star className="h-5 w-5" />
+                                                ),
+                                            },
+                                            {
+                                                title: 'Pilih kategori program',
+                                                body: 'Meeting, wedding, dan travel punya kebutuhan filter yang berbeda.',
+                                                icon: (
+                                                    <BadgePercent className="h-5 w-5" />
+                                                ),
+                                            },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </section>
@@ -281,14 +395,14 @@ export default function SpecialProgramSearch({
                             })}
 
                             {filtered.length === 0 && (
-                                <div className="rounded-2xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm md:col-span-2">
-                                    <div className="text-base font-semibold text-slate-800">
-                                        Belum ada hasil.
-                                    </div>
-                                    <div className="mt-2">
-                                        Coba ubah kata kunci untuk menemukan
-                                        special program terbaik.
-                                    </div>
+                                <div className="col-span-full">
+                                    <DiscoveryEmptyState
+                                        title="Program belum ditemukan"
+                                        description="Coba ubah kategori program, cari benefit lain, atau reset filter agar hasil lebih luas."
+                                        suggestions={chips}
+                                        onSuggestionSelect={applySuggestion}
+                                        onReset={resetDiscovery}
+                                    />
                                 </div>
                             )}
                         </div>

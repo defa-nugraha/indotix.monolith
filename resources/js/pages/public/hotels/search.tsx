@@ -1,5 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import { DateRange, RangeKeyDict } from 'react-date-range';
 import { format } from 'date-fns';
 import 'react-date-range/dist/styles.css';
@@ -20,6 +21,14 @@ import {
     ShoppingCart,
     BadgePercent,
 } from 'lucide-react';
+import {
+    ActiveFilterChips,
+    DiscoveryEmptyState,
+    DiscoveryInsightStrip,
+    DiscoverySearchField,
+    DiscoverySortSelect,
+    type DiscoverySuggestionGroup,
+} from '@/components/discovery/product-discovery';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
@@ -59,6 +68,37 @@ type Recommendation = {
     image_url?: string | null;
 };
 
+const sortOptions = [
+    { value: 'recommended', label: 'Rekomendasi' },
+    { value: 'price_low', label: 'Harga termurah' },
+    { value: 'price_high', label: 'Harga termahal' },
+    { value: 'rating_high', label: 'Bintang tertinggi' },
+    { value: 'title', label: 'Nama A-Z' },
+];
+
+const sortHotels = (items: Hotel[], sort: string) => {
+    const results = [...items];
+    if (sort === 'price_low') {
+        return results.sort(
+            (a, b) => Number(a.min_price ?? 0) - Number(b.min_price ?? 0),
+        );
+    }
+    if (sort === 'price_high') {
+        return results.sort(
+            (a, b) => Number(b.min_price ?? 0) - Number(a.min_price ?? 0),
+        );
+    }
+    if (sort === 'rating_high') {
+        return results.sort(
+            (a, b) => Number(b.star_rating ?? 0) - Number(a.star_rating ?? 0),
+        );
+    }
+    if (sort === 'title') {
+        return results.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return results;
+};
+
 export default function HotelSearch({
     filters,
     hotels,
@@ -92,7 +132,10 @@ export default function HotelSearch({
     });
     const [guestOpen, setGuestOpen] = useState(false);
     const [dateOpen, setDateOpen] = useState(false);
-    const [children, setChildren] = useState(Math.max(0, filters.children ?? 0));
+    const [sort, setSort] = useState('recommended');
+    const [children, setChildren] = useState(
+        Math.max(0, filters.children ?? 0),
+    );
     const [adults, setAdults] = useState(
         Math.max(1, (filters.guests ?? 2) - (filters.children ?? 0)),
     );
@@ -121,6 +164,38 @@ export default function HotelSearch({
             { ...form, guests: totalGuests, rooms, children },
             { preserveState: true, preserveScroll: true },
         );
+    };
+
+    const applySuggestion = (value: string) => {
+        const next = { ...form, q: value };
+        setForm(next);
+        const totalGuests = adults + children;
+        router.get(
+            '/stay',
+            { ...next, guests: totalGuests, rooms, children },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const resetDiscovery = () => {
+        const next = {
+            q: '',
+            city: '',
+            check_in: defaultCheckIn,
+            check_out: defaultCheckOut,
+            rooms: 1,
+            guests: 2,
+            children: 0,
+        };
+        setForm(next);
+        setAdults(2);
+        setChildren(0);
+        setRooms(1);
+        setSort('recommended');
+        router.get('/stay', next, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     useEffect(() => {
@@ -183,6 +258,57 @@ export default function HotelSearch({
         'Danau',
     ];
 
+    const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
+        () => [
+            {
+                label: 'Destinasi populer',
+                items: ['Jakarta', 'Bandung', 'Yogyakarta', 'Bali', 'Surabaya'],
+            },
+            {
+                label: 'Hotel',
+                items: hotels.map((hotel) => hotel.name).filter(Boolean),
+            },
+            {
+                label: 'Kota & area',
+                items: hotels
+                    .flatMap((hotel) => [hotel.city_name, hotel.address])
+                    .filter((item): item is string => Boolean(item)),
+            },
+        ],
+        [hotels],
+    );
+
+    const activeFilters = useMemo(
+        () => [
+            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
+            ...(form.city ? [`Kota: ${form.city}`] : []),
+            ...(form.check_in && form.check_out
+                ? [`${form.check_in} - ${form.check_out}`]
+                : []),
+            ...(rooms > 1 || adults + children !== 2
+                ? [`${rooms} kamar, ${adults + children} tamu`]
+                : []),
+            ...(sort !== 'recommended'
+                ? [
+                      sortOptions.find((item) => item.value === sort)?.label ??
+                          'Urutan aktif',
+                  ]
+                : []),
+        ],
+        [
+            adults,
+            children,
+            form.check_in,
+            form.check_out,
+            form.city,
+            form.q,
+            rooms,
+            sort,
+        ],
+    );
+
+    const filtered = useMemo(() => sortHotels(hotels, sort), [hotels, sort]);
+
     return (
         <PublicLayout categories={categories} chips={chips}>
             <Head title="Cari Hotel">
@@ -239,23 +365,20 @@ export default function HotelSearch({
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
                                                 Kota, destinasi, atau nama hotel
                                             </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    📍
-                                                </span>
-                                                <input
-                                                    className="w-full bg-transparent outline-none"
-                                                    placeholder="Kota, hotel, atau tempat tujuan"
-                                                    value={form.q}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            q: event.target
-                                                                .value,
-                                                        }))
-                                                    }
-                                                />
-                                            </div>
+                                            <DiscoverySearchField
+                                                value={form.q}
+                                                onChange={(value) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        q: value,
+                                                    }))
+                                                }
+                                                onSuggestionSelect={
+                                                    applySuggestion
+                                                }
+                                                placeholder="Kota, hotel, atau tempat tujuan"
+                                                suggestions={suggestionGroups}
+                                            />
                                         </div>
                                         <div className="grid gap-2">
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
@@ -517,15 +640,46 @@ export default function HotelSearch({
                                             Cari
                                         </button>
                                     </form>
-                                    <div className="mt-4 text-sm font-semibold text-sky-700">
-                                        Hotel yang Baru Dilihat
+                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div className="text-sm font-semibold text-sky-700">
+                                            Hotel yang relevan dengan
+                                            pencarianmu
+                                        </div>
+                                        <DiscoverySortSelect
+                                            className="md:w-64"
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={setSort}
+                                        />
                                     </div>
+                                    <ActiveFilterChips
+                                        filters={activeFilters}
+                                        onReset={resetDiscovery}
+                                    />
+                                    <DiscoveryInsightStrip
+                                        tips={[
+                                            {
+                                                title: 'Bandingkan harga per malam',
+                                                body: 'Urutkan harga untuk menemukan hotel yang paling sesuai budget.',
+                                                icon: (
+                                                    <Ticket className="h-5 w-5" />
+                                                ),
+                                            },
+                                            {
+                                                title: 'Cek fasilitas penting',
+                                                body: 'Badge sarapan dan area merokok membantu membandingkan pilihan kamar.',
+                                                icon: (
+                                                    <Coffee className="h-5 w-5" />
+                                                ),
+                                            },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </section>
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                            {hotels.map((hotel) => {
+                            {filtered.map((hotel) => {
                                 const detailSlug =
                                     hotel.slug ?? hotel.encrypted_id;
                                 return (
@@ -643,20 +797,26 @@ export default function HotelSearch({
                                 );
                             })}
 
-                            {hotels.length === 0 && (
-                                <div className="rounded-2xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm md:col-span-2">
-                                    <div className="text-base font-semibold text-slate-800">
-                                        Belum ada hasil.
-                                    </div>
-                                    <div className="mt-2">
-                                        Silakan isi tanggal untuk melihat hotel
-                                        yang tersedia.
-                                    </div>
+                            {filtered.length === 0 && (
+                                <div className="col-span-full">
+                                    <DiscoveryEmptyState
+                                        title="Hotel belum ditemukan"
+                                        description="Coba ubah tanggal, kota, jumlah tamu, atau reset filter agar hasil lebih luas."
+                                        suggestions={[
+                                            'Jakarta',
+                                            'Bandung',
+                                            'Yogyakarta',
+                                            'Bali',
+                                            'Surabaya',
+                                        ]}
+                                        onSuggestionSelect={applySuggestion}
+                                        onReset={resetDiscovery}
+                                    />
                                 </div>
                             )}
                         </div>
 
-                        {hotels.length === 0 && (
+                        {filtered.length === 0 && (
                             <section className="mt-10">
                                 <h2 className="text-xl font-semibold text-slate-900">
                                     Rekomendasi untuk kamu

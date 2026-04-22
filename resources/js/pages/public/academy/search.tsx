@@ -1,6 +1,14 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
+    ActiveFilterChips,
+    DiscoveryEmptyState,
+    DiscoveryInsightStrip,
+    DiscoverySearchField,
+    DiscoverySortSelect,
+    type DiscoverySuggestionGroup,
+} from '@/components/discovery/product-discovery';
+import {
     Bell,
     CalendarCheck,
     History as HistoryIcon,
@@ -29,6 +37,43 @@ type AcademyCard = {
     image_url?: string | null;
 };
 
+const sortOptions = [
+    { value: 'recommended', label: 'Rekomendasi' },
+    { value: 'date_soon', label: 'Jadwal terdekat' },
+    { value: 'price_low', label: 'Harga termurah' },
+    { value: 'price_high', label: 'Harga termahal' },
+    { value: 'title', label: 'Nama A-Z' },
+];
+
+const sortClasses = (items: AcademyCard[], sort: string) => {
+    const results = [...items];
+    if (sort === 'date_soon') {
+        return results.sort((a, b) => {
+            const aTime = a.start_at
+                ? new Date(a.start_at).getTime()
+                : Number.MAX_SAFE_INTEGER;
+            const bTime = b.start_at
+                ? new Date(b.start_at).getTime()
+                : Number.MAX_SAFE_INTEGER;
+            return aTime - bTime;
+        });
+    }
+    if (sort === 'price_low') {
+        return results.sort(
+            (a, b) => Number(a.min_price ?? 0) - Number(b.min_price ?? 0),
+        );
+    }
+    if (sort === 'price_high') {
+        return results.sort(
+            (a, b) => Number(b.min_price ?? 0) - Number(a.min_price ?? 0),
+        );
+    }
+    if (sort === 'title') {
+        return results.sort((a, b) => a.title.localeCompare(b.title));
+    }
+    return results;
+};
+
 export default function AcademySearch({
     classes = [],
     filters,
@@ -49,6 +94,7 @@ export default function AcademySearch({
         visit_date: new Date().toISOString().slice(0, 10),
         quantity: 1,
     });
+    const [sort, setSort] = useState('recommended');
 
     useEffect(() => {
         const timer = setTimeout(() => setIsReady(true), 400);
@@ -95,7 +141,56 @@ export default function AcademySearch({
         );
     };
 
-    const filtered = useMemo(() => classes, [classes]);
+    const applySuggestion = (value: string) => {
+        setForm((prev) => ({ ...prev, q: value }));
+        router.get(
+            '/academy',
+            { q: value },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const resetDiscovery = () => {
+        setForm((prev) => ({ ...prev, q: '' }));
+        setSort('recommended');
+        router.get(
+            '/academy',
+            {},
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
+        () => [
+            { label: 'Topik populer', items: chips },
+            {
+                label: 'Kelas',
+                items: classes.map((item) => item.title).filter(Boolean),
+            },
+            {
+                label: 'Kategori & lokasi',
+                items: classes
+                    .flatMap((item) => [item.category, item.location])
+                    .filter((item): item is string => Boolean(item)),
+            },
+        ],
+        [classes],
+    );
+
+    const activeFilters = useMemo(
+        () => [
+            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
+            ...(sort !== 'recommended'
+                ? [
+                      sortOptions.find((item) => item.value === sort)?.label ??
+                          'Urutan aktif',
+                  ]
+                : []),
+        ],
+        [form.q, sort],
+    );
+
+    const filtered = useMemo(() => sortClasses(classes, sort), [classes, sort]);
     const fallbackImage = classes.find((item) => item.image_url)?.image_url;
 
     return (
@@ -156,23 +251,20 @@ export default function AcademySearch({
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
                                                 Nama kelas atau kategori
                                             </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    🎓
-                                                </span>
-                                                <input
-                                                    className="w-full bg-transparent outline-none"
-                                                    placeholder="Cari kelas academy"
-                                                    value={form.q}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            q: event.target
-                                                                .value,
-                                                        }))
-                                                    }
-                                                />
-                                            </div>
+                                            <DiscoverySearchField
+                                                value={form.q}
+                                                onChange={(value) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        q: value,
+                                                    }))
+                                                }
+                                                onSuggestionSelect={
+                                                    applySuggestion
+                                                }
+                                                placeholder="Cari kelas academy"
+                                                suggestions={suggestionGroups}
+                                            />
                                         </div>
                                         <div className="grid gap-2">
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
@@ -226,9 +318,39 @@ export default function AcademySearch({
                                             Cari
                                         </button>
                                     </form>
-                                    <div className="mt-4 text-sm font-semibold text-sky-700">
-                                        Kelas rekomendasi untukmu
+                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div className="text-sm font-semibold text-sky-700">
+                                            Kelas rekomendasi untukmu
+                                        </div>
+                                        <DiscoverySortSelect
+                                            className="md:w-64"
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={setSort}
+                                        />
                                     </div>
+                                    <ActiveFilterChips
+                                        filters={activeFilters}
+                                        onReset={resetDiscovery}
+                                    />
+                                    <DiscoveryInsightStrip
+                                        tips={[
+                                            {
+                                                title: 'Pilih berdasarkan jadwal',
+                                                body: 'Urutkan kelas yang akan segera dimulai agar mudah menentukan waktu belajar.',
+                                                icon: (
+                                                    <CalendarCheck className="h-5 w-5" />
+                                                ),
+                                            },
+                                            {
+                                                title: 'Gunakan kategori skill',
+                                                body: 'Cari topik seperti marketing, leadership, hospitality, atau digital.',
+                                                icon: (
+                                                    <BookOpen className="h-5 w-5" />
+                                                ),
+                                            },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </section>
@@ -298,8 +420,14 @@ export default function AcademySearch({
                                 );
                             })}
                             {filtered.length === 0 && (
-                                <div className="col-span-full rounded-xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                                    Belum ada kelas academy.
+                                <div className="col-span-full">
+                                    <DiscoveryEmptyState
+                                        title="Kelas belum ditemukan"
+                                        description="Coba cari kategori skill lain, gunakan kata kunci yang lebih umum, atau reset filter."
+                                        suggestions={chips}
+                                        onSuggestionSelect={applySuggestion}
+                                        onReset={resetDiscovery}
+                                    />
                                 </div>
                             )}
                         </div>

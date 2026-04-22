@@ -1,5 +1,13 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+    ActiveFilterChips,
+    DiscoveryEmptyState,
+    DiscoveryInsightStrip,
+    DiscoverySearchField,
+    DiscoverySortSelect,
+    type DiscoverySuggestionGroup,
+} from '@/components/discovery/product-discovery';
 import {
     Bell,
     CalendarCheck,
@@ -31,6 +39,36 @@ type Filters = {
     q?: string | null;
     visit_date?: string | null;
     quantity?: number;
+};
+
+const sortOptions = [
+    { value: 'recommended', label: 'Rekomendasi' },
+    { value: 'price_low', label: 'Harga termurah' },
+    { value: 'price_high', label: 'Harga termahal' },
+    { value: 'title', label: 'Nama A-Z' },
+];
+
+const minTicketPrice = (destination: Destination) => {
+    const prices = destination.tickets
+        .map((ticket) => Number(ticket.price ?? 0))
+        .filter((price) => price > 0);
+    return prices.length > 0 ? Math.min(...prices) : 0;
+};
+
+const sortDestinations = (items: Destination[], sort: string) => {
+    const results = [...items];
+    if (sort === 'price_low') {
+        return results.sort((a, b) => minTicketPrice(a) - minTicketPrice(b));
+    }
+    if (sort === 'price_high') {
+        return results.sort((a, b) => minTicketPrice(b) - minTicketPrice(a));
+    }
+    if (sort === 'title') {
+        return results.sort((a, b) =>
+            a.destination_name.localeCompare(b.destination_name),
+        );
+    }
+    return results;
 };
 
 const navItems = [
@@ -84,6 +122,7 @@ export default function WisataSearch({
         visit_date: filters.visit_date ?? new Date().toISOString().slice(0, 10),
         quantity: filters.quantity ?? 1,
     });
+    const [sort, setSort] = useState('recommended');
     const affiliateForm = useForm({ code: '' });
 
     useEffect(() => {
@@ -98,6 +137,68 @@ export default function WisataSearch({
             preserveScroll: true,
         });
     };
+
+    const applySuggestion = (value: string) => {
+        const next = { ...form, q: value };
+        setForm(next);
+        router.get('/wisata', next, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const resetDiscovery = () => {
+        const next = {
+            q: '',
+            visit_date: new Date().toISOString().slice(0, 10),
+            quantity: 1,
+        };
+        setForm(next);
+        setSort('recommended');
+        router.get('/wisata', next, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
+        () => [
+            { label: 'Kategori populer', items: chips },
+            {
+                label: 'Destinasi',
+                items: destinations
+                    .map((item) => item.destination_name)
+                    .filter(Boolean),
+            },
+            {
+                label: 'Lokasi & tipe',
+                items: destinations
+                    .flatMap((item) => [item.city_name, item.destination_type])
+                    .filter((item): item is string => Boolean(item)),
+            },
+        ],
+        [destinations],
+    );
+
+    const activeFilters = useMemo(
+        () => [
+            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
+            ...(form.visit_date ? [`Tanggal: ${form.visit_date}`] : []),
+            ...(form.quantity > 1 ? [`${form.quantity} tiket`] : []),
+            ...(sort !== 'recommended'
+                ? [
+                      sortOptions.find((item) => item.value === sort)?.label ??
+                          'Urutan aktif',
+                  ]
+                : []),
+        ],
+        [form.q, form.quantity, form.visit_date, sort],
+    );
+
+    const filtered = useMemo(
+        () => sortDestinations(destinations, sort),
+        [destinations, sort],
+    );
     const fallbackImage = destinations.find(
         (item) => item.photo_url,
     )?.photo_url;
@@ -230,23 +331,20 @@ export default function WisataSearch({
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
                                                 Kota atau destinasi wisata
                                             </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    📍
-                                                </span>
-                                                <input
-                                                    className="w-full bg-transparent outline-none"
-                                                    placeholder="Cari kota atau nama destinasi"
-                                                    value={form.q}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            q: event.target
-                                                                .value,
-                                                        }))
-                                                    }
-                                                />
-                                            </div>
+                                            <DiscoverySearchField
+                                                value={form.q}
+                                                onChange={(value) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        q: value,
+                                                    }))
+                                                }
+                                                onSuggestionSelect={
+                                                    applySuggestion
+                                                }
+                                                placeholder="Cari kota atau nama destinasi"
+                                                suggestions={suggestionGroups}
+                                            />
                                         </div>
                                         <div className="grid gap-2">
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
@@ -300,15 +398,45 @@ export default function WisataSearch({
                                             Cari
                                         </button>
                                     </form>
-                                    <div className="mt-4 text-sm font-semibold text-sky-700">
-                                        Destinasi rekomendasi untukmu
+                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div className="text-sm font-semibold text-sky-700">
+                                            Destinasi rekomendasi untukmu
+                                        </div>
+                                        <DiscoverySortSelect
+                                            className="md:w-64"
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={setSort}
+                                        />
                                     </div>
+                                    <ActiveFilterChips
+                                        filters={activeFilters}
+                                        onReset={resetDiscovery}
+                                    />
+                                    <DiscoveryInsightStrip
+                                        tips={[
+                                            {
+                                                title: 'Kuota sesuai tanggal',
+                                                body: 'Hasil wisata mengikuti tanggal kunjungan dan jumlah tiket yang dipilih.',
+                                                icon: (
+                                                    <Ticket className="h-5 w-5" />
+                                                ),
+                                            },
+                                            {
+                                                title: 'Eksplor berdasarkan tipe',
+                                                body: 'Gunakan kategori seperti alam, budaya, edukasi, atau keluarga.',
+                                                icon: (
+                                                    <MapPinned className="h-5 w-5" />
+                                                ),
+                                            },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </section>
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-                            {destinations.map((item) => {
+                            {filtered.map((item) => {
                                 const detailSlug =
                                     item.slug ?? item.encrypted_id;
                                 return (
@@ -391,15 +519,15 @@ export default function WisataSearch({
                                 );
                             })}
 
-                            {destinations.length === 0 && (
-                                <div className="rounded-2xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm md:col-span-2">
-                                    <div className="text-base font-semibold text-slate-800">
-                                        Belum ada hasil.
-                                    </div>
-                                    <div className="mt-2">
-                                        Silakan pilih tanggal untuk melihat
-                                        destinasi yang tersedia.
-                                    </div>
+                            {filtered.length === 0 && (
+                                <div className="col-span-full">
+                                    <DiscoveryEmptyState
+                                        title="Destinasi belum ditemukan"
+                                        description="Coba tanggal lain, jumlah tiket lebih kecil, atau keyword destinasi yang lebih umum."
+                                        suggestions={chips}
+                                        onSuggestionSelect={applySuggestion}
+                                        onReset={resetDiscovery}
+                                    />
                                 </div>
                             )}
                         </div>

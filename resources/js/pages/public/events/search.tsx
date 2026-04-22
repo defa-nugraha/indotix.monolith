@@ -13,6 +13,14 @@ import {
     BadgePercent,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import {
+    ActiveFilterChips,
+    DiscoveryEmptyState,
+    DiscoveryInsightStrip,
+    DiscoverySearchField,
+    DiscoverySortSelect,
+    type DiscoverySuggestionGroup,
+} from '@/components/discovery/product-discovery';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
@@ -27,6 +35,43 @@ type EventCard = {
     start_at?: string | null;
     min_price?: number | null;
     image_url?: string | null;
+};
+
+const sortOptions = [
+    { value: 'recommended', label: 'Rekomendasi' },
+    { value: 'date_soon', label: 'Segera berlangsung' },
+    { value: 'price_low', label: 'Harga termurah' },
+    { value: 'price_high', label: 'Harga termahal' },
+    { value: 'title', label: 'Nama A-Z' },
+];
+
+const sortEvents = (items: EventCard[], sort: string) => {
+    const results = [...items];
+    if (sort === 'date_soon') {
+        return results.sort((a, b) => {
+            const aTime = a.start_at
+                ? new Date(a.start_at).getTime()
+                : Number.MAX_SAFE_INTEGER;
+            const bTime = b.start_at
+                ? new Date(b.start_at).getTime()
+                : Number.MAX_SAFE_INTEGER;
+            return aTime - bTime;
+        });
+    }
+    if (sort === 'price_low') {
+        return results.sort(
+            (a, b) => Number(a.min_price ?? 0) - Number(b.min_price ?? 0),
+        );
+    }
+    if (sort === 'price_high') {
+        return results.sort(
+            (a, b) => Number(b.min_price ?? 0) - Number(a.min_price ?? 0),
+        );
+    }
+    if (sort === 'title') {
+        return results.sort((a, b) => a.title.localeCompare(b.title));
+    }
+    return results;
 };
 
 export default function EventSearch({
@@ -49,6 +94,7 @@ export default function EventSearch({
         visit_date: new Date().toISOString().slice(0, 10),
         quantity: 1,
     });
+    const [sort, setSort] = useState('recommended');
 
     useEffect(() => {
         const timer = setTimeout(() => setIsReady(true), 400);
@@ -95,7 +141,56 @@ export default function EventSearch({
         );
     };
 
-    const filtered = useMemo(() => events, [events]);
+    const applySuggestion = (value: string) => {
+        setForm((prev) => ({ ...prev, q: value }));
+        router.get(
+            '/events',
+            { q: value },
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const resetDiscovery = () => {
+        setForm((prev) => ({ ...prev, q: '' }));
+        setSort('recommended');
+        router.get(
+            '/events',
+            {},
+            { preserveState: true, preserveScroll: true },
+        );
+    };
+
+    const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
+        () => [
+            { label: 'Keyword populer', items: chips },
+            {
+                label: 'Event',
+                items: events.map((event) => event.title).filter(Boolean),
+            },
+            {
+                label: 'Lokasi',
+                items: events
+                    .flatMap((event) => [event.city_name, event.location])
+                    .filter((item): item is string => Boolean(item)),
+            },
+        ],
+        [events],
+    );
+
+    const activeFilters = useMemo(
+        () => [
+            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
+            ...(sort !== 'recommended'
+                ? [
+                      sortOptions.find((item) => item.value === sort)?.label ??
+                          'Urutan aktif',
+                  ]
+                : []),
+        ],
+        [form.q, sort],
+    );
+
+    const filtered = useMemo(() => sortEvents(events, sort), [events, sort]);
     const fallbackImage = events.find((item) => item.image_url)?.image_url;
 
     return (
@@ -156,23 +251,20 @@ export default function EventSearch({
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
                                                 Nama event atau kota
                                             </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    🎤
-                                                </span>
-                                                <input
-                                                    className="w-full bg-transparent outline-none"
-                                                    placeholder="Cari nama event atau lokasi"
-                                                    value={form.q}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            q: event.target
-                                                                .value,
-                                                        }))
-                                                    }
-                                                />
-                                            </div>
+                                            <DiscoverySearchField
+                                                value={form.q}
+                                                onChange={(value) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        q: value,
+                                                    }))
+                                                }
+                                                onSuggestionSelect={
+                                                    applySuggestion
+                                                }
+                                                placeholder="Cari nama event atau lokasi"
+                                                suggestions={suggestionGroups}
+                                            />
                                         </div>
                                         <div className="grid gap-2">
                                             <label className="text-xs font-semibold text-slate-500 uppercase">
@@ -226,9 +318,39 @@ export default function EventSearch({
                                             Cari
                                         </button>
                                     </form>
-                                    <div className="mt-4 text-sm font-semibold text-sky-700">
-                                        Event rekomendasi untukmu
+                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div className="text-sm font-semibold text-sky-700">
+                                            Event rekomendasi untukmu
+                                        </div>
+                                        <DiscoverySortSelect
+                                            className="md:w-64"
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={setSort}
+                                        />
                                     </div>
+                                    <ActiveFilterChips
+                                        filters={activeFilters}
+                                        onReset={resetDiscovery}
+                                    />
+                                    <DiscoveryInsightStrip
+                                        tips={[
+                                            {
+                                                title: 'Prioritaskan tanggal',
+                                                body: 'Gunakan urutan segera berlangsung untuk event yang paling dekat.',
+                                                icon: (
+                                                    <CalendarCheck className="h-5 w-5" />
+                                                ),
+                                            },
+                                            {
+                                                title: 'Cari berdasarkan kota',
+                                                body: 'Nama kota membantu menemukan event yang relevan dengan lokasimu.',
+                                                icon: (
+                                                    <MapPinned className="h-5 w-5" />
+                                                ),
+                                            },
+                                        ]}
+                                    />
                                 </div>
                             </div>
                         </section>
@@ -301,14 +423,14 @@ export default function EventSearch({
                             })}
 
                             {filtered.length === 0 && (
-                                <div className="rounded-2xl border border-slate-100 bg-white p-6 text-center text-sm text-slate-500 shadow-sm md:col-span-2">
-                                    <div className="text-base font-semibold text-slate-800">
-                                        Belum ada hasil.
-                                    </div>
-                                    <div className="mt-2">
-                                        Coba ubah kata kunci untuk menemukan
-                                        event seru.
-                                    </div>
+                                <div className="col-span-full">
+                                    <DiscoveryEmptyState
+                                        title="Event belum ditemukan"
+                                        description="Coba gunakan kata kunci yang lebih umum, pilih kota lain, atau reset filter agar hasil lebih luas."
+                                        suggestions={chips}
+                                        onSuggestionSelect={applySuggestion}
+                                        onReset={resetDiscovery}
+                                    />
                                 </div>
                             )}
                         </div>

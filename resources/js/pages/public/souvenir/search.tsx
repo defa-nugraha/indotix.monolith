@@ -1,6 +1,25 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
-import { Bell, CalendarCheck, MapPinned, MessageCircle, ShoppingBag, Star, Ticket, UserCircle, History, ShoppingCart } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+    Bell,
+    CalendarCheck,
+    MapPinned,
+    MessageCircle,
+    ShoppingBag,
+    Star,
+    Ticket,
+    UserCircle,
+    History,
+    ShoppingCart,
+} from 'lucide-react';
+import {
+    ActiveFilterChips,
+    DiscoveryEmptyState,
+    DiscoveryInsightStrip,
+    DiscoverySearchField,
+    DiscoverySortSelect,
+    type DiscoverySuggestionGroup,
+} from '@/components/discovery/product-discovery';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
 
@@ -25,6 +44,37 @@ type Filters = {
     category_id?: number | null;
 };
 
+const sortOptions = [
+    { value: 'recommended', label: 'Rekomendasi' },
+    { value: 'price_low', label: 'Harga termurah' },
+    { value: 'price_high', label: 'Harga termahal' },
+    { value: 'stock_high', label: 'Stok terbanyak' },
+    { value: 'title', label: 'Nama A-Z' },
+];
+
+const sortProducts = (items: Product[], sort: string) => {
+    const results = [...items];
+    if (sort === 'price_low') {
+        return results.sort(
+            (a, b) => Number(a.price ?? 0) - Number(b.price ?? 0),
+        );
+    }
+    if (sort === 'price_high') {
+        return results.sort(
+            (a, b) => Number(b.price ?? 0) - Number(a.price ?? 0),
+        );
+    }
+    if (sort === 'stock_high') {
+        return results.sort(
+            (a, b) => Number(b.stock ?? 0) - Number(a.stock ?? 0),
+        );
+    }
+    if (sort === 'title') {
+        return results.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return results;
+};
+
 export default function SouvenirSearch({
     filters,
     products,
@@ -34,7 +84,8 @@ export default function SouvenirSearch({
     products: { data: Product[]; links: any[] };
     categories: Category[];
 }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as {
+    const { auth, unread_notifications, souvenir_cart_count } = usePage()
+        .props as {
         auth?: { user?: { role?: string } };
         unread_notifications?: number;
         souvenir_cart_count?: number;
@@ -44,6 +95,7 @@ export default function SouvenirSearch({
         q: filters.q ?? '',
         category_id: filters.category_id ?? '',
     });
+    const [sort, setSort] = useState('recommended');
 
     useEffect(() => {
         const timer = setTimeout(() => setIsReady(true), 350);
@@ -52,7 +104,29 @@ export default function SouvenirSearch({
 
     const submitSearch = (event: React.FormEvent) => {
         event.preventDefault();
-        router.get('/retail-shop', form, { preserveState: true, preserveScroll: true });
+        router.get('/retail-shop', form, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const applySuggestion = (value: string) => {
+        const next = { ...form, q: value };
+        setForm(next);
+        router.get('/retail-shop', next, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const resetDiscovery = () => {
+        setForm({ q: '', category_id: '' });
+        setSort('recommended');
+        router.get(
+            '/retail-shop',
+            {},
+            { preserveState: true, preserveScroll: true },
+        );
     };
 
     const formatIdr = (value: number | string | null | undefined) => {
@@ -64,20 +138,69 @@ export default function SouvenirSearch({
     const navItems = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop', active: true },
+        {
+            label: 'Retail Shop',
+            icon: ShoppingBag,
+            href: '/retail-shop',
+            active: true,
+        },
         { label: 'Spesial Program', icon: Star, href: '/special-programs' },
         { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
+
+    const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
+        () => [
+            {
+                label: 'Kategori',
+                items: categories.map((category) => category.name),
+            },
+            {
+                label: 'Produk',
+                items: products.data
+                    .map((product) => product.name)
+                    .filter(Boolean),
+            },
+            {
+                label: 'Koleksi',
+                items: products.data
+                    .map((product) => product.category)
+                    .filter((item): item is string => Boolean(item)),
+            },
+        ],
+        [categories, products.data],
+    );
+
+    const activeFilters = useMemo(
+        () => [
+            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
+            ...(form.category_id ? ['Kategori aktif'] : []),
+            ...(sort !== 'recommended'
+                ? [
+                      sortOptions.find((item) => item.value === sort)?.label ??
+                          'Urutan aktif',
+                  ]
+                : []),
+        ],
+        [form.category_id, form.q, sort],
+    );
+
+    const filtered = useMemo(
+        () => sortProducts(products.data, sort),
+        [products.data, sort],
+    );
 
     return (
         <PublicLayout categories={navItems}>
             <Head title="Retail Shop - INDOTIX" />
 
-                        <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+            <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 {!isReady && (
                     <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
                         {Array.from({ length: 6 }).map((_, idx) => (
-                            <Skeleton key={idx} className="h-64 w-full rounded-2xl" />
+                            <Skeleton
+                                key={idx}
+                                className="h-64 w-full rounded-2xl"
+                            />
                         ))}
                     </div>
                 )}
@@ -87,60 +210,149 @@ export default function SouvenirSearch({
                         <section className="rounded-2xl bg-white p-6 shadow-sm">
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
-                                    <h1 className="text-2xl font-semibold text-slate-900">Retail Shop Pilihan</h1>
-                                    <p className="mt-2 text-sm text-slate-500">Temukan produk khas daerah untuk melengkapi perjalananmu.</p>
+                                    <h1 className="text-2xl font-semibold text-slate-900">
+                                        Retail Shop Pilihan
+                                    </h1>
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        Temukan produk khas daerah untuk
+                                        melengkapi perjalananmu.
+                                    </p>
                                 </div>
-                                <form onSubmit={submitSearch} className="flex flex-wrap items-center gap-2">
-                                    <input
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        placeholder="Cari souvenir"
+                                <form
+                                    onSubmit={submitSearch}
+                                    className="flex w-full flex-wrap items-center gap-2 lg:w-auto"
+                                >
+                                    <DiscoverySearchField
+                                        className="min-w-[260px] flex-1"
                                         value={form.q}
-                                        onChange={(event) => setForm((prev) => ({ ...prev, q: event.target.value }))}
+                                        onChange={(value) =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                q: value,
+                                            }))
+                                        }
+                                        onSuggestionSelect={applySuggestion}
+                                        placeholder="Cari souvenir"
+                                        suggestions={suggestionGroups}
                                     />
                                     <select
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                        className="h-12 rounded-xl border border-slate-200 px-3 text-sm"
                                         value={form.category_id}
-                                        onChange={(event) => setForm((prev) => ({ ...prev, category_id: event.target.value }))}
+                                        onChange={(event) =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                category_id: event.target.value,
+                                            }))
+                                        }
                                     >
                                         <option value="">Semua kategori</option>
                                         {categories.map((category) => (
-                                            <option key={category.id} value={category.id}>
+                                            <option
+                                                key={category.id}
+                                                value={category.id}
+                                            >
                                                 {category.name}
                                             </option>
                                         ))}
                                     </select>
-                                    <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white">Cari</button>
+                                    <button className="h-12 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white">
+                                        Cari
+                                    </button>
                                 </form>
                             </div>
+                            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div className="text-sm font-semibold text-sky-700">
+                                    Produk populer dan stok tersedia
+                                </div>
+                                <DiscoverySortSelect
+                                    className="md:w-64"
+                                    value={sort}
+                                    options={sortOptions}
+                                    onChange={setSort}
+                                />
+                            </div>
+                            <ActiveFilterChips
+                                filters={activeFilters}
+                                onReset={resetDiscovery}
+                            />
+                            <DiscoveryInsightStrip
+                                tips={[
+                                    {
+                                        title: 'Cek stok produk',
+                                        body: 'Produk retail lebih mudah dipilih saat stok dan kategori langsung terlihat.',
+                                        icon: (
+                                            <ShoppingBag className="h-5 w-5" />
+                                        ),
+                                    },
+                                    {
+                                        title: 'Cari oleh kategori',
+                                        body: 'Gunakan kategori untuk menemukan souvenir yang paling relevan.',
+                                        icon: <Star className="h-5 w-5" />,
+                                    },
+                                ]}
+                            />
                         </section>
 
                         <section className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
-                            {products.data.map((product) => {
-                                const detailSlug = product.slug ?? product.encrypted_id ?? '';
+                            {filtered.map((product) => {
+                                const detailSlug =
+                                    product.slug ?? product.encrypted_id ?? '';
                                 return (
-                                <Link
-                                    key={product.id}
-                                    href={detailSlug ? `/retail-shop/${detailSlug}` : '/retail-shop'}
-                                    className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-                                >
-                                    <div className="h-48 w-full bg-slate-100">
-                                        {product.image_url ? (
-                                            <img src={product.image_url} alt={product.name} className="h-full w-full object-cover" />
-                                        ) : (
-                                            <div className="flex h-full items-center justify-center text-sm text-slate-400">Foto belum tersedia</div>
-                                        )}
-                                    </div>
-                                    <div className="p-4">
-                                        <div className="text-xs text-slate-500">{product.category ?? 'Retail Shop'}</div>
-                                        <h3 className="mt-1 text-base font-semibold text-slate-900">{product.name}</h3>
-                                        <div className="mt-2 flex items-center justify-between text-sm">
-                                            <span className="font-semibold text-sky-600">{formatIdr(product.price)}</span>
-                                            <span className="text-xs text-slate-500">Stok {product.stock}</span>
+                                    <Link
+                                        key={product.id}
+                                        href={
+                                            detailSlug
+                                                ? `/retail-shop/${detailSlug}`
+                                                : '/retail-shop'
+                                        }
+                                        className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                                    >
+                                        <div className="h-48 w-full bg-slate-100">
+                                            {product.image_url ? (
+                                                <img
+                                                    src={product.image_url}
+                                                    alt={product.name}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full items-center justify-center text-sm text-slate-400">
+                                                    Foto belum tersedia
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
-                                </Link>
+                                        <div className="p-4">
+                                            <div className="text-xs text-slate-500">
+                                                {product.category ??
+                                                    'Retail Shop'}
+                                            </div>
+                                            <h3 className="mt-1 text-base font-semibold text-slate-900">
+                                                {product.name}
+                                            </h3>
+                                            <div className="mt-2 flex items-center justify-between text-sm">
+                                                <span className="font-semibold text-sky-600">
+                                                    {formatIdr(product.price)}
+                                                </span>
+                                                <span className="text-xs text-slate-500">
+                                                    Stok {product.stock}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </Link>
                                 );
                             })}
+                            {filtered.length === 0 && (
+                                <div className="col-span-full">
+                                    <DiscoveryEmptyState
+                                        title="Produk retail belum ditemukan"
+                                        description="Coba cari nama produk lain, pilih kategori berbeda, atau reset filter."
+                                        suggestions={categories.map(
+                                            (category) => category.name,
+                                        )}
+                                        onSuggestionSelect={applySuggestion}
+                                        onReset={resetDiscovery}
+                                    />
+                                </div>
+                            )}
                         </section>
                     </>
                 )}

@@ -22,8 +22,10 @@ class PublicSouvenirController extends Controller
             ->where('is_active', true);
 
         if ($search = $request->string('q')->toString()) {
-            $query->where('name', 'like', '%'.$search.'%')
-                ->orWhere('sku', 'like', '%'.$search.'%');
+            $query->where(function ($query) use ($search) {
+                $query->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('sku', 'like', '%'.$search.'%');
+            });
         }
 
         if ($categoryId = $request->integer('category_id')) {
