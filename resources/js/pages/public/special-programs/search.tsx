@@ -14,11 +14,21 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
+    DiscoveryCollectionRail,
+    DiscoveryFeaturedShowcase,
+    DiscoveryIntentRow,
+    DiscoveryStoryHero,
+    type DiscoveryExperiencePayload,
+    type DiscoveryIntentChip,
+    type DiscoveryTheme,
+} from '@/components/discovery/discovery-experience';
+import {
     ActiveFilterChips,
     DiscoveryEmptyState,
     DiscoveryInsightStrip,
     DiscoverySearchField,
     DiscoverySortSelect,
+    formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
@@ -60,12 +70,28 @@ const sortPrograms = (items: ProgramCard[], sort: string) => {
     return results;
 };
 
+const discoveryTheme: DiscoveryTheme = {
+    badge: 'Program Discovery',
+    title: 'Temukan program dari value, urgency, dan kategori yang terasa relevan',
+    description:
+        'Discovery special program diarahkan lewat spotlight, intent, kuota terbatas, dan koleksi tematik supaya terasa lebih eksklusif.',
+    accent: 'bg-rose-600 hover:bg-rose-700',
+    gradientClassName:
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#9f1239,#db2777,#7c3aed)]',
+    surfaceClassName: 'bg-rose-50 text-rose-700',
+    icon: Star,
+};
+
 export default function SpecialProgramSearch({
     programs = [],
     filters,
+    discovery,
+    meta,
 }: {
     programs: ProgramCard[];
-    filters: { q?: string | null; category?: string | null };
+    filters: { q?: string | null; category?: string | null; sort?: string | null };
+    discovery?: DiscoveryExperiencePayload | null;
+    meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
         usePage().props as {
@@ -79,7 +105,7 @@ export default function SpecialProgramSearch({
         q: filters.q ?? '',
         category: filters.category ?? '',
     });
-    const [sort, setSort] = useState('recommended');
+    const [sort, setSort] = useState(filters.sort ?? 'recommended');
 
     useEffect(() => {
         const timer = setTimeout(() => setIsReady(true), 400);
@@ -117,32 +143,63 @@ export default function SpecialProgramSearch({
         'Limited',
     ];
 
-    const submitSearch = (event: React.FormEvent) => {
-        event.preventDefault();
-        router.get(
-            '/special-programs',
-            { q: form.q, category: form.category },
-            { preserveState: true, preserveScroll: true },
+    const applyRoute = (
+        params: Record<string, string | number | null | undefined>,
+    ) => {
+        const query = Object.fromEntries(
+            Object.entries(params).filter(
+                ([, value]) =>
+                    value !== null && value !== undefined && value !== '',
+            ),
         );
-    };
-
-    const applySuggestion = (value: string) => {
-        const next = { ...form, q: value };
-        setForm(next);
-        router.get('/special-programs', next, {
+        router.get('/special-programs', query, {
             preserveState: true,
             preserveScroll: true,
         });
     };
 
+    const submitSearch = (event: React.FormEvent) => {
+        event.preventDefault();
+        applyRoute({ q: form.q, category: form.category, sort });
+    };
+
+    const applySuggestion = (value: string) => {
+        const next = { ...form, q: value };
+        setForm(next);
+        applyRoute({ ...next, sort });
+    };
+
+    const applyIntent = (chip: DiscoveryIntentChip) => {
+        const nextSort =
+            typeof chip.filters?.sort === 'string' ? chip.filters.sort : sort;
+        setSort(nextSort);
+        if (chip.query) {
+            setForm((prev) => ({ ...prev, q: chip.query ?? '' }));
+        }
+        if (chip.filters?.category) {
+            setForm((prev) => ({
+                ...prev,
+                category: chip.filters?.category ?? '',
+            }));
+        }
+        applyRoute({
+            q: chip.query ?? form.q,
+            category:
+                (chip.filters?.category as string | undefined) ?? form.category,
+            sort: nextSort,
+            ...((chip.filters ?? {}) as Record<string, string>),
+        });
+    };
+
+    const applySort = (value: string) => {
+        setSort(value);
+        applyRoute({ q: form.q, category: form.category, sort: value });
+    };
+
     const resetDiscovery = () => {
         setForm({ q: '', category: '' });
         setSort('recommended');
-        router.get(
-            '/special-programs',
-            {},
-            { preserveState: true, preserveScroll: true },
-        );
+        applyRoute({});
     };
 
     const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
@@ -158,14 +215,17 @@ export default function SpecialProgramSearch({
                     .map((program) => program.category)
                     .filter((item): item is string => Boolean(item)),
             },
+            {
+                label: 'Discovery',
+                items: discovery?.popular_keywords ?? [],
+            },
         ],
-        [programs],
+        [discovery?.popular_keywords, programs],
     );
 
     const activeFilters = useMemo(
         () => [
-            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
-            ...(form.category ? [`Kategori: ${form.category}`] : []),
+            ...formatAppliedDiscoveryFilters(meta?.applied_filters),
             ...(sort !== 'recommended'
                 ? [
                       sortOptions.find((item) => item.value === sort)?.label ??
@@ -173,14 +233,17 @@ export default function SpecialProgramSearch({
                   ]
                 : []),
         ],
-        [form.category, form.q, sort],
+        [meta?.applied_filters, sort],
     );
 
     const filtered = useMemo(
         () => sortPrograms(programs, sort),
         [programs, sort],
     );
-    const fallbackImage = programs.find((item) => item.image_url)?.image_url;
+    const fallbackImage =
+        discovery?.featured?.items?.[0]?.image_url ??
+        programs.find((item) => item.image_url)?.image_url;
+    const discoverySections = discovery?.sections ?? [];
 
     return (
         <PublicLayout categories={categories} chips={chips}>
@@ -207,128 +270,132 @@ export default function SpecialProgramSearch({
 
                 {isReady && (
                     <>
-                        <section className="mb-6">
-                            <div className="relative overflow-hidden rounded-[28px] shadow-lg">
-                                <img
-                                    src={
-                                        fallbackImage ??
-                                        '/images/placeholder-card.jpg'
-                                    }
-                                    alt="Special Program"
-                                    className="h-44 w-full object-cover sm:h-56 md:h-72"
-                                />
-                                <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-r from-black/60 via-black/45 to-transparent" />
-                                <div className="absolute top-1/2 right-4 left-4 -translate-y-1/2 text-center text-white sm:right-8 sm:left-8">
-                                    <h1 className="text-lg font-semibold sm:text-xl md:text-3xl">
-                                        Cari special program favorit? Temukan
-                                        promo terbaik di INDOTIX
-                                    </h1>
-                                    <p className="mt-2 text-xs text-white/85 sm:text-sm">
-                                        Pilih program, cek periode, dan nikmati
-                                        benefit terbaik tanpa ribet.
-                                    </p>
-                                </div>
-                            </div>
+                        <section className="space-y-6">
+                            <DiscoveryStoryHero
+                                theme={discoveryTheme}
+                                editorial={discovery?.editorial}
+                                quickCategories={discovery?.quick_categories}
+                                totalLabel={
+                                    meta?.total
+                                        ? `${meta.total} program siap dipertimbangkan`
+                                        : 'Discovery program aktif'
+                                }
+                            />
 
-                            <div className="-mt-14 px-4 sm:-mt-20 sm:px-6 md:-mt-24">
-                                <div className="relative z-20 rounded-[24px] bg-white p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)]">
-                                    <form
-                                        className="grid gap-4 md:grid-cols-[2fr_1fr_auto]"
-                                        onSubmit={submitSearch}
-                                    >
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Nama program
-                                            </label>
-                                            <DiscoverySearchField
-                                                value={form.q}
-                                                onChange={(value) =>
-                                                    setForm((prev) => ({
-                                                        ...prev,
-                                                        q: value,
-                                                    }))
-                                                }
-                                                onSuggestionSelect={
-                                                    applySuggestion
-                                                }
-                                                placeholder="Cari nama program"
-                                                suggestions={suggestionGroups}
-                                                suggestionEndpoint="/api/discovery/special-programs/suggestions"
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Kategori
-                                            </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    🏷️
-                                                </span>
-                                                <select
-                                                    value={form.category}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            category:
-                                                                event.target
-                                                                    .value,
-                                                        }))
-                                                    }
-                                                    className="w-full bg-transparent outline-none"
-                                                >
-                                                    <option value="">
-                                                        Semua kategori
-                                                    </option>
-                                                    <option value="meeting">
-                                                        Meeting
-                                                    </option>
-                                                    <option value="wedding">
-                                                        Wedding
-                                                    </option>
-                                                    <option value="travel">
-                                                        Travel
-                                                    </option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
-                                            Cari
-                                        </button>
-                                    </form>
-                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                        <div className="text-sm font-semibold text-sky-700">
-                                            Special program rekomendasi untukmu
-                                        </div>
-                                        <DiscoverySortSelect
-                                            className="md:w-64"
-                                            value={sort}
-                                            options={sortOptions}
-                                            onChange={setSort}
+                            <DiscoveryIntentRow
+                                chips={discovery?.intent_chips ?? []}
+                                onSelect={applyIntent}
+                            />
+
+                            <DiscoveryFeaturedShowcase
+                                section={discovery?.featured}
+                                theme={discoveryTheme}
+                            />
+
+                            {discoverySections
+                                .slice(0, 2)
+                                .map((section) => (
+                                    <DiscoveryCollectionRail
+                                        key={section.key}
+                                        section={section}
+                                        theme={discoveryTheme}
+                                    />
+                                ))}
+
+                            <div className="sticky top-20 z-20 rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)] backdrop-blur">
+                                <form
+                                    className="grid gap-4 md:grid-cols-[2fr_1fr_auto]"
+                                    onSubmit={submitSearch}
+                                >
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Nama program
+                                        </label>
+                                        <DiscoverySearchField
+                                            value={form.q}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    q: value,
+                                                }))
+                                            }
+                                            onSuggestionSelect={applySuggestion}
+                                            placeholder="Cari nama program"
+                                            suggestions={suggestionGroups}
+                                            suggestionEndpoint="/api/discovery/special-programs/suggestions"
                                         />
                                     </div>
-                                    <ActiveFilterChips
-                                        filters={activeFilters}
-                                        onReset={resetDiscovery}
-                                    />
-                                    <DiscoveryInsightStrip
-                                        tips={[
-                                            {
-                                                title: 'Cek benefit utama',
-                                                body: 'Program unggulan perlu mudah dibandingkan dari kategori dan value paketnya.',
-                                                icon: (
-                                                    <Star className="h-5 w-5" />
-                                                ),
-                                            },
-                                            {
-                                                title: 'Pilih kategori program',
-                                                body: 'Meeting, wedding, dan travel punya kebutuhan filter yang berbeda.',
-                                                icon: (
-                                                    <BadgePercent className="h-5 w-5" />
-                                                ),
-                                            },
-                                        ]}
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Kategori
+                                        </label>
+                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                            <span className="text-slate-400">
+                                                🏷️
+                                            </span>
+                                            <select
+                                                value={form.category}
+                                                onChange={(event) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        category:
+                                                            event.target.value,
+                                                    }))
+                                                }
+                                                className="w-full bg-transparent outline-none"
+                                            >
+                                                <option value="">
+                                                    Semua kategori
+                                                </option>
+                                                <option value="meeting">
+                                                    Meeting
+                                                </option>
+                                                <option value="wedding">
+                                                    Wedding
+                                                </option>
+                                                <option value="travel">
+                                                    Travel
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
+                                        Cari
+                                    </button>
+                                </form>
+                                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div className="text-sm font-semibold text-sky-700">
+                                        Discovery program yang lebih bernilai
+                                    </div>
+                                    <DiscoverySortSelect
+                                        className="md:w-64"
+                                        value={sort}
+                                        options={sortOptions}
+                                        onChange={applySort}
                                     />
                                 </div>
+                                <ActiveFilterChips
+                                    filters={activeFilters}
+                                    onReset={resetDiscovery}
+                                />
+                                <DiscoveryInsightStrip
+                                    tips={[
+                                        {
+                                            title: 'Masuk dari value',
+                                            body: 'Spotlight dan curated block membantu user menilai benefit sebelum membaca detail panjang.',
+                                            icon: (
+                                                <Star className="h-5 w-5" />
+                                            ),
+                                        },
+                                        {
+                                            title: 'Gunakan kategori sebagai pintu masuk',
+                                            body: 'Meeting, wedding, dan travel punya pola eksplorasi berbeda; intent chip membantu membedakannya dari awal.',
+                                            icon: (
+                                                <BadgePercent className="h-5 w-5" />
+                                            ),
+                                        },
+                                    ]}
+                                />
                             </div>
                         </section>
 
@@ -398,9 +465,18 @@ export default function SpecialProgramSearch({
                             {filtered.length === 0 && (
                                 <div className="col-span-full">
                                     <DiscoveryEmptyState
-                                        title="Program belum ditemukan"
-                                        description="Coba ubah kategori program, cari benefit lain, atau reset filter agar hasil lebih luas."
-                                        suggestions={chips}
+                                        title={
+                                            discovery?.empty_state?.title ??
+                                            'Program belum ditemukan'
+                                        }
+                                        description={
+                                            discovery?.empty_state?.message ??
+                                            'Coba ubah kategori program, cari benefit lain, atau reset filter agar hasil lebih luas.'
+                                        }
+                                        suggestions={
+                                            discovery?.empty_state
+                                                ?.recommended_keywords ?? chips
+                                        }
                                         onSuggestionSelect={applySuggestion}
                                         onReset={resetDiscovery}
                                     />

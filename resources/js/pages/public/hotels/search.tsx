@@ -22,11 +22,21 @@ import {
     BadgePercent,
 } from 'lucide-react';
 import {
+    DiscoveryCollectionRail,
+    DiscoveryFeaturedShowcase,
+    DiscoveryIntentRow,
+    DiscoveryStoryHero,
+    type DiscoveryExperiencePayload,
+    type DiscoveryIntentChip,
+    type DiscoveryTheme,
+} from '@/components/discovery/discovery-experience';
+import {
     ActiveFilterChips,
     DiscoveryEmptyState,
     DiscoveryInsightStrip,
     DiscoverySearchField,
     DiscoverySortSelect,
+    formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
@@ -55,6 +65,7 @@ type Filters = {
     guests?: number;
     children?: number;
     q?: string | null;
+    sort?: string | null;
 };
 
 type Recommendation = {
@@ -99,14 +110,30 @@ const sortHotels = (items: Hotel[], sort: string) => {
     return results;
 };
 
+const discoveryTheme: DiscoveryTheme = {
+    badge: 'Hotel Discovery',
+    title: 'Bandingkan hotel lewat tujuan, kebutuhan, dan gaya perjalanan',
+    description:
+        'Discovery hotel dibuat lebih eksploratif: ada spotlight, intent staycation, budget picks, dan kota yang sedang ramai dicari.',
+    accent: 'bg-sky-600 hover:bg-sky-700',
+    gradientClassName:
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#1d4ed8,#0ea5e9,#38bdf8)]',
+    surfaceClassName: 'bg-sky-50 text-sky-700',
+    icon: Ticket,
+};
+
 export default function HotelSearch({
     filters,
     hotels,
     recommendations,
+    discovery,
+    meta,
 }: {
     filters: Filters;
     hotels: Hotel[];
     recommendations: Recommendation[];
+    discovery?: DiscoveryExperiencePayload | null;
+    meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
         usePage().props as {
@@ -132,7 +159,7 @@ export default function HotelSearch({
     });
     const [guestOpen, setGuestOpen] = useState(false);
     const [dateOpen, setDateOpen] = useState(false);
-    const [sort, setSort] = useState('recommended');
+    const [sort, setSort] = useState(filters.sort ?? 'recommended');
     const [children, setChildren] = useState(
         Math.max(0, filters.children ?? 0),
     );
@@ -156,25 +183,61 @@ export default function HotelSearch({
         },
     ]);
 
+    const applyRoute = (
+        params: Record<string, string | number | null | undefined>,
+    ) => {
+        const query = Object.fromEntries(
+            Object.entries(params).filter(
+                ([, value]) =>
+                    value !== null && value !== undefined && value !== '',
+            ),
+        );
+        router.get('/stay', query, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
     const submitSearch = (event: React.FormEvent) => {
         event.preventDefault();
         const totalGuests = adults + children;
-        router.get(
-            '/stay',
-            { ...form, guests: totalGuests, rooms, children },
-            { preserveState: true, preserveScroll: true },
-        );
+        applyRoute({ ...form, guests: totalGuests, rooms, children, sort });
     };
 
     const applySuggestion = (value: string) => {
         const next = { ...form, q: value };
         setForm(next);
         const totalGuests = adults + children;
-        router.get(
-            '/stay',
-            { ...next, guests: totalGuests, rooms, children },
-            { preserveState: true, preserveScroll: true },
-        );
+        applyRoute({ ...next, guests: totalGuests, rooms, children, sort });
+    };
+
+    const applyIntent = (chip: DiscoveryIntentChip) => {
+        const totalGuests = adults + children;
+        const nextSort =
+            typeof chip.filters?.sort === 'string' ? chip.filters.sort : sort;
+        setSort(nextSort);
+        if (chip.query) {
+            setForm((prev) => ({ ...prev, q: chip.query ?? '' }));
+        }
+        if (chip.filters?.city) {
+            setForm((prev) => ({ ...prev, city: chip.filters?.city ?? '' }));
+        }
+        applyRoute({
+            ...form,
+            q: chip.query ?? form.q,
+            city: (chip.filters?.city as string | undefined) ?? form.city,
+            guests: totalGuests,
+            rooms,
+            children,
+            sort: nextSort,
+            ...((chip.filters ?? {}) as Record<string, string>),
+        });
+    };
+
+    const applySort = (value: string) => {
+        setSort(value);
+        const totalGuests = adults + children;
+        applyRoute({ ...form, guests: totalGuests, rooms, children, sort: value });
     };
 
     const resetDiscovery = () => {
@@ -192,10 +255,7 @@ export default function HotelSearch({
         setChildren(0);
         setRooms(1);
         setSort('recommended');
-        router.get('/stay', next, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        applyRoute(next);
     };
 
     useEffect(() => {
@@ -274,20 +334,17 @@ export default function HotelSearch({
                     .flatMap((hotel) => [hotel.city_name, hotel.address])
                     .filter((item): item is string => Boolean(item)),
             },
+            {
+                label: 'Discovery',
+                items: discovery?.popular_keywords ?? [],
+            },
         ],
-        [hotels],
+        [discovery?.popular_keywords, hotels],
     );
 
     const activeFilters = useMemo(
         () => [
-            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
-            ...(form.city ? [`Kota: ${form.city}`] : []),
-            ...(form.check_in && form.check_out
-                ? [`${form.check_in} - ${form.check_out}`]
-                : []),
-            ...(rooms > 1 || adults + children !== 2
-                ? [`${rooms} kamar, ${adults + children} tamu`]
-                : []),
+            ...formatAppliedDiscoveryFilters(meta?.applied_filters),
             ...(sort !== 'recommended'
                 ? [
                       sortOptions.find((item) => item.value === sort)?.label ??
@@ -295,19 +352,11 @@ export default function HotelSearch({
                   ]
                 : []),
         ],
-        [
-            adults,
-            children,
-            form.check_in,
-            form.check_out,
-            form.city,
-            form.q,
-            rooms,
-            sort,
-        ],
+        [meta?.applied_filters, sort],
     );
 
     const filtered = useMemo(() => sortHotels(hotels, sort), [hotels, sort]);
+    const discoverySections = discovery?.sections ?? [];
 
     return (
         <PublicLayout categories={categories} chips={chips}>
@@ -334,6 +383,39 @@ export default function HotelSearch({
 
                 {isReady && (
                     <>
+                        <section className="mb-6 space-y-6">
+                            <DiscoveryStoryHero
+                                theme={discoveryTheme}
+                                editorial={discovery?.editorial}
+                                quickCategories={discovery?.quick_categories}
+                                totalLabel={
+                                    meta?.total
+                                        ? `${meta.total} hotel siap dibandingkan`
+                                        : 'Discovery hotel aktif'
+                                }
+                            />
+
+                            <DiscoveryIntentRow
+                                chips={discovery?.intent_chips ?? []}
+                                onSelect={applyIntent}
+                            />
+
+                            <DiscoveryFeaturedShowcase
+                                section={discovery?.featured}
+                                theme={discoveryTheme}
+                            />
+
+                            {discoverySections
+                                .slice(0, 2)
+                                .map((section) => (
+                                    <DiscoveryCollectionRail
+                                        key={section.key}
+                                        section={section}
+                                        theme={discoveryTheme}
+                                    />
+                                ))}
+                        </section>
+
                         <section className="mb-6">
                             <div className="relative overflow-hidden rounded-[28px] shadow-lg">
                                 <img
@@ -650,7 +732,7 @@ export default function HotelSearch({
                                             className="md:w-64"
                                             value={sort}
                                             options={sortOptions}
-                                            onChange={setSort}
+                                            onChange={applySort}
                                         />
                                     </div>
                                     <ActiveFilterChips
@@ -801,15 +883,24 @@ export default function HotelSearch({
                             {filtered.length === 0 && (
                                 <div className="col-span-full">
                                     <DiscoveryEmptyState
-                                        title="Hotel belum ditemukan"
-                                        description="Coba ubah tanggal, kota, jumlah tamu, atau reset filter agar hasil lebih luas."
-                                        suggestions={[
-                                            'Jakarta',
-                                            'Bandung',
-                                            'Yogyakarta',
-                                            'Bali',
-                                            'Surabaya',
-                                        ]}
+                                        title={
+                                            discovery?.empty_state?.title ??
+                                            'Hotel belum ditemukan'
+                                        }
+                                        description={
+                                            discovery?.empty_state?.message ??
+                                            'Coba ubah tanggal, kota, jumlah tamu, atau reset filter agar hasil lebih luas.'
+                                        }
+                                        suggestions={
+                                            discovery?.empty_state
+                                                ?.recommended_keywords ?? [
+                                                'Jakarta',
+                                                'Bandung',
+                                                'Yogyakarta',
+                                                'Bali',
+                                                'Surabaya',
+                                            ]
+                                        }
                                         onSuggestionSelect={applySuggestion}
                                         onReset={resetDiscovery}
                                     />

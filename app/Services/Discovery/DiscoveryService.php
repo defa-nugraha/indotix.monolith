@@ -68,12 +68,12 @@ class DiscoveryService
         return [
             'data' => $paginator->items(),
             'meta' => $this->paginationMeta($paginator, $type, $filters),
-            'discovery' => [
+            'discovery' => array_merge([
                 'suggestions' => $this->buildSuggestions($type, (string) ($filters['q'] ?? ''), 6),
                 'popular_keywords' => $this->popularKeywords($type),
                 'recommended_filters' => $this->recommendedFilters($type),
                 'empty_state' => $this->emptyState($type),
-            ],
+            ], $this->buildDiscoveryExperience($type, $filters, collect($items))),
         ];
     }
 
@@ -123,8 +123,205 @@ class DiscoveryService
                 'filters_url' => '/api/discovery/'.$type.'/filters',
                 'sorts' => $this->sortOptions($type),
                 'popular_keywords' => $this->popularKeywords($type),
+                'editorial' => $this->editorialCopy($type),
             ])->values()->all(),
         ];
+    }
+
+    private function buildDiscoveryExperience(string $type, array $filters, Collection $items): array
+    {
+        $pool = $this->experiencePool($type, $filters, $items);
+        $featured = $this->featuredSection($type, $pool);
+
+        return [
+            'editorial' => $this->editorialCopy($type),
+            'intent_chips' => $this->intentChips($type),
+            'quick_categories' => $this->quickCategories($type),
+            'featured' => $featured,
+            'sections' => $this->buildDiscoverySections($type, $pool, collect($featured['items'] ?? [])),
+        ];
+    }
+
+    private function experiencePool(string $type, array $filters, Collection $items): Collection
+    {
+        if ($items->count() >= 10) {
+            return $items->values();
+        }
+
+        $fallbackFilters = $filters;
+        foreach ([
+            'q',
+            'category',
+            'category_id',
+            'min_price',
+            'max_price',
+            'price_type',
+            'level',
+            'mentor',
+            'duration',
+            'target_participant',
+            'quota_available',
+            'stock_status',
+            'promo',
+            'sort',
+        ] as $key) {
+            unset($fallbackFilters[$key]);
+        }
+
+        $fallbackFilters['sort'] = 'popular';
+        $fallbackItems = collect($this->mapListingItems(
+            $type,
+            $this->listingQuery($type, $fallbackFilters)->limit(10)->get()
+        ));
+
+        return $items->concat($fallbackItems)->unique('id')->values();
+    }
+
+    private function editorialCopy(string $type): array
+    {
+        return match ($type) {
+            'events' => [
+                'eyebrow' => 'Eksplor Event',
+                'title' => 'Mulai dari yang ramai, gratis, atau jadwal terdekat',
+                'description' => 'Halaman event tidak lagi bergantung pada keyword. Pengguna bisa masuk lewat agenda waktu, kota populer, dan koleksi tematik.',
+            ],
+            'hotels' => [
+                'eyebrow' => 'Rencanakan Menginap',
+                'title' => 'Bandingkan hotel lewat kebutuhan, kota, dan gaya perjalanan',
+                'description' => 'Discovery hotel diarahkan untuk perencanaan cepat: staycation, budget, kota populer, dan kamar yang masih relevan.',
+            ],
+            'wisata' => [
+                'eyebrow' => 'Eksplor Wisata',
+                'title' => 'Temukan destinasi lewat tema perjalanan, bukan hanya nama tempat',
+                'description' => 'Pengguna bisa masuk dari inspirasi keluarga, alam, budaya, atau tiket yang ringan untuk dicoba lebih dulu.',
+            ],
+            'academy' => [
+                'eyebrow' => 'Jelajah Kelas',
+                'title' => 'Belajar dari jalur yang terasa dekat dengan kebutuhan',
+                'description' => 'Discovery academy diarahkan seperti learning marketplace: kelas terdekat, kelas gratis, topik populer, dan entry point untuk pemula.',
+            ],
+            'special-programs' => [
+                'eyebrow' => 'Program Pilihan',
+                'title' => 'Buka peluang lewat program unggulan, kuota terbatas, dan tujuan yang jelas',
+                'description' => 'Discovery special program dibuat lebih eksklusif melalui spotlight, benefit, dan koleksi berbasis kategori serta momentum.',
+            ],
+            'souvenirs' => [
+                'eyebrow' => 'Retail & Souvenir',
+                'title' => 'Biarkan pengguna browse dengan ringan sampai tertarik membeli',
+                'description' => 'Discovery retail menonjolkan impulse browsing: best seller, ready stock, kategori favorit, dan pilihan yang mudah dijadikan hadiah.',
+            ],
+        };
+    }
+
+    private function intentChips(string $type): array
+    {
+        $static = match ($type) {
+            'events' => [
+                ['label' => 'Minggu ini', 'filters' => ['sort' => 'upcoming']],
+                ['label' => 'Gratis', 'filters' => ['price_type' => 'free']],
+                ['label' => 'Populer', 'filters' => ['sort' => 'popular']],
+                ['label' => 'Di kota ramai', 'filters' => ['sort' => 'popular']],
+            ],
+            'hotels' => [
+                ['label' => 'Hotel murah', 'filters' => ['sort' => 'price_low']],
+                ['label' => 'Bintang tinggi', 'filters' => ['sort' => 'rating_high']],
+                ['label' => 'Staycation', 'query' => 'staycation'],
+                ['label' => 'Family room', 'query' => 'family room'],
+            ],
+            'wisata' => [
+                ['label' => 'Wisata keluarga', 'filters' => ['category' => 'keluarga']],
+                ['label' => 'Alam & adventure', 'filters' => ['category' => 'adventure']],
+                ['label' => 'Tiket promo', 'query' => 'tiket promo'],
+                ['label' => 'Destinasi populer', 'filters' => ['sort' => 'popular']],
+            ],
+            'academy' => [
+                ['label' => 'Untuk pemula', 'query' => 'kelas pemula'],
+                ['label' => 'Kelas gratis', 'filters' => ['price_type' => 'free']],
+                ['label' => 'Jadwal terdekat', 'filters' => ['sort' => 'upcoming']],
+                ['label' => 'Topik populer', 'filters' => ['sort' => 'popular']],
+            ],
+            'special-programs' => [
+                ['label' => 'Program unggulan', 'filters' => ['sort' => 'popular']],
+                ['label' => 'Kuota terbatas', 'filters' => ['quota_available' => 'true']],
+                ['label' => 'Meeting', 'filters' => ['category' => 'meeting']],
+                ['label' => 'Travel', 'filters' => ['category' => 'travel']],
+            ],
+            'souvenirs' => [
+                ['label' => 'Ready stock', 'filters' => ['stock_status' => 'in_stock']],
+                ['label' => 'Best seller', 'filters' => ['sort' => 'popular']],
+                ['label' => 'Hadiah perjalanan', 'query' => 'hadiah perjalanan'],
+                ['label' => 'Produk lokal', 'query' => 'produk lokal'],
+            ],
+        };
+
+        $keywordChips = collect($this->popularKeywords($type))
+            ->take(2)
+            ->map(fn (string $keyword) => ['label' => ucfirst($keyword), 'query' => $keyword])
+            ->all();
+
+        return collect(array_merge($static, $keywordChips))
+            ->unique(fn ($item) => strtolower((string) ($item['label'] ?? '')))
+            ->take(6)
+            ->values()
+            ->all();
+    }
+
+    private function quickCategories(string $type): array
+    {
+        $facets = Cache::remember(
+            'discovery:filters:'.$type,
+            now()->addMinutes(10),
+            fn () => $this->buildFacets($type)
+        );
+        $sources = match ($type) {
+            'events' => array_merge($facets['categories'] ?? [], $facets['cities'] ?? [], $facets['price_types'] ?? []),
+            'hotels' => array_merge($facets['cities'] ?? [], $facets['rating_options'] ?? []),
+            'wisata' => array_merge($facets['categories'] ?? [], $facets['cities'] ?? []),
+            'academy' => array_merge($facets['categories'] ?? [], $facets['price_types'] ?? []),
+            'special-programs' => array_merge($facets['categories'] ?? [], $facets['quota_options'] ?? []),
+            'souvenirs' => array_merge($facets['categories'] ?? [], $facets['stock_status'] ?? []),
+        };
+
+        return collect($sources)
+            ->filter(fn ($item) => is_array($item) && ($item['label'] ?? null))
+            ->map(fn (array $item) => ['label' => $item['label'], 'value' => $item['value'] ?? $item['label']])
+            ->unique(fn ($item) => strtolower((string) $item['label']))
+            ->take(8)
+            ->values()
+            ->all();
+    }
+
+    private function featuredSection(string $type, Collection $pool): array
+    {
+        [$title, $description] = match ($type) {
+            'events' => ['Pilihan utama minggu ini', 'Mulai dari event yang paling layak dibuka lebih dulu.'],
+            'hotels' => ['Pilihan menginap yang menonjol', 'Hotel terdepan untuk perencanaan cepat tanpa harus scroll jauh.'],
+            'wisata' => ['Spotlight destinasi yang paling menggoda', 'Destinasi pembuka untuk menyalakan rasa ingin pergi.'],
+            'academy' => ['Kelas yang paling layak diprioritaskan', 'Mulai dari kelas yang sedang relevan untuk kebutuhan belajar.'],
+            'special-programs' => ['Program yang pantas jadi perhatian utama', 'Sorot penawaran yang paling kuat nilainya saat ini.'],
+            'souvenirs' => ['Produk pilihan untuk mulai browse', 'Retail discovery dimulai dari item yang paling mudah menarik klik.'],
+        };
+
+        return [
+            'title' => $title,
+            'description' => $description,
+            'items' => $pool->take($type === 'hotels' ? 2 : 3)->values()->all(),
+        ];
+    }
+
+    private function buildDiscoverySections(string $type, Collection $pool, Collection $featuredItems): array
+    {
+        $usedIds = $featuredItems->pluck('id')->filter()->values()->all();
+        $sections = match ($type) {
+            'events' => $this->eventSections($pool, $usedIds),
+            'hotels' => $this->hotelSections($pool, $usedIds),
+            'wisata' => $this->wisataSections($pool, $usedIds),
+            'academy' => $this->academySections($pool, $usedIds),
+            'special-programs' => $this->specialProgramSections($pool, $usedIds),
+            'souvenirs' => $this->souvenirSections($pool, $usedIds),
+        };
+
+        return array_values(array_filter($sections));
     }
 
     private function normalizeType(string $type): string
@@ -1484,6 +1681,323 @@ class DiscoveryService
             'special-programs' => ['title' => 'Program tidak ditemukan', 'message' => 'Coba kategori meeting, wedding, travel, atau kata kunci benefit lain.', 'recommended_keywords' => self::POPULAR_KEYWORDS['special-programs']],
             'souvenirs' => ['title' => 'Produk tidak ditemukan', 'message' => 'Coba nama produk, SKU, atau kategori retail lain.', 'recommended_keywords' => self::POPULAR_KEYWORDS['souvenirs']],
         };
+    }
+
+    private function eventSections(Collection $pool, array &$usedIds): array
+    {
+        $soonItems = $pool
+            ->filter(fn ($item) => $this->itemDate($item) !== null && $this->itemDate($item)?->isFuture())
+            ->sortBy(fn ($item) => $this->itemDate($item)?->getTimestamp() ?? PHP_INT_MAX)
+            ->values();
+
+        return [
+            $this->section(
+                'event-upcoming',
+                'Segera berlangsung',
+                'Pilihan cepat untuk pengguna yang ingin cari acara terdekat secara waktu.',
+                $this->selectSectionItems($soonItems, $usedIds, fn () => true)
+            ),
+            $this->section(
+                'event-free',
+                'Bisa dicoba tanpa biaya',
+                'Discovery entry point untuk pengguna yang belum yakin ingin mulai dari event seperti apa.',
+                $this->selectSectionItems($pool, $usedIds, fn ($item) => $this->itemPrice($item) === 0)
+            ),
+            $this->section(
+                'event-city',
+                'Kota yang sedang ramai',
+                'Masuk lewat kota membantu eksplorasi meski pengguna belum tahu nama event-nya.',
+                $this->selectFirstCityCluster($pool, $usedIds)
+            ),
+        ];
+    }
+
+    private function hotelSections(Collection $pool, array &$usedIds): array
+    {
+        $budgetItems = $pool
+            ->sortBy(fn ($item) => $this->itemPrice($item) > 0 ? $this->itemPrice($item) : PHP_INT_MAX)
+            ->values();
+        $premiumItems = $pool
+            ->sortByDesc(fn ($item) => (int) data_get($item, 'metadata.rating', 0))
+            ->values();
+
+        return [
+            $this->section(
+                'hotel-budget',
+                'Hotel ramah budget',
+                'Cocok untuk pengguna yang ingin mulai dari harga sebelum membandingkan fasilitas.',
+                $this->selectSectionItems($budgetItems, $usedIds, fn ($item) => $this->itemPrice($item) > 0)
+            ),
+            $this->section(
+                'hotel-city',
+                'Kota favorit staycation',
+                'Entry point berbasis tujuan membantu user yang belum tahu nama hotel.',
+                $this->selectFirstCityCluster($pool, $usedIds)
+            ),
+            $this->section(
+                'hotel-premium',
+                'Pilihan rating tinggi',
+                'Discovery berbasis kualitas untuk user yang ingin shortlist lebih cepat.',
+                $this->selectSectionItems($premiumItems, $usedIds, fn ($item) => (int) data_get($item, 'metadata.rating', 0) >= 4)
+            ),
+        ];
+    }
+
+    private function wisataSections(Collection $pool, array &$usedIds): array
+    {
+        $budgetItems = $pool
+            ->sortBy(fn ($item) => $this->itemPrice($item) > 0 ? $this->itemPrice($item) : PHP_INT_MAX)
+            ->values();
+
+        return [
+            $this->section(
+                'wisata-family',
+                'Pilihan keluarga & santai',
+                'Memudahkan user masuk dari kebutuhan liburan, bukan dari nama destinasi.',
+                $this->selectSectionItems(
+                    $pool,
+                    $usedIds,
+                    fn ($item) => $this->containsAny($this->itemText($item), ['keluarga', 'family', 'edukasi', 'budaya'])
+                )
+            ),
+            $this->section(
+                'wisata-nature',
+                'Alam, adventure, dan eksplorasi',
+                'Cocok untuk discovery berbasis tema perjalanan.',
+                $this->selectSectionItems(
+                    $pool,
+                    $usedIds,
+                    fn ($item) => $this->containsAny($this->itemText($item), ['alam', 'adventure', 'pantai', 'gunung', 'outdoor'])
+                )
+            ),
+            $this->section(
+                'wisata-budget',
+                'Tiket yang ringan untuk dicoba',
+                'Pilihan harga awal agar user lebih mudah mulai membuka detail.',
+                $this->selectSectionItems($budgetItems, $usedIds, fn ($item) => $this->itemPrice($item) > 0)
+            ),
+        ];
+    }
+
+    private function academySections(Collection $pool, array &$usedIds): array
+    {
+        $upcoming = $pool
+            ->filter(fn ($item) => $this->itemDate($item) !== null)
+            ->sortBy(fn ($item) => $this->itemDate($item)?->getTimestamp() ?? PHP_INT_MAX)
+            ->values();
+
+        return [
+            $this->section(
+                'academy-beginner',
+                'Mulai dari kelas yang mudah dimasuki',
+                'Entry point untuk user yang belum tahu harus ambil kelas apa lebih dulu.',
+                $this->selectSectionItems(
+                    $pool,
+                    $usedIds,
+                    fn ($item) => $this->itemPrice($item) === 0 || $this->containsAny($this->itemText($item), ['pemula', 'basic', 'intro', 'fundamental'])
+                )
+            ),
+            $this->section(
+                'academy-upcoming',
+                'Jadwal terdekat',
+                'Discovery berbasis momentum membantu user mengambil keputusan lebih cepat.',
+                $this->selectSectionItems($upcoming, $usedIds, fn () => true)
+            ),
+            $this->section(
+                'academy-topic',
+                'Topik yang sedang dicari',
+                'Kelompok topik memudahkan browsing seperti di learning marketplace.',
+                $this->selectFirstCategoryCluster($pool, $usedIds)
+            ),
+        ];
+    }
+
+    private function specialProgramSections(Collection $pool, array &$usedIds): array
+    {
+        $upcoming = $pool
+            ->filter(fn ($item) => $this->itemDate($item) !== null)
+            ->sortBy(fn ($item) => $this->itemDate($item)?->getTimestamp() ?? PHP_INT_MAX)
+            ->values();
+
+        return [
+            $this->section(
+                'program-limited',
+                'Program dengan kuota terbatas',
+                'Urgency block untuk membantu user cepat membuka detail saat peluangnya tidak banyak.',
+                $this->selectSectionItems(
+                    $pool,
+                    $usedIds,
+                    fn ($item) => ($quota = $this->itemQuota($item)) !== null && $quota > 0 && $quota <= 50
+                )
+            ),
+            $this->section(
+                'program-category',
+                'Kategori yang sedang menonjol',
+                'User bisa mulai dari tujuan program sebelum membaca benefit detail.',
+                $this->selectFirstCategoryCluster($pool, $usedIds)
+            ),
+            $this->section(
+                'program-upcoming',
+                'Segera dibuka',
+                'Bagus untuk user yang ingin melihat momentum program terdekat.',
+                $this->selectSectionItems($upcoming, $usedIds, fn () => true)
+            ),
+        ];
+    }
+
+    private function souvenirSections(Collection $pool, array &$usedIds): array
+    {
+        $budgetItems = $pool
+            ->sortBy(fn ($item) => $this->itemPrice($item) > 0 ? $this->itemPrice($item) : PHP_INT_MAX)
+            ->values();
+
+        return [
+            $this->section(
+                'souvenir-ready',
+                'Ready stock sekarang',
+                'Mendorong impulse browsing dengan item yang bisa langsung dipesan.',
+                $this->selectSectionItems(
+                    $pool,
+                    $usedIds,
+                    fn ($item) => data_get($item, 'availability.status') === 'available'
+                )
+            ),
+            $this->section(
+                'souvenir-gift',
+                'Pilihan hadiah & oleh-oleh',
+                'Discovery ringan untuk user yang belum tahu produk spesifik.',
+                $this->selectSectionItems($budgetItems, $usedIds, fn ($item) => $this->itemPrice($item) > 0)
+            ),
+            $this->section(
+                'souvenir-category',
+                'Kategori yang paling sering dibuka',
+                'Kategori populer membantu user browse tanpa perlu langsung mengetik keyword.',
+                $this->selectFirstCategoryCluster($pool, $usedIds)
+            ),
+        ];
+    }
+
+    private function section(string $key, string $title, string $description, array $items): ?array
+    {
+        if ($items === []) {
+            return null;
+        }
+
+        return [
+            'key' => $key,
+            'title' => $title,
+            'description' => $description,
+            'items' => array_values($items),
+        ];
+    }
+
+    private function selectSectionItems(Collection $pool, array &$usedIds, callable $filter, int $limit = 6): array
+    {
+        $selected = $pool
+            ->filter($filter)
+            ->reject(fn ($item) => in_array((string) ($item['id'] ?? ''), $usedIds, true))
+            ->take($limit)
+            ->values();
+
+        if ($selected->count() < min(3, $limit)) {
+            $selected = $selected->concat(
+                $pool
+                    ->reject(fn ($item) => in_array((string) ($item['id'] ?? ''), $usedIds, true))
+                    ->reject(fn ($item) => $selected->contains('id', $item['id'] ?? null))
+                    ->take($limit - $selected->count())
+            )->values();
+        }
+
+        foreach ($selected as $item) {
+            $id = (string) ($item['id'] ?? '');
+            if ($id !== '' && ! in_array($id, $usedIds, true)) {
+                $usedIds[] = $id;
+            }
+        }
+
+        return $selected->all();
+    }
+
+    private function selectFirstCityCluster(Collection $pool, array &$usedIds, int $limit = 6): array
+    {
+        return $this->selectFirstCluster($pool, $usedIds, fn ($item) => trim((string) data_get($item, 'metadata.city', '')), $limit);
+    }
+
+    private function selectFirstCategoryCluster(Collection $pool, array &$usedIds, int $limit = 6): array
+    {
+        return $this->selectFirstCluster($pool, $usedIds, fn ($item) => trim((string) data_get($item, 'metadata.category', '')), $limit);
+    }
+
+    private function selectFirstCluster(Collection $pool, array &$usedIds, callable $extractor, int $limit = 6): array
+    {
+        $clusterValue = $pool
+            ->reject(fn ($item) => in_array((string) ($item['id'] ?? ''), $usedIds, true))
+            ->map(fn ($item) => $extractor($item))
+            ->filter()
+            ->countBy()
+            ->sortDesc()
+            ->keys()
+            ->first();
+
+        if (! $clusterValue) {
+            return [];
+        }
+
+        return $this->selectSectionItems(
+            $pool,
+            $usedIds,
+            fn ($item) => trim((string) $extractor($item)) === (string) $clusterValue,
+            $limit
+        );
+    }
+
+    private function itemPrice(array $item): int
+    {
+        return max(0, (int) ($item['price'] ?? 0));
+    }
+
+    private function itemQuota(array $item): ?int
+    {
+        $quota = data_get($item, 'availability.quota');
+
+        return $quota !== null ? (int) $quota : null;
+    }
+
+    private function itemDate(array $item): ?Carbon
+    {
+        $date = data_get($item, 'metadata.date');
+
+        if (! $date) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($date);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function itemText(array $item): string
+    {
+        return strtolower(implode(' ', array_filter([
+            $item['title'] ?? null,
+            data_get($item, 'metadata.category'),
+            data_get($item, 'metadata.city'),
+            data_get($item, 'metadata.location'),
+            ...((array) ($item['tags'] ?? [])),
+        ])));
+    }
+
+    private function containsAny(string $haystack, array $keywords): bool
+    {
+        foreach ($keywords as $keyword) {
+            if ($keyword !== '' && str_contains($haystack, strtolower($keyword))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function priceTypeOptions(): array

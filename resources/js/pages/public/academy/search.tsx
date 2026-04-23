@@ -1,11 +1,21 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
+    DiscoveryCollectionRail,
+    DiscoveryFeaturedShowcase,
+    DiscoveryIntentRow,
+    DiscoveryStoryHero,
+    type DiscoveryExperiencePayload,
+    type DiscoveryIntentChip,
+    type DiscoveryTheme,
+} from '@/components/discovery/discovery-experience';
+import {
     ActiveFilterChips,
     DiscoveryEmptyState,
     DiscoveryInsightStrip,
     DiscoverySearchField,
     DiscoverySortSelect,
+    formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
 import {
@@ -74,12 +84,28 @@ const sortClasses = (items: AcademyCard[], sort: string) => {
     return results;
 };
 
+const discoveryTheme: DiscoveryTheme = {
+    badge: 'Academy Discovery',
+    title: 'Masuk ke kelas dari intent belajar, bukan sekadar keyword',
+    description:
+        'Discovery academy dibuat seperti learning marketplace: ada spotlight, jalur pemula, topik populer, dan kelas yang waktunya paling dekat.',
+    accent: 'bg-violet-600 hover:bg-violet-700',
+    gradientClassName:
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#4c1d95,#7c3aed,#2563eb)]',
+    surfaceClassName: 'bg-violet-50 text-violet-700',
+    icon: BookOpen,
+};
+
 export default function AcademySearch({
     classes = [],
     filters,
+    discovery,
+    meta,
 }: {
     classes: AcademyCard[];
-    filters: { q?: string | null };
+    filters: { q?: string | null; sort?: string | null };
+    discovery?: DiscoveryExperiencePayload | null;
+    meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
     const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
         usePage().props as {
@@ -94,7 +120,7 @@ export default function AcademySearch({
         visit_date: new Date().toISOString().slice(0, 10),
         quantity: 1,
     });
-    const [sort, setSort] = useState('recommended');
+    const [sort, setSort] = useState(filters.sort ?? 'recommended');
 
     useEffect(() => {
         const timer = setTimeout(() => setIsReady(true), 400);
@@ -132,32 +158,54 @@ export default function AcademySearch({
         'Customer Care',
     ];
 
+    const applyRoute = (
+        params: Record<string, string | number | null | undefined>,
+    ) => {
+        const query = Object.fromEntries(
+            Object.entries(params).filter(
+                ([, value]) =>
+                    value !== null && value !== undefined && value !== '',
+            ),
+        );
+        router.get('/academy', query, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
     const submitSearch = (event: React.FormEvent) => {
         event.preventDefault();
-        router.get(
-            '/academy',
-            { q: form.q },
-            { preserveState: true, preserveScroll: true },
-        );
+        applyRoute({ q: form.q, sort });
     };
 
     const applySuggestion = (value: string) => {
         setForm((prev) => ({ ...prev, q: value }));
-        router.get(
-            '/academy',
-            { q: value },
-            { preserveState: true, preserveScroll: true },
-        );
+        applyRoute({ q: value, sort });
+    };
+
+    const applyIntent = (chip: DiscoveryIntentChip) => {
+        const nextSort =
+            typeof chip.filters?.sort === 'string' ? chip.filters.sort : sort;
+        setSort(nextSort);
+        if (chip.query) {
+            setForm((prev) => ({ ...prev, q: chip.query ?? '' }));
+        }
+        applyRoute({
+            q: chip.query ?? form.q,
+            sort: nextSort,
+            ...((chip.filters ?? {}) as Record<string, string>),
+        });
+    };
+
+    const applySort = (value: string) => {
+        setSort(value);
+        applyRoute({ q: form.q, sort: value });
     };
 
     const resetDiscovery = () => {
         setForm((prev) => ({ ...prev, q: '' }));
         setSort('recommended');
-        router.get(
-            '/academy',
-            {},
-            { preserveState: true, preserveScroll: true },
-        );
+        applyRoute({});
     };
 
     const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
@@ -173,13 +221,17 @@ export default function AcademySearch({
                     .flatMap((item) => [item.category, item.location])
                     .filter((item): item is string => Boolean(item)),
             },
+            {
+                label: 'Discovery',
+                items: discovery?.popular_keywords ?? [],
+            },
         ],
-        [classes],
+        [classes, discovery?.popular_keywords],
     );
 
     const activeFilters = useMemo(
         () => [
-            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
+            ...formatAppliedDiscoveryFilters(meta?.applied_filters),
             ...(sort !== 'recommended'
                 ? [
                       sortOptions.find((item) => item.value === sort)?.label ??
@@ -187,11 +239,14 @@ export default function AcademySearch({
                   ]
                 : []),
         ],
-        [form.q, sort],
+        [meta?.applied_filters, sort],
     );
 
     const filtered = useMemo(() => sortClasses(classes, sort), [classes, sort]);
-    const fallbackImage = classes.find((item) => item.image_url)?.image_url;
+    const fallbackImage =
+        discovery?.featured?.items?.[0]?.image_url ??
+        classes.find((item) => item.image_url)?.image_url;
+    const discoverySections = discovery?.sections ?? [];
 
     return (
         <PublicLayout categories={categories} chips={chips}>
@@ -218,141 +273,144 @@ export default function AcademySearch({
 
                 {isReady && (
                     <>
-                        <section className="mb-6">
-                            <div className="relative overflow-hidden rounded-[28px] shadow-lg">
-                                <img
-                                    src={
-                                        fallbackImage ??
-                                        '/images/placeholder-card.jpg'
-                                    }
-                                    alt="Academy"
-                                    className="h-44 w-full object-cover sm:h-56 md:h-72"
-                                />
-                                <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-r from-black/60 via-black/45 to-transparent" />
-                                <div className="absolute top-1/2 right-4 left-4 -translate-y-1/2 text-center text-white sm:right-8 sm:left-8">
-                                    <h1 className="text-lg font-semibold sm:text-xl md:text-3xl">
-                                        Upgrade skill bareng Eljohn Academy di
-                                        INDOTIX
-                                    </h1>
-                                    <p className="mt-2 text-xs text-white/85 sm:text-sm">
-                                        Pilih kelas favorit, amankan seat, dan
-                                        belajar langsung dari mentor terbaik.
-                                    </p>
-                                </div>
-                            </div>
+                        <section className="space-y-6">
+                            <DiscoveryStoryHero
+                                theme={discoveryTheme}
+                                editorial={discovery?.editorial}
+                                quickCategories={discovery?.quick_categories}
+                                totalLabel={
+                                    meta?.total
+                                        ? `${meta.total} kelas siap dieksplor`
+                                        : 'Discovery academy aktif'
+                                }
+                            />
 
-                            <div className="-mt-14 px-4 sm:-mt-20 sm:px-6 md:-mt-24">
-                                <div className="relative z-20 rounded-[24px] bg-white p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)]">
-                                    <form
-                                        className="grid gap-4 md:grid-cols-[2fr_1.5fr_1fr_auto]"
-                                        onSubmit={submitSearch}
-                                    >
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Nama kelas atau kategori
-                                            </label>
-                                            <DiscoverySearchField
-                                                value={form.q}
-                                                onChange={(value) =>
-                                                    setForm((prev) => ({
-                                                        ...prev,
-                                                        q: value,
-                                                    }))
-                                                }
-                                                onSuggestionSelect={
-                                                    applySuggestion
-                                                }
-                                                placeholder="Cari kelas academy"
-                                                suggestions={suggestionGroups}
-                                                suggestionEndpoint="/api/discovery/academy/suggestions"
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Tanggal kelas
-                                            </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    📅
-                                                </span>
-                                                <input
-                                                    type="date"
-                                                    value={form.visit_date}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            visit_date:
-                                                                event.target
-                                                                    .value,
-                                                        }))
-                                                    }
-                                                    className="w-full bg-transparent outline-none"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Jumlah tiket
-                                            </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    🎟️
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    min={1}
-                                                    value={form.quantity}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            quantity: Number(
-                                                                event.target
-                                                                    .value,
-                                                            ),
-                                                        }))
-                                                    }
-                                                    className="w-20 bg-transparent outline-none"
-                                                />
-                                            </div>
-                                        </div>
-                                        <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
-                                            Cari
-                                        </button>
-                                    </form>
-                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                        <div className="text-sm font-semibold text-sky-700">
-                                            Kelas rekomendasi untukmu
-                                        </div>
-                                        <DiscoverySortSelect
-                                            className="md:w-64"
-                                            value={sort}
-                                            options={sortOptions}
-                                            onChange={setSort}
+                            <DiscoveryIntentRow
+                                chips={discovery?.intent_chips ?? []}
+                                onSelect={applyIntent}
+                            />
+
+                            <DiscoveryFeaturedShowcase
+                                section={discovery?.featured}
+                                theme={discoveryTheme}
+                            />
+
+                            {discoverySections
+                                .slice(0, 2)
+                                .map((section) => (
+                                    <DiscoveryCollectionRail
+                                        key={section.key}
+                                        section={section}
+                                        theme={discoveryTheme}
+                                    />
+                                ))}
+
+                            <div className="sticky top-20 z-20 rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)] backdrop-blur">
+                                <form
+                                    className="grid gap-4 md:grid-cols-[2fr_1.5fr_1fr_auto]"
+                                    onSubmit={submitSearch}
+                                >
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Nama kelas atau kategori
+                                        </label>
+                                        <DiscoverySearchField
+                                            value={form.q}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    q: value,
+                                                }))
+                                            }
+                                            onSuggestionSelect={applySuggestion}
+                                            placeholder="Cari kelas academy"
+                                            suggestions={suggestionGroups}
+                                            suggestionEndpoint="/api/discovery/academy/suggestions"
                                         />
                                     </div>
-                                    <ActiveFilterChips
-                                        filters={activeFilters}
-                                        onReset={resetDiscovery}
-                                    />
-                                    <DiscoveryInsightStrip
-                                        tips={[
-                                            {
-                                                title: 'Pilih berdasarkan jadwal',
-                                                body: 'Urutkan kelas yang akan segera dimulai agar mudah menentukan waktu belajar.',
-                                                icon: (
-                                                    <CalendarCheck className="h-5 w-5" />
-                                                ),
-                                            },
-                                            {
-                                                title: 'Gunakan kategori skill',
-                                                body: 'Cari topik seperti marketing, leadership, hospitality, atau digital.',
-                                                icon: (
-                                                    <BookOpen className="h-5 w-5" />
-                                                ),
-                                            },
-                                        ]}
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Tanggal kelas
+                                        </label>
+                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                            <span className="text-slate-400">
+                                                📅
+                                            </span>
+                                            <input
+                                                type="date"
+                                                value={form.visit_date}
+                                                onChange={(event) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        visit_date:
+                                                            event.target.value,
+                                                    }))
+                                                }
+                                                className="w-full bg-transparent outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Jumlah tiket
+                                        </label>
+                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                            <span className="text-slate-400">
+                                                🎟️
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={form.quantity}
+                                                onChange={(event) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        quantity: Number(
+                                                            event.target.value,
+                                                        ),
+                                                    }))
+                                                }
+                                                className="w-20 bg-transparent outline-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
+                                        Cari
+                                    </button>
+                                </form>
+                                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div className="text-sm font-semibold text-sky-700">
+                                        Discovery kelas yang lebih terarah
+                                    </div>
+                                    <DiscoverySortSelect
+                                        className="md:w-64"
+                                        value={sort}
+                                        options={sortOptions}
+                                        onChange={applySort}
                                     />
                                 </div>
+                                <ActiveFilterChips
+                                    filters={activeFilters}
+                                    onReset={resetDiscovery}
+                                />
+                                <DiscoveryInsightStrip
+                                    tips={[
+                                        {
+                                            title: 'Masuk dari jalur belajar',
+                                            body: 'Koleksi pemula, topik populer, dan kelas dekat jadwal membantu user memilih tanpa harus tahu nama kelas.',
+                                            icon: (
+                                                <CalendarCheck className="h-5 w-5" />
+                                            ),
+                                        },
+                                        {
+                                            title: 'Topik dulu, detail belakangan',
+                                            body: 'Gunakan entry point seperti marketing, hospitality, leadership, atau digital untuk mulai eksplorasi.',
+                                            icon: (
+                                                <BookOpen className="h-5 w-5" />
+                                            ),
+                                        },
+                                    ]}
+                                />
                             </div>
                         </section>
 
@@ -423,9 +481,18 @@ export default function AcademySearch({
                             {filtered.length === 0 && (
                                 <div className="col-span-full">
                                     <DiscoveryEmptyState
-                                        title="Kelas belum ditemukan"
-                                        description="Coba cari kategori skill lain, gunakan kata kunci yang lebih umum, atau reset filter."
-                                        suggestions={chips}
+                                        title={
+                                            discovery?.empty_state?.title ??
+                                            'Kelas belum ditemukan'
+                                        }
+                                        description={
+                                            discovery?.empty_state?.message ??
+                                            'Coba cari kategori skill lain, gunakan kata kunci yang lebih umum, atau reset filter.'
+                                        }
+                                        suggestions={
+                                            discovery?.empty_state
+                                                ?.recommended_keywords ?? chips
+                                        }
                                         onSuggestionSelect={applySuggestion}
                                         onReset={resetDiscovery}
                                     />

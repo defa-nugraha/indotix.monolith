@@ -1,6 +1,15 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
+    DiscoveryCollectionRail,
+    DiscoveryFeaturedShowcase,
+    DiscoveryIntentRow,
+    DiscoveryStoryHero,
+    type DiscoveryExperiencePayload,
+    type DiscoveryIntentChip,
+    type DiscoveryTheme,
+} from '@/components/discovery/discovery-experience';
+import {
     Bell,
     CalendarCheck,
     MapPinned,
@@ -18,6 +27,7 @@ import {
     DiscoveryInsightStrip,
     DiscoverySearchField,
     DiscoverySortSelect,
+    formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -75,14 +85,30 @@ const sortProducts = (items: Product[], sort: string) => {
     return results;
 };
 
+const discoveryTheme: DiscoveryTheme = {
+    badge: 'Retail Discovery',
+    title: 'Retail discovery yang mendorong browse spontan',
+    description:
+        'Halaman retail tidak lagi hanya katalog. User bisa masuk dari ready stock, best seller, pilihan hadiah, dan kategori yang sedang ramai.',
+    accent: 'bg-orange-500 hover:bg-orange-600',
+    gradientClassName:
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#9a3412,#ea580c,#f59e0b)]',
+    surfaceClassName: 'bg-orange-50 text-orange-700',
+    icon: ShoppingBag,
+};
+
 export default function SouvenirSearch({
     filters,
     products,
     categories,
+    discovery,
+    meta,
 }: {
     filters: Filters;
     products: { data: Product[]; links: any[] };
     categories: Category[];
+    discovery?: DiscoveryExperiencePayload | null;
+    meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage()
         .props as {
@@ -102,31 +128,64 @@ export default function SouvenirSearch({
         return () => clearTimeout(timer);
     }, []);
 
-    const submitSearch = (event: React.FormEvent) => {
-        event.preventDefault();
-        router.get('/retail-shop', form, {
+    const applyRoute = (
+        params: Record<string, string | number | null | undefined>,
+    ) => {
+        const query = Object.fromEntries(
+            Object.entries(params).filter(
+                ([, value]) =>
+                    value !== null && value !== undefined && value !== '',
+            ),
+        );
+        router.get('/retail-shop', query, {
             preserveState: true,
             preserveScroll: true,
         });
+    };
+
+    const submitSearch = (event: React.FormEvent) => {
+        event.preventDefault();
+        applyRoute({ ...form, sort });
     };
 
     const applySuggestion = (value: string) => {
         const next = { ...form, q: value };
         setForm(next);
-        router.get('/retail-shop', next, {
-            preserveState: true,
-            preserveScroll: true,
+        applyRoute({ ...next, sort });
+    };
+
+    const applyIntent = (chip: DiscoveryIntentChip) => {
+        const nextSort =
+            typeof chip.filters?.sort === 'string' ? chip.filters.sort : sort;
+        setSort(nextSort);
+        if (chip.query) {
+            setForm((prev) => ({ ...prev, q: chip.query ?? '' }));
+        }
+        if (chip.filters?.category) {
+            setForm((prev) => ({
+                ...prev,
+                category_id: chip.filters?.category ?? '',
+            }));
+        }
+        applyRoute({
+            q: chip.query ?? form.q,
+            category_id:
+                (chip.filters?.category as string | undefined) ??
+                String(form.category_id ?? ''),
+            sort: nextSort,
+            ...((chip.filters ?? {}) as Record<string, string>),
         });
+    };
+
+    const applySort = (value: string) => {
+        setSort(value);
+        applyRoute({ ...form, sort: value });
     };
 
     const resetDiscovery = () => {
         setForm({ q: '', category_id: '' });
         setSort('recommended');
-        router.get(
-            '/retail-shop',
-            {},
-            { preserveState: true, preserveScroll: true },
-        );
+        applyRoute({});
     };
 
     const formatIdr = (value: number | string | null | undefined) => {
@@ -166,14 +225,17 @@ export default function SouvenirSearch({
                     .map((product) => product.category)
                     .filter((item): item is string => Boolean(item)),
             },
+            {
+                label: 'Discovery',
+                items: discovery?.popular_keywords ?? [],
+            },
         ],
-        [categories, products.data],
+        [categories, discovery?.popular_keywords, products.data],
     );
 
     const activeFilters = useMemo(
         () => [
-            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
-            ...(form.category_id ? ['Kategori aktif'] : []),
+            ...formatAppliedDiscoveryFilters(meta?.applied_filters),
             ...(sort !== 'recommended'
                 ? [
                       sortOptions.find((item) => item.value === sort)?.label ??
@@ -181,13 +243,14 @@ export default function SouvenirSearch({
                   ]
                 : []),
         ],
-        [form.category_id, form.q, sort],
+        [meta?.applied_filters, sort],
     );
 
     const filtered = useMemo(
         () => sortProducts(products.data, sort),
         [products.data, sort],
     );
+    const discoverySections = discovery?.sections ?? [];
 
     return (
         <PublicLayout categories={navItems}>
@@ -207,6 +270,39 @@ export default function SouvenirSearch({
 
                 {isReady && (
                     <>
+                        <section className="space-y-6">
+                            <DiscoveryStoryHero
+                                theme={discoveryTheme}
+                                editorial={discovery?.editorial}
+                                quickCategories={discovery?.quick_categories}
+                                totalLabel={
+                                    meta?.total
+                                        ? `${meta.total} produk siap dibrowse`
+                                        : 'Discovery retail aktif'
+                                }
+                            />
+
+                            <DiscoveryIntentRow
+                                chips={discovery?.intent_chips ?? []}
+                                onSelect={applyIntent}
+                            />
+
+                            <DiscoveryFeaturedShowcase
+                                section={discovery?.featured}
+                                theme={discoveryTheme}
+                            />
+
+                            {discoverySections
+                                .slice(0, 2)
+                                .map((section) => (
+                                    <DiscoveryCollectionRail
+                                        key={section.key}
+                                        section={section}
+                                        theme={discoveryTheme}
+                                    />
+                                ))}
+                        </section>
+
                         <section className="rounded-2xl bg-white p-6 shadow-sm">
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
@@ -269,7 +365,7 @@ export default function SouvenirSearch({
                                     className="md:w-64"
                                     value={sort}
                                     options={sortOptions}
-                                    onChange={setSort}
+                                    onChange={applySort}
                                 />
                             </div>
                             <ActiveFilterChips
@@ -344,11 +440,21 @@ export default function SouvenirSearch({
                             {filtered.length === 0 && (
                                 <div className="col-span-full">
                                     <DiscoveryEmptyState
-                                        title="Produk retail belum ditemukan"
-                                        description="Coba cari nama produk lain, pilih kategori berbeda, atau reset filter."
-                                        suggestions={categories.map(
-                                            (category) => category.name,
-                                        )}
+                                        title={
+                                            discovery?.empty_state?.title ??
+                                            'Produk retail belum ditemukan'
+                                        }
+                                        description={
+                                            discovery?.empty_state?.message ??
+                                            'Coba cari nama produk lain, pilih kategori berbeda, atau reset filter.'
+                                        }
+                                        suggestions={
+                                            discovery?.empty_state
+                                                ?.recommended_keywords ??
+                                            categories.map(
+                                                (category) => category.name,
+                                            )
+                                        }
                                         onSuggestionSelect={applySuggestion}
                                         onReset={resetDiscovery}
                                     />

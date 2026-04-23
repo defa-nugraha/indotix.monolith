@@ -1,11 +1,21 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import {
+    DiscoveryCollectionRail,
+    DiscoveryFeaturedShowcase,
+    DiscoveryIntentRow,
+    DiscoveryStoryHero,
+    type DiscoveryExperiencePayload,
+    type DiscoveryIntentChip,
+    type DiscoveryTheme,
+} from '@/components/discovery/discovery-experience';
+import {
     ActiveFilterChips,
     DiscoveryEmptyState,
     DiscoveryInsightStrip,
     DiscoverySearchField,
     DiscoverySortSelect,
+    formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
 import {
@@ -39,6 +49,7 @@ type Filters = {
     q?: string | null;
     visit_date?: string | null;
     quantity?: number;
+    sort?: string | null;
 };
 
 const sortOptions = [
@@ -93,12 +104,28 @@ const chips = [
     'Danau',
 ];
 
+const discoveryTheme: DiscoveryTheme = {
+    badge: 'Wisata Discovery',
+    title: 'Temukan destinasi dari tema perjalanan, bukan hanya nama tempat',
+    description:
+        'Discovery wisata diarahkan lewat inspirasi keluarga, alam, adventure, dan tiket yang ringan untuk dicoba terlebih dulu.',
+    accent: 'bg-emerald-600 hover:bg-emerald-700',
+    gradientClassName:
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#166534,#0f766e,#14b8a6)]',
+    surfaceClassName: 'bg-emerald-50 text-emerald-700',
+    icon: MapPinned,
+};
+
 export default function WisataSearch({
     filters,
     destinations,
+    discovery,
+    meta,
 }: {
     filters: Filters;
     destinations: Destination[];
+    discovery?: DiscoveryExperiencePayload | null;
+    meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
     const {
         auth,
@@ -122,7 +149,7 @@ export default function WisataSearch({
         visit_date: filters.visit_date ?? new Date().toISOString().slice(0, 10),
         quantity: filters.quantity ?? 1,
     });
-    const [sort, setSort] = useState('recommended');
+    const [sort, setSort] = useState(filters.sort ?? 'recommended');
     const affiliateForm = useForm({ code: '' });
 
     useEffect(() => {
@@ -130,21 +157,51 @@ export default function WisataSearch({
         return () => clearTimeout(timer);
     }, []);
 
-    const submitSearch = (event: React.FormEvent) => {
-        event.preventDefault();
-        router.get('/wisata', form, {
+    const applyRoute = (
+        params: Record<string, string | number | null | undefined>,
+    ) => {
+        const query = Object.fromEntries(
+            Object.entries(params).filter(
+                ([, value]) =>
+                    value !== null && value !== undefined && value !== '',
+            ),
+        );
+        router.get('/wisata', query, {
             preserveState: true,
             preserveScroll: true,
         });
     };
 
+    const submitSearch = (event: React.FormEvent) => {
+        event.preventDefault();
+        applyRoute({ ...form, sort });
+    };
+
     const applySuggestion = (value: string) => {
         const next = { ...form, q: value };
         setForm(next);
-        router.get('/wisata', next, {
-            preserveState: true,
-            preserveScroll: true,
+        applyRoute({ ...next, sort });
+    };
+
+    const applyIntent = (chip: DiscoveryIntentChip) => {
+        const nextSort =
+            typeof chip.filters?.sort === 'string' ? chip.filters.sort : sort;
+        setSort(nextSort);
+        if (chip.query) {
+            setForm((prev) => ({ ...prev, q: chip.query ?? '' }));
+        }
+        applyRoute({
+            q: chip.query ?? form.q,
+            visit_date: form.visit_date,
+            quantity: form.quantity,
+            sort: nextSort,
+            ...((chip.filters ?? {}) as Record<string, string>),
         });
+    };
+
+    const applySort = (value: string) => {
+        setSort(value);
+        applyRoute({ ...form, sort: value });
     };
 
     const resetDiscovery = () => {
@@ -155,10 +212,7 @@ export default function WisataSearch({
         };
         setForm(next);
         setSort('recommended');
-        router.get('/wisata', next, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        applyRoute(next);
     };
 
     const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
@@ -176,15 +230,17 @@ export default function WisataSearch({
                     .flatMap((item) => [item.city_name, item.destination_type])
                     .filter((item): item is string => Boolean(item)),
             },
+            {
+                label: 'Discovery',
+                items: discovery?.popular_keywords ?? [],
+            },
         ],
-        [destinations],
+        [destinations, discovery?.popular_keywords],
     );
 
     const activeFilters = useMemo(
         () => [
-            ...(form.q.trim() ? [`Pencarian: ${form.q.trim()}`] : []),
-            ...(form.visit_date ? [`Tanggal: ${form.visit_date}`] : []),
-            ...(form.quantity > 1 ? [`${form.quantity} tiket`] : []),
+            ...formatAppliedDiscoveryFilters(meta?.applied_filters),
             ...(sort !== 'recommended'
                 ? [
                       sortOptions.find((item) => item.value === sort)?.label ??
@@ -192,7 +248,7 @@ export default function WisataSearch({
                   ]
                 : []),
         ],
-        [form.q, form.quantity, form.visit_date, sort],
+        [meta?.applied_filters, sort],
     );
 
     const filtered = useMemo(
@@ -202,6 +258,7 @@ export default function WisataSearch({
     const fallbackImage = destinations.find(
         (item) => item.photo_url,
     )?.photo_url;
+    const discoverySections = discovery?.sections ?? [];
 
     return (
         <PublicLayout categories={navItems} chips={chips}>
@@ -224,6 +281,39 @@ export default function WisataSearch({
 
                 {isReady && (
                     <>
+                        <section className="mb-6 space-y-6">
+                            <DiscoveryStoryHero
+                                theme={discoveryTheme}
+                                editorial={discovery?.editorial}
+                                quickCategories={discovery?.quick_categories}
+                                totalLabel={
+                                    meta?.total
+                                        ? `${meta.total} destinasi siap dieksplor`
+                                        : 'Discovery wisata aktif'
+                                }
+                            />
+
+                            <DiscoveryIntentRow
+                                chips={discovery?.intent_chips ?? []}
+                                onSelect={applyIntent}
+                            />
+
+                            <DiscoveryFeaturedShowcase
+                                section={discovery?.featured}
+                                theme={discoveryTheme}
+                            />
+
+                            {discoverySections
+                                .slice(0, 2)
+                                .map((section) => (
+                                    <DiscoveryCollectionRail
+                                        key={section.key}
+                                        section={section}
+                                        theme={discoveryTheme}
+                                    />
+                                ))}
+                        </section>
+
                         <section className="mb-6 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
                             {affiliate_referral ? (
                                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -407,7 +497,7 @@ export default function WisataSearch({
                                             className="md:w-64"
                                             value={sort}
                                             options={sortOptions}
-                                            onChange={setSort}
+                                            onChange={applySort}
                                         />
                                     </div>
                                     <ActiveFilterChips
@@ -523,9 +613,18 @@ export default function WisataSearch({
                             {filtered.length === 0 && (
                                 <div className="col-span-full">
                                     <DiscoveryEmptyState
-                                        title="Destinasi belum ditemukan"
-                                        description="Coba tanggal lain, jumlah tiket lebih kecil, atau keyword destinasi yang lebih umum."
-                                        suggestions={chips}
+                                        title={
+                                            discovery?.empty_state?.title ??
+                                            'Destinasi belum ditemukan'
+                                        }
+                                        description={
+                                            discovery?.empty_state?.message ??
+                                            'Coba tanggal lain, jumlah tiket lebih kecil, atau keyword destinasi yang lebih umum.'
+                                        }
+                                        suggestions={
+                                            discovery?.empty_state
+                                                ?.recommended_keywords ?? chips
+                                        }
                                         onSuggestionSelect={applySuggestion}
                                         onReset={resetDiscovery}
                                     />

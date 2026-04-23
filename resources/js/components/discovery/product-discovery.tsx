@@ -19,6 +19,64 @@ export type DiscoverySortOption = {
     label: string;
 };
 
+const appliedFilterLabels: Record<string, string> = {
+    category: 'Kategori',
+    city: 'Kota',
+    location: 'Lokasi',
+    price_type: 'Harga',
+    start_date: 'Mulai',
+    end_date: 'Selesai',
+    check_in: 'Check-in',
+    check_out: 'Check-out',
+    guests: 'Tamu',
+    rooms: 'Kamar',
+    rating: 'Rating',
+    level: 'Level',
+    mentor: 'Mentor',
+    duration: 'Durasi',
+    target_participant: 'Peserta',
+    quota_available: 'Kuota',
+    stock_status: 'Stok',
+    category_id: 'Kategori',
+};
+
+const appliedFilterValueLabels: Record<string, Record<string, string>> = {
+    price_type: {
+        free: 'Gratis',
+        paid: 'Berbayar',
+    },
+    quota_available: {
+        true: 'Kuota tersedia',
+        false: 'Kuota habis',
+    },
+    stock_status: {
+        in_stock: 'Stok tersedia',
+        out_of_stock: 'Stok habis',
+        low_stock: 'Stok menipis',
+    },
+};
+
+export function formatAppliedDiscoveryFilters(
+    filters: Record<string, unknown> | null | undefined,
+): string[] {
+    if (!filters) return [];
+
+    return Object.entries(filters)
+        .flatMap(([key, value]) => {
+            if (value == null || value === '' || key === 'sort') return [];
+            if (key === 'q' && typeof value === 'string') {
+                return [`Pencarian: ${value}`];
+            }
+
+            const label = appliedFilterLabels[key] ?? key;
+            const renderValue = Array.isArray(value)
+                ? value.join(', ')
+                : appliedFilterValueLabels[key]?.[String(value)] ?? String(value);
+            return [`${label}: ${renderValue}`];
+        })
+        .filter(Boolean);
+}
+
 function groupRemoteSuggestions(items: unknown[]): DiscoverySuggestionGroup[] {
     const labels: Record<string, string> = {
         keyword: 'Keyword populer',
