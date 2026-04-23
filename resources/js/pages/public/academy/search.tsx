@@ -264,6 +264,7 @@ export default function AcademySearch({
                                                 }
                                                 placeholder="Cari kelas academy"
                                                 suggestions={suggestionGroups}
+                                                suggestionEndpoint="/api/discovery/academy/suggestions"
                                             />
                                         </div>
                                         <div className="grid gap-2">

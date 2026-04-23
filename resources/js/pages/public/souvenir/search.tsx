@@ -234,6 +234,7 @@ export default function SouvenirSearch({
                                         onSuggestionSelect={applySuggestion}
                                         placeholder="Cari souvenir"
                                         suggestions={suggestionGroups}
+                                        suggestionEndpoint="/api/discovery/souvenirs/suggestions"
                                     />
                                     <select
                                         className="h-12 rounded-xl border border-slate-200 px-3 text-sm"

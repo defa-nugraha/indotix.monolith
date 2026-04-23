@@ -1,5 +1,5 @@
 import { Search, SlidersHorizontal, Sparkles, X } from 'lucide-react';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 export type DiscoverySuggestionGroup = {
@@ -19,12 +19,49 @@ export type DiscoverySortOption = {
     label: string;
 };
 
+function groupRemoteSuggestions(items: unknown[]): DiscoverySuggestionGroup[] {
+    const labels: Record<string, string> = {
+        keyword: 'Keyword populer',
+        product: 'Produk',
+        location: 'Lokasi',
+        category: 'Kategori',
+        facility: 'Fasilitas',
+        mentor: 'Mentor',
+    };
+    const groups = new Map<string, string[]>();
+
+    items.forEach((item) => {
+        if (!item || typeof item !== 'object') return;
+        const row = item as {
+            type?: unknown;
+            label?: unknown;
+            metadata?: { query?: unknown };
+        };
+        const type = typeof row.type === 'string' ? row.type : 'keyword';
+        const label =
+            typeof row.metadata?.query === 'string'
+                ? row.metadata.query
+                : typeof row.label === 'string'
+                  ? row.label
+                  : '';
+        if (!label.trim()) return;
+        const groupLabel = labels[type] ?? labels.keyword;
+        groups.set(groupLabel, [...(groups.get(groupLabel) ?? []), label]);
+    });
+
+    return Array.from(groups.entries()).map(([label, values]) => ({
+        label,
+        items: Array.from(new Set(values)).slice(0, 6),
+    }));
+}
+
 export function DiscoverySearchField({
     value,
     onChange,
     onSuggestionSelect,
     placeholder,
     suggestions,
+    suggestionEndpoint,
     className,
 }: {
     value: string;
@@ -32,12 +69,20 @@ export function DiscoverySearchField({
     onSuggestionSelect: (value: string) => void;
     placeholder: string;
     suggestions: DiscoverySuggestionGroup[];
+    suggestionEndpoint?: string;
     className?: string;
 }) {
     const [focused, setFocused] = useState(false);
+    const [remoteGroups, setRemoteGroups] = useState<
+        DiscoverySuggestionGroup[]
+    >([]);
     const query = value.trim().toLowerCase();
+    const mergedSuggestions = useMemo(
+        () => [...remoteGroups, ...suggestions],
+        [remoteGroups, suggestions],
+    );
     const filteredGroups = useMemo(() => {
-        return suggestions
+        return mergedSuggestions
             .map((group) => ({
                 ...group,
                 items: group.items
@@ -48,7 +93,39 @@ export function DiscoverySearchField({
                     .slice(0, query ? 6 : 4),
             }))
             .filter((group) => group.items.length > 0);
-    }, [query, suggestions]);
+    }, [mergedSuggestions, query]);
+
+    useEffect(() => {
+        if (!suggestionEndpoint || !focused) return;
+
+        const controller = new AbortController();
+        const timer = window.setTimeout(async () => {
+            try {
+                const url = new URL(suggestionEndpoint, window.location.origin);
+                const keyword = value.trim();
+                url.searchParams.set('limit', '10');
+                if (keyword) {
+                    url.searchParams.set('q', keyword);
+                }
+                const response = await fetch(url.toString(), {
+                    headers: { Accept: 'application/json' },
+                    signal: controller.signal,
+                });
+                if (!response.ok) return;
+                const payload = await response.json();
+                setRemoteGroups(groupRemoteSuggestions(payload.data ?? []));
+            } catch (error) {
+                if ((error as Error).name !== 'AbortError') {
+                    setRemoteGroups([]);
+                }
+            }
+        }, 250);
+
+        return () => {
+            window.clearTimeout(timer);
+            controller.abort();
+        };
+    }, [focused, suggestionEndpoint, value]);
 
     const showSuggestions = focused && filteredGroups.length > 0;
 

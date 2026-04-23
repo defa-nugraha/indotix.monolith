@@ -264,6 +264,7 @@ export default function EventSearch({
                                                 }
                                                 placeholder="Cari nama event atau lokasi"
                                                 suggestions={suggestionGroups}
+                                                suggestionEndpoint="/api/discovery/events/suggestions"
                                             />
                                         </div>
                                         <div className="grid gap-2">

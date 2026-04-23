@@ -344,6 +344,7 @@ export default function WisataSearch({
                                                 }
                                                 placeholder="Cari kota atau nama destinasi"
                                                 suggestions={suggestionGroups}
+                                                suggestionEndpoint="/api/discovery/wisata/suggestions"
                                             />
                                         </div>
                                         <div className="grid gap-2">

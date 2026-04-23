@@ -253,6 +253,7 @@ export default function SpecialProgramSearch({
                                                 }
                                                 placeholder="Cari nama program"
                                                 suggestions={suggestionGroups}
+                                                suggestionEndpoint="/api/discovery/special-programs/suggestions"
                                             />
                                         </div>
                                         <div className="grid gap-2">

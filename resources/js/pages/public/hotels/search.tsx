@@ -378,6 +378,7 @@ export default function HotelSearch({
                                                 }
                                                 placeholder="Kota, hotel, atau tempat tujuan"
                                                 suggestions={suggestionGroups}
+                                                suggestionEndpoint="/api/discovery/hotels/suggestions"
                                             />
                                         </div>
                                         <div className="grid gap-2">
