@@ -226,6 +226,7 @@ class DiscoveryService
             ->where(function (Builder $query) {
                 $query->whereNull('published_at')->orWhere('published_at', '<=', now());
             })
+            ->withCount(['bookings as booking_score' => fn ($query) => $query->whereIn('status', ['paid', 'completed'])])
             ->withMin(['tickets as min_price' => fn ($query) => $query->where('is_active', true)], 'price');
     }
 
@@ -233,6 +234,13 @@ class DiscoveryService
     {
         return Hotel::query()
             ->where('status', 'active')
+            ->select('hotels.*')
+            ->selectSub(function ($query) {
+                $query->from('bookings')
+                    ->selectRaw('COUNT(*)')
+                    ->whereColumn('bookings.hotel_id', 'hotels.id')
+                    ->whereIn('bookings.status', ['paid', 'completed', 'checked_in', 'checked_out']);
+            }, 'booking_score')
             ->with(['city', 'images', 'facilities', 'roomTypes' => fn ($query) => $query->where('status', 'active')])
             ->withMin(['roomTypes as min_price' => fn ($query) => $query->where('status', 'active')], 'base_price');
     }
@@ -243,6 +251,7 @@ class DiscoveryService
             ->where('verification_status', 'verified')
             ->where('is_suspended', false)
             ->where('is_temporarily_closed', false)
+            ->withCount(['bookings as booking_score' => fn ($query) => $query->whereIn('status', ['paid', 'completed'])])
             ->with(['tickets' => fn ($query) => $query->where('is_active', true)->where('is_closed', false)])
             ->withMin(['tickets as min_price' => fn ($query) => $query->where('is_active', true)->where('is_closed', false)], 'price');
     }
@@ -253,6 +262,7 @@ class DiscoveryService
 
         return AcademyClassModel::query()
             ->where('is_active', true)
+            ->withCount(['bookings as booking_score' => fn ($query) => $query->whereIn('status', ['paid', 'completed'])])
             ->with('images')
             ->withMin(['tickets as min_price' => function ($query) use ($now) {
                 $query->where('is_active', true)
@@ -272,6 +282,7 @@ class DiscoveryService
             ->where(function (Builder $query) {
                 $query->whereNull('status')->orWhereNotIn('status', ['draft', 'disabled', 'archived']);
             })
+            ->withCount(['bookings as booking_score' => fn ($query) => $query->whereIn('status', ['paid', 'completed'])])
             ->with('variants')
             ->withMin(['variants as variant_min_price' => fn ($query) => $query->whereNotNull('price')], 'price');
     }
@@ -281,6 +292,7 @@ class DiscoveryService
         return SouvenirProduct::query()
             ->where('status', 'active')
             ->where('is_active', true)
+            ->withCount(['orderItems as booking_score' => fn ($query) => $query->whereHas('order', fn ($orderQuery) => $orderQuery->whereIn('status', ['paid', 'processing', 'shipped', 'completed']))])
             ->with(['category', 'images']);
     }
 
@@ -389,10 +401,15 @@ class DiscoveryService
             $dates = $this->dateRange($filters['check_in'], $filters['check_out']);
             $rooms = max(1, (int) ($filters['rooms'] ?? 1));
             if ($dates !== []) {
-                $query->whereHas('roomTypes.inventories', function ($inventoryQuery) use ($dates, $rooms) {
-                    $inventoryQuery->whereIn('date', $dates)
-                        ->where('is_closed', false)
-                        ->where('available_rooms', '>=', $rooms);
+                $query->whereHas('roomTypes', function ($roomTypeQuery) use ($dates, $rooms) {
+                    $roomTypeQuery->where('status', 'active');
+                    foreach ($dates as $date) {
+                        $roomTypeQuery->whereHas('inventories', function ($inventoryQuery) use ($date, $rooms) {
+                            $inventoryQuery->whereDate('date', $date)
+                                ->where('is_closed', false)
+                                ->where('available_rooms', '>=', $rooms);
+                        });
+                    }
                 });
             }
         }
@@ -629,74 +646,77 @@ class DiscoveryService
     private function sortEvents(Builder $query, string $sort): void
     {
         match ($sort) {
-            'popular' => $query->orderByDesc('capacity_sold')->orderBy('start_at'),
+            'popular' => $query->orderByDesc('booking_score')->orderByDesc('capacity_sold')->orderBy('start_at'),
             'newest' => $query->orderByDesc('published_at')->orderByDesc('created_at'),
             'upcoming' => $query->orderByRaw('start_at IS NULL')->orderBy('start_at'),
             'price_low' => $query->orderByRaw('min_price IS NULL')->orderBy('min_price'),
             'price_high' => $query->orderByDesc('min_price'),
             'title' => $query->orderBy('title'),
-            default => $query->orderByDesc('capacity_sold')->orderByRaw('start_at IS NULL')->orderBy('start_at'),
+            default => $query->orderByDesc('booking_score')->orderByDesc('capacity_sold')->orderByRaw('start_at IS NULL')->orderBy('start_at'),
         };
     }
 
     private function sortHotels(Builder $query, string $sort): void
     {
         match ($sort) {
-            'popular', 'rating_high' => $query->orderByDesc('star_rating')->orderBy('name'),
+            'popular' => $query->orderByDesc('booking_score')->orderByDesc('star_rating')->orderBy('name'),
+            'rating_high' => $query->orderByDesc('star_rating')->orderBy('name'),
             'newest' => $query->orderByDesc('created_at'),
             'price_low' => $query->orderByRaw('min_price IS NULL')->orderBy('min_price'),
             'price_high' => $query->orderByDesc('min_price'),
             'title' => $query->orderBy('name'),
-            default => $query->orderByDesc('star_rating')->orderBy('name'),
+            default => $query->orderByDesc('booking_score')->orderByDesc('star_rating')->orderBy('name'),
         };
     }
 
     private function sortWisata(Builder $query, string $sort): void
     {
         match ($sort) {
-            'popular', 'newest' => $query->orderByDesc('created_at'),
+            'popular' => $query->orderByDesc('booking_score')->orderByDesc('created_at'),
+            'newest' => $query->orderByDesc('created_at'),
             'price_low' => $query->orderByRaw('min_price IS NULL')->orderBy('min_price'),
             'price_high' => $query->orderByDesc('min_price'),
             'title' => $query->orderBy('destination_name'),
-            default => $query->orderBy('destination_name'),
+            default => $query->orderByDesc('booking_score')->orderBy('destination_name'),
         };
     }
 
     private function sortAcademy(Builder $query, string $sort): void
     {
         match ($sort) {
-            'popular' => $query->orderByDesc('capacity_sold')->orderBy('start_at'),
+            'popular' => $query->orderByDesc('booking_score')->orderByDesc('capacity_sold')->orderBy('start_at'),
             'newest' => $query->orderByDesc('created_at'),
             'upcoming' => $query->orderByRaw('start_at IS NULL')->orderBy('start_at'),
             'price_low' => $query->orderByRaw('min_price IS NULL')->orderBy('min_price'),
             'price_high' => $query->orderByDesc('min_price'),
             'title' => $query->orderBy('title'),
-            default => $query->orderByRaw('start_at IS NULL')->orderBy('start_at'),
+            default => $query->orderByDesc('booking_score')->orderByRaw('start_at IS NULL')->orderBy('start_at'),
         };
     }
 
     private function sortSpecialPrograms(Builder $query, string $sort): void
     {
         match ($sort) {
-            'popular' => $query->orderByDesc('priority')->orderByDesc('created_at'),
+            'popular' => $query->orderByDesc('booking_score')->orderByDesc('priority')->orderByDesc('created_at'),
             'newest' => $query->orderByDesc('created_at'),
             'upcoming' => $query->orderByRaw('starts_at IS NULL')->orderBy('starts_at'),
             'price_low' => $query->orderByRaw('COALESCE(variant_min_price, base_price) ASC'),
             'price_high' => $query->orderByRaw('COALESCE(variant_min_price, base_price) DESC'),
             'title' => $query->orderBy('name'),
-            default => $query->orderByDesc('priority')->orderByDesc('created_at'),
+            default => $query->orderByDesc('booking_score')->orderByDesc('priority')->orderByDesc('created_at'),
         };
     }
 
     private function sortSouvenirs(Builder $query, string $sort): void
     {
         match ($sort) {
-            'popular', 'stock_high' => $query->orderByDesc('stock')->orderBy('name'),
+            'popular' => $query->orderByDesc('booking_score')->orderByDesc('stock')->orderBy('name'),
+            'stock_high' => $query->orderByDesc('stock')->orderBy('name'),
             'newest' => $query->orderByDesc('created_at'),
             'price_low' => $query->orderBy('price'),
             'price_high' => $query->orderByDesc('price'),
             'title' => $query->orderBy('name'),
-            default => $query->orderByDesc('stock')->orderByDesc('created_at'),
+            default => $query->orderByDesc('booking_score')->orderByDesc('stock')->orderByDesc('created_at'),
         };
     }
 
@@ -1254,7 +1274,9 @@ class DiscoveryService
 
     private function souvenirFacets(): array
     {
-        $base = $this->souvenirQuery();
+        $base = SouvenirProduct::query()
+            ->where('status', 'active')
+            ->where('is_active', true);
         $range = (clone $base)->selectRaw('MIN(price) as min, MAX(price) as max')->first();
 
         return [
@@ -1381,6 +1403,11 @@ class DiscoveryService
     private function normalizeSort(string $type, mixed $sort): string
     {
         $sort = trim((string) ($sort ?: 'relevant'));
+        $aliases = [
+            'recommended' => 'relevant',
+            'date_soon' => 'upcoming',
+        ];
+        $sort = $aliases[$sort] ?? $sort;
         $allowed = array_column($this->sortOptions($type), 'value');
 
         return in_array($sort, $allowed, true) ? $sort : 'relevant';
