@@ -18,6 +18,16 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::prefix('discovery')->group(function () {
+    Route::get('metadata', [\App\Http\Controllers\Api\DiscoveryController::class, 'metadata']);
+    Route::get('{type}', [\App\Http\Controllers\Api\DiscoveryController::class, 'index'])
+        ->where('type', 'events|hotels|wisata|academy|special-programs|souvenirs');
+    Route::get('{type}/suggestions', [\App\Http\Controllers\Api\DiscoveryController::class, 'suggestions'])
+        ->where('type', 'events|hotels|wisata|academy|special-programs|souvenirs');
+    Route::get('{type}/filters', [\App\Http\Controllers\Api\DiscoveryController::class, 'filters'])
+        ->where('type', 'events|hotels|wisata|academy|special-programs|souvenirs');
+});
+
 Route::prefix('products')->group(function () {
     Route::get('hotels', [\App\Http\Controllers\Api\HotelController::class, 'index']);
     Route::get('hotels/{hotel}', [\App\Http\Controllers\Api\HotelController::class, 'show']);
