@@ -11,12 +11,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use App\Services\ProductReviewService;
+use App\Services\Discovery\DiscoveryService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PublicHotelController extends Controller
 {
-    public function search(Request $request): Response
+    public function search(Request $request, DiscoveryService $discovery): Response
     {
         $today = Carbon::today();
         $tomorrow = $today->copy()->addDay();
@@ -29,92 +30,41 @@ class PublicHotelController extends Controller
             'guests' => $request->input('guests', 2),
             'children' => $request->input('children', 0),
             'q' => $request->input('q'),
+            'sort' => $request->input('sort'),
         ];
 
         $data = validator($payload, [
-            'city' => ['nullable', 'string', 'size:4'],
+            'city' => ['nullable', 'string', 'max:255'],
             'check_in' => ['required', 'date'],
             'check_out' => ['required', 'date', 'after:check_in'],
             'rooms' => ['required', 'integer', 'min:1', 'max:10'],
             'guests' => ['required', 'integer', 'min:1', 'max:20'],
             'children' => ['nullable', 'integer', 'min:0', 'max:20'],
             'q' => ['nullable', 'string', 'max:255'],
+            'sort' => ['nullable', 'string', 'max:50'],
         ])->validate();
 
-        $dates = $this->dateRange($data['check_in'], $data['check_out']);
-
-        $hotels = Hotel::query()
-            ->where('status', 'active')
-            ->when($data['city'] ?? null, fn ($query) => $query->where('city_id', $data['city']))
-            ->when($data['q'] ?? null, fn ($query, $term) => $query->where('name', 'like', "%{$term}%"))
-            ->with(['roomTypes' => function ($query) {
-                $query->where('status', 'active');
-            }, 'city', 'images'])
-            ->get();
-
-        $results = $hotels->map(function (Hotel $hotel) use ($dates, $data) {
-            $availableRoomTypes = $hotel->roomTypes->map(function (RoomType $roomType) use ($dates, $data) {
-                $inventories = RoomInventory::query()
-                    ->where('room_type_id', $roomType->id)
-                    ->whereIn('date', $dates)
-                    ->get()
-                    ->keyBy(fn ($inventory) => $inventory->date->toDateString());
-
-                if (count($inventories) !== count($dates)) {
-                    return null;
-                }
-
-                $minAvailable = $inventories->min('available_rooms');
-                $isClosed = $inventories->contains(fn ($item) => $item->is_closed);
-
-                if ($isClosed || $minAvailable < $data['rooms']) {
-                    return null;
-                }
-                $breakfastIncluded = $inventories->every(fn ($item) => (bool) $item->breakfast_included);
-                $smokingAllowed = $inventories->every(fn ($item) => (bool) $item->smoking_allowed);
-
-                $total = 0;
-                foreach ($dates as $date) {
-                    $inventory = $inventories->get($date);
-                    $price = $inventory->price_override ?? $roomType->base_price;
-                    $total += (int) round($price) * $data['rooms'];
-                }
-
-                return [
-                    'id' => $roomType->id,
-                    'name' => $roomType->name,
-                    'max_guest' => $roomType->max_guest,
-                    'bed_type' => $roomType->bed_type,
-                    'total_price' => $total,
-                    'price_per_night' => (int) round($roomType->base_price),
-                    'available_rooms' => $minAvailable,
-                    'breakfast_included' => $breakfastIncluded,
-                    'smoking_allowed' => $smokingAllowed,
-                ];
-            })->filter();
-
-            if ($availableRoomTypes->isEmpty()) {
-                return null;
+        foreach (['city', 'check_in', 'check_out', 'rooms', 'guests', 'q', 'sort'] as $key) {
+            if (($data[$key] ?? null) !== null && $data[$key] !== '') {
+                $request->query->set($key, $data[$key]);
             }
+        }
 
-            $minPrice = $availableRoomTypes->min('price_per_night');
-
-            $coverImage = $hotel->images->first();
-            return [
-                'id' => $hotel->id,
-                'encrypted_id' => Crypt::encryptString((string) $hotel->id),
-                'slug' => $hotel->slug,
-                'name' => $hotel->name,
-                'address' => $hotel->address,
-                'star_rating' => $hotel->star_rating,
-                'city_name' => $hotel->city?->name,
-                'min_price' => $minPrice,
-                'available_rooms' => $availableRoomTypes->sum('available_rooms'),
-                'image_url' => $coverImage?->image_url ? '/storage/'.$coverImage->image_url : null,
-                'breakfast_included' => $availableRoomTypes->contains('breakfast_included', true),
-                'smoking_allowed' => $availableRoomTypes->contains('smoking_allowed', true),
-            ];
-        })->filter()->values();
+        $listing = $discovery->listing('hotels', $request);
+        $hotels = collect($listing['data'] ?? [])->map(fn (array $item) => [
+            'id' => $item['id'] ?? null,
+            'encrypted_id' => $item['encrypted_id'] ?? $item['id'] ?? null,
+            'slug' => $item['slug'] ?? null,
+            'name' => $item['name'] ?? $item['title'] ?? '',
+            'address' => data_get($item, 'metadata.location'),
+            'star_rating' => data_get($item, 'metadata.rating'),
+            'city_name' => data_get($item, 'metadata.city'),
+            'min_price' => $item['price'] ?? null,
+            'available_rooms' => data_get($item, 'availability.quota'),
+            'image_url' => $item['image_url'] ?? $item['image'] ?? null,
+            'breakfast_included' => false,
+            'smoking_allowed' => false,
+        ])->values();
 
         return Inertia::render('public/hotels/search', [
             'filters' => [
@@ -125,9 +75,12 @@ class PublicHotelController extends Controller
                 'guests' => $data['guests'],
                 'children' => $data['children'] ?? 0,
                 'q' => $data['q'] ?? null,
+                'sort' => $data['sort'] ?? null,
             ],
-            'hotels' => $results,
+            'hotels' => $hotels,
             'recommendations' => $this->recommendations(),
+            'discovery' => $listing['discovery'] ?? null,
+            'meta' => $listing['meta'] ?? null,
         ]);
     }
 

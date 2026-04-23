@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AcademyClass;
 use App\Models\AcademyTicket;
+use App\Services\Discovery\DiscoveryService;
 use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,61 +15,29 @@ use Inertia\Response;
 
 class PublicAcademyController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, DiscoveryService $discovery): Response
     {
-        $payload = [
-            'q' => $request->input('q'),
-        ];
-
-        $data = validator($payload, [
-            'q' => ['nullable', 'string', 'max:255'],
-        ])->validate();
-
-        $classes = AcademyClass::query()
-            ->where('is_active', true)
-            ->when($data['q'] ?? null, fn ($query, $term) => $query->where('title', 'like', "%{$term}%"))
-            ->with('images')
-            ->orderByDesc('start_at')
-            ->get();
-
-        $now = now();
-        $tickets = AcademyTicket::query()
-            ->whereIn('academy_class_id', $classes->pluck('id'))
-            ->where('is_active', true)
-            ->where(function ($query) use ($now) {
-                $query->whereNull('sales_start_at')
-                    ->orWhere('sales_start_at', '<=', $now);
-            })
-            ->where(function ($query) use ($now) {
-                $query->whereNull('sales_end_at')
-                    ->orWhere('sales_end_at', '>=', $now);
-            })
-            ->get()
-            ->groupBy('academy_class_id');
-
-        $results = $classes->map(function (AcademyClass $class) use ($tickets) {
-            $ticketRows = $tickets->get($class->id, collect());
-            $minPrice = $ticketRows->min('price');
-            $image = $class->images->first()?->image_path;
-
-            return [
-                'id' => $class->id,
-                'encrypted_id' => Crypt::encryptString((string) $class->id),
-                'slug' => $class->slug,
-                'title' => $class->title,
-                'category' => $class->category,
-                'start_at' => $class->start_at?->toDateString(),
-                'location' => $class->location_detail,
-                'min_price' => $minPrice ? (int) $minPrice : null,
-                'image_url' => $image ? Storage::url($image) : null,
-            ];
-        });
+        $listing = $discovery->listing('academy', $request);
+        $classes = collect($listing['data'] ?? [])->map(fn (array $item) => [
+            'id' => $item['id'] ?? null,
+            'encrypted_id' => $item['encrypted_id'] ?? $item['id'] ?? null,
+            'slug' => $item['slug'] ?? null,
+            'title' => $item['title'] ?? '',
+            'category' => data_get($item, 'metadata.category'),
+            'start_at' => data_get($item, 'metadata.date'),
+            'location' => data_get($item, 'metadata.location'),
+            'min_price' => $item['price'] ?? null,
+            'image_url' => $item['image_url'] ?? $item['image'] ?? null,
+        ])->values();
 
         return Inertia::render('public/academy/search', [
             'filters' => [
-                'q' => $data['q'] ?? null,
+                'q' => $request->input('q'),
+                'sort' => $request->input('sort'),
             ],
-            'classes' => $results,
+            'classes' => $classes,
+            'discovery' => $listing['discovery'] ?? null,
+            'meta' => $listing['meta'] ?? null,
         ]);
     }
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SouvenirCategory;
 use App\Models\SouvenirProduct;
 use App\Services\ProductReviewService;
+use App\Services\Discovery\DiscoveryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -14,49 +15,39 @@ use Inertia\Response;
 
 class PublicSouvenirController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, DiscoveryService $discovery): Response
     {
-        $query = SouvenirProduct::query()
-            ->with(['category', 'images'])
-            ->where('status', 'active')
-            ->where('is_active', true);
+        $listing = $discovery->listing('souvenirs', $request);
+        $products = collect($listing['data'] ?? [])->map(fn (array $item) => [
+            'id' => $item['id'] ?? null,
+            'encrypted_id' => $item['encrypted_id'] ?? $item['id'] ?? null,
+            'slug' => $item['slug'] ?? null,
+            'name' => $item['name'] ?? $item['title'] ?? '',
+            'price' => (int) ($item['price'] ?? 0),
+            'stock' => (int) (data_get($item, 'availability.quota') ?? 0),
+            'category' => data_get($item, 'metadata.category'),
+            'image_url' => $item['image_url'] ?? $item['image'] ?? null,
+        ])->values();
 
-        if ($search = $request->string('q')->toString()) {
-            $query->where(function ($query) use ($search) {
-                $query->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('sku', 'like', '%'.$search.'%');
-            });
-        }
-
-        if ($categoryId = $request->integer('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
-
-        $products = $query->latest()->paginate(12)->withQueryString()->through(function (SouvenirProduct $product) {
-            return [
-                'id' => $product->id,
-                'encrypted_id' => Crypt::encryptString((string) $product->id),
-                'slug' => $product->slug,
-                'name' => $product->name,
-                'price' => (int) $product->price,
-                'stock' => (int) $product->stock,
-                'category' => $product->category?->name,
-                'image_url' => $product->images->first()?->image_url ? Storage::url($product->images->first()->image_url) : null,
-            ];
-        });
-
-        $categories = SouvenirCategory::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        $filterPayload = $discovery->filters('souvenirs', $request);
+        $categories = collect(data_get($filterPayload, 'data.categories', []))->map(fn (array $category) => [
+            'id' => (int) ($category['value'] ?? 0),
+            'name' => $category['label'] ?? '',
+        ])->filter(fn (array $category) => $category['id'] > 0 && $category['name'] !== '')->values();
 
         return Inertia::render('public/souvenir/search', [
             'filters' => [
                 'q' => $request->string('q')->toString(),
-                'category_id' => $request->integer('category_id'),
+                'category_id' => $request->integer('category_id') ?: null,
+                'sort' => $request->input('sort'),
             ],
-            'products' => $products,
+            'products' => [
+                'data' => $products,
+                'links' => [],
+                'meta' => $listing['meta'] ?? null,
+            ],
             'categories' => $categories,
+            'discovery' => $listing['discovery'] ?? null,
         ]);
     }
 

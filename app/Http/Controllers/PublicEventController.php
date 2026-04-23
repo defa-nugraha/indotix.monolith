@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\EventTicket;
+use App\Services\Discovery\DiscoveryService;
 use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,51 +15,29 @@ use Inertia\Response;
 
 class PublicEventController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, DiscoveryService $discovery): Response
     {
-        $payload = [
-            'q' => $request->input('q'),
-        ];
-
-        $data = validator($payload, [
-            'q' => ['nullable', 'string', 'max:255'],
-        ])->validate();
-
-        $events = Event::query()
-            ->where('event_type', 'event')
-            ->where('status', 'published')
-            ->when($data['q'] ?? null, fn ($query, $term) => $query->where('title', 'like', "%{$term}%"))
-            ->orderByDesc('start_at')
-            ->get();
-
-        $tickets = EventTicket::query()
-            ->whereIn('event_id', $events->pluck('id'))
-            ->where('is_active', true)
-            ->get()
-            ->groupBy('event_id');
-
-        $results = $events->map(function (Event $event) use ($tickets) {
-            $ticketRows = $tickets->get($event->id, collect());
-            $minPrice = $ticketRows->min('price');
-
-            return [
-                'id' => $event->id,
-                'encrypted_id' => Crypt::encryptString((string) $event->id),
-                'slug' => $event->slug,
-                'title' => $event->title,
-                'city_name' => $this->resolveCityName($event->city_code),
-                'location' => $event->location,
-                'start_at' => $event->start_at?->toDateString(),
-                'min_price' => $minPrice ? (int) $minPrice : null,
-                'image_url' => null,
-            ];
-        });
+        $listing = $discovery->listing('events', $request);
+        $events = collect($listing['data'] ?? [])->map(fn (array $item) => [
+            'id' => $item['id'] ?? null,
+            'encrypted_id' => $item['encrypted_id'] ?? $item['id'] ?? null,
+            'slug' => $item['slug'] ?? null,
+            'title' => $item['title'] ?? '',
+            'city_name' => data_get($item, 'metadata.city'),
+            'location' => data_get($item, 'metadata.location'),
+            'start_at' => data_get($item, 'metadata.date'),
+            'min_price' => $item['price'] ?? null,
+            'image_url' => $item['image_url'] ?? $item['image'] ?? null,
+        ])->values();
 
         return Inertia::render('public/events/search', [
             'filters' => [
-                'q' => $data['q'] ?? null,
+                'q' => $request->input('q'),
+                'sort' => $request->input('sort'),
             ],
-            'events' => $results,
+            'events' => $events,
+            'discovery' => $listing['discovery'] ?? null,
+            'meta' => $listing['meta'] ?? null,
         ]);
     }
 

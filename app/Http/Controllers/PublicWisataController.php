@@ -8,6 +8,7 @@ use App\Models\WisataAffiliateLink;
 use App\Models\WisataBooking;
 use App\Models\WisataTicket;
 use App\Services\ProductReviewService;
+use App\Services\Discovery\DiscoveryService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,86 +19,42 @@ use Inertia\Response;
 
 class PublicWisataController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, DiscoveryService $discovery): Response
     {
-        $today = Carbon::today();
-
-        $payload = [
-            'q' => $request->input('q'),
-            'visit_date' => $request->input('visit_date') ?? $today->toDateString(),
-            'quantity' => $request->input('quantity', 1),
-        ];
-
-        $data = validator($payload, [
-            'q' => ['nullable', 'string', 'max:255'],
-            'visit_date' => ['required', 'date'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:20'],
-        ])->validate();
-
-        $destinations = MitraWisataOnboarding::query()
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
-            ->where('is_temporarily_closed', false)
-            ->when($data['q'] ?? null, fn ($query, $term) => $query->where('destination_name', 'like', "%{$term}%"))
-            ->with('user:id,name')
-            ->orderBy('destination_name')
-            ->get();
-
-        $tickets = WisataTicket::query()
-            ->where('is_active', true)
-            ->where('is_closed', false)
-            ->whereIn('mitra_wisata_onboarding_id', $destinations->pluck('id'))
-            ->get()
-            ->groupBy('mitra_wisata_onboarding_id');
-
-        $results = $destinations->map(function (MitraWisataOnboarding $destination) use ($tickets, $data) {
-            $items = $tickets->get($destination->id, collect());
-
-            $ticketRows = $items->map(function (WisataTicket $ticket) use ($data) {
-                $reserved = WisataBooking::query()
-                    ->where('wisata_ticket_id', $ticket->id)
-                    ->whereDate('visit_date', $data['visit_date'])
-                    ->whereIn('status', ['pending_payment', 'paid', 'completed'])
-                    ->sum('quantity');
-
-                $maxQuota = $ticket->daily_quota ?? $ticket->quota;
-                $available = max(0, $maxQuota - $reserved);
-
-                if ($available < (int) $data['quantity']) {
-                    return null;
-                }
-
-                return [
-                    'id' => $ticket->id,
-                    'name' => $ticket->name,
-                    'price' => $ticket->price,
-                    'available' => $available,
-                ];
-            })->filter()->values();
-
-            if ($ticketRows->isEmpty()) {
-                return null;
-            }
+        $listing = $discovery->listing('wisata', $request);
+        $destinations = collect($listing['data'] ?? [])->map(function (array $item) {
+            $price = $item['price'] ?? null;
+            $quota = data_get($item, 'availability.quota');
 
             return [
-                'id' => $destination->id,
-                'encrypted_id' => Crypt::encryptString((string) $destination->id),
-                'slug' => $destination->slug,
-                'destination_name' => $destination->destination_name,
-                'destination_type' => $destination->destination_type,
-                'city_name' => $this->resolveCityName($destination->city_code),
-                'photo_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
-                'tickets' => $ticketRows,
+                'id' => $item['id'] ?? null,
+                'encrypted_id' => $item['encrypted_id'] ?? $item['id'] ?? null,
+                'slug' => $item['slug'] ?? null,
+                'destination_name' => $item['destination_name'] ?? $item['title'] ?? '',
+                'destination_type' => data_get($item, 'metadata.category'),
+                'city_name' => data_get($item, 'metadata.city'),
+                'photo_url' => $item['image_url'] ?? $item['image'] ?? null,
+                'tickets' => $price !== null ? [[
+                    'id' => 0,
+                    'name' => 'Tiket',
+                    'price' => (int) $price,
+                    'available' => $quota !== null ? (int) $quota : 0,
+                ]] : [],
             ];
-        })->filter()->values();
+        })->values();
+
+        $today = Carbon::today();
 
         return Inertia::render('public/wisata/search', [
             'filters' => [
-                'q' => $data['q'] ?? null,
-                'visit_date' => $data['visit_date'],
-                'quantity' => $data['quantity'],
+                'q' => $request->input('q'),
+                'visit_date' => $request->input('visit_date') ?? $today->toDateString(),
+                'quantity' => (int) $request->input('quantity', 1),
+                'sort' => $request->input('sort'),
             ],
-            'destinations' => $results,
+            'destinations' => $destinations,
+            'discovery' => $listing['discovery'] ?? null,
+            'meta' => $listing['meta'] ?? null,
         ]);
     }
 
