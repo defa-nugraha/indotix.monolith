@@ -264,11 +264,12 @@
     }
 
     .product-date-calendar .rdrDay {
-        height: auto;
+        height: 4.9rem;
+        line-height: 1;
     }
 
     .product-date-calendar .rdrDayNumber {
-        inset: 0.18rem;
+        inset: 0.14rem;
         display: flex;
         align-items: stretch;
         justify-content: stretch;
@@ -278,15 +279,16 @@
         display: block;
         width: 100%;
         height: 100%;
+        line-height: 1;
     }
 
     .product-date-calendar__content {
         display: flex;
-        min-height: 5.8rem;
+        min-height: 4.6rem;
         width: 100%;
         flex-direction: column;
         align-items: stretch;
-        gap: 0.35rem;
+        gap: 0.2rem;
         overflow: hidden;
         border: 1px solid transparent;
         border-radius: 0.95rem;
@@ -295,7 +297,7 @@
             rgba(248, 250, 252, 0.9),
             rgba(255, 255, 255, 0.96)
         );
-        padding: 0.4rem;
+        padding: 0.28rem;
         transition:
             border-color 0.2s ease,
             background-color 0.2s ease,
@@ -314,7 +316,7 @@
 
     .product-date-calendar__day {
         display: block;
-        font-size: 0.72rem;
+        font-size: 0.76rem;
         font-weight: 700;
         line-height: 1;
         color: #0f172a;
@@ -328,7 +330,7 @@
     }
 
     .product-date-calendar__thumb {
-        height: 2.2rem;
+        height: 1.55rem;
         width: 100%;
         border-radius: 0.7rem;
         object-fit: cover;
@@ -338,11 +340,12 @@
         display: -webkit-box;
         overflow: hidden;
         color: #0369a1;
-        font-size: 0.58rem;
+        font-size: 0.48rem;
         font-weight: 700;
-        line-height: 0.8rem;
+        line-height: 0.58rem;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
+        text-align: center;
     }
 
     .product-date-calendar
@@ -384,18 +387,22 @@
     }
 
     @media (max-width: 640px) {
+        .product-date-calendar .rdrDay {
+            height: 4.25rem;
+        }
+
         .product-date-calendar__content {
-            min-height: 5rem;
-            padding: 0.3rem;
+            min-height: 4rem;
+            padding: 0.24rem;
         }
 
         .product-date-calendar__thumb {
-            height: 1.85rem;
+            height: 1.25rem;
         }
 
         .product-date-calendar__price {
-            font-size: 0.52rem;
-            line-height: 0.72rem;
+            font-size: 0.44rem;
+            line-height: 0.54rem;
         }
     }
 }
