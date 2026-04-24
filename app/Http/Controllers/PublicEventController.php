@@ -34,6 +34,8 @@ class PublicEventController extends Controller
             'filters' => [
                 'q' => $request->input('q'),
                 'sort' => $request->input('sort'),
+                'start_date' => $request->input('start_date'),
+                'quantity' => (int) $request->input('quantity', 1),
             ],
             'events' => $events,
             'discovery' => $listing['discovery'] ?? null,

@@ -1,16 +1,10 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
-    Bell,
     CalendarCheck,
-    History as HistoryIcon,
     MapPinned,
-    MessageCircle,
     ShoppingBag,
     Star,
     Ticket,
-    UserCircle,
-    ShoppingCart,
-    BadgePercent,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
@@ -21,6 +15,10 @@ import {
     type DiscoveryIntentChip,
     type DiscoveryTheme,
 } from '@/components/discovery/discovery-experience';
+import {
+    DiscoverySingleDatePicker,
+    createDateRecommendationMap,
+} from '@/components/discovery/product-date-picker';
 import {
     ActiveFilterChips,
     DiscoveryEmptyState,
@@ -83,6 +81,20 @@ const sortEvents = (items: EventCard[], sort: string) => {
     return results;
 };
 
+const eventChips = [
+    'Konser',
+    'Festival',
+    'Komunitas',
+    'Workshop',
+    'Olahraga',
+    'Keluarga',
+    'Kuliner',
+    'Seni',
+    'Budaya',
+    'Edukasi',
+    'Pameran',
+];
+
 const discoveryTheme: DiscoveryTheme = {
     badge: 'Pilihan Event',
     title: 'Jelajahi event lewat momentum, kota, dan tema favorit',
@@ -102,22 +114,20 @@ export default function EventSearch({
     meta,
 }: {
     events: EventCard[];
-    filters: { q?: string | null; sort?: string | null };
+    filters: {
+        q?: string | null;
+        sort?: string | null;
+        start_date?: string | null;
+        quantity?: number | null;
+    };
     discovery?: DiscoveryExperiencePayload | null;
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
-        usePage().props as {
-            auth?: { user?: { role?: string } };
-            unread_notifications?: number;
-            souvenir_cart_count?: number;
-            affiliate_menu?: boolean;
-        };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
-        visit_date: new Date().toISOString().slice(0, 10),
-        quantity: 1,
+        start_date: filters.start_date ?? new Date().toISOString().slice(0, 10),
+        quantity: filters.quantity ?? 1,
     });
     const [sort, setSort] = useState(filters.sort ?? 'recommended');
 
@@ -143,20 +153,6 @@ export default function EventSearch({
         },
         { label: 'Hotel', icon: Ticket, href: '/stay', active: false },
     ];
-    const chips = [
-        'Konser',
-        'Festival',
-        'Komunitas',
-        'Workshop',
-        'Olahraga',
-        'Keluarga',
-        'Kuliner',
-        'Seni',
-        'Budaya',
-        'Edukasi',
-        'Pameran',
-    ];
-
     const applyRoute = (
         params: Record<string, string | number | null | undefined>,
     ) => {
@@ -174,12 +170,22 @@ export default function EventSearch({
 
     const submitSearch = (event: React.FormEvent) => {
         event.preventDefault();
-        applyRoute({ q: form.q, sort });
+        applyRoute({
+            q: form.q,
+            start_date: form.start_date,
+            quantity: form.quantity,
+            sort,
+        });
     };
 
     const applySuggestion = (value: string) => {
         setForm((prev) => ({ ...prev, q: value }));
-        applyRoute({ q: value, sort });
+        applyRoute({
+            q: value,
+            start_date: form.start_date,
+            quantity: form.quantity,
+            sort,
+        });
     };
 
     const applyIntent = (chip: DiscoveryIntentChip) => {
@@ -191,6 +197,8 @@ export default function EventSearch({
         }
         applyRoute({
             q: chip.query ?? form.q,
+            start_date: form.start_date,
+            quantity: form.quantity,
             sort: nextSort,
             ...((chip.filters ?? {}) as Record<string, string>),
         });
@@ -198,18 +206,28 @@ export default function EventSearch({
 
     const applySort = (value: string) => {
         setSort(value);
-        applyRoute({ q: form.q, sort: value });
+        applyRoute({
+            q: form.q,
+            start_date: form.start_date,
+            quantity: form.quantity,
+            sort: value,
+        });
     };
 
     const resetDiscovery = () => {
-        setForm((prev) => ({ ...prev, q: '' }));
+        const next = {
+            q: '',
+            start_date: new Date().toISOString().slice(0, 10),
+            quantity: 1,
+        };
+        setForm(next);
         setSort('recommended');
-        applyRoute({});
+        applyRoute(next);
     };
 
     const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
         () => [
-            { label: 'Pencarian populer', items: chips },
+            { label: 'Pencarian populer', items: eventChips },
             {
                 label: 'Event',
                 items: events.map((event) => event.title).filter(Boolean),
@@ -228,6 +246,22 @@ export default function EventSearch({
         [discovery?.popular_keywords, events],
     );
 
+    const filtered = useMemo(() => sortEvents(events, sort), [events, sort]);
+    const dateRecommendations = useMemo(
+        () =>
+            createDateRecommendationMap(filtered, {
+                getDateKeys: (item) => [item.start_at],
+                mapItem: (item) => ({
+                    id: item.id,
+                    title: item.title,
+                    imageUrl: item.image_url,
+                    price: item.min_price ?? null,
+                }),
+                limit: 18,
+            }),
+        [filtered],
+    );
+
     const activeFilters = useMemo(
         () => [
             ...formatAppliedDiscoveryFilters(meta?.applied_filters),
@@ -241,14 +275,13 @@ export default function EventSearch({
         [meta?.applied_filters, sort],
     );
 
-    const filtered = useMemo(() => sortEvents(events, sort), [events, sort]);
     const discoverySections = discovery?.sections ?? [];
     const fallbackImage =
         discovery?.featured?.items?.[0]?.image_url ??
         events.find((item) => item.image_url)?.image_url;
 
     return (
-        <PublicLayout categories={categories} chips={chips}>
+        <PublicLayout categories={categories} chips={eventChips}>
             <Head title="Event">
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
@@ -300,23 +333,19 @@ export default function EventSearch({
                                         <label className="text-xs font-semibold text-slate-500 uppercase">
                                             Tanggal event
                                         </label>
-                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                            <span className="text-slate-400">
-                                                📅
-                                            </span>
-                                            <input
-                                                type="date"
-                                                value={form.visit_date}
-                                                onChange={(event) =>
-                                                    setForm((prev) => ({
-                                                        ...prev,
-                                                        visit_date:
-                                                            event.target.value,
-                                                    }))
-                                                }
-                                                className="w-full bg-transparent outline-none"
-                                            />
-                                        </div>
+                                        <DiscoverySingleDatePicker
+                                            value={form.start_date}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    start_date: value,
+                                                }))
+                                            }
+                                            recommendations={
+                                                dateRecommendations
+                                            }
+                                            minDate={new Date()}
+                                        />
                                     </div>
                                     <div className="grid gap-2">
                                         <label className="text-xs font-semibold text-slate-500 uppercase">
@@ -399,15 +428,13 @@ export default function EventSearch({
                                 theme={discoveryTheme}
                             />
 
-                            {discoverySections
-                                .slice(0, 2)
-                                .map((section) => (
-                                    <DiscoveryCollectionRail
-                                        key={section.key}
-                                        section={section}
-                                        theme={discoveryTheme}
-                                    />
-                                ))}
+                            {discoverySections.slice(0, 2).map((section) => (
+                                <DiscoveryCollectionRail
+                                    key={section.key}
+                                    section={section}
+                                    theme={discoveryTheme}
+                                />
+                            ))}
                         </section>
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">

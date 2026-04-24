@@ -1,26 +1,16 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
-import { useMemo } from 'react';
-import { DateRange, RangeKeyDict } from 'react-date-range';
-import { format } from 'date-fns';
-import 'react-date-range/dist/styles.css';
-import 'react-date-range/dist/theme/default.css';
+import { Head, Link, router } from '@inertiajs/react';
+import { addDays, format } from 'date-fns';
 import {
-    Bell,
     CalendarCheck,
-    MapPinned,
-    MessageCircle,
-    ShoppingBag,
-    Star,
-    Ticket,
-    UserCircle,
-    History,
     Coffee,
     Cigarette,
     CigaretteOff,
-    ShoppingCart,
-    BadgePercent,
+    MapPinned,
+    ShoppingBag,
+    Star,
+    Ticket,
 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     DiscoveryCollectionRail,
     DiscoveryFeaturedShowcase,
@@ -29,6 +19,10 @@ import {
     type DiscoveryIntentChip,
     type DiscoveryTheme,
 } from '@/components/discovery/discovery-experience';
+import {
+    DiscoveryRangeDatePicker,
+    createRollingRecommendationMap,
+} from '@/components/discovery/product-date-picker';
 import {
     ActiveFilterChips,
     DiscoveryEmptyState,
@@ -134,17 +128,9 @@ export default function HotelSearch({
     discovery?: DiscoveryExperiencePayload | null;
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
-        usePage().props as {
-            auth?: { user?: unknown };
-            unread_notifications?: number;
-            souvenir_cart_count?: number;
-            affiliate_menu?: boolean;
-        };
-    const isUser = Boolean((auth?.user as any)?.role === 'user');
     const [isReady, setIsReady] = useState(false);
     const today = new Date();
-    const tomorrow = new Date(Date.now() + 86400000);
+    const tomorrow = addDays(today, 1);
     const defaultCheckIn = format(today, 'yyyy-MM-dd');
     const defaultCheckOut = format(tomorrow, 'yyyy-MM-dd');
     const [form, setForm] = useState({
@@ -157,7 +143,6 @@ export default function HotelSearch({
         children: filters.children ?? 0,
     });
     const [guestOpen, setGuestOpen] = useState(false);
-    const [dateOpen, setDateOpen] = useState(false);
     const [sort, setSort] = useState(filters.sort ?? 'recommended');
     const [children, setChildren] = useState(
         Math.max(0, filters.children ?? 0),
@@ -167,20 +152,6 @@ export default function HotelSearch({
     );
     const [rooms, setRooms] = useState(filters.rooms ?? 1);
     const guestRef = useRef<HTMLDivElement | null>(null);
-    const dateRef = useRef<HTMLDivElement | null>(null);
-    const parseDate = (value?: string) =>
-        value ? new Date(value) : new Date();
-    const initialStart = form.check_in ? parseDate(form.check_in) : new Date();
-    const initialEnd = form.check_out
-        ? parseDate(form.check_out)
-        : new Date(Date.now() + 86400000);
-    const [range, setRange] = useState([
-        {
-            startDate: initialStart,
-            endDate: initialEnd,
-            key: 'selection',
-        },
-    ]);
 
     const applyRoute = (
         params: Record<string, string | number | null | undefined>,
@@ -236,7 +207,13 @@ export default function HotelSearch({
     const applySort = (value: string) => {
         setSort(value);
         const totalGuests = adults + children;
-        applyRoute({ ...form, guests: totalGuests, rooms, children, sort: value });
+        applyRoute({
+            ...form,
+            guests: totalGuests,
+            rooms,
+            children,
+            sort: value,
+        });
     };
 
     const resetDiscovery = () => {
@@ -269,12 +246,6 @@ export default function HotelSearch({
                 !guestRef.current.contains(event.target as Node)
             ) {
                 setGuestOpen(false);
-            }
-            if (
-                dateRef.current &&
-                !dateRef.current.contains(event.target as Node)
-            ) {
-                setDateOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -341,6 +312,23 @@ export default function HotelSearch({
         [discovery?.popular_keywords, hotels],
     );
 
+    const filtered = useMemo(() => sortHotels(hotels, sort), [hotels, sort]);
+    const dateRecommendations = useMemo(() => {
+        const pool =
+            recommendations.length > 0 ? recommendations : filtered.slice(0, 6);
+
+        return createRollingRecommendationMap(pool, {
+            startDate: new Date(form.check_in),
+            days: 24,
+            mapItem: (item) => ({
+                id: item.id,
+                title: item.name,
+                imageUrl: item.image_url,
+                price: item.min_price ?? null,
+            }),
+        });
+    }, [filtered, form.check_in, recommendations]);
+
     const activeFilters = useMemo(
         () => [
             ...formatAppliedDiscoveryFilters(meta?.applied_filters),
@@ -354,7 +342,6 @@ export default function HotelSearch({
         [meta?.applied_filters, sort],
     );
 
-    const filtered = useMemo(() => sortHotels(hotels, sort), [hotels, sort]);
     const discoverySections = discovery?.sections ?? [];
 
     return (
@@ -384,329 +371,258 @@ export default function HotelSearch({
                     <>
                         <section className="mb-6 space-y-6">
                             <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
-                                    <form
-                                        className="grid gap-4 md:grid-cols-[2fr_2fr_1.5fr_auto]"
-                                        onSubmit={submitSearch}
-                                    >
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Kota, destinasi, atau nama hotel
-                                            </label>
-                                            <DiscoverySearchField
-                                                value={form.q}
-                                                onChange={(value) =>
-                                                    setForm((prev) => ({
-                                                        ...prev,
-                                                        q: value,
-                                                    }))
-                                                }
-                                                onSuggestionSelect={
-                                                    applySuggestion
-                                                }
-                                                placeholder="Kota, hotel, atau tempat tujuan"
-                                                suggestions={suggestionGroups}
-                                                suggestionEndpoint="/api/discovery/hotels/suggestions"
-                                            />
+                                <form
+                                    className="grid gap-4 md:grid-cols-[2fr_2fr_1.5fr_auto]"
+                                    onSubmit={submitSearch}
+                                >
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Kota, destinasi, atau nama hotel
+                                        </label>
+                                        <DiscoverySearchField
+                                            value={form.q}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    q: value,
+                                                }))
+                                            }
+                                            onSuggestionSelect={applySuggestion}
+                                            placeholder="Kota, hotel, atau tempat tujuan"
+                                            suggestions={suggestionGroups}
+                                            suggestionEndpoint="/api/discovery/hotels/suggestions"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Tanggal Check-in & Check-out
+                                        </label>
+                                        <DiscoveryRangeDatePicker
+                                            startDate={form.check_in}
+                                            endDate={form.check_out}
+                                            onChange={({
+                                                startDate,
+                                                endDate,
+                                            }) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    check_in: startDate,
+                                                    check_out: endDate,
+                                                }))
+                                            }
+                                            recommendations={
+                                                dateRecommendations
+                                            }
+                                            minDate={new Date()}
+                                        />
+                                        <div className="text-[11px] text-slate-400">
+                                            Durasi:{' '}
+                                            {nightCount
+                                                ? `${nightCount} malam`
+                                                : '-'}
                                         </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Tanggal Check-in & Check-out
-                                            </label>
-                                            <div
-                                                className="relative"
-                                                ref={dateRef}
-                                            >
+                                    </div>
+                                    <div
+                                        className="relative grid gap-2"
+                                        ref={guestRef}
+                                    >
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Tamu dan Kamar
+                                        </label>
+                                        <button
+                                            type="button"
+                                            className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm"
+                                            onClick={() =>
+                                                setGuestOpen((prev) => !prev)
+                                            }
+                                        >
+                                            <span className="text-slate-400">
+                                                👥
+                                            </span>
+                                            <span className="flex-1 pl-2 text-left">
+                                                {adults} Dewasa, {children}{' '}
+                                                Anak, {rooms} Kamar
+                                            </span>
+                                            <span className="h-8 w-8 rounded-full bg-sky-100 text-sky-700">
+                                                ▾
+                                            </span>
+                                        </button>
+                                        {guestOpen && (
+                                            <div className="absolute right-0 z-10 mt-2 w-[320px] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm font-semibold text-slate-700">
+                                                        Dewasa
+                                                    </span>
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            type="button"
+                                                            className="h-8 w-8 rounded-full bg-slate-100"
+                                                            onClick={() =>
+                                                                setAdults(
+                                                                    (prev) =>
+                                                                        Math.max(
+                                                                            1,
+                                                                            prev -
+                                                                                1,
+                                                                        ),
+                                                                )
+                                                            }
+                                                        >
+                                                            −
+                                                        </button>
+                                                        <span className="w-6 text-center text-sm font-semibold">
+                                                            {adults}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="h-8 w-8 rounded-full bg-sky-100 text-sky-700"
+                                                            onClick={() =>
+                                                                setAdults(
+                                                                    (prev) =>
+                                                                        prev +
+                                                                        1,
+                                                                )
+                                                            }
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex items-center justify-between">
+                                                    <span className="text-sm font-semibold text-slate-700">
+                                                        Anak
+                                                    </span>
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            type="button"
+                                                            className="h-8 w-8 rounded-full bg-slate-100"
+                                                            onClick={() =>
+                                                                setChildren(
+                                                                    (prev) =>
+                                                                        Math.max(
+                                                                            0,
+                                                                            prev -
+                                                                                1,
+                                                                        ),
+                                                                )
+                                                            }
+                                                        >
+                                                            −
+                                                        </button>
+                                                        <span className="w-6 text-center text-sm font-semibold">
+                                                            {children}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="h-8 w-8 rounded-full bg-sky-100 text-sky-700"
+                                                            onClick={() =>
+                                                                setChildren(
+                                                                    (prev) =>
+                                                                        prev +
+                                                                        1,
+                                                                )
+                                                            }
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <div className="mt-3 flex items-center justify-between">
+                                                    <span className="text-sm font-semibold text-slate-700">
+                                                        Kamar
+                                                    </span>
+                                                    <div className="flex items-center gap-3">
+                                                        <button
+                                                            type="button"
+                                                            className="h-8 w-8 rounded-full bg-slate-100"
+                                                            onClick={() =>
+                                                                setRooms(
+                                                                    (prev) =>
+                                                                        Math.max(
+                                                                            1,
+                                                                            prev -
+                                                                                1,
+                                                                        ),
+                                                                )
+                                                            }
+                                                        >
+                                                            −
+                                                        </button>
+                                                        <span className="w-6 text-center text-sm font-semibold">
+                                                            {rooms}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="h-8 w-8 rounded-full bg-sky-100 text-sky-700"
+                                                            onClick={() =>
+                                                                setRooms(
+                                                                    (prev) =>
+                                                                        prev +
+                                                                        1,
+                                                                )
+                                                            }
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
+                                                </div>
                                                 <button
                                                     type="button"
-                                                    className={`flex w-full items-center gap-2 rounded-xl border px-4 py-3 text-sm ${dateOpen ? 'border-sky-500' : 'border-slate-200'}`}
+                                                    className="mt-4 w-full rounded-lg bg-sky-600 py-2 text-sm font-semibold text-white"
                                                     onClick={() =>
-                                                        setDateOpen(
-                                                            (prev) => !prev,
-                                                        )
+                                                        setGuestOpen(false)
                                                     }
                                                 >
-                                                    <span className="text-slate-400">
-                                                        📅
-                                                    </span>
-                                                    <span className="text-left">
-                                                        {format(
-                                                            range[0]
-                                                                .startDate ??
-                                                                new Date(),
-                                                            'EEE, dd MMM yyyy',
-                                                        )}{' '}
-                                                        -{' '}
-                                                        {format(
-                                                            range[0].endDate ??
-                                                                new Date(),
-                                                            'EEE, dd MMM yyyy',
-                                                        )}
-                                                    </span>
+                                                    Selesai
                                                 </button>
-                                                {dateOpen && (
-                                                    <div className="absolute right-0 z-50 mt-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
-                                                        <DateRange
-                                                            ranges={range}
-                                                            onChange={(
-                                                                item: RangeKeyDict,
-                                                            ) => {
-                                                                const selection =
-                                                                    item.selection;
-                                                                setRange([
-                                                                    selection,
-                                                                ]);
-                                                                const start =
-                                                                    selection.startDate ??
-                                                                    new Date();
-                                                                const end =
-                                                                    selection.endDate ??
-                                                                    new Date();
-                                                                setForm(
-                                                                    (prev) => ({
-                                                                        ...prev,
-                                                                        check_in:
-                                                                            format(
-                                                                                start,
-                                                                                'yyyy-MM-dd',
-                                                                            ),
-                                                                        check_out:
-                                                                            format(
-                                                                                end,
-                                                                                'yyyy-MM-dd',
-                                                                            ),
-                                                                    }),
-                                                                );
-                                                            }}
-                                                            months={2}
-                                                            direction="horizontal"
-                                                            minDate={new Date()}
-                                                            rangeColors={[
-                                                                '#0ea5e9',
-                                                            ]}
-                                                        />
-                                                    </div>
-                                                )}
                                             </div>
-                                            <div className="text-[11px] text-slate-400">
-                                                Durasi:{' '}
-                                                {nightCount
-                                                    ? `${nightCount} malam`
-                                                    : '-'}
-                                            </div>
-                                        </div>
-                                        <div
-                                            className="relative grid gap-2"
-                                            ref={guestRef}
-                                        >
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Tamu dan Kamar
-                                            </label>
-                                            <button
-                                                type="button"
-                                                className="flex w-full items-center justify-between rounded-xl border border-slate-200 px-4 py-3 text-sm"
-                                                onClick={() =>
-                                                    setGuestOpen(
-                                                        (prev) => !prev,
-                                                    )
-                                                }
-                                            >
-                                                <span className="text-slate-400">
-                                                    👥
-                                                </span>
-                                                <span className="flex-1 pl-2 text-left">
-                                                    {adults} Dewasa, {children}{' '}
-                                                    Anak, {rooms} Kamar
-                                                </span>
-                                                <span className="h-8 w-8 rounded-full bg-sky-100 text-sky-700">
-                                                    ▾
-                                                </span>
-                                            </button>
-                                            {guestOpen && (
-                                                <div className="absolute right-0 z-10 mt-2 w-[320px] rounded-2xl border border-slate-200 bg-white p-4 shadow-lg">
-                                                    <div className="flex items-center justify-between">
-                                                        <span className="text-sm font-semibold text-slate-700">
-                                                            Dewasa
-                                                        </span>
-                                                        <div className="flex items-center gap-3">
-                                                            <button
-                                                                type="button"
-                                                                className="h-8 w-8 rounded-full bg-slate-100"
-                                                                onClick={() =>
-                                                                    setAdults(
-                                                                        (
-                                                                            prev,
-                                                                        ) =>
-                                                                            Math.max(
-                                                                                1,
-                                                                                prev -
-                                                                                    1,
-                                                                            ),
-                                                                    )
-                                                                }
-                                                            >
-                                                                −
-                                                            </button>
-                                                            <span className="w-6 text-center text-sm font-semibold">
-                                                                {adults}
-                                                            </span>
-                                                            <button
-                                                                type="button"
-                                                                className="h-8 w-8 rounded-full bg-sky-100 text-sky-700"
-                                                                onClick={() =>
-                                                                    setAdults(
-                                                                        (
-                                                                            prev,
-                                                                        ) =>
-                                                                            prev +
-                                                                            1,
-                                                                    )
-                                                                }
-                                                            >
-                                                                +
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-3 flex items-center justify-between">
-                                                        <span className="text-sm font-semibold text-slate-700">
-                                                            Anak
-                                                        </span>
-                                                        <div className="flex items-center gap-3">
-                                                            <button
-                                                                type="button"
-                                                                className="h-8 w-8 rounded-full bg-slate-100"
-                                                                onClick={() =>
-                                                                    setChildren(
-                                                                        (
-                                                                            prev,
-                                                                        ) =>
-                                                                            Math.max(
-                                                                                0,
-                                                                                prev -
-                                                                                    1,
-                                                                            ),
-                                                                    )
-                                                                }
-                                                            >
-                                                                −
-                                                            </button>
-                                                            <span className="w-6 text-center text-sm font-semibold">
-                                                                {children}
-                                                            </span>
-                                                            <button
-                                                                type="button"
-                                                                className="h-8 w-8 rounded-full bg-sky-100 text-sky-700"
-                                                                onClick={() =>
-                                                                    setChildren(
-                                                                        (
-                                                                            prev,
-                                                                        ) =>
-                                                                            prev +
-                                                                            1,
-                                                                    )
-                                                                }
-                                                            >
-                                                                +
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="mt-3 flex items-center justify-between">
-                                                        <span className="text-sm font-semibold text-slate-700">
-                                                            Kamar
-                                                        </span>
-                                                        <div className="flex items-center gap-3">
-                                                            <button
-                                                                type="button"
-                                                                className="h-8 w-8 rounded-full bg-slate-100"
-                                                                onClick={() =>
-                                                                    setRooms(
-                                                                        (
-                                                                            prev,
-                                                                        ) =>
-                                                                            Math.max(
-                                                                                1,
-                                                                                prev -
-                                                                                    1,
-                                                                            ),
-                                                                    )
-                                                                }
-                                                            >
-                                                                −
-                                                            </button>
-                                                            <span className="w-6 text-center text-sm font-semibold">
-                                                                {rooms}
-                                                            </span>
-                                                            <button
-                                                                type="button"
-                                                                className="h-8 w-8 rounded-full bg-sky-100 text-sky-700"
-                                                                onClick={() =>
-                                                                    setRooms(
-                                                                        (
-                                                                            prev,
-                                                                        ) =>
-                                                                            prev +
-                                                                            1,
-                                                                    )
-                                                                }
-                                                            >
-                                                                +
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <button
-                                                        type="button"
-                                                        className="mt-4 w-full rounded-lg bg-sky-600 py-2 text-sm font-semibold text-white"
-                                                        onClick={() =>
-                                                            setGuestOpen(false)
-                                                        }
-                                                    >
-                                                        Selesai
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
-                                            Cari
-                                        </button>
-                                    </form>
-                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                        <div className="space-y-1">
+                                        )}
+                                    </div>
+                                    <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
+                                        Cari
+                                    </button>
+                                </form>
+                                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div className="space-y-1">
                                         <div className="text-sm font-semibold text-sky-700">
                                             Pilihan hotel untuk perjalananmu
                                         </div>
                                         <p className="text-sm text-slate-500">
-                                            Cari hotel berdasarkan kota, tanggal menginap, jumlah tamu, atau urutan yang paling sesuai.
+                                            Cari hotel berdasarkan kota, tanggal
+                                            menginap, jumlah tamu, atau urutan
+                                            yang paling sesuai.
                                         </p>
-                                        </div>
-                                        <DiscoverySortSelect
-                                            className="md:w-64"
-                                            value={sort}
-                                            options={sortOptions}
-                                            onChange={applySort}
-                                        />
                                     </div>
-                                    <ActiveFilterChips
-                                        filters={activeFilters}
-                                        onReset={resetDiscovery}
-                                    />
-                                    <DiscoveryInsightStrip
-                                        tips={[
-                                            {
-                                            title: 'Bandingkan harga per malam',
-                                                body: 'Urutkan harga untuk menemukan pilihan yang paling pas dengan budgetmu.',
-                                                icon: (
-                                                    <Ticket className="h-5 w-5" />
-                                                ),
-                                            },
-                                            {
-                                            title: 'Cek fasilitas penting',
-                                                body: 'Sarapan, area merokok, dan detail kamar membantu kamu membandingkan hotel dengan cepat.',
-                                                icon: (
-                                                    <Coffee className="h-5 w-5" />
-                                                ),
-                                            },
-                                        ]}
+                                    <DiscoverySortSelect
+                                        className="md:w-64"
+                                        value={sort}
+                                        options={sortOptions}
+                                        onChange={applySort}
                                     />
                                 </div>
+                                <ActiveFilterChips
+                                    filters={activeFilters}
+                                    onReset={resetDiscovery}
+                                />
+                                <DiscoveryInsightStrip
+                                    tips={[
+                                        {
+                                            title: 'Bandingkan harga per malam',
+                                            body: 'Urutkan harga untuk menemukan pilihan yang paling pas dengan budgetmu.',
+                                            icon: (
+                                                <Ticket className="h-5 w-5" />
+                                            ),
+                                        },
+                                        {
+                                            title: 'Cek fasilitas penting',
+                                            body: 'Sarapan, area merokok, dan detail kamar membantu kamu membandingkan hotel dengan cepat.',
+                                            icon: (
+                                                <Coffee className="h-5 w-5" />
+                                            ),
+                                        },
+                                    ]}
+                                />
+                            </div>
 
                             <DiscoveryIntentRow
                                 chips={discovery?.intent_chips ?? []}
@@ -718,18 +634,14 @@ export default function HotelSearch({
                                 theme={discoveryTheme}
                             />
 
-                            {discoverySections
-                                .slice(0, 2)
-                                .map((section) => (
-                                    <DiscoveryCollectionRail
-                                        key={section.key}
-                                        section={section}
-                                        theme={discoveryTheme}
-                                    />
-                                ))}
+                            {discoverySections.slice(0, 2).map((section) => (
+                                <DiscoveryCollectionRail
+                                    key={section.key}
+                                    section={section}
+                                    theme={discoveryTheme}
+                                />
+                            ))}
                         </section>
-
-
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                             {filtered.map((hotel) => {

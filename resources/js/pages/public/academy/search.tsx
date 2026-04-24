@@ -1,4 +1,12 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    BookOpen,
+    CalendarCheck,
+    MapPinned,
+    ShoppingBag,
+    Star,
+    Ticket,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     DiscoveryCollectionRail,
@@ -9,6 +17,10 @@ import {
     type DiscoveryTheme,
 } from '@/components/discovery/discovery-experience';
 import {
+    DiscoverySingleDatePicker,
+    createDateRecommendationMap,
+} from '@/components/discovery/product-date-picker';
+import {
     ActiveFilterChips,
     DiscoveryEmptyState,
     DiscoveryInsightStrip,
@@ -17,20 +29,6 @@ import {
     formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
-import {
-    Bell,
-    CalendarCheck,
-    History as HistoryIcon,
-    MapPinned,
-    MessageCircle,
-    ShoppingBag,
-    Star,
-    Ticket,
-    UserCircle,
-    BookOpen,
-    ShoppingCart,
-    BadgePercent,
-} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
 
@@ -83,6 +81,19 @@ const sortClasses = (items: AcademyCard[], sort: string) => {
     return results;
 };
 
+const academyChips = [
+    'Hospitality',
+    'Event',
+    'Marketing',
+    'Leadership',
+    'Operasional',
+    'Digital',
+    'Public Speaking',
+    'Branding',
+    'Keuangan',
+    'Customer Care',
+];
+
 const discoveryTheme: DiscoveryTheme = {
     badge: 'Pilihan Kelas',
     title: 'Temukan kelas yang sesuai dengan minat belajarmu',
@@ -102,22 +113,20 @@ export default function AcademySearch({
     meta,
 }: {
     classes: AcademyCard[];
-    filters: { q?: string | null; sort?: string | null };
+    filters: {
+        q?: string | null;
+        sort?: string | null;
+        start_date?: string | null;
+        quantity?: number | null;
+    };
     discovery?: DiscoveryExperiencePayload | null;
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
-        usePage().props as {
-            auth?: { user?: { role?: string } };
-            unread_notifications?: number;
-            souvenir_cart_count?: number;
-            affiliate_menu?: boolean;
-        };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
-        visit_date: new Date().toISOString().slice(0, 10),
-        quantity: 1,
+        start_date: filters.start_date ?? new Date().toISOString().slice(0, 10),
+        quantity: filters.quantity ?? 1,
     });
     const [sort, setSort] = useState(filters.sort ?? 'recommended');
 
@@ -144,19 +153,6 @@ export default function AcademySearch({
         { label: 'Academy', icon: BookOpen, href: '/academy', active: true },
         { label: 'Hotel', icon: Ticket, href: '/stay', active: false },
     ];
-    const chips = [
-        'Hospitality',
-        'Event',
-        'Marketing',
-        'Leadership',
-        'Operasional',
-        'Digital',
-        'Public Speaking',
-        'Branding',
-        'Keuangan',
-        'Customer Care',
-    ];
-
     const applyRoute = (
         params: Record<string, string | number | null | undefined>,
     ) => {
@@ -174,12 +170,22 @@ export default function AcademySearch({
 
     const submitSearch = (event: React.FormEvent) => {
         event.preventDefault();
-        applyRoute({ q: form.q, sort });
+        applyRoute({
+            q: form.q,
+            start_date: form.start_date,
+            quantity: form.quantity,
+            sort,
+        });
     };
 
     const applySuggestion = (value: string) => {
         setForm((prev) => ({ ...prev, q: value }));
-        applyRoute({ q: value, sort });
+        applyRoute({
+            q: value,
+            start_date: form.start_date,
+            quantity: form.quantity,
+            sort,
+        });
     };
 
     const applyIntent = (chip: DiscoveryIntentChip) => {
@@ -191,6 +197,8 @@ export default function AcademySearch({
         }
         applyRoute({
             q: chip.query ?? form.q,
+            start_date: form.start_date,
+            quantity: form.quantity,
             sort: nextSort,
             ...((chip.filters ?? {}) as Record<string, string>),
         });
@@ -198,18 +206,28 @@ export default function AcademySearch({
 
     const applySort = (value: string) => {
         setSort(value);
-        applyRoute({ q: form.q, sort: value });
+        applyRoute({
+            q: form.q,
+            start_date: form.start_date,
+            quantity: form.quantity,
+            sort: value,
+        });
     };
 
     const resetDiscovery = () => {
-        setForm((prev) => ({ ...prev, q: '' }));
+        const next = {
+            q: '',
+            start_date: new Date().toISOString().slice(0, 10),
+            quantity: 1,
+        };
+        setForm(next);
         setSort('recommended');
-        applyRoute({});
+        applyRoute(next);
     };
 
     const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
         () => [
-            { label: 'Topik populer', items: chips },
+            { label: 'Topik populer', items: academyChips },
             {
                 label: 'Kelas',
                 items: classes.map((item) => item.title).filter(Boolean),
@@ -228,6 +246,22 @@ export default function AcademySearch({
         [classes, discovery?.popular_keywords],
     );
 
+    const filtered = useMemo(() => sortClasses(classes, sort), [classes, sort]);
+    const dateRecommendations = useMemo(
+        () =>
+            createDateRecommendationMap(filtered, {
+                getDateKeys: (item) => [item.start_at],
+                mapItem: (item) => ({
+                    id: item.id,
+                    title: item.title,
+                    imageUrl: item.image_url,
+                    price: item.min_price ?? null,
+                }),
+                limit: 18,
+            }),
+        [filtered],
+    );
+
     const activeFilters = useMemo(
         () => [
             ...formatAppliedDiscoveryFilters(meta?.applied_filters),
@@ -241,14 +275,13 @@ export default function AcademySearch({
         [meta?.applied_filters, sort],
     );
 
-    const filtered = useMemo(() => sortClasses(classes, sort), [classes, sort]);
     const fallbackImage =
         discovery?.featured?.items?.[0]?.image_url ??
         classes.find((item) => item.image_url)?.image_url;
     const discoverySections = discovery?.sections ?? [];
 
     return (
-        <PublicLayout categories={categories} chips={chips}>
+        <PublicLayout categories={categories} chips={academyChips}>
             <Head title="Eljohn Academy">
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
@@ -300,23 +333,19 @@ export default function AcademySearch({
                                         <label className="text-xs font-semibold text-slate-500 uppercase">
                                             Tanggal kelas
                                         </label>
-                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                            <span className="text-slate-400">
-                                                📅
-                                            </span>
-                                            <input
-                                                type="date"
-                                                value={form.visit_date}
-                                                onChange={(event) =>
-                                                    setForm((prev) => ({
-                                                        ...prev,
-                                                        visit_date:
-                                                            event.target.value,
-                                                    }))
-                                                }
-                                                className="w-full bg-transparent outline-none"
-                                            />
-                                        </div>
+                                        <DiscoverySingleDatePicker
+                                            value={form.start_date}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    start_date: value,
+                                                }))
+                                            }
+                                            recommendations={
+                                                dateRecommendations
+                                            }
+                                            minDate={new Date()}
+                                        />
                                     </div>
                                     <div className="grid gap-2">
                                         <label className="text-xs font-semibold text-slate-500 uppercase">
@@ -348,12 +377,14 @@ export default function AcademySearch({
                                 </form>
                                 <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                     <div className="space-y-1">
-                                    <div className="text-sm font-semibold text-sky-700">
-                                        Pilihan kelas untukmu
-                                    </div>
-                                    <p className="text-sm text-slate-500">
-                                        Cari kelas berdasarkan topik, tanggal, atau urutan yang paling sesuai dengan kebutuhan belajarmu.
-                                    </p>
+                                        <div className="text-sm font-semibold text-sky-700">
+                                            Pilihan kelas untukmu
+                                        </div>
+                                        <p className="text-sm text-slate-500">
+                                            Cari kelas berdasarkan topik,
+                                            tanggal, atau urutan yang paling
+                                            sesuai dengan kebutuhan belajarmu.
+                                        </p>
                                     </div>
                                     <DiscoverySortSelect
                                         className="md:w-64"
@@ -396,17 +427,13 @@ export default function AcademySearch({
                                 theme={discoveryTheme}
                             />
 
-                            {discoverySections
-                                .slice(0, 2)
-                                .map((section) => (
-                                    <DiscoveryCollectionRail
-                                        key={section.key}
-                                        section={section}
-                                        theme={discoveryTheme}
-                                    />
-                                ))}
-
-
+                            {discoverySections.slice(0, 2).map((section) => (
+                                <DiscoveryCollectionRail
+                                    key={section.key}
+                                    section={section}
+                                    theme={discoveryTheme}
+                                />
+                            ))}
                         </section>
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">

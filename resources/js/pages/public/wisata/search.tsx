@@ -1,4 +1,11 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import {
+    CalendarCheck,
+    MapPinned,
+    ShoppingBag,
+    Star,
+    Ticket,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     DiscoveryCollectionRail,
@@ -9,6 +16,10 @@ import {
     type DiscoveryTheme,
 } from '@/components/discovery/discovery-experience';
 import {
+    DiscoverySingleDatePicker,
+    createRollingRecommendationMap,
+} from '@/components/discovery/product-date-picker';
+import {
     ActiveFilterChips,
     DiscoveryEmptyState,
     DiscoveryInsightStrip,
@@ -17,19 +28,6 @@ import {
     formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
-import {
-    Bell,
-    CalendarCheck,
-    MapPinned,
-    MessageCircle,
-    ShoppingBag,
-    Star,
-    Ticket,
-    UserCircle,
-    History,
-    ShoppingCart,
-    BadgePercent,
-} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
 
@@ -126,17 +124,7 @@ export default function WisataSearch({
     discovery?: DiscoveryExperiencePayload | null;
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
-    const {
-        auth,
-        unread_notifications,
-        souvenir_cart_count,
-        affiliate_menu,
-        affiliate_referral,
-    } = usePage().props as {
-        auth?: { user?: { role?: string } };
-        unread_notifications?: number;
-        souvenir_cart_count?: number;
-        affiliate_menu?: boolean;
+    const { affiliate_referral } = usePage().props as {
         affiliate_referral?: {
             code: string;
             destination_name?: string | null;
@@ -237,6 +225,40 @@ export default function WisataSearch({
         [destinations, discovery?.popular_keywords],
     );
 
+    const filtered = useMemo(
+        () => sortDestinations(destinations, sort),
+        [destinations, sort],
+    );
+    const dateRecommendations = useMemo(() => {
+        const featuredItems = discovery?.featured?.items ?? [];
+        if (featuredItems.length > 0) {
+            return createRollingRecommendationMap(featuredItems, {
+                startDate: new Date(form.visit_date),
+                days: 24,
+                mapItem: (item) => ({
+                    id: item.id,
+                    title: item.title ?? item.name ?? 'Pilihan wisata',
+                    imageUrl: item.image_url ?? item.image ?? null,
+                    price: item.price_label
+                        ? Number(String(item.price_label).replace(/\D/g, '')) ||
+                          null
+                        : null,
+                }),
+            });
+        }
+
+        return createRollingRecommendationMap(filtered.slice(0, 6), {
+            startDate: new Date(form.visit_date),
+            days: 24,
+            mapItem: (item) => ({
+                id: item.id,
+                title: item.destination_name,
+                imageUrl: item.photo_url,
+                price: minTicketPrice(item) || null,
+            }),
+        });
+    }, [discovery?.featured?.items, filtered, form.visit_date]);
+
     const activeFilters = useMemo(
         () => [
             ...formatAppliedDiscoveryFilters(meta?.applied_filters),
@@ -250,10 +272,6 @@ export default function WisataSearch({
         [meta?.applied_filters, sort],
     );
 
-    const filtered = useMemo(
-        () => sortDestinations(destinations, sort),
-        [destinations, sort],
-    );
     const fallbackImage = destinations.find(
         (item) => item.photo_url,
     )?.photo_url;
@@ -282,121 +300,115 @@ export default function WisataSearch({
                     <>
                         <section className="mb-6 space-y-6">
                             <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
-                                    <form
-                                        className="grid gap-4 md:grid-cols-[2fr_1.5fr_1fr_auto]"
-                                        onSubmit={submitSearch}
-                                    >
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Kota atau destinasi wisata
-                                            </label>
-                                            <DiscoverySearchField
-                                                value={form.q}
-                                                onChange={(value) =>
+                                <form
+                                    className="grid gap-4 md:grid-cols-[2fr_1.5fr_1fr_auto]"
+                                    onSubmit={submitSearch}
+                                >
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Kota atau destinasi wisata
+                                        </label>
+                                        <DiscoverySearchField
+                                            value={form.q}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    q: value,
+                                                }))
+                                            }
+                                            onSuggestionSelect={applySuggestion}
+                                            placeholder="Cari kota atau nama destinasi"
+                                            suggestions={suggestionGroups}
+                                            suggestionEndpoint="/api/discovery/wisata/suggestions"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Tanggal kunjungan
+                                        </label>
+                                        <DiscoverySingleDatePicker
+                                            value={form.visit_date}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    visit_date: value,
+                                                }))
+                                            }
+                                            recommendations={
+                                                dateRecommendations
+                                            }
+                                            minDate={new Date()}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Jumlah tiket
+                                        </label>
+                                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                            <span className="text-slate-400">
+                                                🎟️
+                                            </span>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                value={form.quantity}
+                                                onChange={(event) =>
                                                     setForm((prev) => ({
                                                         ...prev,
-                                                        q: value,
+                                                        quantity: Number(
+                                                            event.target.value,
+                                                        ),
                                                     }))
                                                 }
-                                                onSuggestionSelect={
-                                                    applySuggestion
-                                                }
-                                                placeholder="Cari kota atau nama destinasi"
-                                                suggestions={suggestionGroups}
-                                                suggestionEndpoint="/api/discovery/wisata/suggestions"
+                                                className="w-20 bg-transparent outline-none"
                                             />
                                         </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Tanggal kunjungan
-                                            </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    📅
-                                                </span>
-                                                <input
-                                                    type="date"
-                                                    value={form.visit_date}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            visit_date:
-                                                                event.target
-                                                                    .value,
-                                                        }))
-                                                    }
-                                                    className="w-full bg-transparent outline-none"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Jumlah tiket
-                                            </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    🎟️
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    min={1}
-                                                    value={form.quantity}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            quantity: Number(
-                                                                event.target
-                                                                    .value,
-                                                            ),
-                                                        }))
-                                                    }
-                                                    className="w-20 bg-transparent outline-none"
-                                                />
-                                            </div>
-                                        </div>
-                                        <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
-                                            Cari
-                                        </button>
-                                    </form>
-                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                        <div className="space-y-1">
+                                    </div>
+                                    <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
+                                        Cari
+                                    </button>
+                                </form>
+                                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div className="space-y-1">
                                         <div className="text-sm font-semibold text-sky-700">
                                             Pilihan wisata untuk liburanmu
                                         </div>
                                         <p className="text-sm text-slate-500">
-                                            Temukan destinasi berdasarkan kota, tanggal kunjungan, jumlah tiket, atau urutan yang paling pas.
+                                            Temukan destinasi berdasarkan kota,
+                                            tanggal kunjungan, jumlah tiket,
+                                            atau urutan yang paling pas.
                                         </p>
-                                        </div>
-                                        <DiscoverySortSelect
-                                            className="md:w-64"
-                                            value={sort}
-                                            options={sortOptions}
-                                            onChange={applySort}
-                                        />
                                     </div>
-                                    <ActiveFilterChips
-                                        filters={activeFilters}
-                                        onReset={resetDiscovery}
-                                    />
-                                    <DiscoveryInsightStrip
-                                        tips={[
-                                            {
-                                            title: 'Kuota sesuai tanggal',
-                                                body: 'Hasil yang tampil menyesuaikan tanggal kunjungan dan jumlah tiket yang kamu pilih.',
-                                                icon: (
-                                                    <Ticket className="h-5 w-5" />
-                                                ),
-                                            },
-                                            {
-                                            title: 'Jelajah berdasarkan suasana',
-                                                body: 'Pilih kategori seperti alam, budaya, edukasi, atau keluarga untuk menemukan tempat yang paling cocok.',
-                                                icon: (
-                                                    <MapPinned className="h-5 w-5" />
-                                                ),
-                                            },
-                                        ]}
+                                    <DiscoverySortSelect
+                                        className="md:w-64"
+                                        value={sort}
+                                        options={sortOptions}
+                                        onChange={applySort}
                                     />
                                 </div>
+                                <ActiveFilterChips
+                                    filters={activeFilters}
+                                    onReset={resetDiscovery}
+                                />
+                                <DiscoveryInsightStrip
+                                    tips={[
+                                        {
+                                            title: 'Kuota sesuai tanggal',
+                                            body: 'Hasil yang tampil menyesuaikan tanggal kunjungan dan jumlah tiket yang kamu pilih.',
+                                            icon: (
+                                                <Ticket className="h-5 w-5" />
+                                            ),
+                                        },
+                                        {
+                                            title: 'Jelajah berdasarkan suasana',
+                                            body: 'Pilih kategori seperti alam, budaya, edukasi, atau keluarga untuk menemukan tempat yang paling cocok.',
+                                            icon: (
+                                                <MapPinned className="h-5 w-5" />
+                                            ),
+                                        },
+                                    ]}
+                                />
+                            </div>
 
                             <DiscoveryIntentRow
                                 chips={discovery?.intent_chips ?? []}
@@ -408,15 +420,13 @@ export default function WisataSearch({
                                 theme={discoveryTheme}
                             />
 
-                            {discoverySections
-                                .slice(0, 2)
-                                .map((section) => (
-                                    <DiscoveryCollectionRail
-                                        key={section.key}
-                                        section={section}
-                                        theme={discoveryTheme}
-                                    />
-                                ))}
+                            {discoverySections.slice(0, 2).map((section) => (
+                                <DiscoveryCollectionRail
+                                    key={section.key}
+                                    section={section}
+                                    theme={discoveryTheme}
+                                />
+                            ))}
                         </section>
 
                         <section className="mb-6 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">
@@ -492,8 +502,6 @@ export default function WisataSearch({
                                 </form>
                             )}
                         </section>
-
-
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                             {filtered.map((item) => {

@@ -229,3 +229,173 @@
         color: #ef4444 !important;
     }
 }
+
+@layer components {
+    .product-date-calendar {
+        width: 100%;
+    }
+
+    .product-date-calendar .rdrCalendarWrapper,
+    .product-date-calendar .rdrDateRangeWrapper,
+    .product-date-calendar .rdrMonth {
+        width: 100% !important;
+    }
+
+    .product-date-calendar .rdrMonth {
+        padding: 0;
+    }
+
+    .product-date-calendar .rdrMonthAndYearWrapper {
+        padding: 0 0.25rem 0.75rem;
+    }
+
+    .product-date-calendar .rdrWeekDays {
+        padding: 0 0.2rem;
+    }
+
+    .product-date-calendar .rdrWeekDay {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+    .product-date-calendar .rdrDays {
+        row-gap: 0.35rem;
+    }
+
+    .product-date-calendar .rdrDay {
+        height: auto;
+    }
+
+    .product-date-calendar .rdrDayNumber {
+        inset: 0.18rem;
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+    }
+
+    .product-date-calendar .rdrDayNumber span {
+        display: block;
+        width: 100%;
+        height: 100%;
+    }
+
+    .product-date-calendar__content {
+        display: flex;
+        min-height: 5.8rem;
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        overflow: hidden;
+        border: 1px solid transparent;
+        border-radius: 0.95rem;
+        background: linear-gradient(
+            180deg,
+            rgba(248, 250, 252, 0.9),
+            rgba(255, 255, 255, 0.96)
+        );
+        padding: 0.4rem;
+        transition:
+            border-color 0.2s ease,
+            background-color 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+    .product-date-calendar__content--featured {
+        border-color: rgba(125, 211, 252, 0.8);
+        background: linear-gradient(
+            180deg,
+            rgba(240, 249, 255, 0.96),
+            rgba(255, 255, 255, 0.98)
+        );
+        box-shadow: inset 0 0 0 1px rgba(186, 230, 253, 0.9);
+    }
+
+    .product-date-calendar__day {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1;
+        color: #0f172a;
+    }
+
+    .product-date-calendar__preview {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .product-date-calendar__thumb {
+        height: 2.2rem;
+        width: 100%;
+        border-radius: 0.7rem;
+        object-fit: cover;
+    }
+
+    .product-date-calendar__price {
+        display: -webkit-box;
+        overflow: hidden;
+        color: #0369a1;
+        font-size: 0.58rem;
+        font-weight: 700;
+        line-height: 0.8rem;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .product-date-calendar
+        .rdrDay:not(.rdrDayPassive)
+        .rdrInRange
+        ~ .rdrDayNumber
+        .product-date-calendar__content,
+    .product-date-calendar
+        .rdrDay:not(.rdrDayPassive)
+        .rdrStartEdge
+        ~ .rdrDayNumber
+        .product-date-calendar__content,
+    .product-date-calendar
+        .rdrDay:not(.rdrDayPassive)
+        .rdrEndEdge
+        ~ .rdrDayNumber
+        .product-date-calendar__content,
+    .product-date-calendar
+        .rdrDay:not(.rdrDayPassive)
+        .rdrSelected
+        ~ .rdrDayNumber
+        .product-date-calendar__content {
+        border-color: rgba(2, 132, 199, 0.42);
+        background: linear-gradient(
+            180deg,
+            rgba(224, 242, 254, 0.82),
+            rgba(240, 249, 255, 0.92)
+        );
+        box-shadow: inset 0 0 0 1px rgba(2, 132, 199, 0.22);
+    }
+
+    .product-date-calendar .rdrDayDisabled .product-date-calendar__content,
+    .product-date-calendar .rdrDayPassive .product-date-calendar__content {
+        opacity: 0.34;
+    }
+
+    .product-date-calendar--range .rdrMonth {
+        min-width: min(100%, 28rem);
+    }
+
+    @media (max-width: 640px) {
+        .product-date-calendar__content {
+            min-height: 5rem;
+            padding: 0.3rem;
+        }
+
+        .product-date-calendar__thumb {
+            height: 1.85rem;
+        }
+
+        .product-date-calendar__price {
+            font-size: 0.52rem;
+            line-height: 0.72rem;
+        }
+    }
+}
