@@ -84,10 +84,10 @@ const sortClasses = (items: AcademyCard[], sort: string) => {
 };
 
 const discoveryTheme: DiscoveryTheme = {
-    badge: 'Academy Discovery',
-    title: 'Masuk ke kelas dari intent belajar, bukan sekadar keyword',
+    badge: 'Pilihan Kelas',
+    title: 'Temukan kelas yang sesuai dengan minat belajarmu',
     description:
-        'Discovery academy dibuat seperti learning marketplace: ada spotlight, jalur pemula, topik populer, dan kelas yang waktunya paling dekat.',
+        'Mulai dari topik populer, kelas pemula, hingga jadwal terdekat yang siap kamu ikuti.',
     accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
         'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
@@ -221,7 +221,7 @@ export default function AcademySearch({
                     .filter((item): item is string => Boolean(item)),
             },
             {
-                label: 'Discovery',
+                label: 'Sedang ramai',
                 items: discovery?.popular_keywords ?? [],
             },
         ],
@@ -347,8 +347,13 @@ export default function AcademySearch({
                                     </button>
                                 </form>
                                 <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div className="space-y-1">
                                     <div className="text-sm font-semibold text-sky-700">
-                                        Discovery kelas yang lebih terarah
+                                        Pilihan kelas untukmu
+                                    </div>
+                                    <p className="text-sm text-slate-500">
+                                        Cari kelas berdasarkan topik, tanggal, atau urutan yang paling sesuai dengan kebutuhan belajarmu.
+                                    </p>
                                     </div>
                                     <DiscoverySortSelect
                                         className="md:w-64"
@@ -365,14 +370,14 @@ export default function AcademySearch({
                                     tips={[
                                         {
                                             title: 'Masuk dari jalur belajar',
-                                            body: 'Koleksi pemula, topik populer, dan kelas dekat jadwal membantu user memilih tanpa harus tahu nama kelas.',
+                                            body: 'Kelas pemula, topik populer, dan jadwal terdekat membantu kamu memilih tanpa harus tahu nama kelasnya.',
                                             icon: (
                                                 <CalendarCheck className="h-5 w-5" />
                                             ),
                                         },
                                         {
-                                            title: 'Topik dulu, detail belakangan',
-                                            body: 'Gunakan entry point seperti marketing, hospitality, leadership, atau digital untuk mulai eksplorasi.',
+                                            title: 'Mulai dari topik yang kamu suka',
+                                            body: 'Pilih marketing, hospitality, leadership, atau digital untuk menemukan kelas yang paling relevan.',
                                             icon: (
                                                 <BookOpen className="h-5 w-5" />
                                             ),

@@ -85,10 +85,10 @@ const sortProducts = (items: Product[], sort: string) => {
 };
 
 const discoveryTheme: DiscoveryTheme = {
-    badge: 'Retail Discovery',
-    title: 'Retail discovery yang mendorong browse spontan',
+    badge: 'Pilihan Produk',
+    title: 'Temukan produk favorit untuk oleh-oleh dan hadiah',
     description:
-        'Halaman retail tidak lagi hanya katalog. User bisa masuk dari ready stock, best seller, pilihan hadiah, dan kategori yang sedang ramai.',
+        'Jelajahi produk best seller, stok siap kirim, dan kategori yang paling sering dicari.',
     accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
         'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
@@ -225,7 +225,7 @@ export default function SouvenirSearch({
                     .filter((item): item is string => Boolean(item)),
             },
             {
-                label: 'Discovery',
+                label: 'Sedang ramai',
                 items: discovery?.popular_keywords ?? [],
             },
         ],
@@ -274,11 +274,11 @@ export default function SouvenirSearch({
                                     <div className="flex flex-wrap items-center justify-between gap-4">
                                     <div>
                                         <h1 className="text-2xl font-semibold text-slate-900">
-                                            Retail Shop Pilihan
+                                            Produk pilihan untuk dibawa pulang
                                         </h1>
                                         <p className="mt-2 text-sm text-slate-500">
-                                            Temukan produk khas daerah untuk
-                                            melengkapi perjalananmu.
+                                            Temukan oleh-oleh dan hadiah favorit
+                                            untuk melengkapi perjalananmu.
                                         </p>
                                     </div>
                                     <form
@@ -326,7 +326,7 @@ export default function SouvenirSearch({
                                 </div>
                                 <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                     <div className="text-sm font-semibold text-sky-700">
-                                        Produk populer dan stok tersedia
+                                        Produk populer yang siap dipilih
                                     </div>
                                     <DiscoverySortSelect
                                         className="md:w-64"
@@ -343,14 +343,14 @@ export default function SouvenirSearch({
                                     tips={[
                                         {
                                             title: 'Cek stok produk',
-                                            body: 'Produk retail lebih mudah dipilih saat stok dan kategori langsung terlihat.',
+                                            body: 'Lihat produk yang stoknya siap agar kamu bisa belanja lebih cepat.',
                                             icon: (
                                                 <ShoppingBag className="h-5 w-5" />
                                             ),
                                         },
                                         {
                                             title: 'Cari oleh kategori',
-                                            body: 'Gunakan kategori untuk menemukan souvenir yang paling relevan.',
+                                            body: 'Pilih kategori untuk menemukan souvenir yang paling cocok untuk dibawa pulang.',
                                             icon: <Star className="h-5 w-5" />,
                                         },
                                     ]}

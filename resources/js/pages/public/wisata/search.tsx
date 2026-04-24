@@ -104,10 +104,10 @@ const chips = [
 ];
 
 const discoveryTheme: DiscoveryTheme = {
-    badge: 'Wisata Discovery',
+    badge: 'Pilihan Wisata',
     title: 'Temukan destinasi dari tema perjalanan, bukan hanya nama tempat',
     description:
-        'Discovery wisata diarahkan lewat inspirasi keluarga, alam, adventure, dan tiket yang ringan untuk dicoba terlebih dulu.',
+        'Jelajahi destinasi favorit dari kategori keluarga, alam, budaya, dan promo yang sedang tersedia.',
     accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
         'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
@@ -230,7 +230,7 @@ export default function WisataSearch({
                     .filter((item): item is string => Boolean(item)),
             },
             {
-                label: 'Discovery',
+                label: 'Sedang ramai',
                 items: discovery?.popular_keywords ?? [],
             },
         ],
@@ -359,8 +359,13 @@ export default function WisataSearch({
                                         </button>
                                     </form>
                                     <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div className="space-y-1">
                                         <div className="text-sm font-semibold text-sky-700">
-                                            Discovery wisata yang terarah
+                                            Pilihan wisata untuk liburanmu
+                                        </div>
+                                        <p className="text-sm text-slate-500">
+                                            Temukan destinasi berdasarkan kota, tanggal kunjungan, jumlah tiket, atau urutan yang paling pas.
+                                        </p>
                                         </div>
                                         <DiscoverySortSelect
                                             className="md:w-64"
@@ -376,15 +381,15 @@ export default function WisataSearch({
                                     <DiscoveryInsightStrip
                                         tips={[
                                             {
-                                                title: 'Kuota sesuai tanggal',
-                                                body: 'Hasil wisata mengikuti tanggal kunjungan dan jumlah tiket yang dipilih.',
+                                            title: 'Kuota sesuai tanggal',
+                                                body: 'Hasil yang tampil menyesuaikan tanggal kunjungan dan jumlah tiket yang kamu pilih.',
                                                 icon: (
                                                     <Ticket className="h-5 w-5" />
                                                 ),
                                             },
                                             {
-                                                title: 'Eksplor berdasarkan tipe',
-                                                body: 'Gunakan kategori seperti alam, budaya, edukasi, atau keluarga.',
+                                            title: 'Jelajah berdasarkan suasana',
+                                                body: 'Pilih kategori seperti alam, budaya, edukasi, atau keluarga untuk menemukan tempat yang paling cocok.',
                                                 icon: (
                                                     <MapPinned className="h-5 w-5" />
                                                 ),
@@ -583,7 +588,7 @@ export default function WisataSearch({
                                         }
                                         description={
                                             discovery?.empty_state?.message ??
-                                            'Coba tanggal lain, jumlah tiket lebih kecil, atau keyword destinasi yang lebih umum.'
+                                            'Coba tanggal lain, jumlah tiket lebih kecil, atau kata kunci destinasi yang lebih umum.'
                                         }
                                         suggestions={
                                             discovery?.empty_state

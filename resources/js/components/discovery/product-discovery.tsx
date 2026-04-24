@@ -65,7 +65,7 @@ export function formatAppliedDiscoveryFilters(
         .flatMap(([key, value]) => {
             if (value == null || value === '' || key === 'sort') return [];
             if (key === 'q' && typeof value === 'string') {
-                return [`Pencarian: ${value}`];
+                return [`Cari: ${value}`];
             }
 
             const label = appliedFilterLabels[key] ?? key;
@@ -79,7 +79,7 @@ export function formatAppliedDiscoveryFilters(
 
 function groupRemoteSuggestions(items: unknown[]): DiscoverySuggestionGroup[] {
     const labels: Record<string, string> = {
-        keyword: 'Keyword populer',
+        keyword: 'Pencarian populer',
         product: 'Produk',
         location: 'Lokasi',
         category: 'Kategori',

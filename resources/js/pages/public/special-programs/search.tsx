@@ -70,10 +70,10 @@ const sortPrograms = (items: ProgramCard[], sort: string) => {
 };
 
 const discoveryTheme: DiscoveryTheme = {
-    badge: 'Program Discovery',
-    title: 'Temukan program dari value, urgency, dan kategori yang terasa relevan',
+    badge: 'Pilihan Program',
+    title: 'Temukan program yang paling sesuai untuk rencanamu',
     description:
-        'Discovery special program diarahkan lewat spotlight, intent, kuota terbatas, dan koleksi tematik supaya terasa lebih eksklusif.',
+        'Lihat program unggulan untuk meeting, wedding, travel, dan kebutuhan spesial lainnya.',
     accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
         'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
@@ -203,7 +203,7 @@ export default function SpecialProgramSearch({
 
     const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
         () => [
-            { label: 'Keyword populer', items: chips },
+            { label: 'Pencarian populer', items: chips },
             {
                 label: 'Program',
                 items: programs.map((program) => program.name).filter(Boolean),
@@ -215,7 +215,7 @@ export default function SpecialProgramSearch({
                     .filter((item): item is string => Boolean(item)),
             },
             {
-                label: 'Discovery',
+                label: 'Sedang ramai',
                 items: discovery?.popular_keywords ?? [],
             },
         ],
@@ -333,7 +333,7 @@ export default function SpecialProgramSearch({
                                 </form>
                                 <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                     <div className="text-sm font-semibold text-sky-700">
-                                        Discovery program yang lebih bernilai
+                                        Program unggulan untuk kebutuhanmu
                                     </div>
                                     <DiscoverySortSelect
                                         className="md:w-64"
@@ -349,15 +349,15 @@ export default function SpecialProgramSearch({
                                 <DiscoveryInsightStrip
                                     tips={[
                                         {
-                                            title: 'Masuk dari value',
-                                            body: 'Spotlight dan curated block membantu user menilai benefit sebelum membaca detail panjang.',
+                                            title: 'Lihat manfaat utamanya',
+                                            body: 'Sorotan program membantu kamu memahami kelebihan utamanya sebelum membuka detail.',
                                             icon: (
                                                 <Star className="h-5 w-5" />
                                             ),
                                         },
                                         {
-                                            title: 'Gunakan kategori sebagai pintu masuk',
-                                            body: 'Meeting, wedding, dan travel punya pola eksplorasi berbeda; intent chip membantu membedakannya dari awal.',
+                                            title: 'Pilih berdasarkan kebutuhan',
+                                            body: 'Mulai dari meeting, wedding, atau travel agar pilihan yang tampil lebih sesuai.',
                                             icon: (
                                                 <BadgePercent className="h-5 w-5" />
                                             ),

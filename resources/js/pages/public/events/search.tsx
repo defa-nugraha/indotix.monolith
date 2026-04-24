@@ -84,10 +84,10 @@ const sortEvents = (items: EventCard[], sort: string) => {
 };
 
 const discoveryTheme: DiscoveryTheme = {
-    badge: 'Event Discovery',
+    badge: 'Pilihan Event',
     title: 'Jelajahi event lewat momentum, kota, dan tema favorit',
     description:
-        'Pengguna tidak perlu mulai dari keyword. Discovery event sekarang dibuka lewat spotlight, intent, koleksi waktu, dan rekomendasi tematik.',
+        'Temukan event seru dari kota populer, jadwal terdekat, dan tema yang sedang ramai.',
     accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
         'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
@@ -209,7 +209,7 @@ export default function EventSearch({
 
     const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
         () => [
-            { label: 'Keyword populer', items: chips },
+            { label: 'Pencarian populer', items: chips },
             {
                 label: 'Event',
                 items: events.map((event) => event.title).filter(Boolean),
@@ -221,7 +221,7 @@ export default function EventSearch({
                     .filter((item): item is string => Boolean(item)),
             },
             {
-                label: 'Discovery',
+                label: 'Sedang ramai',
                 items: discovery?.popular_keywords ?? [],
             },
         ],
@@ -349,12 +349,12 @@ export default function EventSearch({
                                 <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                     <div className="space-y-1">
                                         <div className="text-sm font-semibold text-sky-700">
-                                            Discovery event yang terarah
+                                            Pilihan event untukmu
                                         </div>
                                         <p className="text-sm text-slate-500">
-                                            Masuk lewat nama event, kota,
-                                            momentum, atau urutan terbaik untuk
-                                            mulai eksplorasi.
+                                            Cari berdasarkan nama event, kota,
+                                            atau urutan terbaik untuk mulai
+                                            menjelajah.
                                         </p>
                                     </div>
                                     <div className="md:w-64">
@@ -373,14 +373,14 @@ export default function EventSearch({
                                     tips={[
                                         {
                                             title: 'Prioritaskan momentum',
-                                            body: 'Masuk dari section segera berlangsung untuk event yang paling dekat secara waktu.',
+                                            body: 'Lihat jadwal terdekat kalau kamu ingin cepat menemukan acara yang pas.',
                                             icon: (
                                                 <CalendarCheck className="h-5 w-5" />
                                             ),
                                         },
                                         {
                                             title: 'Jelajah lewat kota',
-                                            body: 'Kota populer memberi arah eksplorasi saat user belum tahu event mana yang ingin dibuka.',
+                                            body: 'Pilih kota yang ramai untuk melihat event menarik yang sedang tersedia.',
                                             icon: (
                                                 <MapPinned className="h-5 w-5" />
                                             ),

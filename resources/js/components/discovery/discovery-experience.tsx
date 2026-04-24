@@ -79,7 +79,7 @@ export type DiscoveryTheme = {
 };
 
 function itemTitle(item: DiscoveryExperienceItem): string {
-    return item.title ?? item.name ?? 'Produk pilihan';
+    return item.title ?? item.name ?? 'Pilihan menarik';
 }
 
 function itemImage(item: DiscoveryExperienceItem): string {
@@ -149,35 +149,35 @@ export function DiscoveryStoryHero({
                             </div>
                             <Star className="h-5 w-5 text-white/75" />
                         </div>
-                        <p className="mt-4 text-sm font-bold">Discovery lebih hidup</p>
+                        <p className="mt-4 text-sm font-bold">Pilihan yang sedang menarik</p>
                         <p className="mt-1 text-xs leading-5 text-white/80">
-                            Gunakan spotlight, intent, dan koleksi tematik untuk mulai eksplorasi.
+                            Temukan rekomendasi, tema, dan kategori yang memudahkan kamu memilih.
                         </p>
                     </div>
                     <div className="rounded-3xl border border-white/18 bg-black/10 p-4 backdrop-blur-sm">
                         <div className="flex items-center gap-2 text-white/85">
                             <Clock3 className="h-4 w-4" />
                             <span className="text-xs font-semibold uppercase tracking-[0.14em]">
-                                Contextual
+                                Mudah dijelajahi
                             </span>
                         </div>
-                        <p className="mt-3 text-sm font-bold">Masuk dari kebutuhan</p>
+                        <p className="mt-3 text-sm font-bold">Mulai dari yang kamu butuhkan</p>
                         <p className="mt-1 text-xs leading-5 text-white/80">
-                            Bukan hanya keyword: mulai dari gratis, populer, kota, atau momen terdekat.
+                            Mulai dari yang gratis, populer, kota tujuan, atau jadwal terdekat.
                         </p>
                     </div>
                     <div className="rounded-3xl border border-white/18 bg-white/8 p-4 backdrop-blur-sm">
                         <div className="flex items-center gap-2 text-white/85">
                             <MapPinned className="h-4 w-4" />
                             <span className="text-xs font-semibold uppercase tracking-[0.14em]">
-                                Pilihan Saat Ini
+                                Sedang tersedia
                             </span>
                         </div>
                         <p className="mt-3 text-xl font-semibold">
-                            {totalLabel ?? 'Discovery mode aktif'}
+                            {totalLabel ?? 'Banyak pilihan menarik'}
                         </p>
                         <p className="mt-1 text-xs leading-5 text-white/80">
-                            Hasil, rekomendasi, dan koleksi tetap terasa terarah tanpa membuat halaman terasa seperti katalog datar.
+                            Rekomendasi dan koleksi pilihan membantu kamu menjelajah lebih cepat.
                         </p>
                     </div>
                 </div>
@@ -201,9 +201,9 @@ export function DiscoveryIntentRow({
         <section className={cn('space-y-3', className)}>
             <div className="flex items-center justify-between gap-3">
                 <div>
-                    <p className="text-sm font-bold text-slate-900">Mulai dari intent</p>
+                    <p className="text-sm font-bold text-slate-900">Cari sesuai kebutuhanmu</p>
                     <p className="text-xs text-slate-500">
-                        Bantu user masuk dari kebutuhan, bukan dari keyword teknis.
+                        Pilih cara jelajah yang paling cocok, lalu lihat rekomendasi yang relevan.
                     </p>
                 </div>
             </div>
@@ -242,7 +242,7 @@ export function DiscoveryFeaturedShowcase({
         ...(featured.badge
             ? [
                   {
-                      label: 'Highlight',
+                      label: 'Sorotan',
                       value: featured.badge,
                       tone: theme.surfaceClassName ?? 'bg-sky-50 text-sky-700',
                   },
@@ -262,15 +262,15 @@ export function DiscoveryFeaturedShowcase({
                     <div>
                         <div className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">
                             <Sparkles className="h-4 w-4" />
-                            <span>{section?.title ?? 'Pilihan utama'}</span>
-                        </div>
-                                <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-[2rem]">
-                            {itemTitle(featured)}
-                        </h2>
-                        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                            {section?.description ?? 'Mulai eksplorasi dari item yang paling kuat membuka minat user.'}
-                        </p>
+                        <span>{section?.title ?? 'Rekomendasi pilihan'}</span>
                     </div>
+                    <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-[2rem]">
+                        {itemTitle(featured)}
+                    </h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+                        {section?.description ?? 'Mulai dari pilihan yang paling menarik untuk membuka pencarianmu.'}
+                    </p>
+                </div>
 
                     {spotlightCards.length > 0 && (
                         <div className="grid gap-3 sm:grid-cols-3">
@@ -346,7 +346,7 @@ export function DiscoveryFeaturedShowcase({
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold tracking-[0.16em] text-white/70 uppercase">
-                                Spotlight
+                                Pilihan utama
                             </p>
                             <p className="mt-2 line-clamp-2 text-lg font-semibold leading-tight sm:text-xl">
                                 {itemTitle(featured)}

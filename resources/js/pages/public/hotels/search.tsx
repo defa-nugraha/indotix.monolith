@@ -110,10 +110,10 @@ const sortHotels = (items: Hotel[], sort: string) => {
 };
 
 const discoveryTheme: DiscoveryTheme = {
-    badge: 'Hotel Discovery',
+    badge: 'Pilihan Hotel',
     title: 'Bandingkan hotel lewat tujuan, kebutuhan, dan gaya perjalanan',
     description:
-        'Discovery hotel dibuat lebih eksploratif: ada spotlight, intent staycation, budget picks, dan kota yang sedang ramai dicari.',
+        'Temukan hotel favorit untuk staycation, perjalanan keluarga, atau budget terbaik di kota tujuan.',
     accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
         'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
@@ -334,7 +334,7 @@ export default function HotelSearch({
                     .filter((item): item is string => Boolean(item)),
             },
             {
-                label: 'Discovery',
+                label: 'Sedang ramai',
                 items: discovery?.popular_keywords ?? [],
             },
         ],
@@ -669,8 +669,13 @@ export default function HotelSearch({
                                         </button>
                                     </form>
                                     <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div className="space-y-1">
                                         <div className="text-sm font-semibold text-sky-700">
-                                            Discovery hotel yang terarah
+                                            Pilihan hotel untuk perjalananmu
+                                        </div>
+                                        <p className="text-sm text-slate-500">
+                                            Cari hotel berdasarkan kota, tanggal menginap, jumlah tamu, atau urutan yang paling sesuai.
+                                        </p>
                                         </div>
                                         <DiscoverySortSelect
                                             className="md:w-64"
@@ -686,15 +691,15 @@ export default function HotelSearch({
                                     <DiscoveryInsightStrip
                                         tips={[
                                             {
-                                                title: 'Bandingkan harga per malam',
-                                                body: 'Urutkan harga untuk menemukan hotel yang paling sesuai budget.',
+                                            title: 'Bandingkan harga per malam',
+                                                body: 'Urutkan harga untuk menemukan pilihan yang paling pas dengan budgetmu.',
                                                 icon: (
                                                     <Ticket className="h-5 w-5" />
                                                 ),
                                             },
                                             {
-                                                title: 'Cek fasilitas penting',
-                                                body: 'Badge sarapan dan area merokok membantu membandingkan pilihan kamar.',
+                                            title: 'Cek fasilitas penting',
+                                                body: 'Sarapan, area merokok, dan detail kamar membantu kamu membandingkan hotel dengan cepat.',
                                                 icon: (
                                                     <Coffee className="h-5 w-5" />
                                                 ),
