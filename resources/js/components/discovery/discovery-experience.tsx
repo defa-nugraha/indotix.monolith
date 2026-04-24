@@ -257,14 +257,14 @@ export function DiscoveryFeaturedShowcase({
 
     return (
         <section className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:items-stretch">
-            <div className="flex h-full flex-col rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-6">
-                <div className="flex flex-1 flex-col gap-6">
+            <div className="flex h-full flex-col rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-5">
+                <div className="flex flex-1 flex-col gap-5">
                     <div>
                         <div className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">
                             <Sparkles className="h-4 w-4" />
                             <span>{section?.title ?? 'Pilihan utama'}</span>
                         </div>
-                        <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
+                                <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-[2rem]">
                             {itemTitle(featured)}
                         </h2>
                         <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
@@ -277,7 +277,7 @@ export function DiscoveryFeaturedShowcase({
                             {spotlightCards.map((card) => (
                                 <div
                                     key={`${card.label}-${card.value}`}
-                                    className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4"
+                                    className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5"
                                 >
                                     <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
                                         {card.label}
@@ -312,7 +312,7 @@ export function DiscoveryFeaturedShowcase({
                     </div>
                 </div>
 
-                <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-5">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-4">
                     <div>
                         <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
                             Mulai dari
@@ -335,14 +335,14 @@ export function DiscoveryFeaturedShowcase({
                     )}
                 </div>
             </div>
-            <div className="relative min-h-[360px] overflow-hidden rounded-[30px] border border-slate-200 bg-slate-900 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.4)] sm:min-h-[440px] xl:min-h-[560px]">
+            <div className="relative min-h-[300px] overflow-hidden rounded-[30px] border border-slate-200 bg-slate-900 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.4)] sm:min-h-[360px] xl:min-h-[460px]">
                 <img
                     src={itemImage(featured)}
                     alt={itemTitle(featured)}
                     className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/26 to-transparent" />
-                <div className="absolute inset-x-5 bottom-5 rounded-[28px] border border-white/14 bg-black/32 p-4 text-white backdrop-blur-md sm:inset-x-6 sm:bottom-6 sm:p-5">
+                <div className="absolute inset-x-4 bottom-4 rounded-[24px] border border-white/14 bg-black/32 p-4 text-white backdrop-blur-md sm:inset-x-5 sm:bottom-5 sm:p-4.5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold tracking-[0.16em] text-white/70 uppercase">
