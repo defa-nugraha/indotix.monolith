@@ -256,61 +256,63 @@ export function DiscoveryFeaturedShowcase({
     ].slice(0, 3);
 
     return (
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:items-start">
-            <div className="flex h-fit flex-col gap-6 rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-6">
-                <div>
-                    <div className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">
-                        <Sparkles className="h-4 w-4" />
-                        <span>{section?.title ?? 'Pilihan utama'}</span>
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:items-stretch">
+            <div className="flex h-full flex-col rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-6">
+                <div className="flex flex-1 flex-col gap-6">
+                    <div>
+                        <div className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">
+                            <Sparkles className="h-4 w-4" />
+                            <span>{section?.title ?? 'Pilihan utama'}</span>
+                        </div>
+                        <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
+                            {itemTitle(featured)}
+                        </h2>
+                        <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+                            {section?.description ?? 'Mulai eksplorasi dari item yang paling kuat membuka minat user.'}
+                        </p>
                     </div>
-                    <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
-                        {itemTitle(featured)}
-                    </h2>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                        {section?.description ?? 'Mulai eksplorasi dari item yang paling kuat membuka minat user.'}
-                    </p>
-                </div>
 
-                {spotlightCards.length > 0 && (
-                    <div className="grid gap-3 sm:grid-cols-3">
-                        {spotlightCards.map((card) => (
-                            <div
-                                key={`${card.label}-${card.value}`}
-                                className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4"
-                            >
-                                <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
-                                    {card.label}
-                                </p>
-                                <div className="mt-2">
-                                    <span
-                                        className={cn(
-                                            'inline-flex rounded-full px-3 py-1 text-xs font-semibold',
-                                            card.tone,
-                                        )}
-                                    >
-                                        {card.value}
-                                    </span>
+                    {spotlightCards.length > 0 && (
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            {spotlightCards.map((card) => (
+                                <div
+                                    key={`${card.label}-${card.value}`}
+                                    className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4"
+                                >
+                                    <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+                                        {card.label}
+                                    </p>
+                                    <div className="mt-2">
+                                        <span
+                                            className={cn(
+                                                'inline-flex rounded-full px-3 py-1 text-xs font-semibold',
+                                                card.tone,
+                                            )}
+                                        >
+                                            {card.value}
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                        {(featured.tags ?? []).slice(0, 4).map((tag) => (
+                            <span
+                                key={tag}
+                                className={cn(
+                                    'rounded-full px-3 py-1 text-xs font-semibold',
+                                    theme.surfaceClassName ?? 'bg-sky-50 text-sky-700',
+                                )}
+                            >
+                                {tag}
+                            </span>
                         ))}
                     </div>
-                )}
-
-                <div className="flex flex-wrap gap-2">
-                    {(featured.tags ?? []).slice(0, 4).map((tag) => (
-                        <span
-                            key={tag}
-                            className={cn(
-                                'rounded-full px-3 py-1 text-xs font-semibold',
-                                theme.surfaceClassName ?? 'bg-sky-50 text-sky-700',
-                            )}
-                        >
-                            {tag}
-                        </span>
-                    ))}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-5">
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-5">
                     <div>
                         <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
                             Mulai dari
