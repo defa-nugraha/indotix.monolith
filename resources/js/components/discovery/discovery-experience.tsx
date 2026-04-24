@@ -237,21 +237,66 @@ export function DiscoveryFeaturedShowcase({
 }) {
     const featured = section?.items?.[0];
     if (!featured) return null;
+    const meta = itemMeta(featured).slice(0, 3);
+    const spotlightCards = [
+        ...(featured.badge
+            ? [
+                  {
+                      label: 'Highlight',
+                      value: featured.badge,
+                      tone: theme.surfaceClassName ?? 'bg-sky-50 text-sky-700',
+                  },
+              ]
+            : []),
+        ...meta.map((entry, index) => ({
+            label: index === 0 ? 'Konteks' : index === 1 ? 'Detail' : 'Info',
+            value: entry,
+            tone: 'bg-slate-50 text-slate-700',
+        })),
+    ].slice(0, 3);
 
     return (
-        <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:items-stretch">
-            <div className="rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-6">
-                <div className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">
-                    <Sparkles className="h-4 w-4" />
-                    <span>{section?.title ?? 'Pilihan utama'}</span>
+        <section className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:items-start">
+            <div className="flex h-fit flex-col gap-6 rounded-[30px] border border-slate-200 bg-white p-5 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-6">
+                <div>
+                    <div className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">
+                        <Sparkles className="h-4 w-4" />
+                        <span>{section?.title ?? 'Pilihan utama'}</span>
+                    </div>
+                    <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
+                        {itemTitle(featured)}
+                    </h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
+                        {section?.description ?? 'Mulai eksplorasi dari item yang paling kuat membuka minat user.'}
+                    </p>
                 </div>
-                <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
-                    {itemTitle(featured)}
-                </h2>
-                <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                    {section?.description ?? 'Mulai eksplorasi dari item yang paling kuat membuka minat user.'}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
+
+                {spotlightCards.length > 0 && (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        {spotlightCards.map((card) => (
+                            <div
+                                key={`${card.label}-${card.value}`}
+                                className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4"
+                            >
+                                <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+                                    {card.label}
+                                </p>
+                                <div className="mt-2">
+                                    <span
+                                        className={cn(
+                                            'inline-flex rounded-full px-3 py-1 text-xs font-semibold',
+                                            card.tone,
+                                        )}
+                                    >
+                                        {card.value}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
                     {(featured.tags ?? []).slice(0, 4).map((tag) => (
                         <span
                             key={tag}
@@ -264,15 +309,21 @@ export function DiscoveryFeaturedShowcase({
                         </span>
                     ))}
                 </div>
-                <div className="mt-6 flex flex-wrap items-center gap-3">
-                    <span className="text-lg font-semibold text-slate-900">
-                        {featured.price_label ?? 'Lihat detail'}
-                    </span>
+
+                <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-5">
+                    <div>
+                        <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+                            Mulai dari
+                        </p>
+                        <span className="mt-2 block text-lg font-semibold text-slate-900 sm:text-[1.75rem]">
+                            {featured.price_label ?? 'Lihat detail'}
+                        </span>
+                    </div>
                     {featured.cta?.url && (
                         <a
                             href={featured.cta.url}
                             className={cn(
-                                'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold text-white transition hover:brightness-105',
+                                'inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-105',
                                 theme.accent,
                             )}
                         >
@@ -282,22 +333,34 @@ export function DiscoveryFeaturedShowcase({
                     )}
                 </div>
             </div>
-            <div className="relative overflow-hidden rounded-[30px] border border-slate-200 bg-slate-900 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.4)]">
+            <div className="relative min-h-[360px] overflow-hidden rounded-[30px] border border-slate-200 bg-slate-900 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.4)] sm:min-h-[440px] xl:min-h-[560px]">
                 <img
                     src={itemImage(featured)}
                     alt={itemTitle(featured)}
-                    className="h-full min-h-[280px] w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-transparent" />
-                <div className="absolute right-5 bottom-5 left-5 rounded-3xl border border-white/14 bg-black/30 p-4 text-white backdrop-blur-md">
-                    <div className="flex items-center justify-between gap-3">
-                        <div>
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/26 to-transparent" />
+                <div className="absolute inset-x-5 bottom-5 rounded-[28px] border border-white/14 bg-black/32 p-4 text-white backdrop-blur-md sm:inset-x-6 sm:bottom-6 sm:p-5">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold tracking-[0.16em] text-white/70 uppercase">
                                 Spotlight
                             </p>
-                            <p className="mt-2 text-lg font-semibold leading-tight">
+                            <p className="mt-2 line-clamp-2 text-lg font-semibold leading-tight sm:text-xl">
                                 {itemTitle(featured)}
                             </p>
+                            {meta.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {meta.slice(0, 2).map((entry) => (
+                                        <span
+                                            key={entry}
+                                            className="rounded-full border border-white/16 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white/88"
+                                        >
+                                            {entry}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                         {featured.badge && (
                             <span className="rounded-full border border-white/14 bg-white/12 px-3 py-1 text-xs font-semibold text-white/90">
