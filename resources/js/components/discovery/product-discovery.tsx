@@ -2,9 +2,17 @@ import { Search, SlidersHorizontal, Sparkles, X } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
+export type DiscoverySuggestionItem = {
+    label: string;
+    value?: string;
+    query?: string;
+    kind?: 'text' | 'product';
+    image?: string | null;
+};
+
 export type DiscoverySuggestionGroup = {
     label: string;
-    items: string[];
+    items: Array<string | DiscoverySuggestionItem>;
     icon?: ReactNode;
 };
 
@@ -77,6 +85,27 @@ export function formatAppliedDiscoveryFilters(
         .filter(Boolean);
 }
 
+function normalizeSuggestionItem(
+    item: string | DiscoverySuggestionItem,
+): DiscoverySuggestionItem {
+    if (typeof item === 'string') {
+        return {
+            label: item,
+            value: item,
+            query: item,
+            kind: 'text',
+        };
+    }
+
+    return {
+        label: item.label,
+        value: item.value ?? item.label,
+        query: item.query ?? item.value ?? item.label,
+        kind: item.kind ?? 'text',
+        image: item.image ?? null,
+    };
+}
+
 function groupRemoteSuggestions(items: unknown[]): DiscoverySuggestionGroup[] {
     const labels: Record<string, string> = {
         keyword: 'Pencarian populer',
@@ -86,14 +115,23 @@ function groupRemoteSuggestions(items: unknown[]): DiscoverySuggestionGroup[] {
         facility: 'Fasilitas',
         mentor: 'Mentor',
     };
-    const groups = new Map<string, string[]>();
+    const priorities: Record<string, number> = {
+        Produk: 0,
+        'Pencarian populer': 1,
+        Lokasi: 2,
+        Kategori: 3,
+        Fasilitas: 4,
+        Mentor: 5,
+    };
+    const groups = new Map<string, DiscoverySuggestionItem[]>();
 
     items.forEach((item) => {
         if (!item || typeof item !== 'object') return;
         const row = item as {
             type?: unknown;
             label?: unknown;
-            metadata?: { query?: unknown };
+            value?: unknown;
+            metadata?: { query?: unknown; image?: unknown };
         };
         const type = typeof row.type === 'string' ? row.type : 'keyword';
         const label =
@@ -104,13 +142,36 @@ function groupRemoteSuggestions(items: unknown[]): DiscoverySuggestionGroup[] {
                   : '';
         if (!label.trim()) return;
         const groupLabel = labels[type] ?? labels.keyword;
-        groups.set(groupLabel, [...(groups.get(groupLabel) ?? []), label]);
+        const nextItem: DiscoverySuggestionItem = {
+            label,
+            value: typeof row.value === 'string' ? row.value : label,
+            query: label,
+            kind: type === 'product' ? 'product' : 'text',
+            image:
+                type === 'product' && typeof row.metadata?.image === 'string'
+                    ? row.metadata.image
+                    : null,
+        };
+        groups.set(groupLabel, [...(groups.get(groupLabel) ?? []), nextItem]);
     });
 
-    return Array.from(groups.entries()).map(([label, values]) => ({
-        label,
-        items: Array.from(new Set(values)).slice(0, 6),
-    }));
+    return Array.from(groups.entries())
+        .map(([label, values]) => ({
+            label,
+            items: values.filter(
+                (value, index, self) =>
+                    self.findIndex(
+                        (item) =>
+                            item.label.toLowerCase() ===
+                                value.label.toLowerCase() &&
+                            item.kind === value.kind,
+                    ) === index,
+            ),
+        }))
+        .sort(
+            (a, b) =>
+                (priorities[a.label] ?? 99) - (priorities[b.label] ?? 99),
+        );
 }
 
 export function DiscoverySearchField({
@@ -135,20 +196,51 @@ export function DiscoverySearchField({
         DiscoverySuggestionGroup[]
     >([]);
     const query = value.trim().toLowerCase();
+    const normalizedSuggestions = useMemo(
+        () =>
+            suggestions.map((group) => ({
+                ...group,
+                items: group.items.map(normalizeSuggestionItem),
+            })),
+        [suggestions],
+    );
     const mergedSuggestions = useMemo(
-        () => [...remoteGroups, ...suggestions],
-        [remoteGroups, suggestions],
+        () => [...remoteGroups, ...normalizedSuggestions],
+        [normalizedSuggestions, remoteGroups],
     );
     const filteredGroups = useMemo(() => {
         return mergedSuggestions
             .map((group) => ({
                 ...group,
                 items: group.items
-                    .filter((item, index, self) => self.indexOf(item) === index)
-                    .filter((item) =>
-                        query ? item.toLowerCase().includes(query) : true,
+                    .map(normalizeSuggestionItem)
+                    .filter(
+                        (item, index, self) =>
+                            self.findIndex(
+                                (candidate) =>
+                                    candidate.label.toLowerCase() ===
+                                        item.label.toLowerCase() &&
+                                    candidate.kind === item.kind,
+                            ) === index,
                     )
-                    .slice(0, query ? 6 : 4),
+                    .filter((item) =>
+                        query
+                            ? item.label.toLowerCase().includes(query) ||
+                              (item.query ?? '')
+                                  .toLowerCase()
+                                  .includes(query)
+                            : true,
+                    )
+                    .slice(
+                        0,
+                        group.label === 'Produk'
+                            ? query
+                                ? 4
+                                : 3
+                            : query
+                              ? 6
+                              : 4,
+                    ),
             }))
             .filter((group) => group.items.length > 0);
     }, [mergedSuggestions, query]);
@@ -225,19 +317,51 @@ export function DiscoverySearchField({
                             </div>
                             {group.items.map((item) => (
                                 <button
-                                    key={`${group.label}-${item}`}
+                                    key={`${group.label}-${item.kind}-${item.label}`}
                                     type="button"
-                                    className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-sky-50 hover:text-sky-700"
+                                    className={cn(
+                                        'flex w-full rounded-xl text-left hover:bg-sky-50 hover:text-sky-700',
+                                        item.kind === 'product'
+                                            ? 'items-center gap-3 px-3 py-2.5'
+                                            : 'items-center justify-between px-3 py-2',
+                                    )}
                                     onMouseDown={(event) =>
                                         event.preventDefault()
                                     }
                                     onClick={() => {
                                         setFocused(false);
-                                        onSuggestionSelect(item);
+                                        onSuggestionSelect(
+                                            item.query ?? item.label,
+                                        );
                                     }}
                                 >
-                                    <span>{item}</span>
-                                    <Search className="h-3.5 w-3.5 text-slate-300" />
+                                    {item.kind === 'product' ? (
+                                        <>
+                                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                                                <img
+                                                    src={
+                                                        item.image ??
+                                                        '/images/placeholder-card.jpg'
+                                                    }
+                                                    alt={item.label}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="truncate text-sm font-semibold text-slate-800">
+                                                    {item.label}
+                                                </div>
+                                                <div className="text-xs text-slate-400">
+                                                    Rekomendasi produk
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>{item.label}</span>
+                                            <Search className="h-3.5 w-3.5 text-slate-300" />
+                                        </>
+                                    )}
                                 </button>
                             ))}
                         </div>
