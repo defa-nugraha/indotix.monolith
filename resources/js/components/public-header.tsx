@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import type { FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { BadgePercent, Bell, History, LayoutGrid, LogOut, Menu, MessageCircle, ShoppingCart, UserCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -18,6 +18,21 @@ export type PublicHeaderSearch = {
     onChange?: (value: string) => void;
     placeholder?: string;
     onSubmit?: (event: FormEvent) => void;
+};
+
+type HeaderDiscoveryProduct = {
+    type: 'product';
+    label: string;
+    image?: string | null;
+    url?: string | null;
+    product_type_label?: string;
+};
+
+type HeaderDiscoveryKeyword = {
+    type: 'keyword';
+    label: string;
+    url?: string | null;
+    product_type_label?: string;
 };
 
 export type PublicHeaderProps = {
@@ -58,6 +73,12 @@ export default function PublicHeader({
     const hasChips = chips.length > 0;
     const dashboardHref = role === 'mitra' ? '/mitra/dashboard' : '/dashboard';
     const dashboardLabel = role === 'mitra' ? 'Dashboard Mitra' : 'Dashboard';
+    const [topbarSearchValue, setTopbarSearchValue] = useState(search?.value ?? '');
+    const [topbarOpen, setTopbarOpen] = useState(false);
+    const [topbarProducts, setTopbarProducts] = useState<HeaderDiscoveryProduct[]>([]);
+    const [topbarKeywords, setTopbarKeywords] = useState<HeaderDiscoveryKeyword[]>([]);
+    const searchWrapperRef = useRef<HTMLDivElement | null>(null);
+    const activeSearchValue = search?.value ?? topbarSearchValue;
 
     const handleLogout = () => {
         router.flushAll();
@@ -71,19 +92,115 @@ export default function PublicHeader({
         { label: 'Notifikasi', href: '/notifications', icon: Bell, show: true },
     ];
 
+    useEffect(() => {
+        if (!topbarOpen) {
+            return undefined;
+        }
+
+        const handlePointerDown = (event: MouseEvent) => {
+            if (
+                searchWrapperRef.current &&
+                !searchWrapperRef.current.contains(event.target as Node)
+            ) {
+                setTopbarOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handlePointerDown);
+        return () => {
+            document.removeEventListener('mousedown', handlePointerDown);
+        };
+    }, [topbarOpen]);
+
+    useEffect(() => {
+        if (!showSearch || !topbarOpen) {
+            return undefined;
+        }
+
+        const controller = new AbortController();
+        const timer = window.setTimeout(async () => {
+            try {
+                const target = new URL('/api/discovery/global/suggestions', window.location.origin);
+                const keyword = activeSearchValue.trim();
+
+                target.searchParams.set('product_limit', '6');
+                target.searchParams.set('keyword_limit', '8');
+                if (keyword) {
+                    target.searchParams.set('q', keyword);
+                }
+
+                const response = await fetch(target.toString(), {
+                    headers: { Accept: 'application/json' },
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                setTopbarProducts(
+                    Array.isArray(payload?.data?.products)
+                        ? payload.data.products
+                        : [],
+                );
+                setTopbarKeywords(
+                    Array.isArray(payload?.data?.popular_searches)
+                        ? payload.data.popular_searches
+                        : [],
+                );
+            } catch (error) {
+                if ((error as Error).name !== 'AbortError') {
+                    setTopbarProducts([]);
+                    setTopbarKeywords([]);
+                }
+            }
+        }, 220);
+
+        return () => {
+            window.clearTimeout(timer);
+            controller.abort();
+        };
+    }, [activeSearchValue, showSearch, topbarOpen]);
+
+    const handleTopbarChange = (value: string) => {
+        if (search?.onChange) {
+            search.onChange(value);
+            return;
+        }
+
+        setTopbarSearchValue(value);
+    };
+
+    const handleTopbarNavigate = (url?: string | null, nextValue?: string) => {
+        if (nextValue) {
+            handleTopbarChange(nextValue);
+        }
+
+        setTopbarOpen(false);
+
+        if (url) {
+            router.visit(url);
+        }
+    };
+
     const renderSearch = (className?: string) => {
-        const controlledValue = search?.value;
-        const valueProps = controlledValue !== undefined ? { value: controlledValue } : {};
+        const showDiscovery = topbarOpen && (topbarProducts.length > 0 || topbarKeywords.length > 0);
+
         return (
-            <div className={cn('flex w-full min-w-0 items-center', className)}>
+            <div
+                className={cn('relative flex w-full min-w-0 items-center', className)}
+                ref={searchWrapperRef}
+            >
                 {search?.onSubmit ? (
                     <form className="w-full min-w-0" onSubmit={search.onSubmit}>
                         <input
                             type="text"
                             placeholder={search.placeholder ?? 'Cari kota/hotel/wisata/event...'}
                             className="h-12 w-full min-w-0 rounded-full border border-slate-200 px-5 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                            {...valueProps}
-                            onChange={(event) => search.onChange?.(event.target.value)}
+                            value={activeSearchValue}
+                            onChange={(event) => handleTopbarChange(event.target.value)}
+                            onFocus={() => setTopbarOpen(true)}
                         />
                     </form>
                 ) : (
@@ -91,9 +208,79 @@ export default function PublicHeader({
                         type="text"
                         placeholder={search?.placeholder ?? 'Cari kota/hotel/wisata/event...'}
                         className="h-12 w-full min-w-0 rounded-full border border-slate-200 px-5 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        {...valueProps}
-                        onChange={(event) => search?.onChange?.(event.target.value)}
+                        value={activeSearchValue}
+                        onChange={(event) => handleTopbarChange(event.target.value)}
+                        onFocus={() => setTopbarOpen(true)}
                     />
+                )}
+                {showDiscovery && (
+                    <div className="absolute top-full left-0 right-0 z-50 mt-3 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_80px_-34px_rgba(15,23,42,0.35)]">
+                        {topbarProducts.length > 0 && (
+                            <div className="border-b border-slate-100 p-4">
+                                <div className="px-1 text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase">
+                                    Rekomendasi produk
+                                </div>
+                                <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                                    {topbarProducts.map((item) => (
+                                        <button
+                                            key={`${item.label}-${item.url ?? item.product_type_label}`}
+                                            type="button"
+                                            className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 text-left transition hover:border-sky-200 hover:bg-sky-50"
+                                            onMouseDown={(event) => event.preventDefault()}
+                                            onClick={() =>
+                                                handleTopbarNavigate(
+                                                    item.url,
+                                                    item.label,
+                                                )
+                                            }
+                                        >
+                                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-slate-100">
+                                                <img
+                                                    src={item.image ?? '/images/placeholder-card.jpg'}
+                                                    alt={item.label}
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="truncate text-sm font-semibold text-slate-900">
+                                                    {item.label}
+                                                </div>
+                                                <div className="mt-1 text-xs text-slate-500">
+                                                    {item.product_type_label ?? 'Produk pilihan'}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {topbarKeywords.length > 0 && (
+                            <div className="p-4">
+                                <div className="px-1 text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase">
+                                    Pencarian populer
+                                </div>
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {topbarKeywords.map((item) => (
+                                        <button
+                                            key={`${item.label}-${item.product_type_label}`}
+                                            type="button"
+                                            className="rounded-full border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                                            onMouseDown={(event) => event.preventDefault()}
+                                            onClick={() =>
+                                                handleTopbarNavigate(
+                                                    item.url,
+                                                    item.label,
+                                                )
+                                            }
+                                        >
+                                            {item.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
         );

@@ -27,6 +27,13 @@ class DiscoveryController extends Controller
         return response()->json($this->discoveryService->suggestions($type, $request));
     }
 
+    public function globalSuggestions(Request $request): JsonResponse
+    {
+        $this->forceJsonResponse($request);
+
+        return response()->json($this->discoveryService->globalSuggestions($request));
+    }
+
     public function filters(Request $request, string $type): JsonResponse
     {
         $this->forceJsonResponse($request);

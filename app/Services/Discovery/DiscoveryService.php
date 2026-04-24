@@ -112,6 +112,31 @@ class DiscoveryService
         ];
     }
 
+    public function globalSuggestions(Request $request): array
+    {
+        $data = Validator::make($request->query(), [
+            'q' => ['nullable', 'string', 'max:255'],
+            'product_limit' => ['nullable', 'integer', 'min:1', 'max:12'],
+            'keyword_limit' => ['nullable', 'integer', 'min:1', 'max:12'],
+        ])->validate();
+
+        $query = $this->cleanText($data['q'] ?? null) ?? '';
+        $productLimit = max(3, min(8, (int) ($data['product_limit'] ?? 6)));
+        $keywordLimit = max(4, min(10, (int) ($data['keyword_limit'] ?? 8)));
+
+        return [
+            'data' => [
+                'products' => $this->globalProductSuggestions($query, $productLimit),
+                'popular_searches' => $this->globalPopularSearches($query, $keywordLimit),
+            ],
+            'meta' => [
+                'q' => $query !== '' ? $query : null,
+                'product_limit' => $productLimit,
+                'keyword_limit' => $keywordLimit,
+            ],
+        ];
+    }
+
     public function metadata(): array
     {
         return [
@@ -262,6 +287,108 @@ class DiscoveryService
         return collect(array_merge($static, $keywordChips))
             ->unique(fn ($item) => strtolower((string) ($item['label'] ?? '')))
             ->take(6)
+            ->values()
+            ->all();
+    }
+
+    private function globalProductSuggestions(string $query, int $limit): array
+    {
+        $types = array_keys(self::TYPES);
+        $primary = collect($types)
+            ->map(function (string $type) use ($query) {
+                $pool = $this->globalProductPool($type, $query);
+                if ($pool->isEmpty()) {
+                    return null;
+                }
+
+                return $query !== ''
+                    ? $pool->first()
+                    : $pool->shuffle()->first();
+            })
+            ->filter()
+            ->values();
+
+        if ($primary->count() >= $limit) {
+            return $primary->take($limit)->values()->all();
+        }
+
+        $pickedUrls = $primary->pluck('url')->filter()->values()->all();
+        $extra = collect($types)
+            ->flatMap(fn (string $type) => $this->globalProductPool($type, $query))
+            ->reject(fn (array $item) => in_array($item['url'] ?? null, $pickedUrls, true))
+            ->values();
+
+        if ($query === '') {
+            $extra = $extra->shuffle();
+        }
+
+        return $primary
+            ->concat($extra)
+            ->unique(fn (array $item) => strtolower((string) ($item['url'] ?? $item['label'] ?? '')))
+            ->take($limit)
+            ->values()
+            ->all();
+    }
+
+    private function globalProductPool(string $type, string $query): Collection
+    {
+        $cacheKey = 'discovery:global:products:'.$type.':'.md5($query !== '' ? $query : 'default');
+
+        return collect(Cache::remember($cacheKey, now()->addMinutes($query !== '' ? 3 : 10), function () use ($type, $query) {
+            $filters = [
+                'q' => $query !== '' ? $query : null,
+                'sort' => $query !== '' ? 'relevant' : 'popular',
+            ];
+
+            $items = collect($this->mapListingItems(
+                $type,
+                $this->listingQuery($type, $filters)
+                    ->limit($query !== '' ? 4 : 6)
+                    ->get()
+            ));
+
+            return $items
+                ->map(fn (array $item) => $this->mapGlobalProductSuggestion($type, $item))
+                ->filter()
+                ->values()
+                ->all();
+        }));
+    }
+
+    private function mapGlobalProductSuggestion(string $type, array $item): ?array
+    {
+        $label = $item['title'] ?? $item['name'] ?? null;
+        $url = $item['cta']['url'] ?? null;
+
+        if (! $label || ! $url) {
+            return null;
+        }
+
+        return [
+            'type' => 'product',
+            'product_type' => $type,
+            'product_type_label' => $this->typeLabel($type),
+            'label' => $label,
+            'image' => $item['image_url'] ?? $item['image'] ?? '/images/placeholder-card.jpg',
+            'url' => $url,
+        ];
+    }
+
+    private function globalPopularSearches(string $query, int $limit): array
+    {
+        return collect(array_keys(self::TYPES))
+            ->flatMap(function (string $type) use ($query) {
+                return collect($this->popularKeywords($type, $query))
+                    ->map(fn (string $keyword) => [
+                        'label' => $keyword,
+                        'type' => 'keyword',
+                        'product_type' => $type,
+                        'product_type_label' => $this->typeLabel($type),
+                        'url' => $this->typeBrowseUrl($type, ['q' => $keyword]),
+                    ]);
+            })
+            ->unique(fn (array $item) => strtolower((string) $item['label']))
+            ->take($limit)
             ->values()
             ->all();
     }
@@ -2145,6 +2272,25 @@ class DiscoveryService
     private function facilityLabel(string $facility): string
     {
         return ucwords(str_replace(['_', '-'], ' ', $facility));
+    }
+
+    private function typeBrowseUrl(string $type, array $query = []): string
+    {
+        $path = match ($type) {
+            'events' => '/events',
+            'hotels' => '/stay',
+            'wisata' => '/wisata',
+            'academy' => '/academy',
+            'special-programs' => '/special-programs',
+            'souvenirs' => '/retail-shop',
+        };
+
+        $queryString = http_build_query(array_filter(
+            $query,
+            fn ($value) => $value !== null && $value !== ''
+        ));
+
+        return $queryString !== '' ? $path.'?'.$queryString : $path;
     }
 
     private function typeLabel(string $type): string

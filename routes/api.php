@@ -19,6 +19,7 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::prefix('discovery')->group(function () {
+    Route::get('global/suggestions', [\App\Http\Controllers\Api\DiscoveryController::class, 'globalSuggestions']);
     Route::get('metadata', [\App\Http\Controllers\Api\DiscoveryController::class, 'metadata']);
     Route::get('{type}', [\App\Http\Controllers\Api\DiscoveryController::class, 'index'])
         ->where('type', 'events|hotels|wisata|academy|special-programs|souvenirs');
