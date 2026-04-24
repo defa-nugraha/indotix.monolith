@@ -4,7 +4,6 @@ import {
     DiscoveryCollectionRail,
     DiscoveryFeaturedShowcase,
     DiscoveryIntentRow,
-    DiscoveryStoryHero,
     type DiscoveryExperiencePayload,
     type DiscoveryIntentChip,
     type DiscoveryTheme,
@@ -282,16 +281,117 @@ export default function WisataSearch({
                 {isReady && (
                     <>
                         <section className="mb-6 space-y-6">
-                            <DiscoveryStoryHero
-                                theme={discoveryTheme}
-                                editorial={discovery?.editorial}
-                                quickCategories={discovery?.quick_categories}
-                                totalLabel={
-                                    meta?.total
-                                        ? `${meta.total} destinasi siap dieksplor`
-                                        : 'Discovery wisata aktif'
-                                }
-                            />
+                            <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
+                                    <form
+                                        className="grid gap-4 md:grid-cols-[2fr_1.5fr_1fr_auto]"
+                                        onSubmit={submitSearch}
+                                    >
+                                        <div className="grid gap-2">
+                                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                                Kota atau destinasi wisata
+                                            </label>
+                                            <DiscoverySearchField
+                                                value={form.q}
+                                                onChange={(value) =>
+                                                    setForm((prev) => ({
+                                                        ...prev,
+                                                        q: value,
+                                                    }))
+                                                }
+                                                onSuggestionSelect={
+                                                    applySuggestion
+                                                }
+                                                placeholder="Cari kota atau nama destinasi"
+                                                suggestions={suggestionGroups}
+                                                suggestionEndpoint="/api/discovery/wisata/suggestions"
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                                Tanggal kunjungan
+                                            </label>
+                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                                <span className="text-slate-400">
+                                                    📅
+                                                </span>
+                                                <input
+                                                    type="date"
+                                                    value={form.visit_date}
+                                                    onChange={(event) =>
+                                                        setForm((prev) => ({
+                                                            ...prev,
+                                                            visit_date:
+                                                                event.target
+                                                                    .value,
+                                                        }))
+                                                    }
+                                                    className="w-full bg-transparent outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-xs font-semibold text-slate-500 uppercase">
+                                                Jumlah tiket
+                                            </label>
+                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
+                                                <span className="text-slate-400">
+                                                    🎟️
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    min={1}
+                                                    value={form.quantity}
+                                                    onChange={(event) =>
+                                                        setForm((prev) => ({
+                                                            ...prev,
+                                                            quantity: Number(
+                                                                event.target
+                                                                    .value,
+                                                            ),
+                                                        }))
+                                                    }
+                                                    className="w-20 bg-transparent outline-none"
+                                                />
+                                            </div>
+                                        </div>
+                                        <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
+                                            Cari
+                                        </button>
+                                    </form>
+                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                        <div className="text-sm font-semibold text-sky-700">
+                                            Discovery wisata yang terarah
+                                        </div>
+                                        <DiscoverySortSelect
+                                            className="md:w-64"
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={applySort}
+                                        />
+                                    </div>
+                                    <ActiveFilterChips
+                                        filters={activeFilters}
+                                        onReset={resetDiscovery}
+                                    />
+                                    <DiscoveryInsightStrip
+                                        tips={[
+                                            {
+                                                title: 'Kuota sesuai tanggal',
+                                                body: 'Hasil wisata mengikuti tanggal kunjungan dan jumlah tiket yang dipilih.',
+                                                icon: (
+                                                    <Ticket className="h-5 w-5" />
+                                                ),
+                                            },
+                                            {
+                                                title: 'Eksplor berdasarkan tipe',
+                                                body: 'Gunakan kategori seperti alam, budaya, edukasi, atau keluarga.',
+                                                icon: (
+                                                    <MapPinned className="h-5 w-5" />
+                                                ),
+                                            },
+                                        ]}
+                                    />
+                                </div>
 
                             <DiscoveryIntentRow
                                 chips={discovery?.intent_chips ?? []}
@@ -388,143 +488,7 @@ export default function WisataSearch({
                             )}
                         </section>
 
-                        <section className="mb-6">
-                            <div className="relative overflow-hidden rounded-[28px] shadow-lg">
-                                <img
-                                    src={
-                                        fallbackImage ??
-                                        '/images/placeholder-card.jpg'
-                                    }
-                                    alt="Wisata"
-                                    className="h-44 w-full object-cover sm:h-56 md:h-72"
-                                />
-                                <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-r from-black/60 via-black/45 to-transparent" />
-                                <div className="absolute top-1/2 right-4 left-4 -translate-y-1/2 text-center text-white sm:right-8 sm:left-8">
-                                    <h1 className="text-lg font-semibold sm:text-xl md:text-3xl">
-                                        Mau ke mana dulu? Pesan tiket wisata
-                                        favoritmu di INDOTIX
-                                    </h1>
-                                    <p className="mt-2 text-xs text-white/85 sm:text-sm">
-                                        Pilih destinasi, tentukan tanggal, lalu
-                                        nikmati liburan tanpa ribet.
-                                    </p>
-                                </div>
-                            </div>
 
-                            <div className="-mt-14 px-4 sm:-mt-20 sm:px-6 md:-mt-24">
-                                <div className="relative z-20 rounded-[24px] bg-white p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)]">
-                                    <form
-                                        className="grid gap-4 md:grid-cols-[2fr_1.5fr_1fr_auto]"
-                                        onSubmit={submitSearch}
-                                    >
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Kota atau destinasi wisata
-                                            </label>
-                                            <DiscoverySearchField
-                                                value={form.q}
-                                                onChange={(value) =>
-                                                    setForm((prev) => ({
-                                                        ...prev,
-                                                        q: value,
-                                                    }))
-                                                }
-                                                onSuggestionSelect={
-                                                    applySuggestion
-                                                }
-                                                placeholder="Cari kota atau nama destinasi"
-                                                suggestions={suggestionGroups}
-                                                suggestionEndpoint="/api/discovery/wisata/suggestions"
-                                            />
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Tanggal kunjungan
-                                            </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    📅
-                                                </span>
-                                                <input
-                                                    type="date"
-                                                    value={form.visit_date}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            visit_date:
-                                                                event.target
-                                                                    .value,
-                                                        }))
-                                                    }
-                                                    className="w-full bg-transparent outline-none"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-xs font-semibold text-slate-500 uppercase">
-                                                Jumlah tiket
-                                            </label>
-                                            <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                                <span className="text-slate-400">
-                                                    🎟️
-                                                </span>
-                                                <input
-                                                    type="number"
-                                                    min={1}
-                                                    value={form.quantity}
-                                                    onChange={(event) =>
-                                                        setForm((prev) => ({
-                                                            ...prev,
-                                                            quantity: Number(
-                                                                event.target
-                                                                    .value,
-                                                            ),
-                                                        }))
-                                                    }
-                                                    className="w-20 bg-transparent outline-none"
-                                                />
-                                            </div>
-                                        </div>
-                                        <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
-                                            Cari
-                                        </button>
-                                    </form>
-                                    <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                        <div className="text-sm font-semibold text-sky-700">
-                                            Destinasi rekomendasi untukmu
-                                        </div>
-                                        <DiscoverySortSelect
-                                            className="md:w-64"
-                                            value={sort}
-                                            options={sortOptions}
-                                            onChange={applySort}
-                                        />
-                                    </div>
-                                    <ActiveFilterChips
-                                        filters={activeFilters}
-                                        onReset={resetDiscovery}
-                                    />
-                                    <DiscoveryInsightStrip
-                                        tips={[
-                                            {
-                                                title: 'Kuota sesuai tanggal',
-                                                body: 'Hasil wisata mengikuti tanggal kunjungan dan jumlah tiket yang dipilih.',
-                                                icon: (
-                                                    <Ticket className="h-5 w-5" />
-                                                ),
-                                            },
-                                            {
-                                                title: 'Eksplor berdasarkan tipe',
-                                                body: 'Gunakan kategori seperti alam, budaya, edukasi, atau keluarga.',
-                                                icon: (
-                                                    <MapPinned className="h-5 w-5" />
-                                                ),
-                                            },
-                                        ]}
-                                    />
-                                </div>
-                            </div>
-                        </section>
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                             {filtered.map((item) => {

@@ -17,7 +17,6 @@ import {
     DiscoveryCollectionRail,
     DiscoveryFeaturedShowcase,
     DiscoveryIntentRow,
-    DiscoveryStoryHero,
     type DiscoveryExperiencePayload,
     type DiscoveryIntentChip,
     type DiscoveryTheme,
@@ -271,38 +270,7 @@ export default function SpecialProgramSearch({
                 {isReady && (
                     <>
                         <section className="space-y-6">
-                            <DiscoveryStoryHero
-                                theme={discoveryTheme}
-                                editorial={discovery?.editorial}
-                                quickCategories={discovery?.quick_categories}
-                                totalLabel={
-                                    meta?.total
-                                        ? `${meta.total} program siap dipertimbangkan`
-                                        : 'Discovery program aktif'
-                                }
-                            />
-
-                            <DiscoveryIntentRow
-                                chips={discovery?.intent_chips ?? []}
-                                onSelect={applyIntent}
-                            />
-
-                            <DiscoveryFeaturedShowcase
-                                section={discovery?.featured}
-                                theme={discoveryTheme}
-                            />
-
-                            {discoverySections
-                                .slice(0, 2)
-                                .map((section) => (
-                                    <DiscoveryCollectionRail
-                                        key={section.key}
-                                        section={section}
-                                        theme={discoveryTheme}
-                                    />
-                                ))}
-
-                            <div className="sticky top-20 z-20 rounded-[28px] border border-slate-200 bg-white/95 p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)] backdrop-blur">
+                            <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
                                 <form
                                     className="grid gap-4 md:grid-cols-[2fr_1fr_auto]"
                                     onSubmit={submitSearch}
@@ -397,6 +365,28 @@ export default function SpecialProgramSearch({
                                     ]}
                                 />
                             </div>
+
+                            <DiscoveryIntentRow
+                                chips={discovery?.intent_chips ?? []}
+                                onSelect={applyIntent}
+                            />
+
+                            <DiscoveryFeaturedShowcase
+                                section={discovery?.featured}
+                                theme={discoveryTheme}
+                            />
+
+                            {discoverySections
+                                .slice(0, 2)
+                                .map((section) => (
+                                    <DiscoveryCollectionRail
+                                        key={section.key}
+                                        section={section}
+                                        theme={discoveryTheme}
+                                    />
+                                ))}
+
+
                         </section>
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">

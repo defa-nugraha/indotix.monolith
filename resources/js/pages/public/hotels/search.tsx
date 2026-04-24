@@ -25,7 +25,6 @@ import {
     DiscoveryCollectionRail,
     DiscoveryFeaturedShowcase,
     DiscoveryIntentRow,
-    DiscoveryStoryHero,
     type DiscoveryExperiencePayload,
     type DiscoveryIntentChip,
     type DiscoveryTheme,
@@ -384,61 +383,7 @@ export default function HotelSearch({
                 {isReady && (
                     <>
                         <section className="mb-6 space-y-6">
-                            <DiscoveryStoryHero
-                                theme={discoveryTheme}
-                                editorial={discovery?.editorial}
-                                quickCategories={discovery?.quick_categories}
-                                totalLabel={
-                                    meta?.total
-                                        ? `${meta.total} hotel siap dibandingkan`
-                                        : 'Discovery hotel aktif'
-                                }
-                            />
-
-                            <DiscoveryIntentRow
-                                chips={discovery?.intent_chips ?? []}
-                                onSelect={applyIntent}
-                            />
-
-                            <DiscoveryFeaturedShowcase
-                                section={discovery?.featured}
-                                theme={discoveryTheme}
-                            />
-
-                            {discoverySections
-                                .slice(0, 2)
-                                .map((section) => (
-                                    <DiscoveryCollectionRail
-                                        key={section.key}
-                                        section={section}
-                                        theme={discoveryTheme}
-                                    />
-                                ))}
-                        </section>
-
-                        <section className="mb-6">
-                            <div className="relative overflow-hidden rounded-[28px] shadow-lg">
-                                <img
-                                    src="/images/placeholder-card.jpg"
-                                    alt="Hotel banner"
-                                    className="h-44 w-full object-cover sm:h-56 md:h-72"
-                                />
-                                <div className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-r from-black/60 via-black/45 to-transparent" />
-                                <div className="absolute top-1/2 right-4 left-4 -translate-y-1/2 text-center text-white sm:right-8 sm:left-8">
-                                    <h1 className="text-lg font-semibold sm:text-xl md:text-3xl">
-                                        Mau ke mana dulu? Booking hotel nyaman
-                                        lebih hemat di INDOTIX
-                                    </h1>
-                                    <p className="mt-2 text-xs text-white/85 sm:text-sm">
-                                        Temukan pilihan hotel, villa, resort,
-                                        dan banyak lagi — semua dalam satu
-                                        tempat.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="-mt-14 px-4 sm:-mt-20 sm:px-6 md:-mt-24">
-                                <div className="relative z-20 rounded-[24px] bg-white p-5 shadow-[0_18px_40px_-18px_rgba(15,23,42,0.35)]">
+                            <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
                                     <form
                                         className="grid gap-4 md:grid-cols-[2fr_2fr_1.5fr_auto]"
                                         onSubmit={submitSearch}
@@ -725,8 +670,7 @@ export default function HotelSearch({
                                     </form>
                                     <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                         <div className="text-sm font-semibold text-sky-700">
-                                            Hotel yang relevan dengan
-                                            pencarianmu
+                                            Discovery hotel yang terarah
                                         </div>
                                         <DiscoverySortSelect
                                             className="md:w-64"
@@ -758,8 +702,29 @@ export default function HotelSearch({
                                         ]}
                                     />
                                 </div>
-                            </div>
+
+                            <DiscoveryIntentRow
+                                chips={discovery?.intent_chips ?? []}
+                                onSelect={applyIntent}
+                            />
+
+                            <DiscoveryFeaturedShowcase
+                                section={discovery?.featured}
+                                theme={discoveryTheme}
+                            />
+
+                            {discoverySections
+                                .slice(0, 2)
+                                .map((section) => (
+                                    <DiscoveryCollectionRail
+                                        key={section.key}
+                                        section={section}
+                                        theme={discoveryTheme}
+                                    />
+                                ))}
                         </section>
+
+
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
                             {filtered.map((hotel) => {

@@ -4,7 +4,6 @@ import {
     DiscoveryCollectionRail,
     DiscoveryFeaturedShowcase,
     DiscoveryIntentRow,
-    DiscoveryStoryHero,
     type DiscoveryExperiencePayload,
     type DiscoveryIntentChip,
     type DiscoveryTheme,
@@ -271,16 +270,92 @@ export default function SouvenirSearch({
                 {isReady && (
                     <>
                         <section className="space-y-6">
-                            <DiscoveryStoryHero
-                                theme={discoveryTheme}
-                                editorial={discovery?.editorial}
-                                quickCategories={discovery?.quick_categories}
-                                totalLabel={
-                                    meta?.total
-                                        ? `${meta.total} produk siap dibrowse`
-                                        : 'Discovery retail aktif'
-                                }
-                            />
+                            <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
+                                    <div className="flex flex-wrap items-center justify-between gap-4">
+                                    <div>
+                                        <h1 className="text-2xl font-semibold text-slate-900">
+                                            Retail Shop Pilihan
+                                        </h1>
+                                        <p className="mt-2 text-sm text-slate-500">
+                                            Temukan produk khas daerah untuk
+                                            melengkapi perjalananmu.
+                                        </p>
+                                    </div>
+                                    <form
+                                        onSubmit={submitSearch}
+                                        className="flex w-full flex-wrap items-center gap-2 lg:w-auto"
+                                    >
+                                        <DiscoverySearchField
+                                            className="min-w-[260px] flex-1"
+                                            value={form.q}
+                                            onChange={(value) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    q: value,
+                                                }))
+                                            }
+                                            onSuggestionSelect={applySuggestion}
+                                            placeholder="Cari souvenir"
+                                            suggestions={suggestionGroups}
+                                            suggestionEndpoint="/api/discovery/souvenirs/suggestions"
+                                        />
+                                        <select
+                                            className="h-12 rounded-xl border border-slate-200 px-3 text-sm"
+                                            value={form.category_id}
+                                            onChange={(event) =>
+                                                setForm((prev) => ({
+                                                    ...prev,
+                                                    category_id: event.target.value,
+                                                }))
+                                            }
+                                        >
+                                            <option value="">Semua kategori</option>
+                                            {categories.map((category) => (
+                                                <option
+                                                    key={category.id}
+                                                    value={category.id}
+                                                >
+                                                    {category.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <button className="h-12 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white">
+                                            Cari
+                                        </button>
+                                    </form>
+                                </div>
+                                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div className="text-sm font-semibold text-sky-700">
+                                        Produk populer dan stok tersedia
+                                    </div>
+                                    <DiscoverySortSelect
+                                        className="md:w-64"
+                                        value={sort}
+                                        options={sortOptions}
+                                        onChange={applySort}
+                                    />
+                                </div>
+                                <ActiveFilterChips
+                                    filters={activeFilters}
+                                    onReset={resetDiscovery}
+                                />
+                                <DiscoveryInsightStrip
+                                    tips={[
+                                        {
+                                            title: 'Cek stok produk',
+                                            body: 'Produk retail lebih mudah dipilih saat stok dan kategori langsung terlihat.',
+                                            icon: (
+                                                <ShoppingBag className="h-5 w-5" />
+                                            ),
+                                        },
+                                        {
+                                            title: 'Cari oleh kategori',
+                                            body: 'Gunakan kategori untuk menemukan souvenir yang paling relevan.',
+                                            icon: <Star className="h-5 w-5" />,
+                                        },
+                                    ]}
+                                />
+                        </section>
 
                             <DiscoveryIntentRow
                                 chips={discovery?.intent_chips ?? []}
@@ -303,92 +378,7 @@ export default function SouvenirSearch({
                                 ))}
                         </section>
 
-                        <section className="rounded-2xl bg-white p-6 shadow-sm">
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                <div>
-                                    <h1 className="text-2xl font-semibold text-slate-900">
-                                        Retail Shop Pilihan
-                                    </h1>
-                                    <p className="mt-2 text-sm text-slate-500">
-                                        Temukan produk khas daerah untuk
-                                        melengkapi perjalananmu.
-                                    </p>
-                                </div>
-                                <form
-                                    onSubmit={submitSearch}
-                                    className="flex w-full flex-wrap items-center gap-2 lg:w-auto"
-                                >
-                                    <DiscoverySearchField
-                                        className="min-w-[260px] flex-1"
-                                        value={form.q}
-                                        onChange={(value) =>
-                                            setForm((prev) => ({
-                                                ...prev,
-                                                q: value,
-                                            }))
-                                        }
-                                        onSuggestionSelect={applySuggestion}
-                                        placeholder="Cari souvenir"
-                                        suggestions={suggestionGroups}
-                                        suggestionEndpoint="/api/discovery/souvenirs/suggestions"
-                                    />
-                                    <select
-                                        className="h-12 rounded-xl border border-slate-200 px-3 text-sm"
-                                        value={form.category_id}
-                                        onChange={(event) =>
-                                            setForm((prev) => ({
-                                                ...prev,
-                                                category_id: event.target.value,
-                                            }))
-                                        }
-                                    >
-                                        <option value="">Semua kategori</option>
-                                        {categories.map((category) => (
-                                            <option
-                                                key={category.id}
-                                                value={category.id}
-                                            >
-                                                {category.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <button className="h-12 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white">
-                                        Cari
-                                    </button>
-                                </form>
-                            </div>
-                            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                <div className="text-sm font-semibold text-sky-700">
-                                    Produk populer dan stok tersedia
-                                </div>
-                                <DiscoverySortSelect
-                                    className="md:w-64"
-                                    value={sort}
-                                    options={sortOptions}
-                                    onChange={applySort}
-                                />
-                            </div>
-                            <ActiveFilterChips
-                                filters={activeFilters}
-                                onReset={resetDiscovery}
-                            />
-                            <DiscoveryInsightStrip
-                                tips={[
-                                    {
-                                        title: 'Cek stok produk',
-                                        body: 'Produk retail lebih mudah dipilih saat stok dan kategori langsung terlihat.',
-                                        icon: (
-                                            <ShoppingBag className="h-5 w-5" />
-                                        ),
-                                    },
-                                    {
-                                        title: 'Cari oleh kategori',
-                                        body: 'Gunakan kategori untuk menemukan souvenir yang paling relevan.',
-                                        icon: <Star className="h-5 w-5" />,
-                                    },
-                                ]}
-                            />
-                        </section>
+
 
                         <section className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
                             {filtered.map((product) => {
