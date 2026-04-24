@@ -89,10 +89,10 @@ const discoveryTheme: DiscoveryTheme = {
     title: 'Retail discovery yang mendorong browse spontan',
     description:
         'Halaman retail tidak lagi hanya katalog. User bisa masuk dari ready stock, best seller, pilihan hadiah, dan kategori yang sedang ramai.',
-    accent: 'bg-orange-500 hover:bg-orange-600',
+    accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
-        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#9a3412,#ea580c,#f59e0b)]',
-    surfaceClassName: 'bg-orange-50 text-orange-700',
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
+    surfaceClassName: 'bg-sky-50 text-sky-700',
     icon: ShoppingBag,
 };
 

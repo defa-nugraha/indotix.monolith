@@ -88,10 +88,10 @@ const discoveryTheme: DiscoveryTheme = {
     title: 'Jelajahi event lewat momentum, kota, dan tema favorit',
     description:
         'Pengguna tidak perlu mulai dari keyword. Discovery event sekarang dibuka lewat spotlight, intent, koleksi waktu, dan rekomendasi tematik.',
-    accent: 'bg-emerald-600 hover:bg-emerald-700',
+    accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
-        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#065f46,#0f766e,#0284c7)]',
-    surfaceClassName: 'bg-emerald-50 text-emerald-700',
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
+    surfaceClassName: 'bg-sky-50 text-sky-700',
     icon: CalendarCheck,
 };
 

@@ -108,10 +108,10 @@ const discoveryTheme: DiscoveryTheme = {
     title: 'Temukan destinasi dari tema perjalanan, bukan hanya nama tempat',
     description:
         'Discovery wisata diarahkan lewat inspirasi keluarga, alam, adventure, dan tiket yang ringan untuk dicoba terlebih dulu.',
-    accent: 'bg-emerald-600 hover:bg-emerald-700',
+    accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
-        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#166534,#0f766e,#14b8a6)]',
-    surfaceClassName: 'bg-emerald-50 text-emerald-700',
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
+    surfaceClassName: 'bg-sky-50 text-sky-700',
     icon: MapPinned,
 };
 

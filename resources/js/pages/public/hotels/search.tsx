@@ -116,7 +116,7 @@ const discoveryTheme: DiscoveryTheme = {
         'Discovery hotel dibuat lebih eksploratif: ada spotlight, intent staycation, budget picks, dan kota yang sedang ramai dicari.',
     accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
-        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#1d4ed8,#0ea5e9,#38bdf8)]',
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
     surfaceClassName: 'bg-sky-50 text-sky-700',
     icon: Ticket,
 };
@@ -418,7 +418,7 @@ export default function HotelSearch({
                                             >
                                                 <button
                                                     type="button"
-                                                    className={`flex w-full items-center gap-2 rounded-xl border px-4 py-3 text-sm ${dateOpen ? 'border-lime-500' : 'border-slate-200'}`}
+                                                    className={`flex w-full items-center gap-2 rounded-xl border px-4 py-3 text-sm ${dateOpen ? 'border-sky-500' : 'border-slate-200'}`}
                                                     onClick={() =>
                                                         setDateOpen(
                                                             (prev) => !prev,

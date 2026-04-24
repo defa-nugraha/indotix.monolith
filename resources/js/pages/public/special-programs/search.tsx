@@ -74,10 +74,10 @@ const discoveryTheme: DiscoveryTheme = {
     title: 'Temukan program dari value, urgency, dan kategori yang terasa relevan',
     description:
         'Discovery special program diarahkan lewat spotlight, intent, kuota terbatas, dan koleksi tematik supaya terasa lebih eksklusif.',
-    accent: 'bg-rose-600 hover:bg-rose-700',
+    accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
-        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#9f1239,#db2777,#7c3aed)]',
-    surfaceClassName: 'bg-rose-50 text-rose-700',
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
+    surfaceClassName: 'bg-sky-50 text-sky-700',
     icon: Star,
 };
 

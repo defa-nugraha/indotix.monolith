@@ -88,10 +88,10 @@ const discoveryTheme: DiscoveryTheme = {
     title: 'Masuk ke kelas dari intent belajar, bukan sekadar keyword',
     description:
         'Discovery academy dibuat seperti learning marketplace: ada spotlight, jalur pemula, topik populer, dan kelas yang waktunya paling dekat.',
-    accent: 'bg-violet-600 hover:bg-violet-700',
+    accent: 'bg-sky-600 hover:bg-sky-700',
     gradientClassName:
-        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#4c1d95,#7c3aed,#2563eb)]',
-    surfaceClassName: 'bg-violet-50 text-violet-700',
+        'bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_30%),linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)]',
+    surfaceClassName: 'bg-sky-50 text-sky-700',
     icon: BookOpen,
 };
 
