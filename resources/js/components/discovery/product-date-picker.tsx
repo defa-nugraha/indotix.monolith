@@ -77,11 +77,15 @@ function formatDateLabel(
 }
 
 function formatPriceLabel(price?: number | null): string {
-    if (typeof price === 'number' && price > 0) {
-        return 'Harga mulai';
+    if (typeof price !== 'number' || Number.isNaN(price)) {
+        return 'Mulai';
     }
 
-    return 'Lihat detail';
+    if (price <= 0) {
+        return 'Mulai Gratis';
+    }
+
+    return `Mulai ${new Intl.NumberFormat('id-ID').format(price)}`;
 }
 
 function DateCellContent({
