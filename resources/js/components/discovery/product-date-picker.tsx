@@ -34,8 +34,6 @@ type RangeDatePickerProps = {
     align?: 'left' | 'right';
 };
 
-const priceFormatter = new Intl.NumberFormat('id-ID');
-
 function parseDateValue(value?: string | null, fallback = new Date()): Date {
     if (!value) {
         return fallback;
@@ -80,7 +78,7 @@ function formatDateLabel(
 
 function formatPriceLabel(price?: number | null): string {
     if (typeof price === 'number' && price > 0) {
-        return `Harga mulai Rp${priceFormatter.format(price)}`;
+        return 'Harga mulai';
     }
 
     return 'Lihat detail';
