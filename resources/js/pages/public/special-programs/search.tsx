@@ -1,15 +1,10 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import {
-    Bell,
     CalendarCheck,
-    History as HistoryIcon,
     MapPinned,
-    MessageCircle,
     ShoppingBag,
     Star,
     Ticket,
-    UserCircle,
-    ShoppingCart,
     BadgePercent,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -22,12 +17,10 @@ import {
     type DiscoveryTheme,
 } from '@/components/discovery/discovery-experience';
 import {
-    ActiveFilterChips,
     DiscoveryEmptyState,
     DiscoveryInsightStrip,
     DiscoverySearchField,
     DiscoverySortSelect,
-    formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
@@ -81,24 +74,30 @@ const discoveryTheme: DiscoveryTheme = {
     icon: Star,
 };
 
+const specialProgramPopularChips = [
+    'Promo',
+    'Diskon',
+    'Flash Sale',
+    'Liburan',
+    'Eksklusif',
+    'Hemat',
+    'Highlight',
+    'Early Access',
+    'Bundling',
+    'Best Deal',
+    'Limited',
+];
+
 export default function SpecialProgramSearch({
     programs = [],
     filters,
     discovery,
-    meta,
 }: {
     programs: ProgramCard[];
     filters: { q?: string | null; category?: string | null; sort?: string | null };
     discovery?: DiscoveryExperiencePayload | null;
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
-        usePage().props as {
-            auth?: { user?: { role?: string } };
-            unread_notifications?: number;
-            souvenir_cart_count?: number;
-            affiliate_menu?: boolean;
-        };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
@@ -128,20 +127,6 @@ export default function SpecialProgramSearch({
         },
         { label: 'Hotel', icon: Ticket, href: '/stay', active: false },
     ];
-    const chips = [
-        'Promo',
-        'Diskon',
-        'Flash Sale',
-        'Liburan',
-        'Eksklusif',
-        'Hemat',
-        'Highlight',
-        'Early Access',
-        'Bundling',
-        'Best Deal',
-        'Limited',
-    ];
-
     const applyRoute = (
         params: Record<string, string | number | null | undefined>,
     ) => {
@@ -203,7 +188,10 @@ export default function SpecialProgramSearch({
 
     const suggestionGroups = useMemo<DiscoverySuggestionGroup[]>(
         () => [
-            { label: 'Pencarian populer', items: chips },
+            {
+                label: 'Pencarian populer',
+                items: specialProgramPopularChips,
+            },
             {
                 label: 'Program',
                 items: programs.map((program) => program.name).filter(Boolean),
@@ -220,19 +208,6 @@ export default function SpecialProgramSearch({
             },
         ],
         [discovery?.popular_keywords, programs],
-    );
-
-    const activeFilters = useMemo(
-        () => [
-            ...formatAppliedDiscoveryFilters(meta?.applied_filters),
-            ...(sort !== 'recommended'
-                ? [
-                      sortOptions.find((item) => item.value === sort)?.label ??
-                          'Urutan aktif',
-                  ]
-                : []),
-        ],
-        [meta?.applied_filters, sort],
     );
 
     const filtered = useMemo(
@@ -272,7 +247,7 @@ export default function SpecialProgramSearch({
                         <section className="space-y-6">
                             <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
                                 <form
-                                    className="grid gap-4 md:grid-cols-[2fr_1fr_auto]"
+                                    className="grid gap-4 md:grid-cols-[2fr_1fr_1fr_auto]"
                                     onSubmit={submitSearch}
                                 >
                                     <div className="grid gap-2">
@@ -327,25 +302,30 @@ export default function SpecialProgramSearch({
                                             </select>
                                         </div>
                                     </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Rekomendasi
+                                        </label>
+                                        <DiscoverySortSelect
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={applySort}
+                                        />
+                                    </div>
                                     <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
                                         Cari
                                     </button>
                                 </form>
-                                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div className="mt-4 space-y-1">
                                     <div className="text-sm font-semibold text-sky-700">
                                         Program unggulan untuk kebutuhanmu
                                     </div>
-                                    <DiscoverySortSelect
-                                        className="md:w-64"
-                                        value={sort}
-                                        options={sortOptions}
-                                        onChange={applySort}
-                                    />
+                                    <p className="text-sm text-slate-500">
+                                        Cari program berdasarkan nama,
+                                        kategori, atau urutan terbaik untuk
+                                        mulai melihat pilihan yang paling pas.
+                                    </p>
                                 </div>
-                                <ActiveFilterChips
-                                    filters={activeFilters}
-                                    onReset={resetDiscovery}
-                                />
                                 <DiscoveryInsightStrip
                                     tips={[
                                         {

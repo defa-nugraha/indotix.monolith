@@ -1,4 +1,11 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
+import {
+    CalendarCheck,
+    MapPinned,
+    ShoppingBag,
+    Star,
+    Ticket,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
     DiscoveryCollectionRail,
@@ -9,24 +16,10 @@ import {
     type DiscoveryTheme,
 } from '@/components/discovery/discovery-experience';
 import {
-    Bell,
-    CalendarCheck,
-    MapPinned,
-    MessageCircle,
-    ShoppingBag,
-    Star,
-    Ticket,
-    UserCircle,
-    History,
-    ShoppingCart,
-} from 'lucide-react';
-import {
-    ActiveFilterChips,
     DiscoveryEmptyState,
     DiscoveryInsightStrip,
     DiscoverySearchField,
     DiscoverySortSelect,
-    formatAppliedDiscoveryFilters,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -101,20 +94,13 @@ export default function SouvenirSearch({
     products,
     categories,
     discovery,
-    meta,
 }: {
     filters: Filters;
-    products: { data: Product[]; links: any[] };
+    products: { data: Product[]; links: unknown[] };
     categories: Category[];
     discovery?: DiscoveryExperiencePayload | null;
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage()
-        .props as {
-        auth?: { user?: { role?: string } };
-        unread_notifications?: number;
-        souvenir_cart_count?: number;
-    };
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
         q: filters.q ?? '',
@@ -232,19 +218,6 @@ export default function SouvenirSearch({
         [categories, discovery?.popular_keywords, products.data],
     );
 
-    const activeFilters = useMemo(
-        () => [
-            ...formatAppliedDiscoveryFilters(meta?.applied_filters),
-            ...(sort !== 'recommended'
-                ? [
-                      sortOptions.find((item) => item.value === sort)?.label ??
-                          'Urutan aktif',
-                  ]
-                : []),
-        ],
-        [meta?.applied_filters, sort],
-    );
-
     const filtered = useMemo(
         () => sortProducts(products.data, sort),
         [products.data, sort],
@@ -319,26 +292,26 @@ export default function SouvenirSearch({
                                                 </option>
                                             ))}
                                         </select>
+                                        <DiscoverySortSelect
+                                            className="min-w-[220px]"
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={applySort}
+                                        />
                                         <button className="h-12 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white">
                                             Cari
                                         </button>
                                     </form>
                                 </div>
-                                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                <div className="mt-4 space-y-1">
                                     <div className="text-sm font-semibold text-sky-700">
                                         Produk populer yang siap dipilih
                                     </div>
-                                    <DiscoverySortSelect
-                                        className="md:w-64"
-                                        value={sort}
-                                        options={sortOptions}
-                                        onChange={applySort}
-                                    />
+                                    <p className="text-sm text-slate-500">
+                                        Cari produk berdasarkan nama, kategori,
+                                        atau urutan yang paling sesuai.
+                                    </p>
                                 </div>
-                                <ActiveFilterChips
-                                    filters={activeFilters}
-                                    onReset={resetDiscovery}
-                                />
                                 <DiscoveryInsightStrip
                                     tips={[
                                         {

@@ -372,7 +372,7 @@ export default function HotelSearch({
                         <section className="mb-6 space-y-6">
                             <div className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
                                 <form
-                                    className="grid gap-4 md:grid-cols-[2fr_2fr_1.5fr_auto]"
+                                    className="grid gap-4 md:grid-cols-[2fr_2fr_1.5fr_1fr_auto]"
                                     onSubmit={submitSearch}
                                 >
                                     <div className="grid gap-2">
@@ -578,27 +578,29 @@ export default function HotelSearch({
                                             </div>
                                         )}
                                     </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase">
+                                            Rekomendasi
+                                        </label>
+                                        <DiscoverySortSelect
+                                            value={sort}
+                                            options={sortOptions}
+                                            onChange={applySort}
+                                        />
+                                    </div>
                                     <button className="h-12 rounded-full bg-sky-600 px-8 text-sm font-semibold text-white shadow-md">
                                         Cari
                                     </button>
                                 </form>
-                                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                                    <div className="space-y-1">
-                                        <div className="text-sm font-semibold text-sky-700">
-                                            Pilihan hotel untuk perjalananmu
-                                        </div>
-                                        <p className="text-sm text-slate-500">
-                                            Cari hotel berdasarkan kota, tanggal
-                                            menginap, jumlah tamu, atau urutan
-                                            yang paling sesuai.
-                                        </p>
+                                <div className="mt-4 space-y-1">
+                                    <div className="text-sm font-semibold text-sky-700">
+                                        Pilihan hotel untuk perjalananmu
                                     </div>
-                                    <DiscoverySortSelect
-                                        className="md:w-64"
-                                        value={sort}
-                                        options={sortOptions}
-                                        onChange={applySort}
-                                    />
+                                    <p className="text-sm text-slate-500">
+                                        Cari hotel berdasarkan kota, tanggal
+                                        menginap, jumlah tamu, atau urutan yang
+                                        paling sesuai.
+                                    </p>
                                 </div>
                                 <ActiveFilterChips
                                     filters={activeFilters}
