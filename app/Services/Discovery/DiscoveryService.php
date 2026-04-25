@@ -206,34 +206,34 @@ class DiscoveryService
     {
         return match ($type) {
             'events' => [
-                'eyebrow' => 'Eksplor Event',
-                'title' => 'Mulai dari yang ramai, gratis, atau jadwal terdekat',
-                'description' => 'Halaman event tidak lagi bergantung pada keyword. Pengguna bisa masuk lewat agenda waktu, kota populer, dan koleksi tematik.',
+                'eyebrow' => 'Event Pilihan',
+                'title' => 'Cari event seru yang pas buat rencanamu',
+                'description' => 'Temukan konser, seminar, festival, dan acara pilihan berdasarkan kota, jadwal, atau minatmu.',
             ],
             'hotels' => [
-                'eyebrow' => 'Rencanakan Menginap',
-                'title' => 'Bandingkan hotel lewat kebutuhan, kota, dan gaya perjalanan',
-                'description' => 'Discovery hotel diarahkan untuk perencanaan cepat: staycation, budget, kota populer, dan kamar yang masih relevan.',
+                'eyebrow' => 'Hotel Pilihan',
+                'title' => 'Cari hotel yang pas untuk rencana menginapmu',
+                'description' => 'Bandingkan pilihan hotel berdasarkan lokasi, tanggal, jumlah tamu, dan harga yang paling sesuai.',
             ],
             'wisata' => [
-                'eyebrow' => 'Eksplor Wisata',
-                'title' => 'Temukan destinasi lewat tema perjalanan, bukan hanya nama tempat',
-                'description' => 'Pengguna bisa masuk dari inspirasi keluarga, alam, budaya, atau tiket yang ringan untuk dicoba lebih dulu.',
+                'eyebrow' => 'Wisata Pilihan',
+                'title' => 'Temukan destinasi seru untuk waktu liburanmu',
+                'description' => 'Jelajahi tiket wisata favorit berdasarkan kota, tema perjalanan, dan tanggal kunjungan yang kamu inginkan.',
             ],
             'academy' => [
-                'eyebrow' => 'Jelajah Kelas',
-                'title' => 'Belajar dari jalur yang terasa dekat dengan kebutuhan',
-                'description' => 'Discovery academy diarahkan seperti learning marketplace: kelas terdekat, kelas gratis, topik populer, dan entry point untuk pemula.',
+                'eyebrow' => 'Kelas Pilihan',
+                'title' => 'Temukan kelas yang pas untuk tujuan belajarmu',
+                'description' => 'Cari kelas populer berdasarkan topik, jadwal, atau skill yang ingin kamu tingkatkan.',
             ],
             'special-programs' => [
                 'eyebrow' => 'Program Pilihan',
-                'title' => 'Buka peluang lewat program unggulan, kuota terbatas, dan tujuan yang jelas',
-                'description' => 'Discovery special program dibuat lebih eksklusif melalui spotlight, benefit, dan koleksi berbasis kategori serta momentum.',
+                'title' => 'Temukan program yang cocok untuk kebutuhanmu',
+                'description' => 'Lihat pilihan program untuk meeting, wedding, travel, dan kebutuhan spesial lainnya.',
             ],
             'souvenirs' => [
-                'eyebrow' => 'Retail & Souvenir',
-                'title' => 'Biarkan pengguna browse dengan ringan sampai tertarik membeli',
-                'description' => 'Discovery retail menonjolkan impulse browsing: best seller, ready stock, kategori favorit, dan pilihan yang mudah dijadikan hadiah.',
+                'eyebrow' => 'Souvenir Pilihan',
+                'title' => 'Cari oleh-oleh dan produk favorit dengan lebih mudah',
+                'description' => 'Temukan souvenir, merchandise, dan produk lokal yang cocok untuk dibawa pulang atau dijadikan hadiah.',
             ],
         };
     }
