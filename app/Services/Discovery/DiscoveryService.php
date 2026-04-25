@@ -206,33 +206,33 @@ class DiscoveryService
     {
         return match ($type) {
             'events' => [
-                'eyebrow' => 'Event Pilihan',
-                'title' => 'Cari event seru yang pas buat rencanamu',
-                'description' => 'Temukan konser, seminar, festival, dan acara pilihan berdasarkan kota, jadwal, atau minatmu.',
+                'eyebrow' => 'Eksplor Event',
+                'title' => 'Cari event yang pas buat rencanamu',
+                'description' => 'Temukan konser, seminar, festival, dan acara menarik berdasarkan kota, jadwal, atau minatmu.',
             ],
             'hotels' => [
-                'eyebrow' => 'Hotel Pilihan',
-                'title' => 'Cari hotel yang pas untuk rencana menginapmu',
-                'description' => 'Bandingkan pilihan hotel berdasarkan lokasi, tanggal, jumlah tamu, dan harga yang paling sesuai.',
+                'eyebrow' => 'Eksplor Hotel',
+                'title' => 'Temukan hotel yang nyaman untuk perjalananmu',
+                'description' => 'Pilih lokasi, tanggal, dan jumlah tamu untuk melihat hotel yang paling sesuai dengan rencanamu.',
             ],
             'wisata' => [
-                'eyebrow' => 'Wisata Pilihan',
-                'title' => 'Temukan destinasi seru untuk waktu liburanmu',
-                'description' => 'Jelajahi tiket wisata favorit berdasarkan kota, tema perjalanan, dan tanggal kunjungan yang kamu inginkan.',
+                'eyebrow' => 'Eksplor Wisata',
+                'title' => 'Temukan destinasi yang pas untuk liburanmu',
+                'description' => 'Cari tempat wisata berdasarkan kota, tema perjalanan, atau tanggal kunjungan yang kamu inginkan.',
             ],
             'academy' => [
-                'eyebrow' => 'Kelas Pilihan',
-                'title' => 'Temukan kelas yang pas untuk tujuan belajarmu',
-                'description' => 'Cari kelas populer berdasarkan topik, jadwal, atau skill yang ingin kamu tingkatkan.',
+                'eyebrow' => 'Eksplor Kelas',
+                'title' => 'Temukan kelas yang cocok untuk langkah belajarmu',
+                'description' => 'Pilih kelas berdasarkan topik, jadwal, atau skill yang ingin kamu kembangkan.',
             ],
             'special-programs' => [
-                'eyebrow' => 'Program Pilihan',
-                'title' => 'Temukan program yang cocok untuk kebutuhanmu',
+                'eyebrow' => 'Eksplor Program',
+                'title' => 'Temukan program yang pas untuk kebutuhanmu',
                 'description' => 'Lihat pilihan program untuk meeting, wedding, travel, dan kebutuhan spesial lainnya.',
             ],
             'souvenirs' => [
-                'eyebrow' => 'Souvenir Pilihan',
-                'title' => 'Cari oleh-oleh dan produk favorit dengan lebih mudah',
+                'eyebrow' => 'Eksplor Produk',
+                'title' => 'Cari oleh-oleh dan produk favoritmu',
                 'description' => 'Temukan souvenir, merchandise, dan produk lokal yang cocok untuk dibawa pulang atau dijadikan hadiah.',
             ],
         };
