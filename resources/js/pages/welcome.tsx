@@ -1,6 +1,13 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
 import SaleCountdown from '@/components/sale-countdown';
@@ -116,6 +123,22 @@ type Contact = {
     youtube_url?: string | null;
 };
 
+const MOBILE_DOWNLOAD_PROMPT_KEY = 'indotix_mobile_download_prompt_dismissed';
+
+const isAndroidPhoneDevice = () => {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+
+    const userAgent = window.navigator.userAgent || '';
+    const isAndroid = /Android/i.test(userAgent);
+    const isMobile = /Mobile/i.test(userAgent);
+    const isTablet = /Tablet|iPad|Nexus 7|Nexus 10|KFAPWI/i.test(userAgent);
+    const isCompactViewport = window.matchMedia('(max-width: 767px)').matches;
+
+    return isAndroid && isMobile && !isTablet && isCompactViewport;
+};
+
 export default function Welcome({
     canRegister,
     banners = [],
@@ -162,6 +185,8 @@ export default function Welcome({
     const [pendingBannerIndex, setPendingBannerIndex] = useState<number | null>(
         null,
     );
+    const [showMobileDownloadPrompt, setShowMobileDownloadPrompt] =
+        useState(false);
     const bannerSlides =
         banners.length > 0
             ? banners.map((banner) => ({
@@ -231,6 +256,32 @@ export default function Welcome({
 
         return () => window.clearInterval(interval);
     }, [bannerSlides.length, isBannerTransitioning]);
+
+    useEffect(() => {
+        const downloadUrl = contact?.download_url?.trim();
+        if (!downloadUrl || downloadUrl === '#') {
+            return;
+        }
+
+        if (!isAndroidPhoneDevice()) {
+            return;
+        }
+
+        if (window.localStorage.getItem(MOBILE_DOWNLOAD_PROMPT_KEY) === '1') {
+            return;
+        }
+
+        const timer = window.setTimeout(() => {
+            setShowMobileDownloadPrompt(true);
+        }, 600);
+
+        return () => window.clearTimeout(timer);
+    }, [contact?.download_url]);
+
+    const dismissMobileDownloadPrompt = () => {
+        setShowMobileDownloadPrompt(false);
+        window.localStorage.setItem(MOBILE_DOWNLOAD_PROMPT_KEY, '1');
+    };
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
@@ -465,6 +516,7 @@ export default function Welcome({
     const formatDate = (value: Date) => value.toISOString().slice(0, 10);
     const defaultCheckIn = formatDate(today);
     const defaultCheckOut = formatDate(tomorrow);
+    const downloadAppUrl = contact?.download_url?.trim() || '#';
 
     return (
         <PublicLayout categories={categories} chips={chips}>
@@ -474,6 +526,56 @@ export default function Welcome({
                     rel="stylesheet"
                 />
             </Head>
+            <Dialog
+                open={showMobileDownloadPrompt}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        dismissMobileDownloadPrompt();
+                    }
+                }}
+            >
+                <DialogContent className="max-w-[calc(100%-1.5rem)] rounded-3xl border-slate-200 p-0 sm:max-w-sm">
+                    <div className="overflow-hidden rounded-3xl">
+                        <div className="bg-[linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)] px-6 py-5 text-white">
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">
+                                Download Aplikasi
+                            </p>
+                            <DialogHeader className="mt-2 text-left">
+                                <DialogTitle className="text-xl font-bold leading-tight text-white">
+                                    Buka pengalaman yang lebih praktis di aplikasi
+                                    Indotix
+                                </DialogTitle>
+                                <DialogDescription className="text-sm leading-6 text-white/85">
+                                    Booking tiket, cek pesanan, dan pantau update
+                                    terbaru langsung dari ponselmu.
+                                </DialogDescription>
+                            </DialogHeader>
+                        </div>
+                        <div className="space-y-4 bg-white px-6 py-5">
+                            <a
+                                href={downloadAppUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={dismissMobileDownloadPrompt}
+                                className="flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-sky-200 hover:bg-sky-50"
+                            >
+                                <img
+                                    src="/images/playstore.png"
+                                    alt="Download di Google Play"
+                                    className="h-12 w-auto object-contain"
+                                />
+                            </a>
+                            <button
+                                type="button"
+                                onClick={dismissMobileDownloadPrompt}
+                                className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                            >
+                                Nanti saja
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
             <style>{`
                 @keyframes partner-scroll {
                     0% { transform: translateX(0); }
