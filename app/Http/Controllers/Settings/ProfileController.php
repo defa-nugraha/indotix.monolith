@@ -175,6 +175,8 @@ class ProfileController extends Controller
             ]);
         }
 
+        Auth::logout();
+
         DB::transaction(function () use ($user) {
             $conversationIds = ChatConversation::query()
                 ->where('user_id', $user->id)
@@ -203,8 +205,6 @@ class ProfileController extends Controller
             $user->tokens()->delete();
             $user->delete();
         });
-
-        Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
