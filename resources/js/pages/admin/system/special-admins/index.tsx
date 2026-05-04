@@ -55,6 +55,8 @@ const roleTone = (role: string) => {
 
 export default function SpecialAdminIndex({ admins, filters, roleOptions }: Props) {
     const [createOpen, setCreateOpen] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
+    const [selectedAdmin, setSelectedAdmin] = useState<AdminRow | null>(null);
     const [roleChanges, setRoleChanges] = useState<Record<number, string>>({});
     const [savingId, setSavingId] = useState<number | null>(null);
 
@@ -66,6 +68,13 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
     }, [roleOptions]);
 
     const createForm = useForm({
+        name: '',
+        email: '',
+        password: '',
+        role: roleOptions[0]?.value ?? 'admin_academy',
+    });
+
+    const editForm = useForm({
         name: '',
         email: '',
         password: '',
@@ -101,23 +110,60 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
         });
     };
 
+    const openEditModal = (admin: AdminRow) => {
+        setSelectedAdmin(admin);
+        editForm.clearErrors();
+        editForm.setData({
+            name: admin.name,
+            email: admin.email,
+            password: '',
+            role: admin.role,
+        });
+        setEditOpen(true);
+    };
+
+    const submitEdit = (event: React.FormEvent) => {
+        event.preventDefault();
+        if (!selectedAdmin) return;
+
+        editForm.put(`/admin/system/special-admins/${selectedAdmin.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                editForm.reset('password');
+                setEditOpen(false);
+                setSelectedAdmin(null);
+                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Data admin diperbarui.' });
+            },
+            onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Tidak dapat memperbarui data admin.' }),
+        });
+    };
+
     const handleSave = (admin: AdminRow) => {
         const role = roleChanges[admin.id] ?? admin.role;
         setSavingId(admin.id);
-        router.put(`/admin/system/special-admins/${admin.id}`, { role }, {
-            preserveScroll: true,
-            onSuccess: () => {
-                Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Role diperbarui.' });
+        router.put(
+            `/admin/system/special-admins/${admin.id}`,
+            {
+                name: admin.name,
+                email: admin.email,
+                role,
+                password: '',
             },
-            onError: (errors) => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal',
-                    text: errors?.role ?? 'Tidak dapat memperbarui role.',
-                });
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: 'Role diperbarui.' });
+                },
+                onError: (errors) => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: errors?.role ?? errors?.email ?? errors?.name ?? 'Tidak dapat memperbarui role.',
+                    });
+                },
+                onFinish: () => setSavingId(null),
             },
-            onFinish: () => setSavingId(null),
-        });
+        );
     };
 
     const handleDelete = async (admin: AdminRow) => {
@@ -214,6 +260,78 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
                                         </Button>
                                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={createForm.processing}>
                                             Simpan
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                        <Dialog
+                            open={editOpen}
+                            onOpenChange={(open) => {
+                                setEditOpen(open);
+                                if (!open) {
+                                    setSelectedAdmin(null);
+                                    editForm.reset();
+                                    editForm.clearErrors();
+                                }
+                            }}
+                        >
+                            <DialogContent className="sm:max-w-xl">
+                                <DialogHeader>
+                                    <DialogTitle>Edit Admin Spesialis</DialogTitle>
+                                </DialogHeader>
+                                <form className="grid gap-4" onSubmit={submitEdit}>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Nama</label>
+                                        <input
+                                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={editForm.data.name}
+                                            onChange={(event) => editForm.setData('name', event.target.value)}
+                                        />
+                                        <InputError message={editForm.errors.name} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Email</label>
+                                        <input
+                                            type="email"
+                                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={editForm.data.email}
+                                            onChange={(event) => editForm.setData('email', event.target.value)}
+                                        />
+                                        <InputError message={editForm.errors.email} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Password Baru</label>
+                                        <input
+                                            type="password"
+                                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={editForm.data.password}
+                                            onChange={(event) => editForm.setData('password', event.target.value)}
+                                            placeholder="Kosongkan jika tidak ingin mengganti password"
+                                        />
+                                        <InputError message={editForm.errors.password} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">Role</label>
+                                        <select
+                                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={editForm.data.role}
+                                            onChange={(event) => editForm.setData('role', event.target.value)}
+                                        >
+                                            {roleOptions.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <InputError message={editForm.errors.role} />
+                                    </div>
+                                    <DialogFooter className="gap-2 sm:justify-end">
+                                        <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+                                            Batal
+                                        </Button>
+                                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={editForm.processing}>
+                                            Simpan Perubahan
                                         </Button>
                                     </DialogFooter>
                                 </form>
@@ -323,6 +441,9 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
                                                         onClick={() => handleSave(admin)}
                                                     >
                                                         Simpan
+                                                    </Button>
+                                                    <Button size="sm" variant="outline" onClick={() => openEditModal(admin)}>
+                                                        Edit
                                                     </Button>
                                                     <Button size="sm" variant="outline" onClick={() => handleDelete(admin)}>
                                                         Hapus

@@ -13,6 +13,8 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\ProductReview;
 use App\Models\SouvenirOrder;
 use App\Models\SouvenirProduct;
+use App\Models\SpecialProgram;
+use App\Models\SpecialProgramBooking;
 use App\Models\User;
 use App\Models\WisataBooking;
 use Illuminate\Database\Eloquent\Model;
@@ -44,7 +46,7 @@ class ProductReviewService
             'event' => Event::query()->where('event_type', 'event')->find($id),
             'academy' => AcademyClass::query()->find($id),
             'souvenir' => SouvenirProduct::query()->find($id),
-            'special_program' => Event::query()->where('event_type', 'special_program')->find($id),
+            'special_program' => SpecialProgram::query()->find($id),
             default => null,
         };
     }
@@ -57,7 +59,7 @@ class ProductReviewService
             'event' => Event::query()->where('event_type', 'event')->whereKey($id)->value('title'),
             'academy' => AcademyClass::query()->whereKey($id)->value('title'),
             'souvenir' => SouvenirProduct::query()->whereKey($id)->value('name'),
-            'special_program' => Event::query()->where('event_type', 'special_program')->whereKey($id)->value('title'),
+            'special_program' => SpecialProgram::query()->whereKey($id)->value('name'),
             default => null,
         };
     }
@@ -75,7 +77,7 @@ class ProductReviewService
             'event' => Event::query()->where('event_type', 'event')->whereIn('id', $ids)->pluck('title', 'id')->all(),
             'academy' => AcademyClass::query()->whereIn('id', $ids)->pluck('title', 'id')->all(),
             'souvenir' => SouvenirProduct::query()->whereIn('id', $ids)->pluck('name', 'id')->all(),
-            'special_program' => Event::query()->where('event_type', 'special_program')->whereIn('id', $ids)->pluck('title', 'id')->all(),
+            'special_program' => SpecialProgram::query()->whereIn('id', $ids)->pluck('name', 'id')->all(),
             default => [],
         };
     }
@@ -233,10 +235,9 @@ class ProductReviewService
                         ->orWhereHas('scans');
                 })
                 ->exists(),
-            'special_program' => EventBooking::query()
+            'special_program' => SpecialProgramBooking::query()
                 ->where('user_id', $userId)
-                ->where('event_id', $productId)
-                ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+                ->where('special_program_id', $productId)
                 ->where(function ($query) {
                     $query
                         ->where('status', 'completed')

@@ -55,4 +55,14 @@ class SpecialProgramBooking extends Model
     {
         return $this->hasMany(SpecialProgramPayment::class, 'special_program_booking_id');
     }
+
+    public function attendees(): HasMany
+    {
+        return $this->hasMany(SpecialProgramAttendee::class, 'special_program_booking_id');
+    }
+
+    public function scans(): HasMany
+    {
+        return $this->hasMany(SpecialProgramScan::class, 'special_program_booking_id');
+    }
 }

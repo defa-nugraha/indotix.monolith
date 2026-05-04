@@ -14,6 +14,8 @@ import {
     MessageCircle,
     Star,
     BookOpen,
+    QrCode,
+    Ticket,
 } from 'lucide-react';
 import {
     Collapsible,
@@ -130,7 +132,11 @@ export function AppSidebarAdmin() {
     const isSpecialProgramSectionActive =
         isCurrentUrl('/admin/special-programs') ||
         isCurrentUrl('/admin/special-programs/create') ||
-        isCurrentUrl('/admin/special-programs/bookings');
+        isCurrentUrl('/admin/special-programs/tickets') ||
+        isCurrentUrl('/admin/special-programs/bookings') ||
+        isCurrentUrl('/admin/special-programs/attendees') ||
+        isCurrentUrl('/admin/special-programs/scans') ||
+        isCurrentUrl('/admin/special-programs/reviews');
     const isSouvenirSectionActive =
         isCurrentUrl('/admin/retail-shop/products') ||
         isCurrentUrl('/admin/retail-shop/categories') ||
@@ -293,9 +299,29 @@ export function AppSidebarAdmin() {
             icon: Sparkles,
         },
         {
+            title: 'Produk Tiket',
+            href: '/admin/special-programs/tickets',
+            icon: Ticket,
+        },
+        {
             title: 'Booking',
             href: '/admin/special-programs/bookings',
-            icon: Sparkles,
+            icon: CalendarCheck,
+        },
+        {
+            title: 'Peserta',
+            href: '/admin/special-programs/attendees',
+            icon: Users,
+        },
+        {
+            title: 'Monitoring QR',
+            href: '/admin/special-programs/scans',
+            icon: QrCode,
+        },
+        {
+            title: 'Review & Rating',
+            href: '/admin/special-programs/reviews',
+            icon: Star,
         },
     ];
     return (
@@ -1190,11 +1216,59 @@ export function AppSidebarAdmin() {
                                             <SidebarMenuSubButton
                                                 asChild
                                                 isActive={isCurrentUrl(
+                                                    '/admin/special-programs/tickets',
+                                                )}
+                                            >
+                                                <Link href="/admin/special-programs/tickets">
+                                                    Produk Tiket
+                                                </Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl(
                                                     '/admin/special-programs/bookings',
                                                 )}
                                             >
                                                 <Link href="/admin/special-programs/bookings">
                                                     Booking
+                                                </Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl(
+                                                    '/admin/special-programs/attendees',
+                                                )}
+                                            >
+                                                <Link href="/admin/special-programs/attendees">
+                                                    Peserta
+                                                </Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl(
+                                                    '/admin/special-programs/scans',
+                                                )}
+                                            >
+                                                <Link href="/admin/special-programs/scans">
+                                                    Monitoring QR
+                                                </Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl(
+                                                    '/admin/special-programs/reviews',
+                                                )}
+                                            >
+                                                <Link href="/admin/special-programs/reviews">
+                                                    Review & Rating
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>

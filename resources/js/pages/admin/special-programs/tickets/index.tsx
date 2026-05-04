@@ -3,7 +3,6 @@ import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import {
     Dialog,
@@ -20,17 +19,16 @@ import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 type Ticket = {
     id: number;
     name: string;
-    price: number;
-    is_active: boolean;
-    max_per_user: number;
-    quota: number;
-    event?: { title?: string | null };
+    price: number | null;
+    capacity: number | null;
+    sort_order: number;
+    program?: { name?: string | null };
 };
 
 type Props = {
     tickets: { data: Ticket[] };
-    events: Array<{ id: number; title: string }>;
-    filters: { event_id?: number | null };
+    programs: Array<{ id: number; name: string }>;
+    filters: { program_id?: number | null };
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -38,15 +36,17 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Produk Tiket', href: '/admin/special-programs/tickets' },
 ];
 
-export default function EventTicketsIndex({ tickets, events, filters }: Props) {
+export default function SpecialProgramTicketsIndex({
+    tickets,
+    programs,
+    filters,
+}: Props) {
     const emptyForm = {
-        event_id: '',
+        program_id: '',
         name: '',
-        description: '',
         price: '',
         quota: '',
-        max_per_user: 1,
-        is_active: true,
+        sort_order: '0',
     };
     const form = useForm({ ...emptyForm });
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -54,6 +54,7 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
 
     const openCreate = () => {
         form.setData({ ...emptyForm });
+        form.clearErrors();
         setPriceDisplay('');
         setIsFormOpen(true);
     };
@@ -66,24 +67,52 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
     const submit = () => {
         form.transform((data) => ({
             ...data,
-            event_id: Number(data.event_id),
+            program_id: Number(data.program_id),
             price: Number(data.price || 0),
             quota: data.quota === '' ? null : Number(data.quota),
-            max_per_user: Number(data.max_per_user || 1),
-            is_active: Boolean(data.is_active),
+            sort_order: Number(data.sort_order || 0),
         }));
 
         form.post('/admin/special-programs/tickets', {
             onSuccess: () => {
-                Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Tiket special program dibuat.' });
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Tersimpan',
+                    text: 'Tiket special program berhasil dibuat.',
+                });
                 setIsFormOpen(false);
             },
             onError: () =>
                 Swal.fire({
                     icon: 'error',
                     title: 'Gagal',
-                    text: 'Periksa data tiket.',
+                    text: 'Periksa kembali data tiket.',
                 }),
+        });
+    };
+
+    const updateTicket = (event: React.FormEvent<HTMLFormElement>, id: number) => {
+        event.preventDefault();
+        const data = new FormData(event.currentTarget);
+        router.put(`/admin/special-programs/tickets/${id}`, Object.fromEntries(data.entries()), {
+            preserveScroll: true,
+        });
+    };
+
+    const deleteTicket = async (ticket: Ticket) => {
+        const result = await Swal.fire({
+            title: 'Hapus tiket?',
+            text: `Tiket ${ticket.name} akan dihapus dari program.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal',
+        });
+
+        if (!result.isConfirmed) return;
+
+        router.delete(`/admin/special-programs/tickets/${ticket.id}`, {
+            preserveScroll: true,
         });
     };
 
@@ -92,29 +121,43 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
             <Head title="Produk Tiket Special Program" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h1 className="text-2xl font-semibold text-slate-900">Produk Tiket Special Program</h1>
-                    <p className="text-sm text-slate-500">Aktif/nonaktif dan batas pembelian per user.</p>
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                            <h1 className="text-2xl font-semibold text-slate-900">
+                                Produk Tiket Special Program
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                Kelola pilihan tiket/paket, harga, kuota, dan urutan tampil.
+                            </p>
+                        </div>
+                        <Button type="button" variant="outline" onClick={openCreate}>
+                            Buat Tiket
+                        </Button>
+                    </div>
                     <form
                         className="mt-6 flex flex-wrap gap-3"
                         onSubmit={(event) => {
                             event.preventDefault();
                             const data = new FormData(event.currentTarget);
-                            router.get('/admin/special-programs/tickets', Object.fromEntries(data.entries()), { preserveState: true });
+                            router.get('/admin/special-programs/tickets', Object.fromEntries(data.entries()), {
+                                preserveState: true,
+                            });
                         }}
                     >
-                        <select name="event_id" defaultValue={filters.event_id ?? ''} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                        <select
+                            name="program_id"
+                            defaultValue={filters.program_id ?? ''}
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        >
                             <option value="">Semua program</option>
-                            {events.map((item) => (
+                            {programs.map((item) => (
                                 <option key={item.id} value={item.id}>
-                                    {item.title}
+                                    {item.name}
                                 </option>
                             ))}
                         </select>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Filter
-                        </Button>
-                        <Button type="button" variant="outline" onClick={openCreate}>
-                            Buat Tiket
                         </Button>
                     </form>
                 </section>
@@ -127,55 +170,70 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                                     <th className="px-4 py-3 text-left">Tiket</th>
                                     <th className="px-4 py-3 text-left">Special Program</th>
                                     <th className="px-4 py-3 text-left">Harga</th>
-                                    <th className="px-4 py-3 text-left">Max/User</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
+                                    <th className="px-4 py-3 text-left">Kuota</th>
+                                    <th className="px-4 py-3 text-left">Urutan</th>
+                                    <th className="px-4 py-3 text-left">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {tickets.data.map((ticket) => (
                                     <tr key={ticket.id} className="border-t border-slate-100">
                                         <td className="px-4 py-3 font-semibold text-slate-900">{ticket.name}</td>
-                                        <td className="px-4 py-3">{ticket.event?.title ?? '-'}</td>
+                                        <td className="px-4 py-3">{ticket.program?.name ?? '-'}</td>
                                         <td className="px-4 py-3">
-                                            {(() => {
-                                                const priceValue = Number(ticket.price ?? 0);
-                                                return `Rp ${Number.isFinite(priceValue) ? priceValue.toLocaleString('id-ID') : '0'}`;
-                                            })()}
+                                            Rp {(ticket.price ?? 0).toLocaleString('id-ID')}
                                         </td>
+                                        <td className="px-4 py-3">{ticket.capacity ?? '-'}</td>
+                                        <td className="px-4 py-3">{ticket.sort_order ?? 0}</td>
                                         <td className="px-4 py-3">
                                             <form
-                                                onSubmit={(e) => {
-                                                    e.preventDefault();
-                                                    const data = new FormData(e.currentTarget);
-                                                    router.post(`/admin/special-programs/tickets/${ticket.id}`, Object.fromEntries(data.entries()), { preserveScroll: true });
-                                                }}
-                                                className="flex items-center gap-2"
+                                                onSubmit={(event) => updateTicket(event, ticket.id)}
+                                                className="flex flex-wrap items-center gap-2"
                                             >
                                                 <input
-                                                    name="max_per_user"
-                                                    defaultValue={ticket.max_per_user}
+                                                    name="name"
+                                                    defaultValue={ticket.name}
+                                                    className="w-40 rounded-md border border-slate-200 px-2 py-1 text-xs"
+                                                />
+                                                <input
+                                                    name="price"
+                                                    type="number"
+                                                    min={0}
+                                                    defaultValue={ticket.price ?? 0}
+                                                    className="w-28 rounded-md border border-slate-200 px-2 py-1 text-xs"
+                                                />
+                                                <input
+                                                    name="quota"
+                                                    type="number"
+                                                    min={0}
+                                                    defaultValue={ticket.capacity ?? ''}
+                                                    className="w-24 rounded-md border border-slate-200 px-2 py-1 text-xs"
+                                                />
+                                                <input
+                                                    name="sort_order"
+                                                    type="number"
+                                                    min={0}
+                                                    defaultValue={ticket.sort_order ?? 0}
                                                     className="w-20 rounded-md border border-slate-200 px-2 py-1 text-xs"
                                                 />
-                                                <input name="quota" defaultValue={ticket.quota} className="w-20 rounded-md border border-slate-200 px-2 py-1 text-xs" />
-                                                <select name="is_active" defaultValue={ticket.is_active ? '1' : '0'} className="rounded-md border border-slate-200 px-2 py-1 text-xs">
-                                                    <option value="1">Aktif</option>
-                                                    <option value="0">Nonaktif</option>
-                                                </select>
                                                 <Button type="submit" variant="outline" className="h-7 px-3 text-xs">
                                                     Simpan
                                                 </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="h-7 px-3 text-xs text-rose-600"
+                                                    onClick={() => deleteTicket(ticket)}
+                                                >
+                                                    Hapus
+                                                </Button>
                                             </form>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <Badge className={ticket.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}>
-                                                {ticket.is_active ? 'Aktif' : 'Nonaktif'}
-                                            </Badge>
                                         </td>
                                     </tr>
                                 ))}
                                 {tickets.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
                                             Belum ada tiket special program.
                                         </td>
                                     </tr>
@@ -189,7 +247,9 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                     <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Buat Tiket Special Program</DialogTitle>
-                            <DialogDescription>Lengkapi data tiket sebelum disimpan.</DialogDescription>
+                            <DialogDescription>
+                                Tiket akan tampil sebagai pilihan paket pada halaman detail special program.
+                            </DialogDescription>
                         </DialogHeader>
                         <form
                             className="grid gap-3"
@@ -201,39 +261,28 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                             <div className="grid gap-1">
                                 <Label>Special Program</Label>
                                 <select
-                                    value={form.data.event_id}
-                                    onChange={(event) => form.setData('event_id', event.target.value)}
+                                    value={form.data.program_id}
+                                    onChange={(event) => form.setData('program_id', event.target.value)}
                                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 >
                                     <option value="">Pilih special program</option>
-                                    {events.map((item) => (
+                                    {programs.map((item) => (
                                         <option key={item.id} value={item.id}>
-                                            {item.title}
+                                            {item.name}
                                         </option>
                                     ))}
                                 </select>
-                                <InputError message={form.errors.event_id} />
+                                <InputError message={form.errors.program_id} />
                             </div>
                             <div className="grid gap-1">
-                                <Label>Nama tiket</Label>
+                                <Label>Nama tiket/paket</Label>
                                 <input
                                     value={form.data.name}
                                     onChange={(event) => form.setData('name', event.target.value)}
-                                    placeholder="Nama tiket"
+                                    placeholder="Contoh: Paket Reguler"
                                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
                                 <InputError message={form.errors.name} />
-                            </div>
-                            <div className="grid gap-1">
-                                <Label>Deskripsi</Label>
-                                <textarea
-                                    value={form.data.description}
-                                    onChange={(event) => form.setData('description', event.target.value)}
-                                    placeholder="Deskripsi tiket (opsional)"
-                                    rows={3}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                />
-                                <InputError message={form.errors.description} />
                             </div>
                             <div className="grid gap-1">
                                 <Label>Harga (Rp)</Label>
@@ -254,34 +303,21 @@ export default function EventTicketsIndex({ tickets, events, filters }: Props) {
                                     min={0}
                                     value={form.data.quota}
                                     onChange={(event) => form.setData('quota', event.target.value)}
-                                    placeholder="Kuota"
+                                    placeholder="Kosongkan jika mengikuti kuota program"
                                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
                                 <InputError message={form.errors.quota} />
                             </div>
                             <div className="grid gap-1">
-                                <Label>Maks per user</Label>
+                                <Label>Urutan tampil</Label>
                                 <input
                                     type="number"
-                                    min={1}
-                                    value={form.data.max_per_user}
-                                    onChange={(event) => form.setData('max_per_user', event.target.value)}
-                                    placeholder="Maks per user"
+                                    min={0}
+                                    value={form.data.sort_order}
+                                    onChange={(event) => form.setData('sort_order', event.target.value)}
                                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
-                                <InputError message={form.errors.max_per_user} />
-                            </div>
-                            <div className="grid gap-1">
-                                <Label>Status tiket</Label>
-                                <select
-                                    value={form.data.is_active ? '1' : '0'}
-                                    onChange={(event) => form.setData('is_active', event.target.value === '1')}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                >
-                                    <option value="1">Aktif</option>
-                                    <option value="0">Nonaktif</option>
-                                </select>
-                                <InputError message={form.errors.is_active} />
+                                <InputError message={form.errors.sort_order} />
                             </div>
                             <DialogFooter className="gap-2">
                                 <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">

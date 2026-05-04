@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailOtp;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,8 +57,10 @@ class SocialAuthController extends Controller
                 'email' => $email,
                 'password' => Hash::make(Str::random(32)),
                 'role' => in_array($role, ['user', 'mitra'], true) ? $role : 'user',
-                'email_verified_at' => now(),
             ]);
+
+            // Google has already verified ownership of the email address.
+            $user->forceFill(['email_verified_at' => now()])->save();
         } else {
             if (! $user->role && in_array($role, ['user', 'mitra'], true)) {
                 $user->forceFill(['role' => $role]);
@@ -69,6 +72,11 @@ class SocialAuthController extends Controller
 
             $user->save();
         }
+
+        EmailOtp::query()
+            ->where('email', $email)
+            ->where('purpose', 'verify_email')
+            ->delete();
 
         if ($user->is_suspended) {
             return redirect()->route('login')->withErrors([

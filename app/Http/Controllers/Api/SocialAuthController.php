@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailOtp;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,14 +39,21 @@ class SocialAuthController extends Controller
                 'email' => $googleUser->getEmail(),
                 'password' => Str::random(40),
                 'role' => $data['role'] ?? 'user',
-                'email_verified_at' => now(),
             ]);
+
+            // Google sign-in only returns a verified Google account email.
+            $user->forceFill(['email_verified_at' => now()])->save();
         } else {
             if (! $user->email_verified_at) {
                 $user->email_verified_at = now();
                 $user->save();
             }
         }
+
+        EmailOtp::query()
+            ->where('email', $googleUser->getEmail())
+            ->where('purpose', 'verify_email')
+            ->delete();
 
         if ($user->is_suspended) {
             return response()->json(['message' => 'Akun sedang dinonaktifkan.'], 403);
@@ -57,6 +65,7 @@ class SocialAuthController extends Controller
             'token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
+            'requires_otp' => false,
         ]);
     }
 }

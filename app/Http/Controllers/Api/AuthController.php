@@ -20,7 +20,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['nullable', Rule::in(['user', 'mitra'])],
             'device_name' => ['nullable', 'string', 'max:255'],
@@ -33,6 +33,7 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Email sudah terdaftar.'], 422);
             }
 
+            $this->clearPendingEmailVerificationOtp($existingUser);
             $otp = $this->sendOtp($existingUser, 'verify_email');
             if (! $otp) {
                 return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
@@ -56,6 +57,7 @@ class AuthController extends Controller
             'role' => $data['role'] ?? 'user',
         ]);
 
+        $this->clearPendingEmailVerificationOtp($user);
         $otp = $this->sendOtp($user, 'verify_email');
         if (! $otp) {
             $user->delete();
@@ -164,5 +166,13 @@ class AuthController extends Controller
         }
 
         return $otp;
+    }
+
+    private function clearPendingEmailVerificationOtp(User $user): void
+    {
+        EmailOtp::query()
+            ->where('user_id', $user->id)
+            ->where('purpose', 'verify_email')
+            ->delete();
     }
 }

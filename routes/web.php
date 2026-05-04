@@ -23,12 +23,32 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.special-programs.create');
     Route::post('admin/special-programs', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'store'])
         ->name('admin.special-programs.store');
+    Route::get('admin/special-programs/tickets', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'index'])
+        ->name('admin.special-programs.tickets.index');
+    Route::post('admin/special-programs/tickets', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'store'])
+        ->name('admin.special-programs.tickets.store');
+    Route::put('admin/special-programs/tickets/{ticket}', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'update'])
+        ->name('admin.special-programs.tickets.update');
+    Route::delete('admin/special-programs/tickets/{ticket}', [\App\Http\Controllers\Admin\SpecialProgramTicketController::class, 'destroy'])
+        ->name('admin.special-programs.tickets.destroy');
     Route::get('admin/special-programs/bookings', [\App\Http\Controllers\Admin\SpecialProgramBookingController::class, 'index'])
         ->name('admin.special-programs.bookings.index');
     Route::get('admin/special-programs/bookings/{booking}', [\App\Http\Controllers\Admin\SpecialProgramBookingController::class, 'show'])
         ->name('admin.special-programs.bookings.show');
     Route::post('admin/special-programs/bookings/{booking}/status', [\App\Http\Controllers\Admin\SpecialProgramBookingController::class, 'updateStatus'])
         ->name('admin.special-programs.bookings.status');
+    Route::get('admin/special-programs/attendees', [\App\Http\Controllers\Admin\SpecialProgramAttendeeController::class, 'index'])
+        ->name('admin.special-programs.attendees.index');
+    Route::get('admin/special-programs/scans', [\App\Http\Controllers\Admin\SpecialProgramScanController::class, 'index'])
+        ->name('admin.special-programs.scans.index');
+    Route::post('admin/special-programs/scans', [\App\Http\Controllers\Admin\SpecialProgramScanController::class, 'store'])
+        ->name('admin.special-programs.scans.store');
+    Route::get('admin/special-programs/reviews', [\App\Http\Controllers\Admin\SpecialProgramReviewController::class, 'index'])
+        ->name('admin.special-programs.reviews.index');
+    Route::post('admin/special-programs/reviews/{review}/reply', [\App\Http\Controllers\Admin\SpecialProgramReviewController::class, 'reply'])
+        ->name('admin.special-programs.reviews.reply');
+    Route::delete('admin/special-programs/reviews/{review}', [\App\Http\Controllers\Admin\SpecialProgramReviewController::class, 'destroy'])
+        ->name('admin.special-programs.reviews.destroy');
     Route::get('admin/special-programs/{program}/edit', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'edit'])
         ->name('admin.special-programs.edit');
     Route::put('admin/special-programs/{program}', [\App\Http\Controllers\Admin\SpecialProgramController::class, 'update'])
@@ -259,6 +279,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
 
     Route::get('admin/academy/scans', [\App\Http\Controllers\Admin\Academy\ScanController::class, 'index'])
         ->name('admin.academy.scans.index');
+    Route::post('admin/academy/scans', [\App\Http\Controllers\Admin\Academy\ScanController::class, 'store'])
+        ->name('admin.academy.scans.store');
 
     Route::get('admin/academy/finance', [\App\Http\Controllers\Admin\Academy\FinanceController::class, 'index'])
         ->name('admin.academy.finance.index');

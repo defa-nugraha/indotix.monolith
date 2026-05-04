@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SpecialProgram;
+use App\Models\SpecialProgramAttendee;
 use App\Models\SpecialProgramBooking;
 use App\Models\SpecialProgramInventory;
 use App\Models\SpecialProgramPayment;
@@ -240,7 +241,7 @@ class SpecialProgramBookingController extends Controller
                 $unitPrice = (int) ($variant?->price ?? $program->base_price);
                 $totalPrice = $unitPrice * (int) $draft['quantity'];
 
-                return SpecialProgramBooking::create([
+                $booking = SpecialProgramBooking::create([
                     'user_id' => $request->user()->id,
                     'special_program_id' => $program->id,
                     'special_program_variant_id' => $variant?->id,
@@ -260,6 +261,10 @@ class SpecialProgramBookingController extends Controller
                     'guest_phone' => $data['guest_phone'],
                     'notes' => $data['notes'] ?? null,
                 ]);
+
+                $this->createAttendees($booking);
+
+                return $booking;
             });
         } catch (RuntimeException $exception) {
             return back()->withErrors(['booking' => $exception->getMessage()]);
@@ -561,6 +566,21 @@ class SpecialProgramBookingController extends Controller
             'qr_data' => $this->buildQrData('SPECIAL_PROGRAM', (string) ($booking->midtrans_order_id ?? $booking->id)),
             'qr_url' => $this->buildQrUrl('SPECIAL_PROGRAM', (string) ($booking->midtrans_order_id ?? $booking->id)),
         ];
+    }
+
+    private function createAttendees(SpecialProgramBooking $booking): void
+    {
+        $quantity = max(1, (int) $booking->quantity);
+
+        for ($index = 1; $index <= $quantity; $index++) {
+            SpecialProgramAttendee::create([
+                'special_program_booking_id' => $booking->id,
+                'name' => $quantity > 1 ? "{$booking->guest_name} #{$index}" : $booking->guest_name,
+                'email' => $booking->guest_email,
+                'phone' => $booking->guest_phone,
+                'attendance_status' => 'absent',
+            ]);
+        }
     }
 
     private function buildSnapPayload(SpecialProgramBooking $booking, string $orderId): array

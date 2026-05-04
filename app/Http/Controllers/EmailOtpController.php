@@ -27,7 +27,15 @@ class EmailOtpController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->route('dashboard');
+            if ($user->role === 'mitra') {
+                return redirect()->route('mitra.dashboard');
+            }
+
+            if (str_starts_with((string) $user->role, 'admin')) {
+                return redirect()->route('dashboard');
+            }
+
+            return redirect()->route('home');
         }
 
         $otp = EmailOtp::query()
@@ -37,10 +45,20 @@ class EmailOtpController extends Controller
             ->first();
 
         $status = $request->session()->get('status');
+        $autoSendSessionKey = $this->autoSendSessionKey($user->id);
 
-        if (! $otp || $otp->expires_at->isPast()) {
+        if (! $otp || $otp->expires_at->isPast() || ! $request->session()->has($autoSendSessionKey)) {
+            EmailOtp::query()
+                ->where('user_id', $user->id)
+                ->where('purpose', 'verify_email')
+                ->delete();
+
             $otp = $this->sendOtp($user->id, $user->email, $user->name, 'verify_email');
             $status = $otp ? 'otp-sent' : 'otp-failed';
+
+            if ($otp) {
+                $request->session()->put($autoSendSessionKey, true);
+            }
         }
 
         return Inertia::render('auth/verify-otp', [
@@ -142,7 +160,15 @@ class EmailOtpController extends Controller
         $user = $request->user();
 
         if ($user->hasVerifiedEmail()) {
-            return redirect()->route('dashboard');
+            if ($user->role === 'mitra') {
+                return redirect()->route('mitra.dashboard');
+            }
+
+            if (str_starts_with((string) $user->role, 'admin')) {
+                return redirect()->route('dashboard');
+            }
+
+            return redirect()->route('home');
         }
 
         $key = sprintf('otp-resend:%s|%s', $user->id, $request->ip());
@@ -174,6 +200,8 @@ class EmailOtpController extends Controller
                 'code' => 'Gagal mengirim OTP. Silakan coba lagi.',
             ]);
         }
+
+        $request->session()->put($this->autoSendSessionKey($user->id), true);
 
         return back()->with('status', 'otp-sent');
     }
@@ -208,5 +236,10 @@ class EmailOtpController extends Controller
         $userAgent = $request->userAgent() ?? 'unknown';
 
         return sha1($userAgent.'|'.$request->ip());
+    }
+
+    private function autoSendSessionKey(int $userId): string
+    {
+        return sprintf('email-otp-auto-sent:%s', $userId);
     }
 }

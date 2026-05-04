@@ -86,12 +86,23 @@ class SpecialAdminController extends Controller
         }
 
         $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'role' => ['required', 'string', Rule::in($roles)],
+            'password' => ['nullable', 'string', 'min:8', 'max:255'],
         ]);
 
-        $user->update([
+        $payload = [
+            'name' => $data['name'],
+            'email' => $data['email'],
             'role' => $data['role'],
-        ]);
+        ];
+
+        if (! empty($data['password'])) {
+            $payload['password'] = $data['password'];
+        }
+
+        $user->update($payload);
 
         return back()->with('status', 'admin-updated');
     }
