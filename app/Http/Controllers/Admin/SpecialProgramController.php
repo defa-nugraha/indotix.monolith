@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SpecialProgram;
 use App\Models\SpecialProgramVariant;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,6 +41,8 @@ class SpecialProgramController extends Controller
     {
         return Inertia::render('admin/special-programs/create', [
             'program' => null,
+            'adminOptions' => $this->adminOptions(),
+            'canChooseAdmin' => request()->user()?->role === 'admin',
         ]);
     }
 
@@ -57,6 +61,8 @@ class SpecialProgramController extends Controller
                 'capacity' => isset($data['capacity']) ? (int) $data['capacity'] : 0,
                 'is_active' => (bool) ($data['is_active'] ?? false),
                 'status' => ($data['is_active'] ?? false) ? 'published' : 'draft',
+                'created_by' => $this->resolveSpecialAdminId($request, $data['created_by'] ?? null),
+                'updated_by' => $request->user()?->id,
             ]);
 
             if ($request->hasFile('image')) {
@@ -81,6 +87,7 @@ class SpecialProgramController extends Controller
         return Inertia::render('admin/special-programs/create', [
             'program' => [
                 'id' => $program->id,
+                'created_by' => $program->created_by,
                 'name' => $program->name,
                 'category' => $program->category,
                 'description' => $program->description,
@@ -117,6 +124,8 @@ class SpecialProgramController extends Controller
                     ])
                     ->all(),
             ],
+            'adminOptions' => $this->adminOptions(),
+            'canChooseAdmin' => request()->user()?->role === 'admin',
         ]);
     }
 
@@ -134,7 +143,12 @@ class SpecialProgramController extends Controller
                 'capacity' => isset($data['capacity']) ? (int) $data['capacity'] : 0,
                 'is_active' => (bool) ($data['is_active'] ?? false),
                 'status' => ($data['is_active'] ?? false) ? 'published' : 'draft',
+                'updated_by' => $request->user()?->id,
             ]);
+
+            if ($request->user()?->role === 'admin') {
+                $program->created_by = $this->resolveSpecialAdminId($request, $data['created_by'] ?? null);
+            }
 
             if ($request->hasFile('image')) {
                 if ($program->image_path) {
@@ -159,6 +173,7 @@ class SpecialProgramController extends Controller
         return Inertia::render('admin/special-programs/show', [
             'program' => [
                 'id' => $program->id,
+                'created_by' => $program->created_by,
                 'name' => $program->name,
                 'category' => $program->category,
                 'description' => $program->description,
@@ -245,7 +260,34 @@ class SpecialProgramController extends Controller
             'inventories' => ['nullable', 'array'],
             'inventories.*.date' => ['required_with:inventories', 'date'],
             'inventories.*.capacity' => ['nullable', 'integer', 'min:0'],
+            'created_by' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where('role', 'admin_special_program'),
+            ],
         ]);
+    }
+
+    private function adminOptions(): array
+    {
+        return User::query()
+            ->where('role', 'admin_special_program')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email'])
+            ->map(fn (User $user) => [
+                'value' => $user->id,
+                'label' => trim($user->name.' - '.$user->email, ' -'),
+            ])
+            ->all();
+    }
+
+    private function resolveSpecialAdminId(Request $request, mixed $selectedId): ?int
+    {
+        if ($request->user()?->role === 'admin_special_program') {
+            return $request->user()->id;
+        }
+
+        return filled($selectedId) ? (int) $selectedId : null;
     }
 
     private function syncVariants(SpecialProgram $program, array $variants): void

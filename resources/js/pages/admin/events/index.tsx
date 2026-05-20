@@ -29,8 +29,15 @@ export default function EventsIndex({ events, filters }: Props) {
             <Head title="Manajemen Event" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h1 className="text-2xl font-semibold text-slate-900">Manajemen Event</h1>
-                    <p className="text-sm text-slate-500">Approval, status event, dan kontrol kapasitas.</p>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <h1 className="text-2xl font-semibold text-slate-900">Manajemen Event</h1>
+                            <p className="text-sm text-slate-500">Approval, status event, dan kontrol kapasitas.</p>
+                        </div>
+                        <Link href="/admin/events/create">
+                            <Button className="bg-sky-600 text-white hover:bg-sky-700">Tambah Event</Button>
+                        </Link>
+                    </div>
                     <form
                         className="mt-6 flex flex-wrap gap-3"
                         onSubmit={(event) => {
@@ -80,9 +87,14 @@ export default function EventsIndex({ events, filters }: Props) {
                                             <Badge className="bg-slate-100 text-slate-600">{item.status}</Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Link href={`/admin/events/${item.id}`} className="text-sky-600 hover:underline">
-                                                Detail
-                                            </Link>
+                                            <div className="flex flex-wrap gap-3">
+                                                <Link href={`/admin/events/${item.id}`} className="text-sky-600 hover:underline">
+                                                    Detail
+                                                </Link>
+                                                <Link href={`/admin/events/${item.id}/edit`} className="text-slate-600 hover:underline">
+                                                    Edit
+                                                </Link>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

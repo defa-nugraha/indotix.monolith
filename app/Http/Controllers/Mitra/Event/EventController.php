@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Mitra\Event;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventOrganizer;
+use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -73,6 +75,7 @@ class EventController extends Controller
                 'city_code' => $event->city_code,
                 'location' => $event->location,
                 'address' => $event->address,
+                'image_url' => $event->image_path ? Storage::url($event->image_path) : null,
                 'start_at' => $event->start_at?->format('Y-m-d\TH:i'),
                 'end_at' => $event->end_at?->format('Y-m-d\TH:i'),
                 'capacity_total' => $event->capacity_total,
@@ -81,7 +84,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $organizer = EventOrganizer::query()
             ->where('user_id', $request->user()->id)
@@ -96,12 +99,18 @@ class EventController extends Controller
             'start_at' => ['required', 'date'],
             'end_at' => ['required', 'date', 'after_or_equal:start_at'],
             'capacity_total' => ['required', 'integer', 'min:0'],
+            'image' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
+
+        $imagePath = $request->hasFile('image')
+            ? $mediaCompression->store($request->file('image'), 'events', 'public')
+            : null;
 
         $event = Event::create([
             'event_organizer_id' => $organizer->id,
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
+            'image_path' => $imagePath,
             'city_code' => $data['city_code'] ?? null,
             'location' => $data['location'] ?? null,
             'address' => $data['address'] ?? null,
@@ -116,7 +125,7 @@ class EventController extends Controller
         return redirect()->route('mitra.events.show', $event)->with('status', 'event-created');
     }
 
-    public function update(Request $request, Event $event): RedirectResponse
+    public function update(Request $request, Event $event, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $organizer = EventOrganizer::query()
             ->where('user_id', $request->user()->id)
@@ -135,11 +144,22 @@ class EventController extends Controller
             'start_at' => ['required', 'date'],
             'end_at' => ['required', 'date', 'after_or_equal:start_at'],
             'capacity_total' => ['required', 'integer', 'min:0'],
+            'image' => ['nullable', 'file', 'image', 'max:5120'],
         ]);
+
+        $imagePath = $event->image_path;
+        if ($request->hasFile('image')) {
+            $oldPath = $event->image_path;
+            $imagePath = $mediaCompression->store($request->file('image'), 'events', 'public');
+            if ($oldPath) {
+                Storage::disk('public')->delete($oldPath);
+            }
+        }
 
         $event->update([
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
+            'image_path' => $imagePath,
             'city_code' => $data['city_code'] ?? null,
             'location' => $data['location'] ?? null,
             'address' => $data['address'] ?? null,

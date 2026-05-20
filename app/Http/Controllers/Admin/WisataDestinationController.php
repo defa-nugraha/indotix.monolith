@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\Regency;
+use App\Models\User;
 use App\Services\MediaCompressionService;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +14,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -76,6 +78,39 @@ class WisataDestinationController extends Controller
         ]);
     }
 
+    public function create(): Response
+    {
+        return Inertia::render('admin/wisata/destinations/show', [
+            'destination' => [
+                'id' => null,
+                'encrypted_id' => null,
+                'user_id' => null,
+                'destination_name' => null,
+                'destination_type' => 'alam',
+                'description' => null,
+                'highlights' => null,
+                'province_code' => null,
+                'city_code' => null,
+                'address_full' => null,
+                'maps_pin_url' => null,
+                'open_days' => null,
+                'open_time' => null,
+                'close_time' => null,
+                'holiday_notes' => null,
+                'contact_phone' => null,
+                'contact_hours' => null,
+                'is_live' => false,
+                'is_suspended' => false,
+                'verification_status' => 'verified',
+            ],
+            'cityName' => null,
+            'provinces' => $this->provinceOptions(),
+            'cities' => $this->cityOptions(),
+            'userOptions' => $this->mitraOptions(),
+            'isCreate' => true,
+        ]);
+    }
+
     public function show(string $destination): Response
     {
         $destination = $this->resolveDestination($destination);
@@ -99,37 +134,38 @@ class WisataDestinationController extends Controller
             'cityName' => Regency::query()->where('code', $destination->city_code)->value('name'),
             'provinces' => $provinces,
             'cities' => $cities,
+            'userOptions' => $this->mitraOptions(),
+            'isCreate' => false,
         ]);
+    }
+
+    public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
+    {
+        $data = $this->validateDestination($request, true);
+        $destination = new MitraWisataOnboarding();
+        $destination->fill(Arr::except($data, [
+            'photo_gate_file',
+            'photo_area_file',
+            'photo_ticket_file',
+            'photo_other_files',
+            'photo_other_remove',
+        ]));
+        $destination->current_step = 3;
+        $destination->verification_status = $data['verification_status'] ?? 'verified';
+        $destination->payout_status = 'verified';
+        $destination->save();
+
+        $this->storeDestinationImages($request, $destination, $mediaCompression, $data);
+        $destination->save();
+
+        return redirect()->route('admin.wisata.destinations.show', Crypt::encryptString((string) $destination->id))
+            ->with('status', 'destination-created');
     }
 
     public function update(Request $request, string $destination, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $destination = $this->resolveDestination($destination);
-        $data = $request->validate([
-            'destination_name' => ['required', 'string', 'max:255'],
-            'destination_type' => ['required', 'in:alam,edukasi,budaya,wahana,event'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'highlights' => ['nullable', 'string', 'max:1000'],
-            'province_code' => ['nullable', 'exists:provinces,code'],
-            'city_code' => ['nullable', 'exists:regencies,code'],
-            'address_full' => ['nullable', 'string', 'max:500'],
-            'maps_pin_url' => ['nullable', 'string', 'max:500'],
-            'open_days' => ['nullable', 'array'],
-            'open_days.*' => ['string'],
-            'open_time' => ['nullable', 'string', 'max:8'],
-            'close_time' => ['nullable', 'string', 'max:8'],
-            'holiday_notes' => ['nullable', 'string', 'max:255'],
-            'contact_phone' => ['nullable', 'string', 'max:50'],
-            'contact_hours' => ['nullable', 'string', 'max:100'],
-            'is_live' => ['nullable', 'boolean'],
-            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_other_files' => ['nullable', 'array', 'max:5'],
-            'photo_other_files.*' => ['file', 'mimes:jpg,jpeg,png'],
-            'photo_other_remove' => ['nullable', 'array', 'max:5'],
-            'photo_other_remove.*' => ['string'],
-        ]);
+        $data = $this->validateDestination($request, false);
 
         $payload = Arr::except($data, [
             'photo_gate_file',
@@ -140,6 +176,15 @@ class WisataDestinationController extends Controller
         ]);
         $destination->fill($payload);
 
+        $this->storeDestinationImages($request, $destination, $mediaCompression, $data);
+
+        $destination->save();
+
+        return back()->with('status', 'destination-updated');
+    }
+
+    private function storeDestinationImages(Request $request, MitraWisataOnboarding $destination, MediaCompressionService $mediaCompression, array $data): void
+    {
         $folder = "mitra-wisata/{$destination->user_id}";
         $uploads = [
             'photo_gate_file' => 'photo_gate_path',
@@ -171,7 +216,7 @@ class WisataDestinationController extends Controller
             $newFiles = $newFiles ? [$newFiles] : [];
         }
         if (count($remainingOthers) + count($newFiles) > 5) {
-            return back()->withErrors([
+            throw ValidationException::withMessages([
                 'photo_other_files' => 'Maksimal 5 foto lainnya.',
             ]);
         }
@@ -193,9 +238,6 @@ class WisataDestinationController extends Controller
                 : null;
         }
 
-        $destination->save();
-
-        return back()->with('status', 'destination-updated');
     }
 
     public function suspend(Request $request, string $destination): RedirectResponse
@@ -223,6 +265,31 @@ class WisataDestinationController extends Controller
         return back()->with('status', 'destination-suspended');
     }
 
+    public function destroy(string $destination): RedirectResponse
+    {
+        $destination = $this->resolveDestination($destination);
+        if ($destination->tickets()->exists() || $destination->bookings()->exists()) {
+            return back()->withErrors([
+                'destination' => 'Destinasi tidak dapat dihapus karena sudah memiliki tiket atau booking.',
+            ]);
+        }
+
+        foreach ([
+            $destination->photo_gate_path,
+            $destination->photo_area_path,
+            $destination->photo_ticket_path,
+            ...(is_array($destination->photo_other_paths) ? $destination->photo_other_paths : []),
+        ] as $path) {
+            if ($path) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+
+        $destination->delete();
+
+        return redirect()->route('admin.wisata.destinations.index')->with('status', 'destination-deleted');
+    }
+
     private function resolveDestination(string $destination): MitraWisataOnboarding
     {
         try {
@@ -236,5 +303,67 @@ class WisataDestinationController extends Controller
         }
 
         return MitraWisataOnboarding::query()->findOrFail($id);
+    }
+
+    private function validateDestination(Request $request, bool $creating): array
+    {
+        return $request->validate([
+            'user_id' => [$creating ? 'required' : 'sometimes', 'integer', 'exists:users,id'],
+            'destination_name' => ['required', 'string', 'max:255'],
+            'destination_type' => ['required', 'in:alam,edukasi,budaya,wahana,event'],
+            'description' => ['nullable', 'string', 'max:1000'],
+            'highlights' => ['nullable', 'string', 'max:1000'],
+            'province_code' => ['nullable', 'exists:provinces,code'],
+            'city_code' => ['nullable', 'exists:regencies,code'],
+            'address_full' => ['nullable', 'string', 'max:500'],
+            'maps_pin_url' => ['nullable', 'string', 'max:500'],
+            'open_days' => ['nullable', 'array'],
+            'open_days.*' => ['string'],
+            'open_time' => ['nullable', 'string', 'max:8'],
+            'close_time' => ['nullable', 'string', 'max:8'],
+            'holiday_notes' => ['nullable', 'string', 'max:255'],
+            'contact_phone' => ['nullable', 'string', 'max:50'],
+            'contact_hours' => ['nullable', 'string', 'max:100'],
+            'verification_status' => ['nullable', 'in:draft,pending,verified,rejected'],
+            'is_live' => ['nullable', 'boolean'],
+            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_other_files' => ['nullable', 'array', 'max:5'],
+            'photo_other_files.*' => ['file', 'mimes:jpg,jpeg,png'],
+            'photo_other_remove' => ['nullable', 'array', 'max:5'],
+            'photo_other_remove.*' => ['string'],
+        ]);
+    }
+
+    private function provinceOptions(): array
+    {
+        return DB::table('provinces')
+            ->orderBy('name')
+            ->get(['code', 'name'])
+            ->map(fn ($item) => ['id' => $item->code, 'label' => $item->name])
+            ->all();
+    }
+
+    private function cityOptions(): array
+    {
+        return Regency::query()
+            ->orderBy('name')
+            ->get(['code', 'name'])
+            ->map(fn ($item) => ['id' => $item->code, 'label' => $item->name])
+            ->all();
+    }
+
+    private function mitraOptions(): array
+    {
+        return User::query()
+            ->where('role', 'mitra')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email'])
+            ->map(fn (User $user) => [
+                'id' => $user->id,
+                'label' => trim($user->name.' - '.$user->email),
+            ])
+            ->all();
     }
 }

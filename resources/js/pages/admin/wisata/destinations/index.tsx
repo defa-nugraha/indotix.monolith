@@ -77,6 +77,9 @@ export default function AdminWisataDestinationsIndex({
                                 admin.
                             </p>
                         </div>
+                        <Link href="/admin/wisata/destinations/create">
+                            <Button className="bg-sky-600 text-white hover:bg-sky-700">Tambah Destinasi</Button>
+                        </Link>
                     </div>
                     <form
                         className="mt-6 grid gap-3 md:grid-cols-4"

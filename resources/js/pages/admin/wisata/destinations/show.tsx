@@ -11,8 +11,9 @@ type Option = { id: string; label: string };
 type CitySelectOption = { value: string; label: string };
 
 type Destination = {
-    id: number;
-    encrypted_id: string;
+    id: number | null;
+    encrypted_id: string | null;
+    user_id?: number | null;
     destination_name: string | null;
     destination_type: string | null;
     description: string | null;
@@ -44,6 +45,8 @@ type Props = {
     provinces: Option[];
     cities: Option[];
     cityName?: string | null;
+    userOptions?: Array<{ id: number; label: string }>;
+    isCreate?: boolean;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -63,6 +66,8 @@ export default function AdminWisataDestinationShow({
     provinces,
     cities,
     cityName,
+    userOptions = [],
+    isCreate = false,
 }: Props) {
     const [cityCode, setCityCode] = useState(destination.city_code ?? '');
     const citySelectOptions: CitySelectOption[] = useMemo(
@@ -118,7 +123,7 @@ export default function AdminWisataDestinationShow({
             inputPlaceholder: destination.is_suspended
                 ? undefined
                 : 'Tulis alasan',
-            inputValidator: (value) => {
+            inputValidator: (value: string) => {
                 if (!destination.is_suspended && !value)
                     return 'Alasan wajib diisi.';
                 return null;
@@ -147,7 +152,7 @@ export default function AdminWisataDestinationShow({
                                 Destinasi Wisata
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-                                {destination.destination_name ?? 'Destinasi'}
+                                {isCreate ? 'Tambah Destinasi Wisata' : (destination.destination_name ?? 'Destinasi')}
                             </h1>
                             <p className="text-sm text-slate-500">
                                 {destination.user?.name} ·{' '}
@@ -155,13 +160,13 @@ export default function AdminWisataDestinationShow({
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <Badge
+                            {!isCreate && <Badge
                                 className={statusTone(
                                     destination.verification_status,
                                 )}
                             >
                                 {destination.verification_status}
-                            </Badge>
+                            </Badge>}
                             <Badge
                                 className={
                                     destination.is_live
@@ -171,14 +176,14 @@ export default function AdminWisataDestinationShow({
                             >
                                 {destination.is_live ? 'Live' : 'Draft'}
                             </Badge>
-                            {destination.is_suspended && (
+                            {!isCreate && destination.is_suspended && (
                                 <Badge className="bg-red-50 text-red-600">
                                     Suspended
                                 </Badge>
                             )}
                         </div>
                     </div>
-                    {destination.is_suspended &&
+                    {!isCreate && destination.is_suspended &&
                         destination.suspended_reason && (
                             <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
                                 Alasan suspend: {destination.suspended_reason}
@@ -230,16 +235,39 @@ export default function AdminWisataDestinationShow({
                         onSubmit={(event) => {
                             event.preventDefault();
                             const form = new FormData(event.currentTarget);
-                            form.append('_method', 'PUT');
+                            if (!isCreate) {
+                                form.append('_method', 'PUT');
+                            }
                             removedOtherPhotos.forEach((path) => {
                                 form.append('photo_other_remove[]', path);
                             });
                             router.post(
-                                `/admin/wisata/destinations/${destination.encrypted_id}`,
+                                isCreate
+                                    ? '/admin/wisata/destinations'
+                                    : `/admin/wisata/destinations/${destination.encrypted_id}`,
                                 form,
                             );
                         }}
                     >
+                        {isCreate && (
+                            <div className="grid gap-2 md:col-span-2">
+                                <label className="text-sm font-medium text-slate-700">
+                                    Mitra Wisata
+                                </label>
+                                <select
+                                    name="user_id"
+                                    defaultValue={destination.user_id ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Pilih mitra</option>
+                                    {userOptions.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <div className="grid gap-2">
                             <label className="text-sm font-medium text-slate-700">
                                 Nama destinasi
@@ -471,9 +499,9 @@ export default function AdminWisataDestinationShow({
                                 type="submit"
                                 className="bg-sky-600 text-white hover:bg-sky-700"
                             >
-                                Simpan Perubahan
+                                {isCreate ? 'Simpan Destinasi' : 'Simpan Perubahan'}
                             </Button>
-                            <Button
+                            {!isCreate && <Button
                                 type="button"
                                 variant="outline"
                                 className={
@@ -486,7 +514,20 @@ export default function AdminWisataDestinationShow({
                                 {destination.is_suspended
                                     ? 'Aktifkan Destinasi'
                                     : 'Suspend Destinasi'}
-                            </Button>
+                            </Button>}
+                            {!isCreate && (
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    onClick={() => {
+                                        if (confirm('Hapus destinasi ini?')) {
+                                            router.delete(`/admin/wisata/destinations/${destination.encrypted_id}`);
+                                        }
+                                    }}
+                                >
+                                    Hapus Destinasi
+                                </Button>
+                            )}
                         </div>
                     </form>
                 </section>

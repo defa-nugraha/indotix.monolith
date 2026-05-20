@@ -28,6 +28,7 @@ type EventDetail = {
     slug?: string | null;
     title: string;
     description?: string | null;
+    image_url?: string | null;
     city_name?: string | null;
     location?: string | null;
     address?: string | null;
@@ -146,7 +147,7 @@ export default function EventShow({
                     <section className="rounded-3xl bg-white p-6 shadow-sm">
                         <div className="h-56 overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500">
                             <img
-                                src="/images/placeholder-card.jpg"
+                                src={event.image_url ?? '/images/placeholder-card.jpg'}
                                 alt={event.title}
                                 className="h-full w-full object-cover"
                             />

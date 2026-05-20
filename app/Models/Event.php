@@ -26,6 +26,7 @@ class Event extends Model
         'title',
         'slug',
         'description',
+        'image_path',
         'city_code',
         'location',
         'address',

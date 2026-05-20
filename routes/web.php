@@ -184,6 +184,10 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
 
     Route::get('admin/events', [\App\Http\Controllers\Admin\EventController::class, 'index'])
         ->name('admin.events.index');
+    Route::get('admin/events/create', [\App\Http\Controllers\Admin\EventController::class, 'create'])
+        ->name('admin.events.create');
+    Route::post('admin/events', [\App\Http\Controllers\Admin\EventController::class, 'store'])
+        ->name('admin.events.store');
 
     Route::get('admin/events/tickets', [\App\Http\Controllers\Admin\EventTicketController::class, 'index'])
         ->name('admin.events.tickets.index');
@@ -240,6 +244,15 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::get('admin/events/{event}', [\App\Http\Controllers\Admin\EventController::class, 'show'])
         ->whereNumber('event')
         ->name('admin.events.show');
+    Route::get('admin/events/{event}/edit', [\App\Http\Controllers\Admin\EventController::class, 'edit'])
+        ->whereNumber('event')
+        ->name('admin.events.edit');
+    Route::put('admin/events/{event}', [\App\Http\Controllers\Admin\EventController::class, 'update'])
+        ->whereNumber('event')
+        ->name('admin.events.update');
+    Route::delete('admin/events/{event}', [\App\Http\Controllers\Admin\EventController::class, 'destroy'])
+        ->whereNumber('event')
+        ->name('admin.events.destroy');
     Route::post('admin/events/{event}/status', [\App\Http\Controllers\Admin\EventController::class, 'updateStatus'])
         ->whereNumber('event')
         ->name('admin.events.status');
@@ -336,10 +349,16 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
 
     Route::get('admin/wisata/destinations', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'index'])
         ->name('admin.wisata.destinations.index');
+    Route::get('admin/wisata/destinations/create', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'create'])
+        ->name('admin.wisata.destinations.create');
+    Route::post('admin/wisata/destinations', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'store'])
+        ->name('admin.wisata.destinations.store');
     Route::get('admin/wisata/destinations/{destination}', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'show'])
         ->name('admin.wisata.destinations.show');
     Route::put('admin/wisata/destinations/{destination}', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'update'])
         ->name('admin.wisata.destinations.update');
+    Route::delete('admin/wisata/destinations/{destination}', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'destroy'])
+        ->name('admin.wisata.destinations.destroy');
     Route::post('admin/wisata/destinations/{destination}/suspend', [\App\Http\Controllers\Admin\WisataDestinationController::class, 'suspend'])
         ->name('admin.wisata.destinations.suspend');
 

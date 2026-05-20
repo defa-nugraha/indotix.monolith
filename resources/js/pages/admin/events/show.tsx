@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,22 @@ export default function EventShow({ event }: { event: EventDetail }) {
                             <h1 className="text-2xl font-semibold text-slate-900">{event.title}</h1>
                             <p className="text-sm text-slate-500">EO: {event.organizer?.name ?? '-'}</p>
                         </div>
-                        <Badge className="bg-slate-100 text-slate-600">{event.status}</Badge>
+                        <div className="flex flex-wrap items-center justify-end gap-2">
+                            <Badge className="bg-slate-100 text-slate-600">{event.status}</Badge>
+                            <Link href={`/admin/events/${event.id}/edit`}>
+                                <Button variant="outline">Edit</Button>
+                            </Link>
+                            <Button
+                                variant="destructive"
+                                onClick={() => {
+                                    if (confirm('Hapus event ini?')) {
+                                        router.delete(`/admin/events/${event.id}`);
+                                    }
+                                }}
+                            >
+                                Hapus
+                            </Button>
+                        </div>
                     </div>
                     {event.status_reason && (
                         <p className="mt-3 text-sm text-slate-500">Alasan: {event.status_reason}</p>

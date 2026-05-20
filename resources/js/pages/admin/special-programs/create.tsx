@@ -20,6 +20,7 @@ type InventoryForm = {
 
 type ProgramForm = {
     id?: number;
+    created_by?: number | string | null;
     name: string;
     category: string;
     base_price: number | string;
@@ -35,6 +36,8 @@ type ProgramForm = {
 
 type Props = {
     program: ProgramForm | null;
+    adminOptions?: Array<{ value: number; label: string }>;
+    canChooseAdmin?: boolean;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -48,7 +51,11 @@ const categoryOptions = [
     { value: 'travel', label: 'Travel' },
 ];
 
-export default function SpecialProgramCreate({ program }: Props) {
+export default function SpecialProgramCreate({
+    program,
+    adminOptions = [],
+    canChooseAdmin = false,
+}: Props) {
     const formatRupiah = (value: string | number | null | undefined) =>
         formatCurrencyInput(value);
 
@@ -78,6 +85,7 @@ export default function SpecialProgramCreate({ program }: Props) {
         facilities: program?.facilities ?? [],
         inventories: program?.inventories ?? [],
         image_url: program?.image_url ?? null,
+        created_by: program?.created_by ?? '',
     });
 
     const showProgramFacilities = form.data.variants.length === 0;
@@ -302,6 +310,36 @@ export default function SpecialProgramCreate({ program }: Props) {
                             </select>
                             <InputError message={form.errors.category} />
                         </div>
+                        {canChooseAdmin && adminOptions.length > 0 && (
+                            <div>
+                                <label className="text-xs font-semibold text-slate-500 uppercase">
+                                    Admin Special Program
+                                </label>
+                                <select
+                                    value={form.data.created_by ?? ''}
+                                    onChange={(e) =>
+                                        form.setData(
+                                            'created_by',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">
+                                        Tidak ditugaskan khusus
+                                    </option>
+                                    {adminOptions.map((option) => (
+                                        <option
+                                            key={option.value}
+                                            value={option.value}
+                                        >
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={form.errors.created_by} />
+                            </div>
+                        )}
                         <div>
                             <label className="text-xs font-semibold text-slate-500 uppercase">
                                 Harga Dasar

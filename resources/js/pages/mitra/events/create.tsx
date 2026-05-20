@@ -8,20 +8,25 @@ import Select from 'react-select';
 
 type EventForm = {
     id?: number;
+    event_organizer_id?: number | string;
     title: string;
     description: string;
     city_code: string;
     location: string;
     address: string;
+    image?: File | null;
+    image_url?: string | null;
     start_at: string;
     end_at: string;
     capacity_total: number | string;
 };
 
 type Props = {
-    organizer: { id: number; name?: string | null };
+    organizer: { id: number | null; name?: string | null };
     event: EventForm | null;
     cityOptions: Array<{ code: string; label: string }>;
+    organizerOptions?: Array<{ id: number; name: string }>;
+    basePath?: string;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -32,13 +37,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type CitySelectOption = { value: string; label: string };
 
-export default function MitraEventCreate({ organizer, event, cityOptions }: Props) {
+export default function MitraEventCreate({ organizer, event, cityOptions, organizerOptions = [], basePath = '/mitra/events' }: Props) {
     const form = useForm<EventForm>({
+        event_organizer_id: event?.event_organizer_id ?? organizer.id ?? organizerOptions[0]?.id ?? '',
         title: event?.title ?? '',
         description: event?.description ?? '',
         city_code: event?.city_code ?? '',
         location: event?.location ?? '',
         address: event?.address ?? '',
+        image: null,
+        image_url: event?.image_url ?? null,
         start_at: event?.start_at ?? '',
         end_at: event?.end_at ?? '',
         capacity_total: event?.capacity_total ?? 0,
@@ -68,15 +76,18 @@ export default function MitraEventCreate({ organizer, event, cityOptions }: Prop
         const payload = {
             ...form.data,
             capacity_total: Number(form.data.capacity_total || 0),
+            _method: event?.id ? 'put' : undefined,
         };
         if (event?.id) {
-            router.put(`/mitra/events/${event.id}`, payload, {
+            router.post(`${basePath}/${event.id}`, payload, {
+                forceFormData: true,
                 onSuccess: () => Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Event diperbarui.' }),
                 onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Periksa data form.' }),
             });
             return;
         }
-        form.post('/mitra/events', {
+        form.post(basePath, {
+            forceFormData: true,
             onSuccess: () => Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Event dibuat.' }),
             onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Periksa data form.' }),
         });
@@ -101,6 +112,23 @@ export default function MitraEventCreate({ organizer, event, cityOptions }: Prop
                             submit();
                         }}
                     >
+                        {organizerOptions.length > 0 && (
+                            <div className="md:col-span-2">
+                                <label className="text-xs font-semibold uppercase text-slate-500">Organizer Event</label>
+                                <select
+                                    value={form.data.event_organizer_id ?? ''}
+                                    onChange={(e) => form.setData('event_organizer_id', e.target.value)}
+                                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    {organizerOptions.map((option) => (
+                                        <option key={option.id} value={option.id}>
+                                            {option.name}
+                                        </option>
+                                    ))}
+                                </select>
+                                <InputError message={form.errors.event_organizer_id} />
+                            </div>
+                        )}
                         <div className="md:col-span-2">
                             <label className="text-xs font-semibold uppercase text-slate-500">Judul Event</label>
                             <input
@@ -118,6 +146,24 @@ export default function MitraEventCreate({ organizer, event, cityOptions }: Prop
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 rows={4}
                             />
+                        </div>
+                        <div className="md:col-span-2">
+                            <label className="text-xs font-semibold uppercase text-slate-500">Gambar Event</label>
+                            {event?.image_url && (
+                                <img
+                                    src={event.image_url}
+                                    alt={event.title}
+                                    className="mt-2 h-40 w-full rounded-xl object-cover md:w-80"
+                                />
+                            )}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => form.setData('image', e.target.files?.[0] ?? null)}
+                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                            <p className="mt-1 text-xs text-slate-500">Gunakan poster atau banner event. Maksimal 5 MB.</p>
+                            <InputError message={form.errors.image} />
                         </div>
                         <div>
                             <label className="text-xs font-semibold uppercase text-slate-500">Kota/Kabupaten</label>

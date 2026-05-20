@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -103,6 +104,7 @@ class PublicEventController extends Controller
                 'slug' => $event->slug,
                 'title' => $event->title,
                 'description' => $event->description,
+                'image_url' => $event->image_path ? Storage::url($event->image_path) : '/images/placeholder-card.jpg',
                 'city_name' => $this->resolveCityName($event->city_code),
                 'location' => $event->location,
                 'address' => $event->address,
