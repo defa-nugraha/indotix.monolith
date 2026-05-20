@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ReactNode } from 'react';
-import { ChartLine, Link2, PiggyBank, LayoutGrid, TicketCheck, Wallet, FileText, MessageCircle } from 'lucide-react';
+import { Bell, Link2, PiggyBank, LayoutGrid, TicketCheck, Wallet, FileText, MessageCircle } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
+import CoachMarks from '@/components/coach-marks';
 
 type Props = {
     children: ReactNode;
@@ -25,7 +26,7 @@ export default function AffiliateLayout({ children, active }: Props) {
     };
 
     return (
-        <PublicLayout showCategories={false} showChips={false}>
+        <PublicLayout showCategories={false} showChips={false} coachContext="none">
             <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
                     <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -50,6 +51,7 @@ export default function AffiliateLayout({ children, active }: Props) {
                     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">{children}</div>
                 </div>
             </main>
+            <CoachMarks context="affiliate" />
         </PublicLayout>
     );
 }

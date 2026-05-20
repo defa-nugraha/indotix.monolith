@@ -8,6 +8,7 @@ import { usePage } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 import { loadCkeditor, warmupCkeditor } from '@/lib/ckeditor-loader';
 import Swal from 'sweetalert2';
+import CoachMarks from '@/components/coach-marks';
 
 export default function AppSidebarLayout({
     children,
@@ -72,6 +73,7 @@ export default function AppSidebarLayout({
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 {children}
             </AppContent>
+            <CoachMarks context={isMitra ? 'mitra' : 'admin'} />
         </AppShell>
     );
 }

@@ -4,12 +4,14 @@ import type { ReactNode } from 'react';
 import PublicHeader, { type PublicHeaderProps } from '@/components/public-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import CoachMarks from '@/components/coach-marks';
 
 type PublicLayoutProps = PublicHeaderProps & {
     children: ReactNode;
     skeleton?: React.ReactNode;
     className?: string;
     contentClassName?: string;
+    coachContext?: 'public' | 'none';
 };
 
 export default function PublicLayout({
@@ -17,6 +19,7 @@ export default function PublicLayout({
     skeleton,
     className,
     contentClassName,
+    coachContext = 'public',
     ...headerProps
 }: PublicLayoutProps) {
     const { url } = usePage();
@@ -62,6 +65,7 @@ export default function PublicLayout({
                     </div>
                 )}
             </div>
+            {coachContext !== 'none' && <CoachMarks context="public" />}
         </div>
     );
 }

@@ -191,6 +191,7 @@ export default function PublicHeader({
             <div
                 className={cn('relative flex w-full min-w-0 items-center', className)}
                 ref={searchWrapperRef}
+                data-coach="public-search"
             >
                 {search?.onSubmit ? (
                     <form className="w-full min-w-0" onSubmit={search.onSubmit}>
@@ -298,7 +299,7 @@ export default function PublicHeader({
 
                     <div className="hidden items-center gap-4 md:flex">
                         {showCart && (
-                            <Link href="/retail-shop/cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
+                            <Link href="/retail-shop/cart" data-coach="public-cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
                                 <ShoppingCart className="h-4 w-4" />
                                 Keranjang
                                 {Boolean(souvenir_cart_count) && (
@@ -325,7 +326,7 @@ export default function PublicHeader({
                             </div>
                         )}
                         {isUser && (
-                            <div className="flex items-center gap-4 text-sm font-semibold text-slate-600">
+                            <div data-coach="public-user-menu" className="flex items-center gap-4 text-sm font-semibold text-slate-600">
                                 {userMenu
                                     .filter((item) => item.show)
                                     .map((item) => (
@@ -375,7 +376,7 @@ export default function PublicHeader({
 
                     <div className="flex items-center gap-2 md:hidden">
                         {showCart && (
-                            <Link href="/retail-shop/cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
+                            <Link href="/retail-shop/cart" data-coach="public-cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
                                 <ShoppingCart className="h-4 w-4" />
                                 <span className="hidden sm:inline">Keranjang</span>
                                 <span className="sr-only">Keranjang</span>
@@ -486,7 +487,7 @@ export default function PublicHeader({
             </div>
 
             {showCategories && hasCategories && (
-                <div className="border-t border-slate-100">
+                <div className="border-t border-slate-100" data-coach="public-categories">
                     <div className="mx-auto flex w-full max-w-6xl items-center gap-6 overflow-x-auto px-4 py-3 text-sm font-semibold md:px-8">
                         {resolvedCategories.map((item) => {
                             const active = item.active ?? isActivePath(item.href);
