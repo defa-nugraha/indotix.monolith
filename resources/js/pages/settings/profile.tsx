@@ -670,6 +670,8 @@ export default function Profile({
     const [newVillageOption, setNewVillageOption] =
         useState<VillageOption | null>(null);
 
+    const isCustomerRole = auth?.user?.role === 'user';
+
     const newProvinceCodeValue = addressForm.data.province_code ?? '';
     const newCityCodeValue = addressForm.data.city_code ?? '';
     const newDistrictCodeValue = addressForm.data.district_code ?? '';
@@ -893,20 +895,21 @@ export default function Profile({
                             </Form>
                         </div>
 
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
-                                    <h2 className="text-lg font-semibold text-slate-900">
-                                        Alamat Pengiriman
-                                    </h2>
-                                    <p className="mt-2 text-sm text-slate-500">
-                                        Kelola alamat utama untuk pengiriman
-                                        pesanan.
-                                    </p>
+                        {isCustomerRole && (
+                            <div className="rounded-2xl bg-white p-6 shadow-sm">
+                                <div className="flex items-center justify-between gap-4">
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-slate-900">
+                                            Alamat Pengiriman
+                                        </h2>
+                                        <p className="mt-2 text-sm text-slate-500">
+                                            Kelola alamat utama untuk pengiriman
+                                            pesanan.
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="mt-5 grid gap-4">
+                                <div className="mt-5 grid gap-4">
                                 {addresses.length > 0 ? (
                                     addresses.map((address) => (
                                         <AddressCard
@@ -1320,6 +1323,7 @@ export default function Profile({
                                 </button>
                             </form>
                         </div>
+                        )}
 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-slate-900">
@@ -1336,18 +1340,20 @@ export default function Profile({
                                 >
                                     Ubah Password
                                 </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        deleteForm.reset();
-                                        deleteForm.clearErrors();
-                                        setDeleteConfirmed(false);
-                                        setDeleteOpen(true);
-                                    }}
-                                    className="rounded-lg border border-rose-200 px-5 py-2 text-sm font-semibold text-rose-600 hover:border-rose-300"
-                                >
-                                    Hapus Akun
-                                </button>
+                                {isCustomerRole && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            deleteForm.reset();
+                                            deleteForm.clearErrors();
+                                            setDeleteConfirmed(false);
+                                            setDeleteOpen(true);
+                                        }}
+                                        className="rounded-lg border border-rose-200 px-5 py-2 text-sm font-semibold text-rose-600 hover:border-rose-300"
+                                    >
+                                        Hapus Akun
+                                    </button>
+                                )}
                                 <Link
                                     href="/logout"
                                     method="post"
@@ -1553,7 +1559,7 @@ export default function Profile({
                         </div>
                     </div>
                 )}
-                {deleteOpen && (
+                {isCustomerRole && deleteOpen && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
                         <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
                             <div className="flex items-start justify-between">

@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { ReactNode } from 'react';
-import { Bell, Link2, PiggyBank, LayoutGrid, TicketCheck, Wallet, FileText, MessageCircle } from 'lucide-react';
+import { Bell, Link2, PiggyBank, LayoutGrid, TicketCheck, Wallet, FileText, MessageCircle, UserCircle } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 import CoachMarks from '@/components/coach-marks';
 
@@ -16,6 +16,7 @@ const menuItems = [
     { key: 'commissions', label: 'Komisi', href: '/affiliate/commissions', icon: Wallet },
     { key: 'payouts', label: 'Payout', href: '/affiliate/payouts', icon: PiggyBank },
     { key: 'notifications', label: 'Notifikasi', href: '/affiliate/notifications', icon: Bell },
+    { key: 'profile', label: 'Kelola Profil', href: '/affiliate/profile', icon: UserCircle },
     { key: 'terms', label: 'Ketentuan', href: '/affiliate/terms', icon: FileText },
     { key: 'support', label: 'Bantuan', href: '/affiliate/support', icon: MessageCircle },
 ];

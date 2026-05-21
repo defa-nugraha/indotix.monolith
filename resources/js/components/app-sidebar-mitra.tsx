@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { AlertCircle, Banknote, Bell, Building2, CalendarDays, ChevronDown, LayoutGrid, MapPinned, QrCode, Ticket, Users, MessageCircle, Star } from 'lucide-react';
+import { AlertCircle, Banknote, Bell, Building2, CalendarDays, ChevronDown, LayoutGrid, MapPinned, QrCode, Ticket, Users, MessageCircle, Star, UserCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { NavMain } from '@/components/nav-main';
 import { useCurrentUrl } from '@/hooks/use-current-url';
@@ -28,6 +28,11 @@ const mainNavItems: NavItem[] = [
         title: 'Live Chat',
         href: '/mitra/chat',
         icon: MessageCircle,
+    },
+    {
+        title: 'Kelola Profil',
+        href: '/settings/profile',
+        icon: UserCircle,
     },
 ];
 

@@ -34,6 +34,13 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        if ($request->user()?->role !== 'user') {
+            return Inertia::render('settings/staff-profile', [
+                'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+                'status' => $request->session()->get('status'),
+            ]);
+        }
+
         $provinces = DB::table('provinces')
             ->orderBy('name')
             ->get(['code', 'name'])

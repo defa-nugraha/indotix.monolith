@@ -16,6 +16,7 @@ import {
     BookOpen,
     QrCode,
     Ticket,
+    UserCircle,
 } from 'lucide-react';
 import {
     Collapsible,
@@ -40,12 +41,20 @@ import type { NavItem } from '@/types';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import AppLogo from './app-logo';
 
+const dashboardNavItem: NavItem = {
+    title: 'Dashboard',
+    href: dashboard(),
+    icon: LayoutGrid,
+};
+
+const profileNavItem: NavItem = {
+    title: 'Kelola Profil',
+    href: '/settings/profile',
+    icon: UserCircle,
+};
+
 const baseMainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
+    dashboardNavItem,
     {
         title: 'Kelola User',
         href: '/admin/users',
@@ -71,8 +80,8 @@ export function AppSidebarAdmin() {
     const isRetailAdmin = role === 'admin_retail';
     const isSpecialAdmin = role === 'admin_special_program';
     const mainNavItems = isFullAdmin
-        ? baseMainNavItems
-        : baseMainNavItems.filter((item) => item.title === 'Dashboard');
+        ? [...baseMainNavItems, profileNavItem]
+        : [dashboardNavItem, profileNavItem];
     const { isCurrentUrl } = useCurrentUrl();
     const isHotelSectionActive =
         isCurrentUrl('/hotels') ||
