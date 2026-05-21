@@ -21,7 +21,7 @@ type TargetRect = {
     height: number;
 };
 
-const guideStoragePrefix = 'indotix.coach-mark.v3.seen';
+const guideStoragePrefix = 'indotix.coach-mark.v4.seen';
 
 const pathWithoutQuery = (url: string) => url.split('?')[0] || '/';
 
@@ -186,9 +186,167 @@ const mitraPagePurpose = (path: string) => {
     };
 };
 
+
+const adminDashboardCopy = (role?: string) => {
+    if (role === 'admin_academy') {
+        return {
+            heroTitle: 'Ringkasan operasional Academy',
+            heroDescription: 'Bagian ini menunjukkan fokus dashboard Academy: booking kelas, tiket kelas, dan kelas aktif yang perlu dipantau hari ini.',
+            metricsTitle: 'Angka penting Academy',
+            metricsDescription: 'Gunakan kartu ini untuk melihat booking hari ini, tiket kelas terjual, dan jumlah kelas aktif sebelum membuka modul detail.',
+            activityTitle: 'Aktivitas kelas terbaru',
+            activityDescription: 'Pantau aktivitas terbaru seperti booking, pembayaran, atau perubahan data kelas agar tindak lanjut tidak tertunda.',
+            statusTitle: 'Status yang perlu ditindaklanjuti',
+            statusDescription: 'Area ini menampilkan pembayaran, review, atau refund yang perlu dicek oleh admin Academy.',
+        };
+    }
+
+    if (role === 'admin_retail') {
+        return {
+            heroTitle: 'Ringkasan operasional Retail Shop',
+            heroDescription: 'Bagian ini merangkum order, item terjual, dan produk aktif untuk membantu admin retail menentukan prioritas kerja.',
+            metricsTitle: 'Angka penting Retail Shop',
+            metricsDescription: 'Gunakan kartu ini untuk memantau order hari ini, item terjual, dan produk aktif sebelum membuka modul produk atau order.',
+            activityTitle: 'Aktivitas order terbaru',
+            activityDescription: 'Pantau order, stok, refund, atau pengiriman terbaru agar proses fulfillment tetap lancar.',
+            statusTitle: 'Status order dan refund',
+            statusDescription: 'Area ini membantu menemukan pembayaran, refund, atau pekerjaan retail yang membutuhkan tindak lanjut cepat.',
+        };
+    }
+
+    if (role === 'admin_special_program') {
+        return {
+            heroTitle: 'Ringkasan Special Program',
+            heroDescription: 'Bagian ini merangkum booking, tiket terjual, dan program aktif yang sedang berjalan.',
+            metricsTitle: 'Angka penting Special Program',
+            metricsDescription: 'Gunakan kartu ini untuk melihat booking hari ini, tiket terjual, dan jumlah program aktif.',
+            activityTitle: 'Aktivitas program terbaru',
+            activityDescription: 'Pantau booking, peserta, scan QR, atau perubahan status program terbaru dari area ini.',
+            statusTitle: 'Status booking dan review',
+            statusDescription: 'Area ini menampilkan pembayaran, review, atau refund yang perlu ditindaklanjuti admin Special Program.',
+        };
+    }
+
+    return {
+        heroTitle: 'Pusat kontrol Admin Utama',
+        heroDescription: 'Bagian ini merangkum kondisi operasional INDOTIX lintas produk: transaksi, tiket, mitra, pembayaran, payout, dan review.',
+        metricsTitle: 'Angka operasional utama',
+        metricsDescription: 'Gunakan kartu metrik untuk melihat transaksi hari ini, tiket terjual, dan mitra aktif sebelum membuka modul detail.',
+        activityTitle: 'Aktivitas platform terbaru',
+        activityDescription: 'Area ini membantu admin melihat aktivitas terbaru agar perubahan penting tidak terlewat.',
+        statusTitle: 'Status sistem yang perlu dicek',
+        statusDescription: 'Pantau review mitra, pembayaran pending, dan payout pending untuk menentukan pekerjaan prioritas.',
+    };
+};
+
+const adminDashboardSteps = (role?: string): CoachStep[] => {
+    const copy = adminDashboardCopy(role);
+
+    return [
+        {
+            selector: 'aside a[href="/dashboard"]',
+            title: `Dashboard ${roleLabel(role)}`,
+            description: 'Gunakan menu Dashboard untuk kembali ke ringkasan utama sesuai hak akses role Anda.',
+        },
+        {
+            selector: '[data-coach="dashboard-hero"]',
+            title: copy.heroTitle,
+            description: copy.heroDescription,
+        },
+        {
+            selector: '[data-coach="dashboard-metrics"]',
+            title: copy.metricsTitle,
+            description: copy.metricsDescription,
+        },
+        {
+            selector: '[data-coach="dashboard-activity"]',
+            title: copy.activityTitle,
+            description: copy.activityDescription,
+        },
+        {
+            selector: '[data-coach="dashboard-status"]',
+            title: copy.statusTitle,
+            description: copy.statusDescription,
+        },
+    ];
+};
+
+const mitraDashboardSteps = (): CoachStep[] => [
+    {
+        selector: 'aside a[href="/mitra/dashboard"]',
+        title: 'Dashboard Mitra',
+        description: 'Gunakan menu ini untuk kembali ke ringkasan performa bisnis mitra Anda.',
+    },
+    {
+        selector: '[data-coach="dashboard-hero"]',
+        title: 'Ringkasan performa mitra',
+        description: 'Bagian ini menyesuaikan isi dashboard dengan jenis mitra: hotel, wisata, atau event.',
+    },
+    {
+        selector: '[data-coach="dashboard-onboarding"]',
+        title: 'Pilih jenis mitra',
+        description: 'Jika belum memilih jenis mitra, mulai dari kartu ini agar sistem menampilkan alur pendaftaran yang sesuai.',
+    },
+    {
+        selector: '[data-coach="dashboard-verification"]',
+        title: 'Status verifikasi mitra',
+        description: 'Pantau status dokumen dan payout. Jika ditolak, perbaiki data dari tombol lengkapi dokumen.',
+    },
+    {
+        selector: '[data-coach="dashboard-metrics"]',
+        title: 'Metrik bisnis utama',
+        description: 'Kartu ini menampilkan angka penting seperti booking, penjualan tiket, pendapatan, atau kapasitas sesuai jenis mitra.',
+    },
+    {
+        selector: '[data-coach="dashboard-activity"]',
+        title: 'Aktivitas terbaru',
+        description: 'Gunakan area ini untuk mengecek booking, pembayaran, validasi QR, atau perubahan terbaru pada produk Anda.',
+    },
+    {
+        selector: '[data-coach="dashboard-status"]',
+        title: 'Status operasional',
+        description: 'Pantau kondisi yang perlu ditindaklanjuti, seperti verifikasi, pembayaran, payout, atau pekerjaan operasional lain.',
+    },
+];
+
+const affiliateDashboardSteps = (): CoachStep[] => [
+    {
+        selector: 'aside a[href="/affiliate"]',
+        title: 'Dashboard Afiliasi',
+        description: 'Gunakan menu ini untuk kembali ke ringkasan performa afiliasi Anda.',
+    },
+    {
+        selector: '[data-coach="dashboard-hero"]',
+        title: 'Ringkasan akun afiliasi',
+        description: 'Bagian ini menampilkan konteks akun afiliasi dan status performa link promosi Anda.',
+    },
+    {
+        selector: '[data-coach="dashboard-metrics"]',
+        title: 'Performa link promosi',
+        description: 'Pantau total klik, total booking, dan konversi untuk menilai efektivitas link atau kode afiliasi.',
+    },
+    {
+        selector: '[data-coach="dashboard-status"]',
+        title: 'Ringkasan komisi',
+        description: 'Area ini menampilkan total komisi, komisi disetujui, dan komisi pending sebelum Anda membuka menu payout.',
+    },
+];
+
 const buildSteps = (context: CoachContext, path: string, role?: string): CoachStep[] => {
     const quotedPath = quoteSelectorValue(path);
     const currentMenuSelector = `aside a[href="${quotedPath}"], a[data-coach-current="true"]`;
+
+    if (context === 'admin' && path === '/dashboard') {
+        return adminDashboardSteps(role);
+    }
+
+    if (context === 'mitra' && path === '/mitra/dashboard') {
+        return mitraDashboardSteps();
+    }
+
+    if (context === 'affiliate' && path === '/affiliate') {
+        return affiliateDashboardSteps();
+    }
 
     if (context === 'public') {
         const label = publicSectionLabel(path);

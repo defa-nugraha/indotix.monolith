@@ -21,7 +21,7 @@ export default function AffiliateDashboard({ affiliate, stats }: Props) {
         <>
             <Head title="Dashboard Afiliasi" />
             <div className="space-y-6">
-                <div>
+                <div data-coach="dashboard-hero">
                     <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Dashboard Afiliasi</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">
                         Halo {auth?.user?.name ?? affiliate.name}
@@ -31,7 +31,7 @@ export default function AffiliateDashboard({ affiliate, stats }: Props) {
                     </p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div data-coach="dashboard-metrics" className="grid gap-4 md:grid-cols-3">
                     {[
                         { label: 'Total Klik', value: stats.total_clicks },
                         { label: 'Total Booking', value: stats.total_bookings },
@@ -44,7 +44,7 @@ export default function AffiliateDashboard({ affiliate, stats }: Props) {
                     ))}
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div data-coach="dashboard-status" className="grid gap-4 md:grid-cols-3">
                     {[
                         { label: 'Total Komisi', value: stats.total_commission },
                         { label: 'Komisi Disetujui', value: stats.approved_commission },

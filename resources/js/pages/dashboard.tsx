@@ -208,7 +208,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                 <div className="pointer-events-none absolute right-[-10%] top-0 h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
                 <div className="pointer-events-none absolute bottom-[-15%] left-[20%] h-80 w-80 rounded-full bg-amber-300/20 blur-[140px]" />
 
-                <section className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
+                <section data-coach="dashboard-hero" className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-3">
                             <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
@@ -236,7 +236,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                         )}
                     </div>
 
-                    <div className="mt-6 grid gap-4 lg:grid-cols-3">
+                    <div data-coach="dashboard-metrics" className="mt-6 grid gap-4 lg:grid-cols-3">
                         {summaryCards.map((item) => (
                             <div
                                 key={item.title}
@@ -264,7 +264,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                 </section>
 
                 <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-                    <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                    <section data-coach="dashboard-activity" className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">
@@ -310,7 +310,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                         </div>
                     </section>
 
-                    <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                    <section data-coach="dashboard-status" className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div>
                             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">
                                 Status Sistem
