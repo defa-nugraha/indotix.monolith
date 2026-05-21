@@ -70,6 +70,122 @@ const publicSectionLabel = (path: string) => {
     return 'INDOTIX';
 };
 
+const adminPagePurpose = (path: string) => {
+    if (path.startsWith('/admin/chat')) {
+        return {
+            title: 'Pantau percakapan pengguna',
+            description: 'Gunakan halaman ini untuk membaca pesan masuk, melihat konteks percakapan, dan merespons kebutuhan pengguna dengan cepat.',
+            list: 'Daftar percakapan membantu Anda memprioritaskan chat yang perlu ditindaklanjuti.',
+        };
+    }
+    if (path.startsWith('/admin/users')) {
+        return {
+            title: 'Kelola akun pengguna',
+            description: 'Periksa status, verifikasi, detail akun, dan aktivitas pengguna dari halaman ini.',
+            list: 'Gunakan daftar user untuk membuka detail akun atau mengambil tindakan administratif yang diperlukan.',
+        };
+    }
+    if (path.startsWith('/admin/reviews')) {
+        return {
+            title: 'Moderasi ulasan produk',
+            description: 'Pantau ulasan dari pengguna agar kualitas informasi produk tetap terjaga.',
+            list: 'Daftar ulasan membantu Anda melihat rating, komentar, dan produk yang perlu ditinjau.',
+        };
+    }
+    if (path.startsWith('/admin/events')) {
+        return {
+            title: 'Kelola operasional event',
+            description: 'Atur event, tiket, booking, peserta, QR scan, review, hingga laporan event dari modul ini.',
+            list: 'Daftar event atau transaksi menampilkan data yang perlu dicek sebelum Anda membuka detail atau memprosesnya.',
+        };
+    }
+    if (path.startsWith('/admin/wisata')) {
+        return {
+            title: 'Kelola produk wisata',
+            description: 'Gunakan modul ini untuk mengelola destinasi, tiket, booking, validasi QR, dan operasional wisata.',
+            list: 'Daftar wisata membantu Anda melihat destinasi, tiket, transaksi, atau laporan yang sedang aktif.',
+        };
+    }
+    if (path.startsWith('/admin/special-programs')) {
+        return {
+            title: 'Kelola special program',
+            description: 'Atur program, tiket, booking, peserta, QR scan, serta ulasan special program dari halaman ini.',
+            list: 'Daftar program atau transaksi membantu Anda memantau program yang sudah siap ditampilkan ke pengguna.',
+        };
+    }
+    if (path.startsWith('/admin/academy')) {
+        return {
+            title: 'Kelola kelas academy',
+            description: 'Atur kelas, tiket, booking, peserta, scan kehadiran, dan laporan academy dari modul ini.',
+            list: 'Daftar kelas atau booking membantu Anda memastikan jadwal, kapasitas, dan status kelas tetap terkendali.',
+        };
+    }
+    if (path.startsWith('/admin/retail-shop')) {
+        return {
+            title: 'Kelola retail shop',
+            description: 'Atur produk, kategori, stok, order, pengiriman, refund, promo, dan laporan retail dari modul ini.',
+            list: 'Daftar produk atau order membantu Anda memantau stok, status transaksi, dan pemenuhan pesanan.',
+        };
+    }
+    if (path.startsWith('/admin/public')) {
+        return {
+            title: 'Kelola konten publik',
+            description: 'Gunakan halaman ini untuk memperbarui banner, promo, FAQ, kontak, partner, dan informasi publik.',
+            list: 'Daftar konten membantu Anda memastikan materi yang tampil ke pengguna tetap terbaru.',
+        };
+    }
+    if (path.startsWith('/admin/system')) {
+        return {
+            title: 'Kelola sistem dan akses',
+            description: 'Pantau audit, konfigurasi, notifikasi, role, dan akun admin spesialis dari modul ini.',
+            list: 'Daftar sistem membantu Anda memeriksa akses, perubahan data, dan konfigurasi operasional.',
+        };
+    }
+
+    return {
+        title: 'Pantau ringkasan operasional',
+        description: 'Gunakan halaman ini untuk melihat kondisi terbaru sistem dan memilih modul yang perlu ditindaklanjuti.',
+        list: 'Area data menampilkan ringkasan, daftar, atau kartu informasi yang relevan dengan halaman.',
+    };
+};
+
+const mitraPagePurpose = (path: string) => {
+    if (path.startsWith('/mitra/events')) {
+        return {
+            title: 'Kelola event Anda',
+            description: 'Atur informasi event, tiket, booking, peserta, QR scan, ulasan, dan laporan dari menu event.',
+            list: 'Daftar ini membantu Anda memantau event dan transaksi yang perlu ditindaklanjuti.',
+        };
+    }
+    if (path.startsWith('/mitra/wisata')) {
+        return {
+            title: 'Kelola destinasi wisata',
+            description: 'Atur profil destinasi, tiket, booking, validasi QR, ulasan, dan laporan wisata dari modul ini.',
+            list: 'Daftar ini membantu Anda melihat tiket, booking, dan aktivitas wisata yang sedang berjalan.',
+        };
+    }
+    if (path.startsWith('/mitra/hotels') || path.startsWith('/mitra/room')) {
+        return {
+            title: 'Kelola hotel dan kamar',
+            description: 'Atur profil hotel, tipe kamar, ketersediaan, booking, ulasan, dan pendapatan dari modul hotel.',
+            list: 'Daftar ini membantu Anda memantau hotel, kamar, inventory, dan transaksi.',
+        };
+    }
+    if (path.startsWith('/mitra/finance')) {
+        return {
+            title: 'Pantau keuangan mitra',
+            description: 'Lihat ringkasan pendapatan, payout, dan rekening agar proses pencairan tetap jelas.',
+            list: 'Data keuangan membantu Anda mencocokkan transaksi, payout, dan status pencairan.',
+        };
+    }
+
+    return {
+        title: 'Pantau operasional mitra',
+        description: 'Gunakan halaman ini untuk melihat data penting dan memilih pekerjaan yang perlu diproses.',
+        list: 'Area data menampilkan informasi operasional yang relevan dengan akun mitra Anda.',
+    };
+};
+
 const buildSteps = (context: CoachContext, path: string, role?: string): CoachStep[] => {
     const quotedPath = quoteSelectorValue(path);
     const currentMenuSelector = `aside a[href="${quotedPath}"], a[data-coach-current="true"]`;
@@ -110,76 +226,68 @@ const buildSteps = (context: CoachContext, path: string, role?: string): CoachSt
             },
             {
                 selector: 'main h1, main h2, main h3',
-                title: 'Informasi halaman',
-                description: 'Bagian ini menjelaskan fungsi halaman yang sedang dibuka.',
+                title: 'Fokus halaman affiliate',
+                description: 'Bagian ini menjelaskan konteks pekerjaan, seperti membuat link promosi, melihat komisi, atau mengajukan payout.',
             },
             {
-                selector: 'main a[href], main button',
-                title: 'Aksi utama',
-                description: 'Tombol dan link di area ini digunakan untuk membuat link, melihat detail, atau mengelola data affiliate.',
+                selector: 'main table, main [class*="grid"], main form',
+                title: 'Data dan pekerjaan utama',
+                description: 'Area ini berisi katalog, link promosi, riwayat komisi, atau form yang perlu Anda isi.',
             },
         ];
     }
 
     if (context === 'mitra') {
         const label = mitraSectionLabel(path);
+        const purpose = mitraPagePurpose(path);
 
         return [
             {
                 selector: currentMenuSelector,
                 title: `Menu ${label}`,
-                description: 'Menu samping membantu Anda berpindah ke data produk, booking, QR scan, ulasan, dan keuangan sesuai jenis mitra.',
+                description: 'Gunakan menu yang sedang aktif ini untuk memahami posisi Anda di panel mitra dan berpindah ke pekerjaan terkait.',
             },
             {
                 selector: 'main h1, [role="main"] h1, h1',
-                title: 'Ringkasan halaman',
-                description: `Bagian ini memberi konteks pekerjaan utama untuk fitur ${label}.`,
+                title: purpose.title,
+                description: purpose.description,
             },
             {
                 selector: 'main form, input[placeholder*="Cari"], input[name="search"], select[name="status"]',
-                title: 'Filter dan pencarian',
-                description: 'Gunakan pencarian atau filter untuk menemukan data lebih cepat sebelum melakukan aksi.',
+                title: 'Temukan data yang perlu diproses',
+                description: 'Gunakan pencarian dan filter untuk mempersempit data berdasarkan status, tanggal, nama produk, atau transaksi.',
             },
             {
-                selector: 'main a[href$="/create"], main button[type="submit"], main button',
-                title: 'Aksi operasional',
-                description: 'Gunakan tombol aksi untuk menambah, menyimpan, memproses, memvalidasi, atau memperbarui data.',
-            },
-            {
-                selector: 'main table, main [data-coach-list]',
-                title: 'Daftar data',
-                description: 'Data utama halaman ditampilkan di sini. Buka detail atau gunakan aksi pada tiap baris bila tersedia.',
+                selector: 'main table, main [data-coach-list], main [class*="grid"]',
+                title: 'Area data utama',
+                description: purpose.list,
             },
         ];
     }
 
     const adminLabel = adminSectionLabel(path);
+    const purpose = adminPagePurpose(path);
 
     return [
         {
             selector: currentMenuSelector,
             title: `Navigasi ${roleLabel(role)}`,
-            description: `Menu ini membawa Anda ke area ${adminLabel}. Gunakan sidebar untuk berpindah antar modul operasional.`,
+            description: `Anda sedang berada di area ${adminLabel}. Gunakan menu ini untuk memahami konteks modul yang sedang dikelola.`,
         },
         {
             selector: 'main h1, [role="main"] h1, h1',
-            title: `Halaman ${adminLabel}`,
-            description: 'Judul dan deskripsi halaman menjelaskan data yang sedang dikelola.',
+            title: purpose.title,
+            description: purpose.description,
         },
         {
             selector: 'main form, input[placeholder*="Cari"], input[name="search"], select[name="status"]',
-            title: 'Pencarian dan filter',
-            description: 'Gunakan area ini untuk mempersempit data berdasarkan kata kunci, status, role, kategori, atau periode.',
+            title: 'Saring data sebelum diproses',
+            description: 'Gunakan pencarian dan filter untuk menemukan data tertentu tanpa harus menelusuri semua baris.',
         },
         {
-            selector: 'main a[href$="/create"], main button[type="submit"], main button',
-            title: 'Tombol aksi',
-            description: 'Tombol ini digunakan untuk menambah data, menyimpan perubahan, mengubah status, scan QR, atau memproses transaksi.',
-        },
-        {
-            selector: 'main table, main [data-coach-list]',
-            title: 'Daftar dan detail data',
-            description: 'Tabel atau kartu ini adalah area kerja utama. Gunakan aksi pada baris data untuk melihat, mengubah, atau memproses data.',
+            selector: 'main table, main [data-coach-list], main [class*="grid"]',
+            title: 'Area kerja utama',
+            description: purpose.list,
         },
     ];
 };
@@ -256,8 +364,7 @@ export default function CoachMarks({ context }: Props) {
         setRect(null);
         setActiveIndex(0);
 
-        const timer = window.setTimeout(() => startGuide(false), 850);
-        return () => window.clearTimeout(timer);
+        return undefined;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [path, context, role]);
 
