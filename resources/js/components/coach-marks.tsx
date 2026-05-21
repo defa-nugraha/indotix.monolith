@@ -21,7 +21,7 @@ type TargetRect = {
     height: number;
 };
 
-const guideStoragePrefix = 'indotix.coach-mark.v2.seen';
+const guideStoragePrefix = 'indotix.coach-mark.v3.seen';
 
 const pathWithoutQuery = (url: string) => url.split('?')[0] || '/';
 
@@ -205,7 +205,7 @@ const buildSteps = (context: CoachContext, path: string, role?: string): CoachSt
                 description: `Pilih kategori untuk mulai menemukan produk ${label} tanpa harus mengetik kata kunci.`,
             },
             {
-                selector: 'main [data-coach-list], main table, main [class*="grid"]',
+                selector: 'main [data-coach-list], main table',
                 title: 'Lihat rekomendasi dan daftar produk',
                 description: 'Area ini menampilkan produk, rekomendasi, atau riwayat yang bisa langsung dibuka untuk melihat detail.',
             },
@@ -230,7 +230,12 @@ const buildSteps = (context: CoachContext, path: string, role?: string): CoachSt
                 description: 'Bagian ini menjelaskan konteks pekerjaan, seperti membuat link promosi, melihat komisi, atau mengajukan payout.',
             },
             {
-                selector: 'main table, main [class*="grid"], main form',
+                selector: 'main section, main [class*="grid"]',
+                title: 'Ringkasan affiliate',
+                description: 'Kartu informasi menampilkan status, angka penting, atau ringkasan aktivitas affiliate yang perlu dipantau.',
+            },
+            {
+                selector: 'main table, main form',
                 title: 'Data dan pekerjaan utama',
                 description: 'Area ini berisi katalog, link promosi, riwayat komisi, atau form yang perlu Anda isi.',
             },
@@ -253,12 +258,17 @@ const buildSteps = (context: CoachContext, path: string, role?: string): CoachSt
                 description: purpose.description,
             },
             {
+                selector: 'main section, main [class*="grid"]',
+                title: 'Ringkasan dan kartu informasi',
+                description: 'Kartu di halaman ini menampilkan status, angka penting, atau informasi operasional yang perlu dipantau sebelum membuka detail.',
+            },
+            {
                 selector: 'main form, input[placeholder*="Cari"], input[name="search"], select[name="status"]',
                 title: 'Temukan data yang perlu diproses',
                 description: 'Gunakan pencarian dan filter untuk mempersempit data berdasarkan status, tanggal, nama produk, atau transaksi.',
             },
             {
-                selector: 'main table, main [data-coach-list], main [class*="grid"]',
+                selector: 'main table, main [data-coach-list]',
                 title: 'Tabel dan aksi data',
                 description: purpose.list,
             },
@@ -295,12 +305,17 @@ const buildSteps = (context: CoachContext, path: string, role?: string): CoachSt
             description: purpose.description,
         },
         {
+            selector: 'main section, main [class*="grid"]',
+            title: 'Ringkasan dan kartu informasi',
+            description: 'Kartu di halaman ini menampilkan status, jumlah data, atau informasi penting. Gunakan ringkasan ini untuk menentukan bagian mana yang perlu dicek lebih dulu.',
+        },
+        {
             selector: 'main form, input[placeholder*="Cari"], input[name="search"], select[name="status"]',
             title: 'Saring data sebelum diproses',
             description: 'Gunakan pencarian dan filter untuk menemukan data tertentu tanpa harus menelusuri semua baris.',
         },
         {
-            selector: 'main table, main [data-coach-list], main [class*="grid"]',
+            selector: 'main table, main [data-coach-list]',
             title: 'Tabel dan aksi data',
             description: purpose.list,
         },
@@ -331,6 +346,7 @@ export default function CoachMarks({ context }: Props) {
     const [rect, setRect] = useState<TargetRect | null>(null);
     const seenKey = `${guideStoragePrefix}.${context}.${role ?? 'guest'}.${path}`;
     const availableStepsRef = useRef<CoachStep[]>([]);
+    const targetUpdateTokenRef = useRef(0);
 
     const steps = useMemo(() => buildSteps(context, path, role), [context, path, role]);
 
@@ -343,23 +359,31 @@ export default function CoachMarks({ context }: Props) {
         });
 
     const updateTargetRect = (index: number) => {
+        const token = targetUpdateTokenRef.current + 1;
+        targetUpdateTokenRef.current = token;
+        setRect(null);
+
         const availableSteps = availableStepsRef.current;
         const step = availableSteps[index];
         if (!step) {
-            setRect(null);
             return;
         }
 
         const element = document.querySelector(step.selector);
         if (!element) {
-            setRect(null);
             return;
         }
 
         element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
 
         window.setTimeout(() => {
-            const elementRect = element.getBoundingClientRect();
+            if (targetUpdateTokenRef.current !== token) return;
+
+            const currentStep = availableStepsRef.current[index];
+            const currentElement = currentStep ? document.querySelector(currentStep.selector) : null;
+            if (!currentElement || currentElement !== element) return;
+
+            const elementRect = currentElement.getBoundingClientRect();
             setRect({
                 top: elementRect.top,
                 left: elementRect.left,
