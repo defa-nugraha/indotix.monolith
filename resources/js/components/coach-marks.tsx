@@ -21,7 +21,7 @@ type TargetRect = {
     height: number;
 };
 
-const guideStoragePrefix = 'indotix.coach-mark.seen';
+const guideStoragePrefix = 'indotix.coach-mark.v2.seen';
 
 const pathWithoutQuery = (url: string) => url.split('?')[0] || '/';
 
@@ -75,77 +75,77 @@ const adminPagePurpose = (path: string) => {
         return {
             title: 'Pantau percakapan pengguna',
             description: 'Gunakan halaman ini untuk membaca pesan masuk, melihat konteks percakapan, dan merespons kebutuhan pengguna dengan cepat.',
-            list: 'Daftar percakapan membantu Anda memprioritaskan chat yang perlu ditindaklanjuti.',
+            list: 'Daftar percakapan menampilkan user yang menghubungi admin. Buka salah satu percakapan untuk melihat isi chat dan membalas pesan.',
         };
     }
     if (path.startsWith('/admin/users')) {
         return {
             title: 'Kelola akun pengguna',
             description: 'Periksa status, verifikasi, detail akun, dan aktivitas pengguna dari halaman ini.',
-            list: 'Gunakan daftar user untuk membuka detail akun atau mengambil tindakan administratif yang diperlukan.',
+            list: 'Tabel user menampilkan akun yang terdaftar. Gunakan tombol Detail untuk melihat profil user dan tombol Hapus hanya jika akun memang perlu dihapus.',
         };
     }
     if (path.startsWith('/admin/reviews')) {
         return {
             title: 'Moderasi ulasan produk',
             description: 'Pantau ulasan dari pengguna agar kualitas informasi produk tetap terjaga.',
-            list: 'Daftar ulasan membantu Anda melihat rating, komentar, dan produk yang perlu ditinjau.',
+            list: 'Tabel ulasan menampilkan rating, komentar, dan produk terkait. Gunakan aksi balas, sembunyikan, atau hapus sesuai kebutuhan moderasi.',
         };
     }
     if (path.startsWith('/admin/events')) {
         return {
             title: 'Kelola operasional event',
             description: 'Atur event, tiket, booking, peserta, QR scan, review, hingga laporan event dari modul ini.',
-            list: 'Daftar event atau transaksi menampilkan data yang perlu dicek sebelum Anda membuka detail atau memprosesnya.',
+            list: 'Tabel event/transaksi menampilkan data operasional. Gunakan Tambah Event untuk membuat event baru, Detail untuk mengecek data, Edit untuk memperbarui, dan Hapus hanya jika data belum dipakai transaksi.',
         };
     }
     if (path.startsWith('/admin/wisata')) {
         return {
             title: 'Kelola produk wisata',
             description: 'Gunakan modul ini untuk mengelola destinasi, tiket, booking, validasi QR, dan operasional wisata.',
-            list: 'Daftar wisata membantu Anda melihat destinasi, tiket, transaksi, atau laporan yang sedang aktif.',
+            list: 'Tabel wisata/tiket/booking membantu admin memantau operasional. Gunakan Tambah untuk membuat data baru, Detail/Edit untuk koreksi data, dan Hapus secara hati-hati.',
         };
     }
     if (path.startsWith('/admin/special-programs')) {
         return {
             title: 'Kelola special program',
             description: 'Atur program, tiket, booking, peserta, QR scan, serta ulasan special program dari halaman ini.',
-            list: 'Daftar program atau transaksi membantu Anda memantau program yang sudah siap ditampilkan ke pengguna.',
+            list: 'Tabel program menampilkan paket dan statusnya. Gunakan Buat Paket untuk menambah program, Detail/Edit untuk meninjau isi paket, dan Hapus jika program tidak lagi digunakan.',
         };
     }
     if (path.startsWith('/admin/academy')) {
         return {
             title: 'Kelola kelas academy',
             description: 'Atur kelas, tiket, booking, peserta, scan kehadiran, dan laporan academy dari modul ini.',
-            list: 'Daftar kelas atau booking membantu Anda memastikan jadwal, kapasitas, dan status kelas tetap terkendali.',
+            list: 'Tabel kelas/tiket/booking membantu admin memantau jadwal dan kapasitas. Gunakan Buat Kelas atau Tambah Tiket bila tersedia, lalu pakai Detail/Edit untuk memastikan data sudah benar.',
         };
     }
     if (path.startsWith('/admin/retail-shop')) {
         return {
             title: 'Kelola retail shop',
             description: 'Atur produk, kategori, stok, order, pengiriman, refund, promo, dan laporan retail dari modul ini.',
-            list: 'Daftar produk atau order membantu Anda memantau stok, status transaksi, dan pemenuhan pesanan.',
+            list: 'Tabel produk/order menampilkan stok dan status transaksi. Gunakan Tambah Produk untuk menambah item, Edit untuk memperbarui katalog, dan aksi order untuk memproses pesanan.',
         };
     }
     if (path.startsWith('/admin/public')) {
         return {
             title: 'Kelola konten publik',
             description: 'Gunakan halaman ini untuk memperbarui banner, promo, FAQ, kontak, partner, dan informasi publik.',
-            list: 'Daftar konten membantu Anda memastikan materi yang tampil ke pengguna tetap terbaru.',
+            list: 'Tabel konten menampilkan materi yang tampil di sisi pengguna. Gunakan Tambah untuk membuat konten baru, Edit untuk memperbarui, dan Hapus untuk konten yang tidak perlu tampil lagi.',
         };
     }
     if (path.startsWith('/admin/system')) {
         return {
             title: 'Kelola sistem dan akses',
             description: 'Pantau audit, konfigurasi, notifikasi, role, dan akun admin spesialis dari modul ini.',
-            list: 'Daftar sistem membantu Anda memeriksa akses, perubahan data, dan konfigurasi operasional.',
+            list: 'Tabel sistem membantu admin mengelola role, admin spesialis, audit, dan konfigurasi. Gunakan Edit/Simpan untuk perubahan akses dan Hapus hanya jika akun atau data sudah tidak diperlukan.',
         };
     }
 
     return {
         title: 'Pantau ringkasan operasional',
         description: 'Gunakan halaman ini untuk melihat kondisi terbaru sistem dan memilih modul yang perlu ditindaklanjuti.',
-        list: 'Area data menampilkan ringkasan, daftar, atau kartu informasi yang relevan dengan halaman.',
+        list: 'Area ini menampilkan ringkasan atau tabel utama. Gunakan tombol Detail untuk meninjau data dan tombol aksi untuk memproses pekerjaan yang tersedia.',
     };
 };
 
@@ -154,35 +154,35 @@ const mitraPagePurpose = (path: string) => {
         return {
             title: 'Kelola event Anda',
             description: 'Atur informasi event, tiket, booking, peserta, QR scan, ulasan, dan laporan dari menu event.',
-            list: 'Daftar ini membantu Anda memantau event dan transaksi yang perlu ditindaklanjuti.',
+            list: 'Tabel event dan booking membantu Anda memantau transaksi. Gunakan tombol tambah untuk membuat data, Detail/Edit untuk koreksi, dan scan QR untuk validasi peserta.',
         };
     }
     if (path.startsWith('/mitra/wisata')) {
         return {
             title: 'Kelola destinasi wisata',
             description: 'Atur profil destinasi, tiket, booking, validasi QR, ulasan, dan laporan wisata dari modul ini.',
-            list: 'Daftar ini membantu Anda melihat tiket, booking, dan aktivitas wisata yang sedang berjalan.',
+            list: 'Tabel wisata menampilkan tiket, booking, dan aktivitas kunjungan. Gunakan Detail/Edit untuk memperbarui data dan QR scan untuk validasi tiket.',
         };
     }
     if (path.startsWith('/mitra/hotels') || path.startsWith('/mitra/room')) {
         return {
             title: 'Kelola hotel dan kamar',
             description: 'Atur profil hotel, tipe kamar, ketersediaan, booking, ulasan, dan pendapatan dari modul hotel.',
-            list: 'Daftar ini membantu Anda memantau hotel, kamar, inventory, dan transaksi.',
+            list: 'Tabel hotel/kamar/inventory membantu Anda mengatur ketersediaan. Gunakan Tambah untuk membuat tipe kamar, Edit untuk memperbarui data, dan Detail untuk melihat transaksi.',
         };
     }
     if (path.startsWith('/mitra/finance')) {
         return {
             title: 'Pantau keuangan mitra',
             description: 'Lihat ringkasan pendapatan, payout, dan rekening agar proses pencairan tetap jelas.',
-            list: 'Data keuangan membantu Anda mencocokkan transaksi, payout, dan status pencairan.',
+            list: 'Tabel keuangan menampilkan transaksi dan payout. Gunakan detail status untuk mencocokkan pendapatan dan proses pencairan.',
         };
     }
 
     return {
         title: 'Pantau operasional mitra',
         description: 'Gunakan halaman ini untuk melihat data penting dan memilih pekerjaan yang perlu diproses.',
-        list: 'Area data menampilkan informasi operasional yang relevan dengan akun mitra Anda.',
+        list: 'Area ini menampilkan tabel atau kartu operasional. Gunakan tombol Detail/Edit/Simpan untuk memproses data yang tersedia.',
     };
 };
 
@@ -259,8 +259,23 @@ const buildSteps = (context: CoachContext, path: string, role?: string): CoachSt
             },
             {
                 selector: 'main table, main [data-coach-list], main [class*="grid"]',
-                title: 'Area data utama',
+                title: 'Tabel dan aksi data',
                 description: purpose.list,
+            },
+            {
+                selector: 'main a[href$="/create"], main button[type="submit"]',
+                title: 'Tambah atau simpan data',
+                description: 'Gunakan tombol ini untuk membuat data baru atau menyimpan perubahan setelah form diisi dengan benar.',
+            },
+            {
+                selector: 'main table a, main table button',
+                title: 'Detail dan aksi baris',
+                description: 'Tombol pada setiap baris digunakan untuk membuka detail, mengedit, memproses, atau menghapus data sesuai kebutuhan.',
+            },
+            {
+                selector: 'main table button[class*="rose"], main table button[class*="red"], main button[class*="rose"], main button[class*="red"]',
+                title: 'Aksi hapus atau batal',
+                description: 'Tombol berwarna merah biasanya untuk menghapus, membatalkan, atau menolak data. Pastikan data sudah benar sebelum melanjutkan aksi ini.',
             },
         ];
     }
@@ -286,8 +301,23 @@ const buildSteps = (context: CoachContext, path: string, role?: string): CoachSt
         },
         {
             selector: 'main table, main [data-coach-list], main [class*="grid"]',
-            title: 'Area kerja utama',
+            title: 'Tabel dan aksi data',
             description: purpose.list,
+        },
+        {
+            selector: 'main a[href$="/create"], main button[type="submit"]',
+            title: 'Tambah atau simpan data',
+            description: 'Gunakan tombol ini untuk membuat data baru atau menyimpan perubahan. Pastikan field wajib sudah terisi sebelum menyimpan.',
+        },
+        {
+            selector: 'main table a, main table button',
+            title: 'Detail, edit, dan proses data',
+            description: 'Tombol pada baris tabel digunakan untuk membuka detail, mengedit data, memproses booking/order, mengubah status, atau menjalankan aksi operasional lainnya.',
+        },
+        {
+            selector: 'main table button[class*="rose"], main table button[class*="red"], main button[class*="rose"], main button[class*="red"]',
+            title: 'Hapus atau aksi berisiko',
+            description: 'Tombol berwarna merah biasanya berdampak besar seperti hapus, batal, refund, atau tolak. Gunakan hanya setelah data benar-benar dipastikan.',
         },
     ];
 };
@@ -364,7 +394,8 @@ export default function CoachMarks({ context }: Props) {
         setRect(null);
         setActiveIndex(0);
 
-        return undefined;
+        const timer = window.setTimeout(() => startGuide(false), 850);
+        return () => window.clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [path, context, role]);
 
