@@ -35,12 +35,19 @@ const breadcrumbs: BreadcrumbItem[] = [
 export default function AdminWisataTicketsIndex({ tickets, filters }: Props) {
     const submitFilters = (form: HTMLFormElement) => {
         const data = new FormData(form);
-        router.get('/admin/wisata/tickets', Object.fromEntries(data.entries()), {
-            preserveState: true,
-        });
+        router.get(
+            '/admin/wisata/tickets',
+            Object.fromEntries(data.entries()),
+            {
+                preserveState: true,
+            },
+        );
     };
 
-    const handleUpdate = (ticketId: number, payload: Record<string, unknown>) => {
+    const handleUpdate = (
+        ticketId: number,
+        payload: Record<string, string | number | boolean | null>,
+    ) => {
         router.put(`/admin/wisata/tickets/${ticketId}`, payload, {
             preserveScroll: true,
             onSuccess: () =>
@@ -99,12 +106,15 @@ export default function AdminWisataTicketsIndex({ tickets, filters }: Props) {
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                        <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
                             Wisata
                         </p>
-                        <h1 className="mt-2 text-2xl font-semibold text-slate-900">Manajemen Produk Tiket</h1>
+                        <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                            Manajemen Produk Tiket
+                        </h1>
                         <p className="text-sm text-slate-500">
-                            Review tiket mitra, aktifkan/nonaktifkan, dan override kuota.
+                            Review tiket mitra, aktifkan/nonaktifkan, dan
+                            override kuota.
                         </p>
                     </div>
                     <form
@@ -130,14 +140,19 @@ export default function AdminWisataTicketsIndex({ tickets, filters }: Props) {
                             <option value="inactive">Nonaktif</option>
                         </select>
                         <div className="flex gap-2">
-                            <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                            <Button
+                                type="submit"
+                                className="bg-sky-600 text-white hover:bg-sky-700"
+                            >
                                 Filter
                             </Button>
                             <Button
                                 type="button"
                                 variant="outline"
                                 className="border-sky-200 text-sky-700 hover:bg-sky-50"
-                                onClick={() => router.visit('/admin/wisata/tickets/create')}
+                                onClick={() =>
+                                    router.visit('/admin/wisata/tickets/create')
+                                }
                             >
                                 Tambah Tiket
                             </Button>
@@ -148,38 +163,71 @@ export default function AdminWisataTicketsIndex({ tickets, filters }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-hidden rounded-2xl border border-slate-100">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
-                                    <th className="px-4 py-3 text-left">Produk</th>
-                                    <th className="px-4 py-3 text-left">Destinasi</th>
-                                    <th className="px-4 py-3 text-left">Harga</th>
-                                    <th className="px-4 py-3 text-left">Kuota</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
-                                    <th className="px-4 py-3 text-left">Aksi</th>
+                                    <th className="px-4 py-3 text-left">
+                                        Produk
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Destinasi
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Harga
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Kuota
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Status
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {tickets.data.map((ticket) => (
-                                    <tr key={ticket.id} className="border-t border-slate-100">
+                                    <tr
+                                        key={ticket.id}
+                                        className="border-t border-slate-100"
+                                    >
                                         <td className="px-4 py-3">
-                                            <div className="font-semibold text-slate-900">{ticket.name}</div>
+                                            <div className="font-semibold text-slate-900">
+                                                {ticket.name}
+                                            </div>
                                             <div className="text-xs text-slate-500">
                                                 {ticket.owner?.name ?? '-'}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            {ticket.destination?.destination_name ?? '-'}
+                                            {ticket.destination
+                                                ?.destination_name ?? '-'}
                                         </td>
-                                        <td className="px-4 py-3">Rp {ticket.price.toLocaleString('id-ID')}</td>
+                                        <td className="px-4 py-3">
+                                            Rp{' '}
+                                            {ticket.price.toLocaleString(
+                                                'id-ID',
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <div>Kuota: {ticket.quota}</div>
                                             <div className="text-xs text-slate-500">
-                                                Override: {ticket.max_quota_override ?? '-'}
+                                                Override:{' '}
+                                                {ticket.max_quota_override ??
+                                                    '-'}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge className={ticket.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}>
-                                                {ticket.is_active ? 'Aktif' : 'Nonaktif'}
+                                            <Badge
+                                                className={
+                                                    ticket.is_active
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-slate-50 text-slate-600'
+                                                }
+                                            >
+                                                {ticket.is_active
+                                                    ? 'Aktif'
+                                                    : 'Nonaktif'}
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
@@ -187,25 +235,48 @@ export default function AdminWisataTicketsIndex({ tickets, filters }: Props) {
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
-                                                    onClick={() => handleUpdate(ticket.id, { is_active: !ticket.is_active })}
+                                                    onClick={() =>
+                                                        handleUpdate(
+                                                            ticket.id,
+                                                            {
+                                                                is_active:
+                                                                    !ticket.is_active,
+                                                            },
+                                                        )
+                                                    }
                                                 >
-                                                    {ticket.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                                                    {ticket.is_active
+                                                        ? 'Nonaktifkan'
+                                                        : 'Aktifkan'}
                                                 </Button>
                                                 <input
                                                     type="number"
                                                     min={0}
-                                                    defaultValue={ticket.max_quota_override ?? ''}
+                                                    defaultValue={
+                                                        ticket.max_quota_override ??
+                                                        ''
+                                                    }
                                                     placeholder="Override kuota"
                                                     className="w-32 rounded-lg border border-slate-200 px-2 py-1 text-xs"
                                                     onBlur={(event) =>
-                                                        handleUpdate(ticket.id, { max_quota_override: event.target.value || null })
+                                                        handleUpdate(
+                                                            ticket.id,
+                                                            {
+                                                                max_quota_override:
+                                                                    event.target
+                                                                        .value ||
+                                                                    null,
+                                                            },
+                                                        )
                                                     }
                                                 />
                                                 <Button
                                                     size="sm"
                                                     variant="outline"
                                                     className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                                                    onClick={() => handleDelete(ticket.id)}
+                                                    onClick={() =>
+                                                        handleDelete(ticket.id)
+                                                    }
                                                 >
                                                     Hapus
                                                 </Button>
@@ -215,7 +286,10 @@ export default function AdminWisataTicketsIndex({ tickets, filters }: Props) {
                                 ))}
                                 {tickets.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td
+                                            colSpan={6}
+                                            className="px-4 py-8 text-center text-sm text-slate-500"
+                                        >
                                             Belum ada produk tiket.
                                         </td>
                                     </tr>

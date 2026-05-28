@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\AdminPermissionRegistry;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -21,8 +22,20 @@ class EnsureAdmin
             return $next($request);
         }
 
-        $path = $request->path();
         $isDashboard = $request->is('dashboard');
+
+        if ($user->adminRole && $user->adminRole->is_active) {
+            if ($isDashboard) {
+                return $next($request);
+            }
+
+            $permission = AdminPermissionRegistry::resolveRequest($request);
+            if ($permission && AdminPermissionRegistry::can($user, $permission['feature'], $permission['action'])) {
+                return $next($request);
+            }
+
+            abort(403, 'Anda tidak memiliki permission untuk mengakses fitur ini.');
+        }
 
         if ($role === 'admin_academy' && ($isDashboard || $request->is('admin/academy*'))) {
             return $next($request);

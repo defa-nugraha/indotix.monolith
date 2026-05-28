@@ -1,6 +1,13 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { Bell, MessageCircle, ShoppingCart, UserCircle, History, BadgePercent } from 'lucide-react';
+import {
+    Bell,
+    MessageCircle,
+    ShoppingCart,
+    UserCircle,
+    History,
+    BadgePercent,
+} from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 
 type Conversation = {
@@ -21,17 +28,25 @@ type Message = {
 
 type Props = {
     conversations: Conversation[];
-    activeConversation?: { id: number; subject?: { label?: string; title?: string | null } } | null;
+    activeConversation?: {
+        id: number;
+        subject?: { label?: string; title?: string | null };
+    } | null;
     messages: Message[];
 };
 
-export default function ChatIndex({ conversations, activeConversation, messages }: Props) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
-        auth?: { user?: { id?: number; role?: string } };
-        unread_notifications?: number;
-        souvenir_cart_count?: number;
-        affiliate_menu?: boolean;
-    };
+export default function ChatIndex({
+    conversations,
+    activeConversation,
+    messages,
+}: Props) {
+    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
+        usePage().props as {
+            auth?: { user?: { id?: number; role?: string } };
+            unread_notifications?: number;
+            souvenir_cart_count?: number;
+            affiliate_menu?: boolean;
+        };
     const form = useForm({ message: '' });
     const [localMessages, setLocalMessages] = useState<Message[]>(messages);
     const [isTyping, setIsTyping] = useState(false);
@@ -83,7 +98,10 @@ export default function ChatIndex({ conversations, activeConversation, messages 
             if (typingTimerRef.current) {
                 window.clearTimeout(typingTimerRef.current);
             }
-            typingTimerRef.current = window.setTimeout(() => setIsTyping(false), 1500);
+            typingTimerRef.current = window.setTimeout(
+                () => setIsTyping(false),
+                1500,
+            );
         });
 
         return () => {
@@ -98,7 +116,7 @@ export default function ChatIndex({ conversations, activeConversation, messages 
         const startPolling = () => {
             if (pollingRef.current) return;
             pollingRef.current = window.setInterval(() => {
-                router.reload({ only: ['messages', 'conversations'], preserveState: true, preserveScroll: true });
+                router.reload({ only: ['messages', 'conversations'] });
             }, 6000);
         };
 
@@ -141,11 +159,13 @@ export default function ChatIndex({ conversations, activeConversation, messages 
         <PublicLayout>
             <Head title="Live Chat" />
 
-                        <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
+            <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
                     <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                         <div className="flex items-center justify-between">
-                            <div className="text-sm font-semibold text-slate-900">Percakapan</div>
+                            <div className="text-sm font-semibold text-slate-900">
+                                Percakapan
+                            </div>
                             <Link
                                 href="/chat/start/admin"
                                 className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700"
@@ -156,7 +176,8 @@ export default function ChatIndex({ conversations, activeConversation, messages 
                         <div className="mt-4 space-y-2">
                             {conversations.length === 0 && (
                                 <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-xs text-slate-500">
-                                    Belum ada chat. Mulai chat dengan admin atau mitra.
+                                    Belum ada chat. Mulai chat dengan admin atau
+                                    mitra.
                                 </div>
                             )}
                             {conversations.map((item) => (
@@ -164,11 +185,16 @@ export default function ChatIndex({ conversations, activeConversation, messages 
                                     key={item.id}
                                     href={`/chat/${item.id}`}
                                     className={`flex flex-col gap-1 rounded-xl px-3 py-2 text-xs ${
-                                        activeId === item.id ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50'
+                                        activeId === item.id
+                                            ? 'bg-sky-50 text-sky-700'
+                                            : 'text-slate-600 hover:bg-slate-50'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-semibold">{item.partner?.name ?? 'Customer Service'}</span>
+                                        <span className="text-sm font-semibold">
+                                            {item.partner?.name ??
+                                                'Customer Service'}
+                                        </span>
                                         {Boolean(item.unread_count) && (
                                             <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-semibold text-white">
                                                 {item.unread_count}
@@ -176,7 +202,10 @@ export default function ChatIndex({ conversations, activeConversation, messages 
                                         )}
                                     </div>
                                     <div className="text-[11px] text-slate-500">
-                                        {item.subject?.label} {item.subject?.title ? `· ${item.subject.title}` : ''}
+                                        {item.subject?.label}{' '}
+                                        {item.subject?.title
+                                            ? `· ${item.subject.title}`
+                                            : ''}
                                     </div>
                                 </Link>
                             ))}
@@ -193,62 +222,97 @@ export default function ChatIndex({ conversations, activeConversation, messages 
                             <>
                                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                                     <div>
-                                        <div className="text-sm font-semibold text-slate-900">Live Chat</div>
-                                        <div className="text-xs text-slate-500">{activeConversation?.subject?.label} {activeConversation?.subject?.title}</div>
-                                    </div>
-                                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Online</span>
-                                </div>
-
-                            <div
-                                ref={listRef}
-                                onScroll={(event) => {
-                                    const node = event.currentTarget;
-                                    const distance = node.scrollHeight - node.scrollTop - node.clientHeight;
-                                    isAtBottomRef.current = distance < 120;
-                                }}
-                                className="mt-4 h-[360px] overflow-y-auto pr-2"
-                            >
-                                {localMessages.map((msg) => (
-                                    <div key={msg.id} className={`mb-3 flex ${msg.is_me ? 'justify-end' : 'justify-start'}`}>
-                                        <div
-                                            className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
-                                                msg.is_me ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-700'
-                                            }`}
-                                        >
-                                            <div>{msg.body}</div>
-                                            <div className={`mt-1 text-[10px] ${msg.is_me ? 'text-white/70' : 'text-slate-400'}`}>
-                                                {msg.created_at}
-                                            </div>
+                                        <div className="text-sm font-semibold text-slate-900">
+                                            Live Chat
+                                        </div>
+                                        <div className="text-xs text-slate-500">
+                                            {activeConversation?.subject?.label}{' '}
+                                            {activeConversation?.subject?.title}
                                         </div>
                                     </div>
-                                ))}
-                                {isTyping && (
-                                    <div className="text-xs text-slate-400">Sedang mengetik...</div>
-                                )}
-                                {localMessages.length === 0 && (
-                                    <div className="text-center text-xs text-slate-400">Belum ada pesan.</div>
-                                )}
-                            </div>
+                                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                        Online
+                                    </span>
+                                </div>
+
+                                <div
+                                    ref={listRef}
+                                    onScroll={(event) => {
+                                        const node = event.currentTarget;
+                                        const distance =
+                                            node.scrollHeight -
+                                            node.scrollTop -
+                                            node.clientHeight;
+                                        isAtBottomRef.current = distance < 120;
+                                    }}
+                                    className="mt-4 h-[360px] overflow-y-auto pr-2"
+                                >
+                                    {localMessages.map((msg) => (
+                                        <div
+                                            key={msg.id}
+                                            className={`mb-3 flex ${msg.is_me ? 'justify-end' : 'justify-start'}`}
+                                        >
+                                            <div
+                                                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
+                                                    msg.is_me
+                                                        ? 'bg-sky-600 text-white'
+                                                        : 'bg-slate-100 text-slate-700'
+                                                }`}
+                                            >
+                                                <div>{msg.body}</div>
+                                                <div
+                                                    className={`mt-1 text-[10px] ${msg.is_me ? 'text-white/70' : 'text-slate-400'}`}
+                                                >
+                                                    {msg.created_at}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {isTyping && (
+                                        <div className="text-xs text-slate-400">
+                                            Sedang mengetik...
+                                        </div>
+                                    )}
+                                    {localMessages.length === 0 && (
+                                        <div className="text-center text-xs text-slate-400">
+                                            Belum ada pesan.
+                                        </div>
+                                    )}
+                                </div>
 
                                 <form
                                     onSubmit={(event) => {
                                         event.preventDefault();
                                         if (!activeId) return;
-                                        form.post(`/chat/${activeId}/messages`, {
-                                            preserveScroll: true,
-                                            onSuccess: () => form.reset('message'),
-                                        });
+                                        form.post(
+                                            `/chat/${activeId}/messages`,
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () =>
+                                                    form.reset('message'),
+                                            },
+                                        );
                                     }}
                                     className="mt-4 flex items-center gap-2"
                                 >
                                     <input
                                         value={form.data.message}
                                         onChange={(event) => {
-                                            form.setData('message', event.target.value);
+                                            form.setData(
+                                                'message',
+                                                event.target.value,
+                                            );
                                             const now = Date.now();
-                                            if (channelRef.current && now - typingSentRef.current > 800) {
+                                            if (
+                                                channelRef.current &&
+                                                now - typingSentRef.current >
+                                                    800
+                                            ) {
                                                 typingSentRef.current = now;
-                                                channelRef.current.whisper('typing', { user_id: auth?.user?.id });
+                                                channelRef.current.whisper(
+                                                    'typing',
+                                                    { user_id: auth?.user?.id },
+                                                );
                                             }
                                         }}
                                         className="h-11 flex-1 rounded-xl border border-slate-200 px-4 text-sm focus:border-sky-400 focus:outline-none"

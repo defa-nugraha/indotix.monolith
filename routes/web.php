@@ -528,8 +528,14 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.system.notifications.broadcast');
     Route::get('admin/system/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'index'])
         ->name('admin.system.roles.index');
-    Route::put('admin/system/roles/{user}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'update'])
+    Route::post('admin/system/roles', [\App\Http\Controllers\Admin\RoleManagementController::class, 'store'])
+        ->name('admin.system.roles.store');
+    Route::put('admin/system/roles/{role}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'update'])
         ->name('admin.system.roles.update');
+    Route::delete('admin/system/roles/{role}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'destroy'])
+        ->name('admin.system.roles.destroy');
+    Route::put('admin/system/roles/users/{user}', [\App\Http\Controllers\Admin\RoleManagementController::class, 'assign'])
+        ->name('admin.system.roles.users.assign');
     Route::get('admin/system/special-admins', [\App\Http\Controllers\Admin\SpecialAdminController::class, 'index'])
         ->name('admin.system.special-admins.index');
     Route::post('admin/system/special-admins', [\App\Http\Controllers\Admin\SpecialAdminController::class, 'store'])

@@ -14,7 +14,11 @@ type ScanRow = {
     officer_name: string | null;
     location: string | null;
     is_anomaly: boolean;
-    booking?: { booking_code?: string | null; visit_date?: string | null; ticket_name?: string | null };
+    booking?: {
+        booking_code?: string | null;
+        visit_date?: string | null;
+        ticket_name?: string | null;
+    };
 };
 
 type Props = {
@@ -31,7 +35,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Validasi QR', href: '/mitra/wisata/scans' },
 ];
 
-export default function MitraWisataScansIndex({ destination, scans, filters }: Props) {
+export default function MitraWisataScansIndex({
+    destination,
+    scans,
+    filters,
+}: Props) {
     const form = useForm({
         booking_code: '',
         officer_name: '',
@@ -53,7 +61,10 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
     const normalizeBookingCode = (value: string) => {
         const trimmed = value.trim();
         if (!trimmed) return trimmed;
-        const parts = trimmed.split('|').map((item) => item.trim()).filter(Boolean);
+        const parts = trimmed
+            .split('|')
+            .map((item) => item.trim())
+            .filter(Boolean);
         return parts.length > 1 ? parts[parts.length - 1] : trimmed;
     };
 
@@ -94,7 +105,8 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
 
     const playBeep = (frequency: number, duration = 120) => {
         try {
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            const AudioContext =
+                window.AudioContext || (window as any).webkitAudioContext;
             if (!AudioContext) return;
             const ctx = new AudioContext();
             const oscillator = ctx.createOscillator();
@@ -129,15 +141,19 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
                     if (result?.getText()) {
                         submitScan(result.getText());
                     }
-                }
+                },
             )
             .catch((error) => {
-                setCameraError('Tidak dapat mengakses kamera. Pastikan izin kamera diaktifkan.');
+                setCameraError(
+                    'Tidak dapat mengakses kamera. Pastikan izin kamera diaktifkan.',
+                );
                 setIsScanning(false);
             });
 
         return () => {
-            readerRef.current?.reset();
+            (
+                readerRef.current as unknown as { reset?: () => void } | null
+            )?.reset?.();
             readerRef.current = null;
         };
     }, [isScanning]);
@@ -148,7 +164,7 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                        <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
                             Validasi QR
                         </p>
                         <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -162,16 +178,30 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
                         <div className="rounded-2xl border border-dashed border-sky-200 bg-sky-50/40 p-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-semibold text-slate-900">Scan QR dengan Kamera</p>
-                                    <p className="text-xs text-slate-500">Arahkan kamera ke QR pada tiket wisata.</p>
+                                    <p className="text-sm font-semibold text-slate-900">
+                                        Scan QR dengan Kamera
+                                    </p>
+                                    <p className="text-xs text-slate-500">
+                                        Arahkan kamera ke QR pada tiket wisata.
+                                    </p>
                                 </div>
                                 <Button
                                     type="button"
-                                    variant={isScanning ? 'destructive' : 'default'}
-                                    className={isScanning ? '' : 'bg-sky-600 text-white hover:bg-sky-700'}
+                                    variant={
+                                        isScanning ? 'destructive' : 'default'
+                                    }
+                                    className={
+                                        isScanning
+                                            ? ''
+                                            : 'bg-sky-600 text-white hover:bg-sky-700'
+                                    }
                                     onClick={() => {
                                         if (isScanning) {
-                                            readerRef.current?.reset();
+                                            (
+                                                readerRef.current as unknown as {
+                                                    reset?: () => void;
+                                                } | null
+                                            )?.reset?.();
                                             readerRef.current = null;
                                             setIsScanning(false);
                                             return;
@@ -183,10 +213,16 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
                                 </Button>
                             </div>
                             <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-900/80">
-                                <video ref={videoRef} className="h-64 w-full object-cover" muted />
+                                <video
+                                    ref={videoRef}
+                                    className="h-64 w-full object-cover"
+                                    muted
+                                />
                             </div>
                             {cameraError && (
-                                <p className="mt-3 text-xs font-semibold text-rose-600">{cameraError}</p>
+                                <p className="mt-3 text-xs font-semibold text-rose-600">
+                                    {cameraError}
+                                </p>
                             )}
                         </div>
                         <div>
@@ -200,25 +236,45 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
                                 <div>
                                     <input
                                         value={form.data.booking_code}
-                                        onChange={(event) => form.setData('booking_code', event.target.value)}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'booking_code',
+                                                event.target.value,
+                                            )
+                                        }
                                         placeholder="Kode booking"
                                         className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     />
-                                    <InputError message={form.errors.booking_code} />
+                                    <InputError
+                                        message={form.errors.booking_code}
+                                    />
                                 </div>
                                 <input
                                     value={form.data.officer_name}
-                                    onChange={(event) => form.setData('officer_name', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'officer_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nama petugas"
                                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
                                 <input
                                     value={form.data.location}
-                                    onChange={(event) => form.setData('location', event.target.value)}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'location',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Lokasi (opsional)"
                                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
                                     Simpan Scan
                                 </Button>
                             </form>
@@ -240,38 +296,74 @@ export default function MitraWisataScansIndex({ destination, scans, filters }: P
                             defaultValue={filters.date ?? ''}
                             className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                         />
-                        <Button type="submit" variant="outline" className="border-sky-200 text-sky-700 hover:bg-sky-50">
+                        <Button
+                            type="submit"
+                            variant="outline"
+                            className="border-sky-200 text-sky-700 hover:bg-sky-50"
+                        >
                             Filter
                         </Button>
                     </form>
                     <div className="overflow-hidden rounded-2xl border border-slate-100">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
-                                    <th className="px-4 py-3 text-left">Waktu Scan</th>
-                                    <th className="px-4 py-3 text-left">Kode Booking</th>
-                                    <th className="px-4 py-3 text-left">Tiket</th>
-                                    <th className="px-4 py-3 text-left">Petugas</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
+                                    <th className="px-4 py-3 text-left">
+                                        Waktu Scan
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Kode Booking
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Tiket
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Petugas
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Status
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {scans.data.map((scan) => (
-                                    <tr key={scan.id} className="border-t border-slate-100">
-                                        <td className="px-4 py-3">{scan.scanned_at}</td>
-                                        <td className="px-4 py-3">{scan.booking?.booking_code ?? '-'}</td>
-                                        <td className="px-4 py-3">{scan.booking?.ticket_name ?? '-'}</td>
-                                        <td className="px-4 py-3">{scan.officer_name ?? '-'}</td>
+                                    <tr
+                                        key={scan.id}
+                                        className="border-t border-slate-100"
+                                    >
                                         <td className="px-4 py-3">
-                                            <Badge className={scan.is_anomaly ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-700'}>
-                                                {scan.is_anomaly ? 'Anomali' : 'Valid'}
+                                            {scan.scanned_at}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {scan.booking?.booking_code ?? '-'}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {scan.booking?.ticket_name ?? '-'}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            {scan.officer_name ?? '-'}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge
+                                                className={
+                                                    scan.is_anomaly
+                                                        ? 'bg-rose-50 text-rose-600'
+                                                        : 'bg-emerald-50 text-emerald-700'
+                                                }
+                                            >
+                                                {scan.is_anomaly
+                                                    ? 'Anomali'
+                                                    : 'Valid'}
                                             </Badge>
                                         </td>
                                     </tr>
                                 ))}
                                 {scans.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td
+                                            colSpan={5}
+                                            className="px-4 py-8 text-center text-sm text-slate-500"
+                                        >
                                             Belum ada data scan.
                                         </td>
                                     </tr>

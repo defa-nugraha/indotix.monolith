@@ -88,7 +88,7 @@ const Preview = ({ label, path }: { label: string; path?: string | null }) => {
                 </div>
             )}
             <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                <p className="text-[11px] font-semibold tracking-[0.15em] text-slate-400 uppercase">
                     {label}
                 </p>
                 {hasFile ? (
@@ -129,8 +129,10 @@ export default function AdminMitraShow({
             cancelButtonText: 'Batal',
             input: mitra.is_suspended ? undefined : 'textarea',
             inputLabel: mitra.is_suspended ? undefined : 'Alasan suspend',
-            inputPlaceholder: mitra.is_suspended ? undefined : 'Tulis alasan suspend',
-            inputValidator: (value) => {
+            inputPlaceholder: mitra.is_suspended
+                ? undefined
+                : 'Tulis alasan suspend',
+            inputValidator: (value: string | null) => {
                 if (!mitra.is_suspended && !value) {
                     return 'Alasan suspend wajib diisi.';
                 }
@@ -161,7 +163,7 @@ export default function AdminMitraShow({
                         text: 'Tidak dapat memperbarui status suspend.',
                         icon: 'error',
                     }),
-            }
+            },
         );
     };
     const handleVerify = async (action: 'approve' | 'reject') => {
@@ -194,23 +196,27 @@ export default function AdminMitraShow({
 
         if (!result.isConfirmed) return;
 
-        router.post(`/admin/mitra/${mitra.id}/verify`, {
-            action,
-            reason: action === 'reject' ? result.value : null,
-        }, {
-            onSuccess: () =>
-                Swal.fire({
-                    title: 'Berhasil',
-                    text: 'Status verifikasi diperbarui.',
-                    icon: 'success',
-                }),
-            onError: () =>
-                Swal.fire({
-                    title: 'Gagal',
-                    text: 'Tidak dapat memperbarui status verifikasi.',
-                    icon: 'error',
-                }),
-        });
+        router.post(
+            `/admin/mitra/${mitra.id}/verify`,
+            {
+                action,
+                reason: action === 'reject' ? result.value : null,
+            },
+            {
+                onSuccess: () =>
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: 'Status verifikasi diperbarui.',
+                        icon: 'success',
+                    }),
+                onError: () =>
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: 'Tidak dapat memperbarui status verifikasi.',
+                        icon: 'error',
+                    }),
+            },
+        );
     };
 
     const handlePayout = async (action: 'approve' | 'reject') => {
@@ -243,23 +249,27 @@ export default function AdminMitraShow({
 
         if (!result.isConfirmed) return;
 
-        router.post(`/admin/mitra/${mitra.id}/payout`, {
-            action,
-            reason: action === 'reject' ? result.value : null,
-        }, {
-            onSuccess: () =>
-                Swal.fire({
-                    title: 'Berhasil',
-                    text: 'Status payout diperbarui.',
-                    icon: 'success',
-                }),
-            onError: () =>
-                Swal.fire({
-                    title: 'Gagal',
-                    text: 'Tidak dapat memperbarui status payout.',
-                    icon: 'error',
-                }),
-        });
+        router.post(
+            `/admin/mitra/${mitra.id}/payout`,
+            {
+                action,
+                reason: action === 'reject' ? result.value : null,
+            },
+            {
+                onSuccess: () =>
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: 'Status payout diperbarui.',
+                        icon: 'success',
+                    }),
+                onError: () =>
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: 'Tidak dapat memperbarui status payout.',
+                        icon: 'error',
+                    }),
+            },
+        );
     };
 
     return (
@@ -272,25 +282,33 @@ export default function AdminMitraShow({
             </Head>
 
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
-                <div className="pointer-events-none absolute -left-32 top-12 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-                <div className="pointer-events-none absolute right-[-10%] top-0 h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
+                <div className="pointer-events-none absolute top-12 -left-32 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
+                <div className="pointer-events-none absolute top-0 right-[-10%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
                                 Mitra
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
                                 {mitra.name}
                             </h1>
-                            <p className="text-sm text-slate-600">{mitra.email}</p>
+                            <p className="text-sm text-slate-600">
+                                {mitra.email}
+                            </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-3">
-                            <Badge className={statusTone(onboarding.verification_status)}>
+                            <Badge
+                                className={statusTone(
+                                    onboarding.verification_status,
+                                )}
+                            >
                                 Verifikasi: {onboarding.verification_status}
                             </Badge>
-                            <Badge className={statusTone(onboarding.payout_status)}>
+                            <Badge
+                                className={statusTone(onboarding.payout_status)}
+                            >
                                 Payout: {onboarding.payout_status}
                             </Badge>
                             <Badge
@@ -332,38 +350,55 @@ export default function AdminMitraShow({
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
-                        <h2 className="text-lg font-semibold text-slate-900">Tahap 1 - Data Hotel</h2>
-                        <span className="text-xs text-slate-500">Step {onboarding.current_step}</span>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Tahap 1 - Data Hotel
+                        </h2>
+                        <span className="text-xs text-slate-500">
+                            Step {onboarding.current_step}
+                        </span>
                     </div>
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Nama Hotel</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Nama Hotel
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.hotel_name ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Jenis Properti</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Jenis Properti
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.property_type ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Kota</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Kota
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
-                                {cityName ?? onboarding.city_code ?? 'Belum diisi'}
+                                {cityName ??
+                                    onboarding.city_code ??
+                                    'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Alamat singkat</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Alamat singkat
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.address_short ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Perkiraan kamar</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Perkiraan kamar
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
-                                {onboarding.estimated_room_count ?? 'Belum diisi'}
+                                {onboarding.estimated_room_count ??
+                                    'Belum diisi'}
                             </p>
                         </div>
                     </div>
@@ -377,7 +412,7 @@ export default function AdminMitraShow({
                         {onboarding.verification_status === 'pending' && (
                             <div className="flex flex-wrap gap-2">
                                 <Button
-                                    className="!bg-emerald-500 !text-white hover:!bg-sky-600 shadow-sm !border-emerald-500"
+                                    className="!border-emerald-500 !bg-emerald-500 !text-white shadow-sm hover:!bg-sky-600"
                                     onClick={() => handleVerify('approve')}
                                 >
                                     Setujui
@@ -395,43 +430,57 @@ export default function AdminMitraShow({
 
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Nama sesuai KTP</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Nama sesuai KTP
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.responsible_name ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">NIK</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                NIK
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.responsible_nik ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Jabatan</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Jabatan
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.responsible_role ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Legalitas</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Legalitas
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.legal_doc_type ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Nomor dokumen</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Nomor dokumen
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.legal_doc_number ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div className="md:col-span-2">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Alamat lengkap</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Alamat lengkap
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.address_full ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div className="md:col-span-2">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Pin Maps</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Pin Maps
+                            </p>
                             {onboarding.maps_pin_url ? (
                                 <Button
                                     asChild
@@ -447,23 +496,31 @@ export default function AdminMitraShow({
                                     </a>
                                 </Button>
                             ) : (
-                                <p className="text-sm font-semibold text-slate-900">Belum diisi</p>
+                                <p className="text-sm font-semibold text-slate-900">
+                                    Belum diisi
+                                </p>
                             )}
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Nomor resepsionis</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Nomor resepsionis
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.reception_phone ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Jam operasional</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Jam operasional
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.operational_hours ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">PIC reservasi</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                PIC reservasi
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.reservation_pic ?? 'Belum diisi'}
                             </p>
@@ -472,18 +529,35 @@ export default function AdminMitraShow({
 
                     <div className="mt-6 grid gap-3 md:grid-cols-3 xl:grid-cols-4">
                         <Preview label="KTP" path={onboarding.ktp_path} />
-                        <Preview label="Selfie + KTP" path={onboarding.selfie_ktp_path} />
-                        <Preview label="Dokumen Legalitas" path={onboarding.legal_doc_path} />
-                        <Preview label="Foto Depan" path={onboarding.photo_front_path} />
-                        <Preview label="Foto Resepsionis" path={onboarding.photo_lobby_path} />
-                        <Preview label="Foto Kamar" path={onboarding.photo_room_path} />
+                        <Preview
+                            label="Selfie + KTP"
+                            path={onboarding.selfie_ktp_path}
+                        />
+                        <Preview
+                            label="Dokumen Legalitas"
+                            path={onboarding.legal_doc_path}
+                        />
+                        <Preview
+                            label="Foto Depan"
+                            path={onboarding.photo_front_path}
+                        />
+                        <Preview
+                            label="Foto Resepsionis"
+                            path={onboarding.photo_lobby_path}
+                        />
+                        <Preview
+                            label="Foto Kamar"
+                            path={onboarding.photo_room_path}
+                        />
                     </div>
 
-                    {onboarding.verification_status === 'rejected' && onboarding.verification_reason && (
-                        <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            Alasan penolakan: {onboarding.verification_reason}
-                        </div>
-                    )}
+                    {onboarding.verification_status === 'rejected' &&
+                        onboarding.verification_reason && (
+                            <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                Alasan penolakan:{' '}
+                                {onboarding.verification_reason}
+                            </div>
+                        )}
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
@@ -494,7 +568,7 @@ export default function AdminMitraShow({
                         {onboarding.payout_status === 'pending' && (
                             <div className="flex flex-wrap gap-2">
                                 <Button
-                                    className="!bg-emerald-500 !text-white hover:!bg-sky-600 shadow-sm !border-emerald-500"
+                                    className="!border-emerald-500 !bg-emerald-500 !text-white shadow-sm hover:!bg-sky-600"
                                     onClick={() => handlePayout('approve')}
                                 >
                                     Setujui
@@ -512,42 +586,54 @@ export default function AdminMitraShow({
 
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Nama bank</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Nama bank
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.bank_name ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Nomor rekening</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Nomor rekening
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
-                                {onboarding.bank_account_number ?? 'Belum diisi'}
+                                {onboarding.bank_account_number ??
+                                    'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Nama pemilik rekening</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Nama pemilik rekening
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.bank_account_name ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">NPWP</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                NPWP
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.tax_npwp ?? 'Belum diisi'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Tipe pajak</p>
+                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                                Tipe pajak
+                            </p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {onboarding.tax_type ?? 'Belum diisi'}
                             </p>
                         </div>
                     </div>
 
-                    {onboarding.payout_status === 'rejected' && onboarding.payout_reason && (
-                        <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-                            Alasan penolakan: {onboarding.payout_reason}
-                        </div>
-                    )}
+                    {onboarding.payout_status === 'rejected' &&
+                        onboarding.payout_reason && (
+                            <div className="mt-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+                                Alasan penolakan: {onboarding.payout_reason}
+                            </div>
+                        )}
                 </section>
             </div>
         </AppLayout>

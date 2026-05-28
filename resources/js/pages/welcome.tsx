@@ -27,6 +27,12 @@ import {
 } from 'lucide-react';
 
 type Banner = { id: number; image_path: string; link_url?: string | null };
+type BannerSlide = {
+    id: number;
+    image?: string;
+    link?: string | null;
+    gradient?: string;
+};
 type PromoVideo = {
     title: string;
     description?: string | null;
@@ -187,7 +193,7 @@ export default function Welcome({
     );
     const [showMobileDownloadPrompt, setShowMobileDownloadPrompt] =
         useState(false);
-    const bannerSlides =
+    const bannerSlides: BannerSlide[] =
         banners.length > 0
             ? banners.map((banner) => ({
                   id: banner.id,
@@ -438,7 +444,7 @@ export default function Welcome({
                       sales_end_at: null,
                   },
               ];
-    const specialProgramProducts =
+    const specialProgramProducts: SpecialProgramItem[] =
         specialProgramItems.length > 0
             ? specialProgramItems
             : [
@@ -537,17 +543,17 @@ export default function Welcome({
                 <DialogContent className="max-w-[calc(100%-1.5rem)] rounded-3xl border-slate-200 p-0 sm:max-w-sm">
                     <div className="overflow-hidden rounded-3xl">
                         <div className="bg-[linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)] px-6 py-5 text-white">
-                            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/80">
+                            <p className="text-xs font-semibold tracking-[0.22em] text-white/80 uppercase">
                                 Download Aplikasi
                             </p>
                             <DialogHeader className="mt-2 text-left">
-                                <DialogTitle className="text-xl font-bold leading-tight text-white">
-                                    Buka pengalaman yang lebih praktis di aplikasi
-                                    Indotix
+                                <DialogTitle className="text-xl leading-tight font-bold text-white">
+                                    Buka pengalaman yang lebih praktis di
+                                    aplikasi Indotix
                                 </DialogTitle>
                                 <DialogDescription className="text-sm leading-6 text-white/85">
-                                    Booking tiket, cek pesanan, dan pantau update
-                                    terbaru langsung dari ponselmu.
+                                    Booking tiket, cek pesanan, dan pantau
+                                    update terbaru langsung dari ponselmu.
                                 </DialogDescription>
                             </DialogHeader>
                         </div>

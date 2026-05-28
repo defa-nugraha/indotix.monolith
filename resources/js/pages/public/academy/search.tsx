@@ -495,7 +495,8 @@ export default function AcademySearch({
                                         }
                                         suggestions={
                                             discovery?.empty_state
-                                                ?.recommended_keywords ?? chips
+                                                ?.recommended_keywords ??
+                                            academyChips
                                         }
                                         onSuggestionSelect={applySuggestion}
                                         onReset={resetDiscovery}

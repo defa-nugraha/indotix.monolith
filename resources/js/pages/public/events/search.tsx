@@ -374,9 +374,8 @@ export default function EventSearch({
                                         Pilihan event untukmu
                                     </div>
                                     <p className="text-sm text-slate-500">
-                                        Cari berdasarkan nama event, kota,
-                                        atau urutan terbaik untuk mulai
-                                        menjelajah.
+                                        Cari berdasarkan nama event, kota, atau
+                                        urutan terbaik untuk mulai menjelajah.
                                     </p>
                                 </div>
                                 <DiscoveryInsightStrip
@@ -498,7 +497,8 @@ export default function EventSearch({
                                         }
                                         suggestions={
                                             discovery?.empty_state
-                                                ?.recommended_keywords ?? chips
+                                                ?.recommended_keywords ??
+                                            eventChips
                                         }
                                         onSuggestionSelect={applySuggestion}
                                         onReset={resetDiscovery}

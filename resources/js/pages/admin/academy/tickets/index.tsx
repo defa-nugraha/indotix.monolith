@@ -88,10 +88,10 @@ export default function AcademyTicketsIndex({
         setEditing(item);
         form.setData({
             ...emptyForm,
-            academy_class_id: item.academy_class_id,
+            academy_class_id: String(item.academy_class_id),
             name: item.name,
             price: String(item.price ?? ''),
-            quota: item.quota ?? '',
+            quota: item.quota === null ? '' : String(item.quota),
             ticket_type: item.ticket_type,
             refundable: item.refundable,
             sales_start_at: toDatetimeLocal(item.sales_start_at),

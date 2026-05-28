@@ -26,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'gender',
         'password',
         'role',
+        'admin_role_id',
         'mitra_onboarding_type',
         'is_suspended',
         'suspended_at',
@@ -47,6 +48,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function mitraOnboarding()
     {
         return $this->hasOne(\App\Models\MitraOnboarding::class);
+    }
+
+    public function adminRole()
+    {
+        return $this->belongsTo(AdminRole::class);
     }
 
     public function mitraWisataOnboarding()

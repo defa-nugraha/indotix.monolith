@@ -8,6 +8,7 @@ use App\Models\UserNotification;
 use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateLink;
 use App\Models\MitraWisataOnboarding;
+use App\Support\AdminPermissionRegistry;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -41,11 +42,14 @@ class HandleInertiaRequests extends Middleware
     {
         $affiliateReferral = null;
         $defaultAddress = null;
+        $user = $request->user();
 
-        if ($request->user()) {
-            $defaultAddress = $request->user()->defaultAddressValue();
+        if ($user) {
+            $user->loadMissing('adminRole.permissions');
+            $defaultAddress = $user->defaultAddressValue();
         }
-        if ($request->user() || $request->session()->has('affiliate_ref') || $request->cookie('affiliate_ref')) {
+
+        if ($user || $request->session()->has('affiliate_ref') || $request->cookie('affiliate_ref')) {
             $payload = $request->session()->get('affiliate_ref');
             if (! $payload && $request->cookie('affiliate_ref')) {
                 $payload = json_decode($request->cookie('affiliate_ref'), true);
@@ -86,19 +90,23 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user ? [
+                    ...$user->toArray(),
+                    'admin_permissions' => AdminPermissionRegistry::permissionKeysForUser($user),
+                    'admin_role_name' => $user->adminRole?->name,
+                ] : null,
             ],
             'default_address' => $defaultAddress,
-            'affiliate_menu' => $request->user()
-                ? (bool) WisataAffiliate::query()->where('user_id', $request->user()->id)->exists()
+            'affiliate_menu' => $user
+                ? (bool) WisataAffiliate::query()->where('user_id', $user->id)->exists()
                 : false,
-            'affiliate_status' => $request->user()
-                ? WisataAffiliate::query()->where('user_id', $request->user()->id)->value('status')
+            'affiliate_status' => $user
+                ? WisataAffiliate::query()->where('user_id', $user->id)->value('status')
                 : null,
             'affiliate_referral' => $affiliateReferral,
-            'unread_notifications' => $request->user()
+            'unread_notifications' => $user
                 ? UserNotification::query()
-                    ->where('user_id', $request->user()->id)
+                    ->where('user_id', $user->id)
                     ->where('is_read', false)
                     ->count()
                 : 0,

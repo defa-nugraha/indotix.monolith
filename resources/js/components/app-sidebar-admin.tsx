@@ -53,35 +53,53 @@ const profileNavItem: NavItem = {
     icon: UserCircle,
 };
 
-const baseMainNavItems: NavItem[] = [
-    dashboardNavItem,
-    {
-        title: 'Kelola User',
-        href: '/admin/users',
-        icon: Users,
-    },
-    {
-        title: 'Live Chat',
-        href: '/admin/chat',
-        icon: MessageCircle,
-    },
-    {
-        title: 'Ulasan Produk',
-        href: '/admin/reviews',
-        icon: Star,
-    },
-];
-
 export function AppSidebarAdmin() {
-    const { auth } = usePage().props as { auth?: { user?: { role?: string } } };
+    const { auth } = usePage().props as {
+        auth?: { user?: { role?: string; admin_permissions?: string[] } };
+    };
     const role = auth?.user?.role;
+    const permissions = auth?.user?.admin_permissions ?? [];
     const isFullAdmin = role === 'admin';
     const isAcademyAdmin = role === 'admin_academy';
     const isRetailAdmin = role === 'admin_retail';
     const isSpecialAdmin = role === 'admin_special_program';
-    const mainNavItems = isFullAdmin
-        ? [...baseMainNavItems, profileNavItem]
-        : [dashboardNavItem, profileNavItem];
+    const hasAnyPermission = (features: string[]) =>
+        isFullAdmin ||
+        features.some((feature) =>
+            permissions.some((permission) => permission.startsWith(`${feature}.`)),
+        );
+    const hasFeaturePermission = (feature: string) => hasAnyPermission([feature]);
+    const mainNavItems = [
+        dashboardNavItem,
+        ...(isFullAdmin || hasFeaturePermission('users')
+            ? [
+                  {
+                      title: 'Kelola User',
+                      href: '/admin/users',
+                      icon: Users,
+                  },
+              ]
+            : []),
+        ...(isFullAdmin || hasFeaturePermission('chat')
+            ? [
+                  {
+                      title: 'Live Chat',
+                      href: '/admin/chat',
+                      icon: MessageCircle,
+                  },
+              ]
+            : []),
+        ...(isFullAdmin || hasFeaturePermission('reviews')
+            ? [
+                  {
+                      title: 'Ulasan Produk',
+                      href: '/admin/reviews',
+                      icon: Star,
+                  },
+              ]
+            : []),
+        profileNavItem,
+    ];
     const { isCurrentUrl } = useCurrentUrl();
     const isHotelSectionActive =
         isCurrentUrl('/hotels') ||
@@ -183,17 +201,17 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/academy/reports') ||
         isCurrentUrl('/admin/academy/system/audit') ||
         isCurrentUrl('/admin/academy/system/settings');
-    const showMitraSection = isFullAdmin;
-    const showHotelSection = isFullAdmin;
-    const showBlogSection = isFullAdmin;
-    const showWisataSection = isFullAdmin;
-    const showAffiliateSection = isFullAdmin;
-    const showEventSection = isFullAdmin;
-    const showPublicSection = isFullAdmin;
-    const showSystemSection = isFullAdmin;
-    const showSpecialProgramSection = isFullAdmin;
-    const showSouvenirSection = isFullAdmin;
-    const showAcademySection = isFullAdmin;
+    const showMitraSection = hasFeaturePermission('mitra');
+    const showHotelSection = hasFeaturePermission('hotel');
+    const showBlogSection = hasFeaturePermission('blog');
+    const showWisataSection = hasFeaturePermission('wisata');
+    const showAffiliateSection = hasFeaturePermission('wisata_affiliates');
+    const showEventSection = hasFeaturePermission('events');
+    const showPublicSection = hasFeaturePermission('public_content');
+    const showSystemSection = hasFeaturePermission('system');
+    const showSpecialProgramSection = hasFeaturePermission('special_programs');
+    const showSouvenirSection = hasFeaturePermission('retail_shop');
+    const showAcademySection = hasFeaturePermission('academy');
     const showAcademyFlatMenu = isAcademyAdmin && !isFullAdmin;
     const showRetailFlatMenu = isRetailAdmin && !isFullAdmin;
     const showSpecialFlatMenu = isSpecialAdmin && !isFullAdmin;

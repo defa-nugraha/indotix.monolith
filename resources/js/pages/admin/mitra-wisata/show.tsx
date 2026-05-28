@@ -83,7 +83,11 @@ const DocItem = ({ label, path }: { label: string; path?: string | null }) => {
                         PDF
                     </div>
                 ) : (
-                    <img src={url ?? ''} alt={label} className="h-12 w-12 rounded-lg object-cover" />
+                    <img
+                        src={url ?? ''}
+                        alt={label}
+                        className="h-12 w-12 rounded-lg object-cover"
+                    />
                 )
             ) : (
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-slate-200 text-[10px] text-slate-400">
@@ -91,7 +95,7 @@ const DocItem = ({ label, path }: { label: string; path?: string | null }) => {
                 </div>
             )}
             <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-400">
+                <p className="text-[11px] font-semibold tracking-[0.15em] text-slate-400 uppercase">
                     {label}
                 </p>
                 {hasFile ? (
@@ -111,7 +115,12 @@ const DocItem = ({ label, path }: { label: string; path?: string | null }) => {
     );
 };
 
-export default function AdminMitraWisataShow({ mitra, onboarding, cityName, provinceName }: Props) {
+export default function AdminMitraWisataShow({
+    mitra,
+    onboarding,
+    cityName,
+    provinceName,
+}: Props) {
     const handleSuspend = async () => {
         const result = await Swal.fire({
             title: mitra.is_suspended ? 'Aktifkan mitra?' : 'Suspend mitra?',
@@ -124,9 +133,12 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
             cancelButtonText: 'Batal',
             input: mitra.is_suspended ? undefined : 'textarea',
             inputLabel: mitra.is_suspended ? undefined : 'Alasan suspend',
-            inputPlaceholder: mitra.is_suspended ? undefined : 'Tulis alasan suspend',
-            inputValidator: (value) => {
-                if (!mitra.is_suspended && !value) return 'Alasan suspend wajib diisi.';
+            inputPlaceholder: mitra.is_suspended
+                ? undefined
+                : 'Tulis alasan suspend',
+            inputValidator: (value: string | null) => {
+                if (!mitra.is_suspended && !value)
+                    return 'Alasan suspend wajib diisi.';
                 return null;
             },
         });
@@ -143,7 +155,9 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                 onSuccess: () =>
                     Swal.fire({
                         title: 'Berhasil',
-                        text: mitra.is_suspended ? 'Mitra diaktifkan kembali.' : 'Mitra berhasil disuspend.',
+                        text: mitra.is_suspended
+                            ? 'Mitra diaktifkan kembali.'
+                            : 'Mitra berhasil disuspend.',
                         icon: 'success',
                     }),
                 onError: () =>
@@ -152,15 +166,18 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                         text: 'Tidak dapat memperbarui status suspend.',
                         icon: 'error',
                     }),
-            }
+            },
         );
     };
     const handleVerify = async (action: 'approve' | 'reject') => {
         const result = await Swal.fire({
-            title: action === 'approve' ? 'Setujui mitra wisata?' : 'Tolak mitra wisata?',
+            title:
+                action === 'approve'
+                    ? 'Setujui mitra wisata?'
+                    : 'Tolak mitra wisata?',
             input: action === 'reject' ? 'textarea' : undefined,
             inputLabel: action === 'reject' ? 'Alasan penolakan' : undefined,
-            inputValidator: (value) => {
+            inputValidator: (value: string | null) => {
                 if (action === 'reject' && !value) return 'Alasan wajib diisi.';
                 return null;
             },
@@ -189,7 +206,7 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                         text: 'Tidak dapat memperbarui status verifikasi.',
                         icon: 'error',
                     }),
-            }
+            },
         );
     };
 
@@ -198,7 +215,7 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
             title: action === 'approve' ? 'Setujui payout?' : 'Tolak payout?',
             input: action === 'reject' ? 'textarea' : undefined,
             inputLabel: action === 'reject' ? 'Alasan penolakan' : undefined,
-            inputValidator: (value) => {
+            inputValidator: (value: string | null) => {
                 if (action === 'reject' && !value) return 'Alasan wajib diisi.';
                 return null;
             },
@@ -227,7 +244,7 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                         text: 'Tidak dapat memperbarui status payout.',
                         icon: 'error',
                     }),
-            }
+            },
         );
     };
 
@@ -238,13 +255,30 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Detail Mitra Wisata</p>
-                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">{onboarding.destination_name ?? 'Destinasi wisata'}</h1>
-                            <p className="text-sm text-slate-500">{mitra.name} · {mitra.email}</p>
+                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                                Detail Mitra Wisata
+                            </p>
+                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                                {onboarding.destination_name ??
+                                    'Destinasi wisata'}
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                {mitra.name} · {mitra.email}
+                            </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <Badge className={statusTone(onboarding.verification_status)}>{onboarding.verification_status}</Badge>
-                            <Badge className={statusTone(onboarding.payout_status)}>{onboarding.payout_status}</Badge>
+                            <Badge
+                                className={statusTone(
+                                    onboarding.verification_status,
+                                )}
+                            >
+                                {onboarding.verification_status}
+                            </Badge>
+                            <Badge
+                                className={statusTone(onboarding.payout_status)}
+                            >
+                                {onboarding.payout_status}
+                            </Badge>
                         </div>
                     </div>
                 </section>
@@ -252,78 +286,189 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                 <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                     <div className="space-y-6">
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Identitas Destinasi</h2>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Identitas Destinasi
+                            </h2>
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
-                                <div><span className="font-semibold">Jenis:</span> {onboarding.destination_type ?? '-'}</div>
-                                <div><span className="font-semibold">Provinsi:</span> {provinceName ?? '-'}</div>
-                                <div><span className="font-semibold">Kota/Kabupaten:</span> {cityName ?? '-'}</div>
-                                <div><span className="font-semibold">Alamat:</span> {onboarding.address_full ?? '-'}</div>
-                                <div><span className="font-semibold">Maps:</span> {onboarding.maps_pin_url ?? '-'}</div>
-                                <div><span className="font-semibold">Deskripsi:</span> {onboarding.description ?? '-'}</div>
-                                <div><span className="font-semibold">Highlight:</span> {onboarding.highlights ?? '-'}</div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Jenis:
+                                    </span>{' '}
+                                    {onboarding.destination_type ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Provinsi:
+                                    </span>{' '}
+                                    {provinceName ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Kota/Kabupaten:
+                                    </span>{' '}
+                                    {cityName ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Alamat:
+                                    </span>{' '}
+                                    {onboarding.address_full ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">Maps:</span>{' '}
+                                    {onboarding.maps_pin_url ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Deskripsi:
+                                    </span>{' '}
+                                    {onboarding.description ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Highlight:
+                                    </span>{' '}
+                                    {onboarding.highlights ?? '-'}
+                                </div>
                             </div>
                         </div>
 
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Operasional</h2>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Operasional
+                            </h2>
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
-                                <div><span className="font-semibold">Hari buka:</span> {(onboarding.open_days ?? []).join(', ') || '-'}</div>
-                                <div><span className="font-semibold">Jam:</span> {onboarding.open_time ?? '-'} - {onboarding.close_time ?? '-'}</div>
-                                <div><span className="font-semibold">Catatan libur:</span> {onboarding.holiday_notes ?? '-'}</div>
-                                <div><span className="font-semibold">Fasilitas:</span> {(onboarding.facilities ?? []).join(', ') || '-'}</div>
-                                <div><span className="font-semibold">Kontak loket:</span> {onboarding.contact_phone ?? '-'}</div>
-                                <div><span className="font-semibold">Jam kontak:</span> {onboarding.contact_hours ?? '-'}</div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Hari buka:
+                                    </span>{' '}
+                                    {(onboarding.open_days ?? []).join(', ') ||
+                                        '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">Jam:</span>{' '}
+                                    {onboarding.open_time ?? '-'} -{' '}
+                                    {onboarding.close_time ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Catatan libur:
+                                    </span>{' '}
+                                    {onboarding.holiday_notes ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Fasilitas:
+                                    </span>{' '}
+                                    {(onboarding.facilities ?? []).join(', ') ||
+                                        '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Kontak loket:
+                                    </span>{' '}
+                                    {onboarding.contact_phone ?? '-'}
+                                </div>
+                                <div>
+                                    <span className="font-semibold">
+                                        Jam kontak:
+                                    </span>{' '}
+                                    {onboarding.contact_hours ?? '-'}
+                                </div>
                             </div>
                         </div>
 
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Dokumen & Foto</h2>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Dokumen & Foto
+                            </h2>
                             <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-4">
-                                <DocItem label="Foto Gerbang" path={onboarding.photo_gate_path} />
-                                <DocItem label="Foto Area" path={onboarding.photo_area_path} />
-                                <DocItem label="Foto Loket" path={onboarding.photo_ticket_path} />
-                                <DocItem label="KTP" path={onboarding.ktp_path} />
-                                <DocItem label="Selfie + KTP" path={onboarding.selfie_ktp_path} />
-                                <DocItem label="Dokumen Legalitas" path={onboarding.legal_doc_path} />
+                                <DocItem
+                                    label="Foto Gerbang"
+                                    path={onboarding.photo_gate_path}
+                                />
+                                <DocItem
+                                    label="Foto Area"
+                                    path={onboarding.photo_area_path}
+                                />
+                                <DocItem
+                                    label="Foto Loket"
+                                    path={onboarding.photo_ticket_path}
+                                />
+                                <DocItem
+                                    label="KTP"
+                                    path={onboarding.ktp_path}
+                                />
+                                <DocItem
+                                    label="Selfie + KTP"
+                                    path={onboarding.selfie_ktp_path}
+                                />
+                                <DocItem
+                                    label="Dokumen Legalitas"
+                                    path={onboarding.legal_doc_path}
+                                />
                             </div>
                             <div className="mt-3 text-xs text-slate-500">
-                                Legalitas: {onboarding.legal_doc_type ?? '-'} · {onboarding.legal_doc_number ?? '-'}
+                                Legalitas: {onboarding.legal_doc_type ?? '-'} ·{' '}
+                                {onboarding.legal_doc_number ?? '-'}
                             </div>
                         </div>
                     </div>
 
                     <div className="space-y-6">
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-900">Aksi Verifikasi</h3>
+                            <h3 className="text-sm font-semibold text-slate-900">
+                                Aksi Verifikasi
+                            </h3>
                             <div className="mt-4 flex flex-col gap-3">
-                                <Button className="bg-sky-600 text-white hover:bg-sky-700" onClick={() => handleVerify('approve')}>
+                                <Button
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                    onClick={() => handleVerify('approve')}
+                                >
                                     Setujui
                                 </Button>
-                                <Button variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => handleVerify('reject')}>
+                                <Button
+                                    variant="outline"
+                                    className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                    onClick={() => handleVerify('reject')}
+                                >
                                     Tolak
                                 </Button>
                             </div>
                         </div>
 
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-900">Payout</h3>
+                            <h3 className="text-sm font-semibold text-slate-900">
+                                Payout
+                            </h3>
                             <div className="mt-2 text-sm text-slate-600">
                                 <div>{onboarding.bank_name ?? '-'}</div>
-                                <div>{onboarding.bank_account_number ?? '-'}</div>
+                                <div>
+                                    {onboarding.bank_account_number ?? '-'}
+                                </div>
                                 <div>{onboarding.bank_account_name ?? '-'}</div>
                             </div>
                             <div className="mt-4 flex flex-col gap-3">
-                                <Button className="bg-sky-600 text-white hover:bg-sky-700" onClick={() => handlePayout('approve')}>
+                                <Button
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                    onClick={() => handlePayout('approve')}
+                                >
                                     Setujui Payout
                                 </Button>
-                                <Button variant="outline" className="border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => handlePayout('reject')}>
+                                <Button
+                                    variant="outline"
+                                    className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                    onClick={() => handlePayout('reject')}
+                                >
                                     Tolak Payout
                                 </Button>
                             </div>
                         </div>
 
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-900">Status Akun</h3>
+                            <h3 className="text-sm font-semibold text-slate-900">
+                                Status Akun
+                            </h3>
                             <div className="mt-2 text-sm text-slate-600">
                                 {mitra.is_suspended ? 'Suspended' : 'Active'}
                             </div>
@@ -342,7 +487,9 @@ export default function AdminMitraWisataShow({ mitra, onboarding, cityName, prov
                                 onClick={handleSuspend}
                                 className={`mt-4 w-full ${mitra.is_suspended ? 'bg-sky-600 hover:bg-sky-700' : 'bg-rose-600 hover:bg-rose-700'} text-white`}
                             >
-                                {mitra.is_suspended ? 'Aktifkan Akun' : 'Suspend Akun'}
+                                {mitra.is_suspended
+                                    ? 'Aktifkan Akun'
+                                    : 'Suspend Akun'}
                             </Button>
                         </div>
                     </div>

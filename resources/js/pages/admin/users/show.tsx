@@ -45,15 +45,19 @@ export default function AdminUserShow({
     const handleSuspend = async () => {
         const result = await Swal.fire({
             title: user.is_suspended ? 'Aktifkan user?' : 'Suspend user?',
-            text: user.is_suspended ? 'Akun user akan diaktifkan kembali.' : 'User tidak bisa login hingga diaktifkan kembali.',
+            text: user.is_suspended
+                ? 'Akun user akan diaktifkan kembali.'
+                : 'User tidak bisa login hingga diaktifkan kembali.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonText: user.is_suspended ? 'Aktifkan' : 'Suspend',
             cancelButtonText: 'Batal',
             input: user.is_suspended ? undefined : 'textarea',
             inputLabel: user.is_suspended ? undefined : 'Alasan suspend',
-            inputPlaceholder: user.is_suspended ? undefined : 'Tulis alasan suspend',
-            inputValidator: (value) => {
+            inputPlaceholder: user.is_suspended
+                ? undefined
+                : 'Tulis alasan suspend',
+            inputValidator: (value: string | null) => {
                 if (!user.is_suspended && !value) {
                     return 'Alasan suspend wajib diisi.';
                 }
@@ -73,7 +77,9 @@ export default function AdminUserShow({
                 onSuccess: () =>
                     Swal.fire({
                         title: 'Berhasil',
-                        text: user.is_suspended ? 'User diaktifkan kembali.' : 'User berhasil disuspend.',
+                        text: user.is_suspended
+                            ? 'User diaktifkan kembali.'
+                            : 'User berhasil disuspend.',
                         icon: 'success',
                     }),
                 onError: () =>
@@ -82,7 +88,7 @@ export default function AdminUserShow({
                         text: 'Tidak dapat memperbarui status user.',
                         icon: 'error',
                     }),
-            }
+            },
         );
     };
 
@@ -93,16 +99,28 @@ export default function AdminUserShow({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">User</p>
-                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">{user.name}</h1>
-                            <p className="text-sm text-slate-500">{user.email}</p>
+                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                                User
+                            </p>
+                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                                {user.name}
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                {user.email}
+                            </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                             <Button
-                                className={user.is_suspended ? 'bg-sky-600 text-white hover:bg-sky-700' : 'bg-rose-600 text-white hover:bg-rose-700'}
+                                className={
+                                    user.is_suspended
+                                        ? 'bg-sky-600 text-white hover:bg-sky-700'
+                                        : 'bg-rose-600 text-white hover:bg-rose-700'
+                                }
                                 onClick={handleSuspend}
                             >
-                                {user.is_suspended ? 'Aktifkan User' : 'Suspend User'}
+                                {user.is_suspended
+                                    ? 'Aktifkan User'
+                                    : 'Suspend User'}
                             </Button>
                             <Button
                                 variant="destructive"
@@ -116,24 +134,31 @@ export default function AdminUserShow({
                                         cancelButtonText: 'Batal',
                                     }).then((result) => {
                                         if (result.isConfirmed) {
-                                            router.delete(`/admin/users/${user.id}`, {
-                                                onSuccess: () => {
-                                                    Swal.fire({
-                                                        icon: 'success',
-                                                        title: 'Terhapus',
-                                                        text: 'User dihapus.',
-                                                    }).then(() => {
-                                                        router.get('/admin/users');
-                                                    });
+                                            router.delete(
+                                                `/admin/users/${user.id}`,
+                                                {
+                                                    onSuccess: () => {
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Terhapus',
+                                                            text: 'User dihapus.',
+                                                        }).then(() => {
+                                                            router.get(
+                                                                '/admin/users',
+                                                            );
+                                                        });
+                                                    },
+                                                    onError: (errors) => {
+                                                        Swal.fire({
+                                                            icon: 'error',
+                                                            title: 'Gagal',
+                                                            text:
+                                                                errors.user ??
+                                                                'User gagal dihapus.',
+                                                        });
+                                                    },
                                                 },
-                                                onError: (errors) => {
-                                                    Swal.fire({
-                                                        icon: 'error',
-                                                        title: 'Gagal',
-                                                        text: errors.user ?? 'User gagal dihapus.',
-                                                    });
-                                                },
-                                            });
+                                            );
                                         }
                                     });
                                 }}
@@ -146,7 +171,9 @@ export default function AdminUserShow({
 
                 <section className="grid gap-4 md:grid-cols-2">
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Informasi Akun</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Informasi Akun
+                        </h2>
                         <div className="mt-4 space-y-3 text-sm text-slate-700">
                             <div className="flex items-center justify-between">
                                 <span className="text-slate-500">Email</span>
@@ -157,76 +184,138 @@ export default function AdminUserShow({
                                 <span>{user.phone ?? '-'}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500">Jenis Kelamin</span>
+                                <span className="text-slate-500">
+                                    Jenis Kelamin
+                                </span>
                                 <span>{user.gender ?? '-'}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500">Terdaftar</span>
+                                <span className="text-slate-500">
+                                    Terdaftar
+                                </span>
                                 <span>{user.created_at ?? '-'}</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Status Akun</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Status Akun
+                        </h2>
                         <div className="mt-4 space-y-3 text-sm text-slate-700">
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500">Verifikasi Email</span>
-                                <Badge className={user.email_verified_at ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}>
-                                    {user.email_verified_at ? 'verified' : 'unverified'}
+                                <span className="text-slate-500">
+                                    Verifikasi Email
+                                </span>
+                                <Badge
+                                    className={
+                                        user.email_verified_at
+                                            ? 'bg-emerald-50 text-emerald-700'
+                                            : 'bg-amber-50 text-amber-700'
+                                    }
+                                >
+                                    {user.email_verified_at
+                                        ? 'verified'
+                                        : 'unverified'}
                                 </Badge>
                             </div>
                             <div className="flex items-center justify-between">
                                 <span className="text-slate-500">Status</span>
-                                <Badge className={user.is_suspended ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}>
+                                <Badge
+                                    className={
+                                        user.is_suspended
+                                            ? 'bg-rose-50 text-rose-700'
+                                            : 'bg-emerald-50 text-emerald-700'
+                                    }
+                                >
                                     {user.is_suspended ? 'suspended' : 'active'}
                                 </Badge>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500">Suspend sejak</span>
+                                <span className="text-slate-500">
+                                    Suspend sejak
+                                </span>
                                 <span>{user.suspended_at ?? '-'}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-500">Alasan suspend</span>
-                                <span className="text-right">{user.suspended_reason ?? '-'}</span>
+                                <span className="text-slate-500">
+                                    Alasan suspend
+                                </span>
+                                <span className="text-right">
+                                    {user.suspended_reason ?? '-'}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-slate-900">Riwayat Transaksi</h2>
+                    <h2 className="text-lg font-semibold text-slate-900">
+                        Riwayat Transaksi
+                    </h2>
                     <div className="mt-4 overflow-hidden rounded-2xl border border-slate-100">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
-                                    <th className="px-4 py-3 text-left">Produk</th>
-                                    <th className="px-4 py-3 text-left">Kode</th>
-                                    <th className="px-4 py-3 text-left">Total</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
-                                    <th className="px-4 py-3 text-left">Pembayaran</th>
-                                    <th className="px-4 py-3 text-left">Tanggal</th>
+                                    <th className="px-4 py-3 text-left">
+                                        Produk
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Kode
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Total
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Status
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Pembayaran
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Tanggal
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {transactions.map((trx) => (
-                                    <tr key={`${trx.type}-${trx.id}`} className="border-t border-slate-100">
+                                    <tr
+                                        key={`${trx.type}-${trx.id}`}
+                                        className="border-t border-slate-100"
+                                    >
                                         <td className="px-4 py-3">
-                                            <div className="font-semibold text-slate-900">{trx.title}</div>
-                                            <div className="text-xs uppercase text-slate-400">{trx.type}</div>
+                                            <div className="font-semibold text-slate-900">
+                                                {trx.title}
+                                            </div>
+                                            <div className="text-xs text-slate-400 uppercase">
+                                                {trx.type}
+                                            </div>
                                         </td>
-                                        <td className="px-4 py-3 text-slate-600">{trx.code}</td>
                                         <td className="px-4 py-3 text-slate-600">
-                                            {typeof trx.total === 'number' ? `Rp ${trx.total.toLocaleString('id-ID')}` : '-'}
+                                            {trx.code}
                                         </td>
-                                        <td className="px-4 py-3 text-slate-600">{trx.status ?? '-'}</td>
-                                        <td className="px-4 py-3 text-slate-600">{trx.payment_status ?? '-'}</td>
-                                        <td className="px-4 py-3 text-slate-500">{trx.created_at ?? '-'}</td>
+                                        <td className="px-4 py-3 text-slate-600">
+                                            {typeof trx.total === 'number'
+                                                ? `Rp ${trx.total.toLocaleString('id-ID')}`
+                                                : '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600">
+                                            {trx.status ?? '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600">
+                                            {trx.payment_status ?? '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-500">
+                                            {trx.created_at ?? '-'}
+                                        </td>
                                     </tr>
                                 ))}
                                 {transactions.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td
+                                            colSpan={6}
+                                            className="px-4 py-8 text-center text-sm text-slate-500"
+                                        >
                                             Belum ada transaksi.
                                         </td>
                                     </tr>

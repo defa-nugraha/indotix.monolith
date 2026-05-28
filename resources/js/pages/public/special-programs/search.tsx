@@ -94,7 +94,11 @@ export default function SpecialProgramSearch({
     discovery,
 }: {
     programs: ProgramCard[];
-    filters: { q?: string | null; category?: string | null; sort?: string | null };
+    filters: {
+        q?: string | null;
+        category?: string | null;
+        sort?: string | null;
+    };
     discovery?: DiscoveryExperiencePayload | null;
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
 }) {
@@ -220,7 +224,10 @@ export default function SpecialProgramSearch({
     const discoverySections = discovery?.sections ?? [];
 
     return (
-        <PublicLayout categories={categories} chips={chips}>
+        <PublicLayout
+            categories={categories}
+            chips={specialProgramPopularChips}
+        >
             <Head title="Special Program">
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
@@ -321,9 +328,9 @@ export default function SpecialProgramSearch({
                                         Program unggulan untuk kebutuhanmu
                                     </div>
                                     <p className="text-sm text-slate-500">
-                                        Cari program berdasarkan nama,
-                                        kategori, atau urutan terbaik untuk
-                                        mulai melihat pilihan yang paling pas.
+                                        Cari program berdasarkan nama, kategori,
+                                        atau urutan terbaik untuk mulai melihat
+                                        pilihan yang paling pas.
                                     </p>
                                 </div>
                                 <DiscoveryInsightStrip
@@ -331,9 +338,7 @@ export default function SpecialProgramSearch({
                                         {
                                             title: 'Lihat manfaat utamanya',
                                             body: 'Sorotan program membantu kamu memahami kelebihan utamanya sebelum membuka detail.',
-                                            icon: (
-                                                <Star className="h-5 w-5" />
-                                            ),
+                                            icon: <Star className="h-5 w-5" />,
                                         },
                                         {
                                             title: 'Pilih berdasarkan kebutuhan',
@@ -356,17 +361,13 @@ export default function SpecialProgramSearch({
                                 theme={discoveryTheme}
                             />
 
-                            {discoverySections
-                                .slice(0, 2)
-                                .map((section) => (
-                                    <DiscoveryCollectionRail
-                                        key={section.key}
-                                        section={section}
-                                        theme={discoveryTheme}
-                                    />
-                                ))}
-
-
+                            {discoverySections.slice(0, 2).map((section) => (
+                                <DiscoveryCollectionRail
+                                    key={section.key}
+                                    section={section}
+                                    theme={discoveryTheme}
+                                />
+                            ))}
                         </section>
 
                         <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
@@ -445,7 +446,8 @@ export default function SpecialProgramSearch({
                                         }
                                         suggestions={
                                             discovery?.empty_state
-                                                ?.recommended_keywords ?? chips
+                                                ?.recommended_keywords ??
+                                            specialProgramPopularChips
                                         }
                                         onSuggestionSelect={applySuggestion}
                                         onReset={resetDiscovery}

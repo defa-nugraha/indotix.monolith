@@ -910,419 +910,451 @@ export default function Profile({
                                 </div>
 
                                 <div className="mt-5 grid gap-4">
-                                {addresses.length > 0 ? (
-                                    addresses.map((address) => (
-                                        <AddressCard
-                                            key={address.id}
-                                            address={address}
-                                            provinces={provinces}
-                                            cities={cities}
-                                            districts={districts}
-                                        />
-                                    ))
-                                ) : (
-                                    <div className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-                                        Belum ada alamat tersimpan. Tambahkan
-                                        alamat utama agar checkout lebih cepat.
-                                    </div>
-                                )}
-                            </div>
+                                    {addresses.length > 0 ? (
+                                        addresses.map((address) => (
+                                            <AddressCard
+                                                key={address.id}
+                                                address={address}
+                                                provinces={provinces}
+                                                cities={cities}
+                                                districts={districts}
+                                            />
+                                        ))
+                                    ) : (
+                                        <div className="rounded-xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
+                                            Belum ada alamat tersimpan.
+                                            Tambahkan alamat utama agar checkout
+                                            lebih cepat.
+                                        </div>
+                                    )}
+                                </div>
 
-                            <form
-                                className="mt-6 grid gap-4 border-t border-slate-100 pt-6"
-                                onSubmit={(event) => {
-                                    event.preventDefault();
-                                    addressForm.post('/settings/addresses', {
-                                        preserveScroll: true,
-                                        onSuccess: () => {
-                                            addressForm.reset();
-                                            setNewVillageOption(null);
-                                        },
-                                    });
-                                }}
-                            >
-                                <h3 className="text-sm font-semibold text-slate-900">
-                                    Tambah Alamat Baru
-                                </h3>
-                                <div className="grid gap-4 md:grid-cols-2">
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Label
-                                        </label>
-                                        <input
-                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={addressForm.data.label}
-                                            onChange={(event) =>
-                                                addressForm.setData(
-                                                    'label',
-                                                    event.target.value,
-                                                )
-                                            }
-                                            placeholder="Rumah, Kantor, dll"
-                                        />
-                                        <InputError
-                                            message={addressForm.errors.label}
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Nama Penerima
-                                        </label>
-                                        <input
-                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={
-                                                addressForm.data.recipient_name
-                                            }
-                                            onChange={(event) =>
-                                                addressForm.setData(
-                                                    'recipient_name',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        />
-                                        <InputError
-                                            message={
-                                                addressForm.errors
-                                                    .recipient_name
-                                            }
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Nomor HP
-                                        </label>
-                                        <input
-                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={addressForm.data.phone}
-                                            onChange={(event) =>
-                                                addressForm.setData(
-                                                    'phone',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        />
-                                        <InputError
-                                            message={addressForm.errors.phone}
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Alamat Lengkap
-                                        </label>
-                                        <input
-                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={
-                                                addressForm.data.address_line
-                                            }
-                                            onChange={(event) =>
-                                                addressForm.setData(
-                                                    'address_line',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        />
-                                        <InputError
-                                            message={
-                                                addressForm.errors.address_line
-                                            }
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Provinsi
-                                        </label>
-                                        <Select
-                                            inputId="address-province-new"
-                                            instanceId="address-province-new"
-                                            options={provinces}
-                                            value={selectedNewProvince}
-                                            placeholder="Pilih provinsi"
-                                            onChange={(option) => {
-                                                const nextProvince =
-                                                    (
-                                                        option as SelectOption | null
-                                                    )?.value ?? '';
-                                                addressForm.setData(
-                                                    'province_code',
-                                                    nextProvince,
-                                                );
-                                                if (
-                                                    addressForm.data.city_code
-                                                ) {
-                                                    addressForm.setData(
-                                                        'city_code',
-                                                        '',
-                                                    );
-                                                }
-                                                if (
-                                                    addressForm.data
-                                                        .district_code
-                                                ) {
-                                                    addressForm.setData(
-                                                        'district_code',
-                                                        '',
-                                                    );
-                                                }
-                                                if (
-                                                    addressForm.data
-                                                        .village_code
-                                                ) {
-                                                    addressForm.setData(
-                                                        'village_code',
-                                                        '',
-                                                    );
-                                                }
-                                                setNewVillageOption(null);
-                                            }}
-                                            styles={selectStyles}
-                                        />
-                                        <InputError
-                                            message={
-                                                addressForm.errors.province_code
-                                            }
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Kota/Kabupaten
-                                        </label>
-                                        <Select
-                                            inputId="address-city-new"
-                                            instanceId="address-city-new"
-                                            options={filteredNewCities}
-                                            value={selectedNewCity}
-                                            placeholder={
-                                                newProvinceCodeValue
-                                                    ? 'Pilih kota/kabupaten'
-                                                    : 'Pilih provinsi dulu'
-                                            }
-                                            isDisabled={!newProvinceCodeValue}
-                                            onChange={(option) => {
-                                                const selected =
-                                                    option as SelectOption | null;
-                                                const nextCity =
-                                                    selected?.value ?? '';
-                                                addressForm.setData(
-                                                    'city_code',
-                                                    nextCity,
-                                                );
-                                                if (
-                                                    addressForm.data
-                                                        .district_code
-                                                ) {
-                                                    addressForm.setData(
-                                                        'district_code',
-                                                        '',
-                                                    );
-                                                }
-                                                if (
-                                                    addressForm.data
-                                                        .village_code
-                                                ) {
-                                                    addressForm.setData(
-                                                        'village_code',
-                                                        '',
-                                                    );
-                                                }
-                                                if (selected?.province_code) {
-                                                    addressForm.setData(
-                                                        'province_code',
-                                                        selected.province_code,
-                                                    );
-                                                }
-                                                setNewVillageOption(null);
-                                            }}
-                                            styles={selectStyles}
-                                        />
-                                        <InputError
-                                            message={
-                                                addressForm.errors.city_code
-                                            }
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Kecamatan
-                                        </label>
-                                        <Select
-                                            inputId="address-district-new"
-                                            instanceId="address-district-new"
-                                            options={filteredNewDistricts}
-                                            value={selectedNewDistrict}
-                                            placeholder={
-                                                newCityCodeValue
-                                                    ? 'Pilih kecamatan'
-                                                    : 'Pilih kota dulu'
-                                            }
-                                            isDisabled={!newCityCodeValue}
-                                            onChange={(option) => {
-                                                const selected =
-                                                    option as SelectOption | null;
-                                                const nextDistrict =
-                                                    selected?.value ?? '';
-                                                addressForm.setData(
-                                                    'district_code',
-                                                    nextDistrict,
-                                                );
-                                                if (
-                                                    addressForm.data
-                                                        .village_code
-                                                ) {
-                                                    addressForm.setData(
-                                                        'village_code',
-                                                        '',
-                                                    );
-                                                }
-                                                if (selected?.city_code) {
-                                                    addressForm.setData(
-                                                        'city_code',
-                                                        selected.city_code,
-                                                    );
-                                                }
-                                                if (selected?.province_code) {
-                                                    addressForm.setData(
-                                                        'province_code',
-                                                        selected.province_code,
-                                                    );
-                                                }
-                                                setNewVillageOption(null);
-                                            }}
-                                            styles={selectStyles}
-                                        />
-                                        <InputError
-                                            message={
-                                                addressForm.errors.district_code
-                                            }
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Desa
-                                        </label>
-                                        <AsyncSelect
-                                            key={`address-village-new-${newDistrictCodeValue || 'none'}`}
-                                            inputId="address-village-new"
-                                            instanceId="address-village-new"
-                                            cacheOptions
-                                            defaultOptions={Boolean(
-                                                newDistrictCodeValue,
-                                            )}
-                                            loadOptions={buildVillageLoader(
-                                                newDistrictCodeValue,
-                                                newCityCodeValue,
-                                                newProvinceCodeValue,
-                                            )}
-                                            isClearable
-                                            isDisabled={!newDistrictCodeValue}
-                                            noOptionsMessage={villageNoOptionsMessage(
-                                                newDistrictCodeValue,
-                                            )}
-                                            value={newVillageOption}
-                                            placeholder={
-                                                newDistrictCodeValue
-                                                    ? 'Ketik untuk cari desa'
-                                                    : 'Pilih kecamatan dulu'
-                                            }
-                                            onChange={(option) => {
-                                                const selected =
-                                                    option as VillageOption | null;
-                                                setNewVillageOption(selected);
-                                                addressForm.setData(
-                                                    'village_code',
-                                                    selected?.value ?? '',
-                                                );
-                                                if (selected?.district_code) {
-                                                    addressForm.setData(
-                                                        'district_code',
-                                                        selected.district_code,
-                                                    );
-                                                }
-                                                if (selected?.city_code) {
-                                                    addressForm.setData(
-                                                        'city_code',
-                                                        selected.city_code,
-                                                    );
-                                                }
-                                                if (selected?.province_code) {
-                                                    addressForm.setData(
-                                                        'province_code',
-                                                        selected.province_code,
-                                                    );
-                                                }
-                                            }}
-                                            styles={selectStyles}
-                                        />
-                                        <InputError
-                                            message={
-                                                addressForm.errors.village_code
-                                            }
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
-                                            Kode Pos
-                                        </label>
-                                        <input
-                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                            value={addressForm.data.postal_code}
-                                            onChange={(event) =>
-                                                addressForm.setData(
-                                                    'postal_code',
-                                                    event.target.value,
-                                                )
-                                            }
-                                        />
-                                        <InputError
-                                            message={
-                                                addressForm.errors.postal_code
-                                            }
-                                        />
-                                    </div>
-                                </div>
-                                <div className="grid gap-2">
-                                    <label className="text-sm font-semibold text-slate-700">
-                                        Catatan (opsional)
-                                    </label>
-                                    <textarea
-                                        className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
-                                        value={addressForm.data.notes}
-                                        onChange={(event) =>
-                                            addressForm.setData(
-                                                'notes',
-                                                event.target.value,
-                                            )
-                                        }
-                                    />
-                                    <InputError
-                                        message={addressForm.errors.notes}
-                                    />
-                                </div>
-                                <label className="flex items-center gap-2 text-sm text-slate-600">
-                                    <input
-                                        type="checkbox"
-                                        checked={Boolean(
-                                            addressForm.data.is_default,
-                                        )}
-                                        onChange={(event) =>
-                                            addressForm.setData(
-                                                'is_default',
-                                                event.target.checked,
-                                            )
-                                        }
-                                    />
-                                    Jadikan alamat utama
-                                </label>
-                                <button
-                                    type="submit"
-                                    className="w-fit rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700"
-                                    disabled={addressForm.processing}
+                                <form
+                                    className="mt-6 grid gap-4 border-t border-slate-100 pt-6"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        addressForm.post(
+                                            '/settings/addresses',
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    addressForm.reset();
+                                                    setNewVillageOption(null);
+                                                },
+                                            },
+                                        );
+                                    }}
                                 >
-                                    {addressForm.processing
-                                        ? 'Menyimpan...'
-                                        : 'Simpan Alamat'}
-                                </button>
-                            </form>
-                        </div>
+                                    <h3 className="text-sm font-semibold text-slate-900">
+                                        Tambah Alamat Baru
+                                    </h3>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Label
+                                            </label>
+                                            <input
+                                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                                value={addressForm.data.label}
+                                                onChange={(event) =>
+                                                    addressForm.setData(
+                                                        'label',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                                placeholder="Rumah, Kantor, dll"
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors.label
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Nama Penerima
+                                            </label>
+                                            <input
+                                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                                value={
+                                                    addressForm.data
+                                                        .recipient_name
+                                                }
+                                                onChange={(event) =>
+                                                    addressForm.setData(
+                                                        'recipient_name',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors
+                                                        .recipient_name
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Nomor HP
+                                            </label>
+                                            <input
+                                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                                value={addressForm.data.phone}
+                                                onChange={(event) =>
+                                                    addressForm.setData(
+                                                        'phone',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors.phone
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Alamat Lengkap
+                                            </label>
+                                            <input
+                                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                                value={
+                                                    addressForm.data
+                                                        .address_line
+                                                }
+                                                onChange={(event) =>
+                                                    addressForm.setData(
+                                                        'address_line',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors
+                                                        .address_line
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Provinsi
+                                            </label>
+                                            <Select
+                                                inputId="address-province-new"
+                                                instanceId="address-province-new"
+                                                options={provinces}
+                                                value={selectedNewProvince}
+                                                placeholder="Pilih provinsi"
+                                                onChange={(option) => {
+                                                    const nextProvince =
+                                                        (
+                                                            option as SelectOption | null
+                                                        )?.value ?? '';
+                                                    addressForm.setData(
+                                                        'province_code',
+                                                        nextProvince,
+                                                    );
+                                                    if (
+                                                        addressForm.data
+                                                            .city_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'city_code',
+                                                            '',
+                                                        );
+                                                    }
+                                                    if (
+                                                        addressForm.data
+                                                            .district_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'district_code',
+                                                            '',
+                                                        );
+                                                    }
+                                                    if (
+                                                        addressForm.data
+                                                            .village_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'village_code',
+                                                            '',
+                                                        );
+                                                    }
+                                                    setNewVillageOption(null);
+                                                }}
+                                                styles={selectStyles}
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors
+                                                        .province_code
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Kota/Kabupaten
+                                            </label>
+                                            <Select
+                                                inputId="address-city-new"
+                                                instanceId="address-city-new"
+                                                options={filteredNewCities}
+                                                value={selectedNewCity}
+                                                placeholder={
+                                                    newProvinceCodeValue
+                                                        ? 'Pilih kota/kabupaten'
+                                                        : 'Pilih provinsi dulu'
+                                                }
+                                                isDisabled={
+                                                    !newProvinceCodeValue
+                                                }
+                                                onChange={(option) => {
+                                                    const selected =
+                                                        option as SelectOption | null;
+                                                    const nextCity =
+                                                        selected?.value ?? '';
+                                                    addressForm.setData(
+                                                        'city_code',
+                                                        nextCity,
+                                                    );
+                                                    if (
+                                                        addressForm.data
+                                                            .district_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'district_code',
+                                                            '',
+                                                        );
+                                                    }
+                                                    if (
+                                                        addressForm.data
+                                                            .village_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'village_code',
+                                                            '',
+                                                        );
+                                                    }
+                                                    if (
+                                                        selected?.province_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'province_code',
+                                                            selected.province_code,
+                                                        );
+                                                    }
+                                                    setNewVillageOption(null);
+                                                }}
+                                                styles={selectStyles}
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors.city_code
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Kecamatan
+                                            </label>
+                                            <Select
+                                                inputId="address-district-new"
+                                                instanceId="address-district-new"
+                                                options={filteredNewDistricts}
+                                                value={selectedNewDistrict}
+                                                placeholder={
+                                                    newCityCodeValue
+                                                        ? 'Pilih kecamatan'
+                                                        : 'Pilih kota dulu'
+                                                }
+                                                isDisabled={!newCityCodeValue}
+                                                onChange={(option) => {
+                                                    const selected =
+                                                        option as SelectOption | null;
+                                                    const nextDistrict =
+                                                        selected?.value ?? '';
+                                                    addressForm.setData(
+                                                        'district_code',
+                                                        nextDistrict,
+                                                    );
+                                                    if (
+                                                        addressForm.data
+                                                            .village_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'village_code',
+                                                            '',
+                                                        );
+                                                    }
+                                                    if (selected?.city_code) {
+                                                        addressForm.setData(
+                                                            'city_code',
+                                                            selected.city_code,
+                                                        );
+                                                    }
+                                                    if (
+                                                        selected?.province_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'province_code',
+                                                            selected.province_code,
+                                                        );
+                                                    }
+                                                    setNewVillageOption(null);
+                                                }}
+                                                styles={selectStyles}
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors
+                                                        .district_code
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Desa
+                                            </label>
+                                            <AsyncSelect
+                                                key={`address-village-new-${newDistrictCodeValue || 'none'}`}
+                                                inputId="address-village-new"
+                                                instanceId="address-village-new"
+                                                cacheOptions
+                                                defaultOptions={Boolean(
+                                                    newDistrictCodeValue,
+                                                )}
+                                                loadOptions={buildVillageLoader(
+                                                    newDistrictCodeValue,
+                                                    newCityCodeValue,
+                                                    newProvinceCodeValue,
+                                                )}
+                                                isClearable
+                                                isDisabled={
+                                                    !newDistrictCodeValue
+                                                }
+                                                noOptionsMessage={villageNoOptionsMessage(
+                                                    newDistrictCodeValue,
+                                                )}
+                                                value={newVillageOption}
+                                                placeholder={
+                                                    newDistrictCodeValue
+                                                        ? 'Ketik untuk cari desa'
+                                                        : 'Pilih kecamatan dulu'
+                                                }
+                                                onChange={(option) => {
+                                                    const selected =
+                                                        option as VillageOption | null;
+                                                    setNewVillageOption(
+                                                        selected,
+                                                    );
+                                                    addressForm.setData(
+                                                        'village_code',
+                                                        selected?.value ?? '',
+                                                    );
+                                                    if (
+                                                        selected?.district_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'district_code',
+                                                            selected.district_code,
+                                                        );
+                                                    }
+                                                    if (selected?.city_code) {
+                                                        addressForm.setData(
+                                                            'city_code',
+                                                            selected.city_code,
+                                                        );
+                                                    }
+                                                    if (
+                                                        selected?.province_code
+                                                    ) {
+                                                        addressForm.setData(
+                                                            'province_code',
+                                                            selected.province_code,
+                                                        );
+                                                    }
+                                                }}
+                                                styles={selectStyles}
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors
+                                                        .village_code
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Kode Pos
+                                            </label>
+                                            <input
+                                                className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                                value={
+                                                    addressForm.data.postal_code
+                                                }
+                                                onChange={(event) =>
+                                                    addressForm.setData(
+                                                        'postal_code',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            />
+                                            <InputError
+                                                message={
+                                                    addressForm.errors
+                                                        .postal_code
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Catatan (opsional)
+                                        </label>
+                                        <textarea
+                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm"
+                                            value={addressForm.data.notes}
+                                            onChange={(event) =>
+                                                addressForm.setData(
+                                                    'notes',
+                                                    event.target.value,
+                                                )
+                                            }
+                                        />
+                                        <InputError
+                                            message={addressForm.errors.notes}
+                                        />
+                                    </div>
+                                    <label className="flex items-center gap-2 text-sm text-slate-600">
+                                        <input
+                                            type="checkbox"
+                                            checked={Boolean(
+                                                addressForm.data.is_default,
+                                            )}
+                                            onChange={(event) =>
+                                                addressForm.setData(
+                                                    'is_default',
+                                                    event.target.checked,
+                                                )
+                                            }
+                                        />
+                                        Jadikan alamat utama
+                                    </label>
+                                    <button
+                                        type="submit"
+                                        className="w-fit rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                                        disabled={addressForm.processing}
+                                    >
+                                        {addressForm.processing
+                                            ? 'Menyimpan...'
+                                            : 'Simpan Alamat'}
+                                    </button>
+                                </form>
+                            </div>
                         )}
 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -1623,7 +1655,14 @@ export default function Profile({
                                         message={deleteForm.errors.password}
                                     />
                                     <InputError
-                                        message={deleteForm.errors.account}
+                                        message={
+                                            (
+                                                deleteForm.errors as Record<
+                                                    string,
+                                                    string | undefined
+                                                >
+                                            ).account
+                                        }
                                     />
                                 </div>
                                 <label className="flex items-start gap-3 text-sm text-slate-600">

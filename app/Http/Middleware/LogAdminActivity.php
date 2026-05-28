@@ -14,7 +14,7 @@ class LogAdminActivity
         $response = $next($request);
 
         $user = $request->user();
-        if (! $user || $user->role !== 'admin') {
+        if (! $user || ($user->role !== 'admin' && ! $user->adminRole)) {
             return $response;
         }
 

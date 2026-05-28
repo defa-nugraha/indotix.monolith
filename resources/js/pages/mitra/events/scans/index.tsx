@@ -14,7 +14,11 @@ type ScanRow = {
     officer_name: string | null;
     location: string | null;
     is_anomaly: boolean;
-    booking?: { booking_code?: string | null; event_title?: string | null; ticket_name?: string | null };
+    booking?: {
+        booking_code?: string | null;
+        event_title?: string | null;
+        ticket_name?: string | null;
+    };
 };
 
 type Props = {
@@ -53,7 +57,10 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
     const normalizeBookingCode = (value: string) => {
         const trimmed = value.trim();
         if (!trimmed) return trimmed;
-        const parts = trimmed.split('|').map((item) => item.trim()).filter(Boolean);
+        const parts = trimmed
+            .split('|')
+            .map((item) => item.trim())
+            .filter(Boolean);
         return parts.length > 1 ? parts[parts.length - 1] : trimmed;
     };
 
@@ -94,7 +101,8 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
 
     const playBeep = (frequency: number, duration = 120) => {
         try {
-            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            const AudioContext =
+                window.AudioContext || (window as any).webkitAudioContext;
             if (!AudioContext) return;
             const ctx = new AudioContext();
             const oscillator = ctx.createOscillator();
@@ -129,15 +137,19 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
                     if (result?.getText()) {
                         submitScan(result.getText());
                     }
-                }
+                },
             )
             .catch(() => {
-                setCameraError('Tidak dapat mengakses kamera. Pastikan izin kamera diaktifkan.');
+                setCameraError(
+                    'Tidak dapat mengakses kamera. Pastikan izin kamera diaktifkan.',
+                );
                 setIsScanning(false);
             });
 
         return () => {
-            readerRef.current?.reset();
+            (
+                readerRef.current as unknown as { reset?: () => void } | null
+            )?.reset?.();
             readerRef.current = null;
         };
     }, [isScanning]);
@@ -148,7 +160,7 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                        <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
                             Validasi QR
                         </p>
                         <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -162,16 +174,30 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
                         <div className="rounded-2xl border border-dashed border-sky-200 bg-sky-50/40 p-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-semibold text-slate-900">Scan QR dengan Kamera</p>
-                                    <p className="text-xs text-slate-500">Arahkan kamera ke QR tiket event.</p>
+                                    <p className="text-sm font-semibold text-slate-900">
+                                        Scan QR dengan Kamera
+                                    </p>
+                                    <p className="text-xs text-slate-500">
+                                        Arahkan kamera ke QR tiket event.
+                                    </p>
                                 </div>
                                 <Button
                                     type="button"
-                                    variant={isScanning ? 'destructive' : 'default'}
-                                    className={isScanning ? '' : 'bg-sky-600 text-white hover:bg-sky-700'}
+                                    variant={
+                                        isScanning ? 'destructive' : 'default'
+                                    }
+                                    className={
+                                        isScanning
+                                            ? ''
+                                            : 'bg-sky-600 text-white hover:bg-sky-700'
+                                    }
                                     onClick={() => {
                                         if (isScanning) {
-                                            readerRef.current?.reset();
+                                            (
+                                                readerRef.current as unknown as {
+                                                    reset?: () => void;
+                                                } | null
+                                            )?.reset?.();
                                             readerRef.current = null;
                                             setIsScanning(false);
                                             return;
@@ -183,10 +209,16 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
                                 </Button>
                             </div>
                             <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-900/80">
-                                <video ref={videoRef} className="h-64 w-full object-cover" muted />
+                                <video
+                                    ref={videoRef}
+                                    className="h-64 w-full object-cover"
+                                    muted
+                                />
                             </div>
                             {cameraError && (
-                                <p className="mt-3 text-xs font-semibold text-rose-600">{cameraError}</p>
+                                <p className="mt-3 text-xs font-semibold text-rose-600">
+                                    {cameraError}
+                                </p>
                             )}
                         </div>
                         <div>
@@ -198,31 +230,57 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
                                 }}
                             >
                                 <div>
-                                    <label className="text-xs font-semibold uppercase text-slate-500">Kode Booking</label>
+                                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                                        Kode Booking
+                                    </label>
                                     <input
                                         value={form.data.booking_code}
-                                        onChange={(event) => form.setData('booking_code', event.target.value)}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'booking_code',
+                                                event.target.value,
+                                            )
+                                        }
                                         className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     />
-                                    <InputError message={form.errors.booking_code} />
+                                    <InputError
+                                        message={form.errors.booking_code}
+                                    />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-semibold uppercase text-slate-500">Petugas</label>
+                                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                                        Petugas
+                                    </label>
                                     <input
                                         value={form.data.officer_name}
-                                        onChange={(event) => form.setData('officer_name', event.target.value)}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'officer_name',
+                                                event.target.value,
+                                            )
+                                        }
                                         className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-semibold uppercase text-slate-500">Lokasi</label>
+                                    <label className="text-xs font-semibold text-slate-500 uppercase">
+                                        Lokasi
+                                    </label>
                                     <input
                                         value={form.data.location}
-                                        onChange={(event) => form.setData('location', event.target.value)}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'location',
+                                                event.target.value,
+                                            )
+                                        }
                                         className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     />
                                 </div>
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
                                     Validasi Manual
                                 </Button>
                             </form>
@@ -232,7 +290,9 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
-                        <h2 className="text-lg font-semibold text-slate-900">Riwayat Scan</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Riwayat Scan
+                        </h2>
                         <form
                             onSubmit={(event) => {
                                 event.preventDefault();
@@ -249,25 +309,40 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
                     </div>
                     <div className="mt-4 grid gap-3">
                         {scans.data.map((scan) => (
-                            <div key={scan.id} className="rounded-2xl border border-slate-100 p-4">
+                            <div
+                                key={scan.id}
+                                className="rounded-2xl border border-slate-100 p-4"
+                            >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div>
                                         <p className="text-sm font-semibold text-slate-900">
-                                            {scan.booking?.booking_code ?? '-'} • {scan.booking?.event_title ?? '-'}
+                                            {scan.booking?.booking_code ?? '-'}{' '}
+                                            • {scan.booking?.event_title ?? '-'}
                                         </p>
-                                        <p className="text-xs text-slate-500">{scan.scanned_at}</p>
+                                        <p className="text-xs text-slate-500">
+                                            {scan.scanned_at}
+                                        </p>
                                     </div>
-                                    <Badge className={scan.is_anomaly ? 'bg-rose-50 text-rose-700' : 'bg-emerald-50 text-emerald-700'}>
+                                    <Badge
+                                        className={
+                                            scan.is_anomaly
+                                                ? 'bg-rose-50 text-rose-700'
+                                                : 'bg-emerald-50 text-emerald-700'
+                                        }
+                                    >
                                         {scan.is_anomaly ? 'Anomali' : 'Valid'}
                                     </Badge>
                                 </div>
                                 <p className="mt-2 text-xs text-slate-500">
-                                    Petugas: {scan.officer_name ?? '-'} • Lokasi: {scan.location ?? '-'}
+                                    Petugas: {scan.officer_name ?? '-'} •
+                                    Lokasi: {scan.location ?? '-'}
                                 </p>
                             </div>
                         ))}
                         {scans.data.length === 0 && (
-                            <div className="text-sm text-slate-500">Belum ada scan.</div>
+                            <div className="text-sm text-slate-500">
+                                Belum ada scan.
+                            </div>
                         )}
                     </div>
                 </section>
