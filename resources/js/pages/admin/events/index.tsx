@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import Swal from 'sweetalert2';
 
 type EventRow = {
     id: number;
@@ -24,6 +25,45 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function EventsIndex({ events, filters }: Props) {
+    const handleDelete = async (item: EventRow) => {
+        const result = await Swal.fire({
+            icon: 'warning',
+            title: 'Hapus event?',
+            text: `Event "${item.title}" akan dihapus permanen jika belum memiliki booking.`,
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            reverseButtons: true,
+        });
+
+        if (!result.isConfirmed) return;
+
+        router.delete(`/admin/events/${item.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Event dihapus',
+                    text: 'Event berhasil dihapus dari daftar.',
+                    timer: 1800,
+                    showConfirmButton: false,
+                });
+            },
+            onError: (errors) => {
+                const message =
+                    Object.values(errors).flat().join('\n') ||
+                    'Event tidak dapat dihapus. Periksa apakah event sudah memiliki booking.';
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal menghapus',
+                    text: message,
+                });
+            },
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Manajemen Event" />
@@ -94,6 +134,13 @@ export default function EventsIndex({ events, filters }: Props) {
                                                 <Link href={`/admin/events/${item.id}/edit`} className="text-slate-600 hover:underline">
                                                     Edit
                                                 </Link>
+                                                <button
+                                                    type="button"
+                                                    className="text-rose-600 hover:underline"
+                                                    onClick={() => handleDelete(item)}
+                                                >
+                                                    Hapus
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>

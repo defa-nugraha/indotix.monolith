@@ -27,7 +27,7 @@ export default function AffiliateCommissions({
             <Head title="Riwayat Komisi" />
             <div className="space-y-6">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Riwayat Komisi</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Riwayat Komisi</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">Komisi dari penjualan wisata</h1>
                 </div>
 

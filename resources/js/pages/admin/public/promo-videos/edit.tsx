@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
@@ -14,6 +15,46 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Edit', href: '#' },
 ];
 
+const maxVideoBytes = 100 * 1024 * 1024;
+const maxVideoSizeLabel = '100 MB';
+const recommendedVideoSize = { width: 1280, height: 720 };
+
+type ProgressStepStatus = 'pending' | 'active' | 'done' | 'error';
+
+type ProgressStep = {
+    key: string;
+    title: string;
+    description: string;
+    status: ProgressStepStatus;
+};
+
+const initialProgressSteps: ProgressStep[] = [
+    {
+        key: 'upload',
+        title: 'Mengunggah video',
+        description: 'File video dikirim ke server.',
+        status: 'pending',
+    },
+    {
+        key: 'validate',
+        title: 'Memeriksa data',
+        description: 'Server memvalidasi judul, status, format, dan ukuran file.',
+        status: 'pending',
+    },
+    {
+        key: 'save',
+        title: 'Menyimpan perubahan',
+        description: 'Server menyimpan data promo video dan mengganti file jika ada.',
+        status: 'pending',
+    },
+    {
+        key: 'compress',
+        title: 'Menyiapkan kompresi',
+        description: 'Video besar dijadwalkan untuk dikompresi di background.',
+        status: 'pending',
+    },
+];
+
 type PromoVideo = {
     id: number;
     title: string;
@@ -26,6 +67,10 @@ type PromoVideo = {
 };
 
 export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo }) {
+    const [showProgressModal, setShowProgressModal] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [progressSteps, setProgressSteps] = useState<ProgressStep[]>(initialProgressSteps);
+
     const form = useForm({
         title: promoVideo.title ?? '',
         description: promoVideo.description ?? '',
@@ -34,6 +79,7 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
         is_active: promoVideo.is_active ?? true,
         video: null as File | null,
         secondary_video: null as File | null,
+        _method: 'put',
     });
 
     const validateVideoFile = (
@@ -45,6 +91,20 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
         if (!file) {
             form.setData(field, null);
             form.clearErrors(field);
+            return;
+        }
+
+        if (file.size > maxVideoBytes) {
+            form.setError(field, `Ukuran video maksimal ${maxVideoSizeLabel}.`);
+            form.setData(field, null);
+            if (input) {
+                input.value = '';
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'Video terlalu besar',
+                text: `Ukuran video maksimal ${maxVideoSizeLabel}.`,
+            });
             return;
         }
 
@@ -80,6 +140,16 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
         video.src = url;
     };
 
+    const setStepStatus = (keys: string[], status: ProgressStepStatus) => {
+        setProgressSteps((steps) => steps.map((step) => (keys.includes(step.key) ? { ...step, status } : step)));
+    };
+
+    const resetProgress = () => {
+        setShowProgressModal(true);
+        setUploadProgress(0);
+        setProgressSteps(initialProgressSteps.map((step) => (step.key === 'upload' ? { ...step, status: 'active' } : step)));
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit Promo Video">
@@ -96,12 +166,47 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
                             event.preventDefault();
-                            form.put(`/admin/public/promo-videos/${promoVideo.id}`, {
+                            let requestFailed = false;
+                            resetProgress();
+                            form.post(`/admin/public/promo-videos/${promoVideo.id}`, {
                                 forceFormData: true,
-                                onSuccess: () =>
-                                    Swal.fire({ title: 'Berhasil', text: 'Promo video diperbarui.', icon: 'success' }),
-                                onError: () =>
-                                    Swal.fire({ title: 'Gagal', text: 'Promo video gagal diperbarui.', icon: 'error' }),
+                                onProgress: (progress) => {
+                                    const percent = progress?.percentage ?? 0;
+                                    setUploadProgress(Math.round(percent));
+                                    if (percent >= 100) {
+                                        setStepStatus(['upload'], 'done');
+                                        setStepStatus(['validate', 'save'], 'active');
+                                    }
+                                },
+                                onSuccess: () => {
+                                    setUploadProgress(100);
+                                    setProgressSteps((steps) =>
+                                        steps.map((step) => ({
+                                            ...step,
+                                            status: 'done',
+                                        })),
+                                    );
+                                    return Swal.fire({
+                                        title: 'Berhasil',
+                                        text: 'Promo video diperbarui. Jika ukuran file besar, kompresi berjalan di background.',
+                                        icon: 'success',
+                                    });
+                                },
+                                onError: () => {
+                                    requestFailed = true;
+                                    setStepStatus(['validate', 'save'], 'error');
+                                    Swal.fire({
+                                        title: 'Gagal',
+                                        text: 'Promo video gagal diperbarui.',
+                                        icon: 'error',
+                                    });
+                                },
+                                onFinish: () => {
+                                    if (requestFailed) {
+                                        return;
+                                    }
+                                    setTimeout(() => setShowProgressModal(false), 1200);
+                                },
                             });
                         }}
                     >
@@ -126,11 +231,12 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
                         {promoVideo.image_path && (
                             <div className="grid gap-2">
                                 <Label>Video utama saat ini</Label>
-                                <video
-                                    src={`/storage/${promoVideo.image_path}`}
-                                    className="h-40 w-full max-w-md rounded-xl object-cover"
-                                    controls
-                                />
+                                <div className="aspect-video w-full max-w-2xl overflow-hidden rounded-xl border border-sky-100 bg-slate-950">
+                                    <video src={`/storage/${promoVideo.image_path}`} className="h-full w-full object-cover" controls />
+                                </div>
+                                <p className="text-xs text-slate-500">
+                                    Preview memakai rasio rekomendasi {recommendedVideoSize.width} × {recommendedVideoSize.height} px (16:9).
+                                </p>
                             </div>
                         )}
                         <div className="grid gap-2">
@@ -139,20 +245,21 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
                                 type="file"
                                 accept="video/*"
                                 onChange={(event) =>
-                                    validateVideoFile(event.target.files?.[0] ?? null, 'video', { width: 1280, height: 720 }, event.currentTarget)
+                                    validateVideoFile(event.target.files?.[0] ?? null, 'video', recommendedVideoSize, event.currentTarget)
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9).</p>
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9), maksimal {maxVideoSizeLabel}.</p>
                             <InputError message={form.errors.video} />
                         </div>
                         {promoVideo.secondary_video_path && (
                             <div className="grid gap-2">
                                 <Label>Video bawah saat ini</Label>
-                                <video
-                                    src={`/storage/${promoVideo.secondary_video_path}`}
-                                    className="h-32 w-full max-w-md rounded-xl object-cover"
-                                    controls
-                                />
+                                <div className="aspect-video w-full max-w-2xl overflow-hidden rounded-xl border border-sky-100 bg-slate-950">
+                                    <video src={`/storage/${promoVideo.secondary_video_path}`} className="h-full w-full object-cover" controls />
+                                </div>
+                                <p className="text-xs text-slate-500">
+                                    Preview memakai rasio rekomendasi {recommendedVideoSize.width} × {recommendedVideoSize.height} px (16:9).
+                                </p>
                             </div>
                         )}
                         <div className="grid gap-2">
@@ -161,20 +268,74 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
                                 type="file"
                                 accept="video/*"
                                 onChange={(event) =>
-                                    validateVideoFile(event.target.files?.[0] ?? null, 'secondary_video', { width: 1280, height: 720 }, event.currentTarget)
+                                    validateVideoFile(event.target.files?.[0] ?? null, 'secondary_video', recommendedVideoSize, event.currentTarget)
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9).</p>
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9), maksimal {maxVideoSizeLabel}.</p>
                             <InputError message={form.errors.secondary_video} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">
                             <input type="checkbox" checked={form.data.is_active} onChange={(event) => form.setData('is_active', event.target.checked)} />
                             Aktif
                         </label>
-                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">Simpan Perubahan</Button>
+                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={form.processing}>
+                            {form.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                        </Button>
                     </form>
                 </section>
             </div>
+
+            {showProgressModal && (
+                <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/45 px-4 backdrop-blur-sm">
+                    <div className="w-full max-w-lg rounded-2xl border border-sky-100 bg-white p-6 shadow-2xl">
+                        <div className="space-y-1">
+                            <p className="text-sm font-semibold text-sky-600">Menyimpan promo video</p>
+                            <h2 className="text-xl font-semibold text-slate-950">Server sedang memproses perubahan</h2>
+                            <p className="text-sm text-slate-500">Tunggu sampai proses selesai. Jangan tutup halaman ini.</p>
+                        </div>
+
+                        <div className="mt-5">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium text-slate-700">Progress upload</span>
+                                <span className="font-semibold text-slate-950">{uploadProgress}%</span>
+                            </div>
+                            <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                                <div className="h-full rounded-full bg-sky-600 transition-all" style={{ width: `${uploadProgress}%` }} />
+                            </div>
+                        </div>
+
+                        <div className="mt-6 space-y-3">
+                            {progressSteps.map((step) => (
+                                <div key={step.key} className="flex gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                                    <div
+                                        className={[
+                                            'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+                                            step.status === 'done' ? 'bg-emerald-100 text-emerald-700' : '',
+                                            step.status === 'active' ? 'bg-sky-100 text-sky-700' : '',
+                                            step.status === 'error' ? 'bg-red-100 text-red-700' : '',
+                                            step.status === 'pending' ? 'bg-slate-200 text-slate-500' : '',
+                                        ].join(' ')}
+                                    >
+                                        {step.status === 'done' ? '✓' : step.status === 'error' ? '!' : step.status === 'active' ? '•' : ''}
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-900">{step.title}</p>
+                                        <p className="text-xs leading-5 text-slate-500">{step.description}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {!form.processing && progressSteps.some((step) => step.status === 'error') && (
+                            <div className="mt-5 flex justify-end">
+                                <Button type="button" variant="outline" onClick={() => setShowProgressModal(false)}>
+                                    Tutup
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </AppLayout>
     );
 }

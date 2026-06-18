@@ -95,7 +95,7 @@ export default function MitraDashboard({
                 >
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-3">
-                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Mitra Indotix
                             </p>
                             <h1 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
@@ -188,7 +188,7 @@ export default function MitraDashboard({
                                         <Icon className="h-5 w-5" />
                                     </div>
                                     <div className="space-y-1">
-                                        <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">
+                                        <p className="text-xs font-semibold text-slate-400 uppercase">
                                             {item.title}
                                         </p>
                                         <p className="text-2xl font-semibold text-slate-900">
@@ -210,7 +210,7 @@ export default function MitraDashboard({
                         className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
                     >
                         <div className="flex flex-col gap-2">
-                            <p className="text-xs font-semibold tracking-[0.2em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Pilih Jenis Mitra
                             </p>
                             <h2 className="text-lg font-semibold text-slate-900">
@@ -292,7 +292,7 @@ export default function MitraDashboard({
                         className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
                     >
                         <div className="flex flex-col gap-2">
-                            <p className="text-xs font-semibold tracking-[0.2em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Status Pendaftaran Wisata
                             </p>
                             <h2 className="text-lg font-semibold text-slate-900">
@@ -301,7 +301,7 @@ export default function MitraDashboard({
                         </div>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                             <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                                <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">
+                                <p className="text-xs font-semibold text-slate-400 uppercase">
                                     Verifikasi
                                 </p>
                                 <div className="mt-2">
@@ -324,7 +324,7 @@ export default function MitraDashboard({
                                 </div>
                             </div>
                             <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                                <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">
+                                <p className="text-xs font-semibold text-slate-400 uppercase">
                                     Payout
                                 </p>
                                 <div className="mt-2">
@@ -355,7 +355,7 @@ export default function MitraDashboard({
                         className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
                     >
                         <div className="flex flex-col gap-2">
-                            <p className="text-xs font-semibold tracking-[0.2em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Status Pendaftaran Event
                             </p>
                             <h2 className="text-lg font-semibold text-slate-900">
@@ -364,7 +364,7 @@ export default function MitraDashboard({
                         </div>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                             <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                                <p className="text-xs font-semibold tracking-[0.2em] text-slate-400 uppercase">
+                                <p className="text-xs font-semibold text-slate-400 uppercase">
                                     Verifikasi
                                 </p>
                                 <div className="mt-2">
@@ -397,7 +397,7 @@ export default function MitraDashboard({
                     >
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <p className="text-xs font-semibold tracking-[0.2em] text-sky-600 uppercase">
+                                <p className="text-xs font-semibold text-sky-600 uppercase">
                                     {onboardingType === 'wisata'
                                         ? 'Aktivitas Destinasi'
                                         : onboardingType === 'event'
@@ -455,7 +455,7 @@ export default function MitraDashboard({
                         className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
                     >
                         <div>
-                            <p className="text-xs font-semibold tracking-[0.2em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Status Operasional
                             </p>
                             <h2 className="mt-2 text-lg font-semibold text-slate-900">

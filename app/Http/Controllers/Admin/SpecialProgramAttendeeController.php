@@ -26,7 +26,7 @@ class SpecialProgramAttendeeController extends Controller
         }
 
         return Inertia::render('admin/special-programs/attendees/index', [
-            'attendees' => $query->paginate(20)->withQueryString(),
+            'attendees' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'programs' => SpecialProgram::query()
                 ->select('id', 'name')
                 ->orderBy('name')

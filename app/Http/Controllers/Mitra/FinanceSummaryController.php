@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\CommissionRule;
 use App\Models\Hotel;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -103,7 +104,7 @@ class FinanceSummaryController extends Controller
         };
     }
 
-    private function resolveCommissionRule(int $hotelId, Carbon $date): array
+    private function resolveCommissionRule(int $hotelId, CarbonInterface $date): array
     {
         $rule = CommissionRule::query()
             ->where('is_active', true)

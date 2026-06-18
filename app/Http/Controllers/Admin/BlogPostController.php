@@ -27,7 +27,7 @@ class BlogPostController extends Controller
             $query->where('status', $request->string('status')->toString());
         }
 
-        $posts = $query->paginate(10)->withQueryString()->through(function (BlogPost $post) {
+        $posts = $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString()->through(function (BlogPost $post) {
             return [
                 'id' => $post->id,
                 'title' => $post->title,

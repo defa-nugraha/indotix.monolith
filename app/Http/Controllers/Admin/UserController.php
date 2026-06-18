@@ -5,19 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AcademyBooking;
 use App\Models\Booking;
-use App\Models\ChatConversation;
-use App\Models\EmailOtp;
 use App\Models\EventBooking;
-use App\Models\ProductReview;
 use App\Models\SouvenirOrder;
 use App\Models\User;
-use App\Models\UserAddress;
-use App\Models\UserDeviceToken;
-use App\Models\UserNotification;
 use App\Models\WisataBooking;
-use App\Models\WisataReview;
+use App\Services\UserDeletionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,7 +43,7 @@ class UserController extends Controller
                 ->when(! $verified, fn ($builder) => $builder->whereNull('email_verified_at'));
         }
 
-        $paginator = $query->latest()->paginate(10)->withQueryString();
+        $paginator = $query->latest()->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
         $users = $paginator->through(function (User $user) {
             return [
                 'id' => $user->id,
@@ -66,6 +61,61 @@ class UserController extends Controller
             'users' => $users,
             'filters' => $request->only(['search', 'status', 'verified']),
         ]);
+    }
+
+    public function store(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'gender' => ['nullable', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:8', 'max:255'],
+        ]);
+
+        $user = User::query()->create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'gender' => $data['gender'] ?? null,
+            'password' => $data['password'],
+            'role' => 'user',
+        ]);
+        $user->forceFill([
+            'email_verified_at' => now(),
+        ])->save();
+
+        return back()->with('status', 'user-created');
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($user->role === 'user', 404);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'gender' => ['nullable', 'string', 'max:20'],
+            'password' => ['nullable', 'string', 'min:8', 'max:255'],
+        ]);
+
+        $payload = [
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'gender' => $data['gender'] ?? null,
+        ];
+        if (! empty($data['password'])) {
+            $payload['password'] = $data['password'];
+        }
+
+        $user->fill($payload);
+        $user->forceFill([
+            'email_verified_at' => now(),
+        ])->save();
+
+        return back()->with('status', 'user-updated');
     }
 
     public function show(User $user): Response
@@ -227,42 +277,11 @@ class UserController extends Controller
         return back()->with('status', 'user-suspension-updated');
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user, UserDeletionService $userDeletion): RedirectResponse
     {
         abort_unless($user->role === 'user', 404);
 
-        $counts = [
-            'hotel' => Booking::query()->where('user_id', $user->id)->count(),
-            'wisata' => WisataBooking::query()->where('user_id', $user->id)->count(),
-            'event' => EventBooking::query()->where('user_id', $user->id)->count(),
-            'academy' => AcademyBooking::query()->where('user_id', $user->id)->count(),
-            'special_program' => EventBooking::query()
-                ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
-                ->where('user_id', $user->id)
-                ->count(),
-            'retail_shop' => SouvenirOrder::query()->where('user_id', $user->id)->count(),
-        ];
-
-        $blocked = array_filter($counts, fn ($count) => $count > 0);
-        if ($blocked) {
-            $details = collect($blocked)
-                ->map(fn ($count, $key) => "{$key} ({$count})")
-                ->implode(', ');
-
-            return back()->withErrors([
-                'user' => "User tidak dapat dihapus karena masih memiliki transaksi: {$details}.",
-            ]);
-        }
-
-        UserAddress::query()->where('user_id', $user->id)->delete();
-        UserNotification::query()->where('user_id', $user->id)->delete();
-        UserDeviceToken::query()->where('user_id', $user->id)->delete();
-        EmailOtp::query()->where('user_id', $user->id)->delete();
-        ChatConversation::query()->where('user_id', $user->id)->delete();
-        ProductReview::query()->where('user_id', $user->id)->get()->each->delete();
-        WisataReview::query()->where('user_id', $user->id)->delete();
-
-        $user->delete();
+        $userDeletion->deleteUser($user);
 
         return back()->with('status', 'user-deleted');
     }

@@ -70,7 +70,7 @@ export default function MitraPayouts({ payouts, filters, statusOptions }: Props)
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Keuangan Mitra</p>
+                            <p className="text-xs font-semibold uppercase text-sky-600">Keuangan Mitra</p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">Riwayat payout</h1>
                             <p className="text-sm text-slate-500">Pantau transfer pendapatan ke rekening Anda.</p>
                         </div>
@@ -84,7 +84,7 @@ export default function MitraPayouts({ payouts, filters, statusOptions }: Props)
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form onSubmit={applyFilters} className="grid gap-4 md:grid-cols-4">
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Status</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Status</label>
                             <select
                                 name="status"
                                 defaultValue={filters.status ?? ''}
@@ -99,7 +99,7 @@ export default function MitraPayouts({ payouts, filters, statusOptions }: Props)
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Dari</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Dari</label>
                             <input
                                 type="date"
                                 name="date_from"
@@ -108,7 +108,7 @@ export default function MitraPayouts({ payouts, filters, statusOptions }: Props)
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Sampai</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Sampai</label>
                             <input
                                 type="date"
                                 name="date_to"
@@ -128,7 +128,7 @@ export default function MitraPayouts({ payouts, filters, statusOptions }: Props)
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                            <thead className="text-xs uppercase tracking-wider text-slate-400">
+                            <thead className="text-xs uppercase text-slate-400">
                                 <tr>
                                     <th className="py-3 pr-4">Hotel</th>
                                     <th className="py-3 pr-4">Periode</th>

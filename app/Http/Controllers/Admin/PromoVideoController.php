@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\CompressPromoVideoJob;
 use App\Models\PromoVideo;
 use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
@@ -46,14 +47,14 @@ class PromoVideoController extends Controller
             'cta_label' => ['nullable', 'string', 'max:255'],
             'cta_url' => ['nullable', 'string', 'max:500'],
             'is_active' => ['nullable', 'boolean'],
-            'video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg'],
-            'secondary_video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg'],
+            'video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:102400'],
+            'secondary_video' => ['required', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:102400'],
         ]);
 
-        $path = $mediaCompression->store($request->file('video'), 'promo-videos', 'public');
-        $secondaryPath = $mediaCompression->store($request->file('secondary_video'), 'promo-videos', 'public');
+        $path = $mediaCompression->storeOriginal($request->file('video'), 'promo-videos', 'public');
+        $secondaryPath = $mediaCompression->storeOriginal($request->file('secondary_video'), 'promo-videos', 'public');
 
-        PromoVideo::create([
+        $promoVideo = PromoVideo::create([
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
             'cta_label' => $data['cta_label'] ?? null,
@@ -62,6 +63,9 @@ class PromoVideoController extends Controller
             'image_path' => $path,
             'secondary_video_path' => $secondaryPath,
         ]);
+
+        CompressPromoVideoJob::dispatch($promoVideo->id, 'image_path', $path)->afterResponse();
+        CompressPromoVideoJob::dispatch($promoVideo->id, 'secondary_video_path', $secondaryPath)->afterResponse();
 
         return redirect()->route('admin.public.promo-videos.index')->with('status', 'promo-video-created');
     }
@@ -81,21 +85,23 @@ class PromoVideoController extends Controller
             'cta_label' => ['nullable', 'string', 'max:255'],
             'cta_url' => ['nullable', 'string', 'max:500'],
             'is_active' => ['nullable', 'boolean'],
-            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg'],
-            'secondary_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg'],
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:102400'],
+            'secondary_video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:102400'],
         ]);
 
         if ($request->hasFile('video')) {
-            if ($promoVideo->image_path) {
-                Storage::disk('public')->delete($promoVideo->image_path);
+            $previousPath = $promoVideo->image_path;
+            $promoVideo->image_path = $mediaCompression->storeOriginal($request->file('video'), 'promo-videos', 'public');
+            if ($previousPath) {
+                Storage::disk('public')->delete($previousPath);
             }
-            $promoVideo->image_path = $mediaCompression->store($request->file('video'), 'promo-videos', 'public');
         }
         if ($request->hasFile('secondary_video')) {
-            if ($promoVideo->secondary_video_path) {
-                Storage::disk('public')->delete($promoVideo->secondary_video_path);
+            $previousSecondaryPath = $promoVideo->secondary_video_path;
+            $promoVideo->secondary_video_path = $mediaCompression->storeOriginal($request->file('secondary_video'), 'promo-videos', 'public');
+            if ($previousSecondaryPath) {
+                Storage::disk('public')->delete($previousSecondaryPath);
             }
-            $promoVideo->secondary_video_path = $mediaCompression->store($request->file('secondary_video'), 'promo-videos', 'public');
         }
 
         $promoVideo->fill([
@@ -106,6 +112,13 @@ class PromoVideoController extends Controller
             'is_active' => (bool) ($data['is_active'] ?? true),
         ]);
         $promoVideo->save();
+
+        if ($request->hasFile('video')) {
+            CompressPromoVideoJob::dispatch($promoVideo->id, 'image_path', $promoVideo->image_path)->afterResponse();
+        }
+        if ($request->hasFile('secondary_video')) {
+            CompressPromoVideoJob::dispatch($promoVideo->id, 'secondary_video_path', $promoVideo->secondary_video_path)->afterResponse();
+        }
 
         return redirect()->route('admin.public.promo-videos.index')->with('status', 'promo-video-updated');
     }

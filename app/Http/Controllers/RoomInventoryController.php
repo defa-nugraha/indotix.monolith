@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\RoomInventory;
 use App\Models\RoomType;
 use App\Models\Hotel;
+use App\Support\AdminDataScope;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
@@ -19,6 +20,7 @@ class RoomInventoryController extends Controller
     {
         $query = RoomInventory::query()
             ->with('roomType')
+            ->whereHas('roomType', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
             ->latest('date');
 
         if ($request->filled('hotel_id')) {
@@ -39,12 +41,13 @@ class RoomInventoryController extends Controller
         }
 
         $inventories = $query
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (RoomInventory $inventory) => $this->toPayload($inventory));
 
         $groupQuery = RoomInventory::query()
-            ->selectRaw('DATE_FORMAT(date, "%Y-%m") as month_key, COUNT(*) as total');
+            ->selectRaw('DATE_FORMAT(date, "%Y-%m") as month_key, COUNT(*) as total')
+            ->whereHas('roomType', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request));
 
         if ($request->filled('hotel_id')) {
             $hotelId = (int) $request->input('hotel_id');
@@ -127,6 +130,7 @@ class RoomInventoryController extends Controller
 
     public function edit(RoomInventory $roomInventory): Response
     {
+        $this->authorizeInventory($roomInventory, request());
         $roomInventory->load('roomType');
 
         return Inertia::render('room-inventories/edit', [
@@ -137,6 +141,7 @@ class RoomInventoryController extends Controller
 
     public function update(Request $request, RoomInventory $roomInventory): RedirectResponse
     {
+        $this->authorizeInventory($roomInventory, $request);
         $validated = $this->validateInventory($request, $roomInventory->id);
         $roomInventory->update($validated);
 
@@ -145,6 +150,7 @@ class RoomInventoryController extends Controller
 
     public function destroy(RoomInventory $roomInventory): RedirectResponse
     {
+        $this->authorizeInventory($roomInventory, request());
         $roomInventory->delete();
 
         return redirect()->route('room-inventories.index');
@@ -159,6 +165,7 @@ class RoomInventoryController extends Controller
 
         RoomInventory::query()
             ->whereIn('id', $data['ids'])
+            ->whereHas('roomType', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
             ->delete();
 
         return redirect()->route('room-inventories.index');
@@ -167,6 +174,10 @@ class RoomInventoryController extends Controller
     private function validateInventory(Request $request, ?int $inventoryId = null): array
     {
         $isBulk = $request->filled('date_from') || $request->filled('date_to');
+        $roomTypeRule = Rule::exists('room_types', 'id');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $roomTypeRule = $roomTypeRule->where('created_by', $request->user()?->id ?? 0);
+        }
 
         if ($isBulk && $inventoryId === null) {
             return $request->validate([
@@ -177,7 +188,7 @@ class RoomInventoryController extends Controller
                 'is_closed' => ['boolean'],
                 'breakfast_included' => ['boolean'],
                 'smoking_allowed' => ['boolean'],
-                'room_type_id' => ['required', 'integer', 'exists:room_types,id'],
+                'room_type_id' => ['required', 'integer', $roomTypeRule],
             ]);
         }
 
@@ -191,7 +202,7 @@ class RoomInventoryController extends Controller
             'room_type_id' => [
                 'required',
                 'integer',
-                'exists:room_types,id',
+                $roomTypeRule,
                 Rule::unique('room_inventories')
                     ->where(fn ($query) => $query
                         ->whereDate('date', $request->input('date'))
@@ -204,7 +215,7 @@ class RoomInventoryController extends Controller
 
     private function roomTypeOptions(): array
     {
-        return RoomType::query()
+        return AdminDataScope::applyCreatedBy(RoomType::query(), request())
             ->with('hotel')
             ->orderBy('name')
             ->get()
@@ -217,7 +228,7 @@ class RoomInventoryController extends Controller
 
     private function hotelOptions(): array
     {
-        return Hotel::query()
+        return AdminDataScope::applyCreatedBy(Hotel::query(), request())
             ->select('id', 'name')
             ->orderBy('name')
             ->get()
@@ -242,5 +253,16 @@ class RoomInventoryController extends Controller
             'breakfast_included' => $inventory->breakfast_included,
             'smoking_allowed' => $inventory->smoking_allowed,
         ];
+    }
+
+    private function authorizeInventory(RoomInventory $inventory, Request $request): void
+    {
+        $inventory->loadMissing('roomType');
+
+        if (! $inventory->roomType) {
+            abort(404);
+        }
+
+        AdminDataScope::authorizeCreatedBy($inventory->roomType, $request);
     }
 }

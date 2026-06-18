@@ -24,7 +24,7 @@ class ClassController extends Controller
         }
 
         return Inertia::render('admin/academy/classes/index', [
-            'classes' => $query->paginate(20)->withQueryString(),
+            'classes' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'filters' => ['status' => $status],
         ]);
     }

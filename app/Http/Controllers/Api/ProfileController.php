@@ -71,6 +71,89 @@ class ProfileController extends Controller
         ]);
     }
 
+    public function addresses(Request $request): JsonResponse
+    {
+        $addresses = $request->user()
+            ->addresses()
+            ->orderByDesc('is_default')
+            ->orderByDesc('updated_at')
+            ->get()
+            ->map(fn (UserAddress $address) => $this->addressPayload($address))
+            ->values();
+
+        return response()->json([
+            'addresses' => $addresses,
+        ]);
+    }
+
+    public function storeAddress(Request $request): JsonResponse
+    {
+        $data = $this->validateAddress($request);
+        $data['is_default'] = (bool) ($data['is_default'] ?? false);
+
+        $address = $request->user()->addresses()->create($data);
+
+        if ($data['is_default'] || $request->user()->addresses()->count() === 1) {
+            $this->makeDefaultAddress($address);
+        } else {
+            $this->ensureDefaultAddress($request->user()->id);
+        }
+
+        return response()->json([
+            'message' => 'Alamat berhasil ditambahkan.',
+            'address' => $this->addressPayload($address->fresh()),
+        ], 201);
+    }
+
+    public function updateAddress(Request $request, UserAddress $address): JsonResponse
+    {
+        $this->authorizeAddress($request, $address);
+
+        $data = $this->validateAddress($request);
+        $data['is_default'] = (bool) ($data['is_default'] ?? false);
+
+        $address->update($data);
+
+        if ($data['is_default']) {
+            $this->makeDefaultAddress($address);
+        } else {
+            $this->ensureDefaultAddress($request->user()->id);
+        }
+
+        return response()->json([
+            'message' => 'Alamat berhasil diperbarui.',
+            'address' => $this->addressPayload($address->fresh()),
+        ]);
+    }
+
+    public function setDefaultAddress(Request $request, UserAddress $address): JsonResponse
+    {
+        $this->authorizeAddress($request, $address);
+        $this->makeDefaultAddress($address);
+
+        return response()->json([
+            'message' => 'Alamat utama berhasil diperbarui.',
+            'address' => $this->addressPayload($address->fresh()),
+        ]);
+    }
+
+    public function destroyAddress(Request $request, UserAddress $address): JsonResponse
+    {
+        $this->authorizeAddress($request, $address);
+
+        $userId = $address->user_id;
+        $wasDefault = $address->is_default;
+        $address->delete();
+
+        if ($wasDefault) {
+            $this->ensureDefaultAddress($userId);
+        }
+
+        return response()->json([
+            'message' => 'Alamat berhasil dihapus.',
+        ]);
+    }
+
     public function sendPasswordOtp(Request $request): JsonResponse
     {
         $user = $request->user();
@@ -330,5 +413,91 @@ class ProfileController extends Controller
     private function passwordOtpCacheKey(int $userId): string
     {
         return sprintf('password-otp-sent:%s', $userId);
+    }
+
+    private function validateAddress(Request $request): array
+    {
+        return $request->validate([
+            'label' => ['required', 'string', 'max:50'],
+            'recipient_name' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:30'],
+            'address_line' => ['required', 'string', 'max:500'],
+            'province' => ['nullable', 'string', 'max:120'],
+            'province_code' => ['nullable', 'string', 'max:20'],
+            'city' => ['nullable', 'string', 'max:120'],
+            'city_code' => ['nullable', 'string', 'max:20'],
+            'district' => ['nullable', 'string', 'max:120'],
+            'district_code' => ['nullable', 'string', 'max:20'],
+            'village' => ['nullable', 'string', 'max:120'],
+            'village_code' => ['nullable', 'string', 'max:20'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'is_default' => ['nullable', 'boolean'],
+        ]);
+    }
+
+    private function authorizeAddress(Request $request, UserAddress $address): void
+    {
+        abort_if($address->user_id !== $request->user()->id, 403);
+    }
+
+    private function makeDefaultAddress(UserAddress $address): void
+    {
+        UserAddress::query()
+            ->where('user_id', $address->user_id)
+            ->where('id', '!=', $address->id)
+            ->update(['is_default' => false]);
+
+        if (! $address->is_default) {
+            $address->update(['is_default' => true]);
+        }
+    }
+
+    private function ensureDefaultAddress(int $userId): void
+    {
+        $hasDefault = UserAddress::query()
+            ->where('user_id', $userId)
+            ->where('is_default', true)
+            ->exists();
+
+        if ($hasDefault) {
+            return;
+        }
+
+        $fallback = UserAddress::query()
+            ->where('user_id', $userId)
+            ->orderByDesc('updated_at')
+            ->first();
+
+        if ($fallback) {
+            $fallback->update(['is_default' => true]);
+        }
+    }
+
+    private function addressPayload(?UserAddress $address): ?array
+    {
+        if (! $address) {
+            return null;
+        }
+
+        return [
+            'id' => $address->id,
+            'label' => $address->label,
+            'recipient_name' => $address->recipient_name,
+            'phone' => $address->phone,
+            'address_line' => $address->address_line,
+            'village' => $address->village,
+            'village_code' => $address->village_code,
+            'district' => $address->district,
+            'district_code' => $address->district_code,
+            'city' => $address->city,
+            'city_code' => $address->city_code,
+            'province' => $address->province,
+            'province_code' => $address->province_code,
+            'postal_code' => $address->postal_code,
+            'notes' => $address->notes,
+            'is_default' => (bool) $address->is_default,
+            'formatted_address' => $address->formatted_address,
+        ];
     }
 }

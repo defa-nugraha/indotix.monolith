@@ -37,7 +37,7 @@ export default function FinanceReportIndex({ filters, summary }: Props) {
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8 text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                        <p className="text-xs font-semibold uppercase text-sky-600">
                             Laporan Keuangan
                         </p>
                         <h1 className="text-2xl font-semibold text-slate-900">
@@ -52,7 +52,7 @@ export default function FinanceReportIndex({ filters, summary }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form onSubmit={applyFilters} className="grid gap-4 md:grid-cols-4">
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Dari tanggal
                             </label>
                             <input
@@ -63,7 +63,7 @@ export default function FinanceReportIndex({ filters, summary }: Props) {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Sampai tanggal
                             </label>
                             <input
@@ -85,7 +85,7 @@ export default function FinanceReportIndex({ filters, summary }: Props) {
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">GMV</p>
+                                <p className="text-xs uppercase text-slate-400">GMV</p>
                                 <p className="mt-2 text-xl font-semibold text-slate-900">
                                     Rp {summary.gmv.toLocaleString('id-ID')}
                                 </p>
@@ -96,7 +96,7 @@ export default function FinanceReportIndex({ filters, summary }: Props) {
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">Revenue Platform</p>
+                                <p className="text-xs uppercase text-slate-400">Revenue Platform</p>
                                 <p className="mt-2 text-xl font-semibold text-slate-900">
                                     Rp {summary.revenue.toLocaleString('id-ID')}
                                 </p>
@@ -107,7 +107,7 @@ export default function FinanceReportIndex({ filters, summary }: Props) {
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">Payout Outstanding</p>
+                                <p className="text-xs uppercase text-slate-400">Payout Outstanding</p>
                                 <p className="mt-2 text-xl font-semibold text-slate-900">
                                     Rp {summary.payout_outstanding.toLocaleString('id-ID')}
                                 </p>
@@ -118,7 +118,7 @@ export default function FinanceReportIndex({ filters, summary }: Props) {
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">Refund</p>
+                                <p className="text-xs uppercase text-slate-400">Refund</p>
                                 <p className="mt-2 text-xl font-semibold text-slate-900">
                                     Rp {summary.refund.toLocaleString('id-ID')}
                                 </p>

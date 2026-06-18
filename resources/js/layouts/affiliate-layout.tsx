@@ -3,6 +3,7 @@ import { ReactNode } from 'react';
 import { Bell, Link2, PiggyBank, LayoutGrid, TicketCheck, Wallet, FileText, MessageCircle, UserCircle } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 import CoachMarks from '@/components/coach-marks';
+import TablePagination from '@/components/table-pagination';
 
 type Props = {
     children: ReactNode;
@@ -49,7 +50,10 @@ export default function AffiliateLayout({ children, active }: Props) {
                             ))}
                         </div>
                     </aside>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">{children}</div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                        {children}
+                        <TablePagination />
+                    </div>
                 </div>
             </main>
             <CoachMarks context="affiliate" />

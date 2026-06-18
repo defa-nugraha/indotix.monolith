@@ -326,8 +326,12 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
 
     Route::get('admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])
         ->name('admin.users.index');
+    Route::post('admin/users', [\App\Http\Controllers\Admin\UserController::class, 'store'])
+        ->name('admin.users.store');
     Route::get('admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'show'])
         ->name('admin.users.show');
+    Route::put('admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'update'])
+        ->name('admin.users.update');
     Route::post('admin/users/{user}/suspend', [\App\Http\Controllers\Admin\UserController::class, 'suspend'])
         ->name('admin.users.suspend');
     Route::delete('admin/users/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])
@@ -514,6 +518,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.system.settings.index');
     Route::post('admin/system/settings', [\App\Http\Controllers\Admin\SystemSettingController::class, 'update'])
         ->name('admin.system.settings.update');
+    Route::post('admin/system/reset', [\App\Http\Controllers\Admin\SystemSettingController::class, 'reset'])
+        ->name('admin.system.reset');
     Route::get('admin/system/notifications', [\App\Http\Controllers\Admin\NotificationControlController::class, 'index'])
         ->name('admin.system.notifications.index');
     Route::post('admin/system/notifications/templates', [\App\Http\Controllers\Admin\NotificationControlController::class, 'storeTemplate'])
@@ -625,10 +631,10 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
 });
 
 Route::get('mitra/dashboard', [\App\Http\Controllers\Mitra\DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified', 'mitra'])
+    ->middleware(['auth', 'verified', 'mitra', 'user.activity'])
     ->name('mitra.dashboard');
 
-Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
+Route::middleware(['auth', 'verified', 'mitra', 'user.activity'])->group(function () {
     Route::get('mitra/chat', [\App\Http\Controllers\Mitra\ChatController::class, 'index'])
         ->name('mitra.chat.index');
     Route::get('mitra/chat/{conversation}', [\App\Http\Controllers\Mitra\ChatController::class, 'show'])
@@ -696,7 +702,7 @@ Route::middleware(['auth', 'verified', 'mitra'])->group(function () {
 
 Route::prefix('mitra')
     ->name('mitra.')
-    ->middleware(['auth', 'verified', 'mitra', 'mitra.verified'])
+    ->middleware(['auth', 'verified', 'mitra', 'mitra.verified', 'user.activity'])
     ->group(function () {
         Route::resource('hotels', \App\Http\Controllers\Mitra\HotelController::class)->except(['show']);
         Route::delete('hotels/{hotel}/images/{hotelImage}', [\App\Http\Controllers\Mitra\HotelController::class, 'destroyImage'])
@@ -744,7 +750,7 @@ Route::prefix('mitra')
 
 Route::prefix('mitra/wisata')
     ->name('mitra.wisata.')
-    ->middleware(['auth', 'verified', 'mitra', 'mitra.wisata'])
+    ->middleware(['auth', 'verified', 'mitra', 'mitra.wisata', 'user.activity'])
     ->group(function () {
         Route::get('destination', [\App\Http\Controllers\Mitra\Wisata\DestinationController::class, 'edit'])
             ->name('destination.edit');
@@ -797,7 +803,7 @@ Route::prefix('mitra/wisata')
 
 Route::prefix('mitra/events')
     ->name('mitra.events.')
-    ->middleware(['auth', 'verified', 'mitra', 'mitra.event'])
+    ->middleware(['auth', 'verified', 'mitra', 'mitra.event', 'user.activity'])
     ->group(function () {
         Route::get('/', [\App\Http\Controllers\Mitra\Event\EventController::class, 'index'])
             ->name('index');
@@ -862,7 +868,7 @@ Route::prefix('mitra/events')
             ->name('submit');
     });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'user.activity'])->group(function () {
     Route::resource('hotels', \App\Http\Controllers\HotelController::class)->except(['show']);
     Route::resource('room-types', \App\Http\Controllers\RoomTypeController::class);
     Route::delete('room-inventories/bulk', [\App\Http\Controllers\RoomInventoryController::class, 'bulkDestroy'])
@@ -876,7 +882,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('reviews.store');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'user.activity'])->group(function () {
     Route::get('/email/otp', [\App\Http\Controllers\EmailOtpController::class, 'show'])
         ->name('email-otp.notice');
     Route::post('/email/otp', [\App\Http\Controllers\EmailOtpController::class, 'verify'])
@@ -927,10 +933,12 @@ Route::post('/retail-shop/cart/clear', [\App\Http\Controllers\SouvenirCartContro
 Route::get('/retail-shop', [\App\Http\Controllers\PublicSouvenirController::class, 'index'])
     ->name('souvenir.search');
 
-Route::middleware(['auth', 'verified', 'user'])->group(function () {
+Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function () {
     Route::get('/retail-shop/checkout', [\App\Http\Controllers\SouvenirBookingController::class, 'review'])
+        ->middleware('maintenance.transactions')
         ->name('souvenir.checkout.review');
     Route::post('/retail-shop/checkout/confirm', [\App\Http\Controllers\SouvenirBookingController::class, 'confirm'])
+        ->middleware('maintenance.transactions')
         ->name('souvenir.checkout.confirm');
     Route::get('/retail-shop/booking/{order}', [\App\Http\Controllers\SouvenirBookingController::class, 'show'])
         ->name('souvenir.booking.show');
@@ -950,14 +958,19 @@ Route::get('/wisata', [\App\Http\Controllers\PublicWisataController::class, 'ind
 Route::get('/wisata/{destination}', [\App\Http\Controllers\PublicWisataController::class, 'show'])
     ->name('wisata.show');
 Route::post('/events/booking/prepare', [\App\Http\Controllers\EventPublicBookingController::class, 'prepare'])
+    ->middleware('maintenance.transactions')
     ->name('events.booking.prepare');
 Route::post('/academy/booking/prepare', [\App\Http\Controllers\AcademyPublicBookingController::class, 'prepare'])
+    ->middleware('maintenance.transactions')
     ->name('academy.booking.prepare');
 Route::post('/special-programs/booking/prepare', [\App\Http\Controllers\SpecialProgramBookingController::class, 'prepare'])
+    ->middleware('maintenance.transactions')
     ->name('special-programs.booking.prepare');
 Route::post('/wisata/booking/prepare', [\App\Http\Controllers\WisataBookingController::class, 'prepare'])
+    ->middleware('maintenance.transactions')
     ->name('wisata.booking.prepare');
 Route::post('/booking/prepare', [\App\Http\Controllers\BookingController::class, 'prepare'])
+    ->middleware('maintenance.transactions')
     ->name('booking.prepare');
 
 Route::get('/auth/google/redirect', [\App\Http\Controllers\Auth\SocialAuthController::class, 'redirect'])
@@ -970,14 +983,14 @@ Route::post('/affiliate/referral/apply', [\App\Http\Controllers\Affiliate\Referr
 Route::post('/affiliate/referral/clear', [\App\Http\Controllers\Affiliate\ReferralController::class, 'clear'])
     ->name('affiliate.referral.clear');
 
-Route::middleware(['auth', 'verified', 'user'])->prefix('affiliate')->name('affiliate.')->group(function () {
+Route::middleware(['auth', 'verified', 'user', 'user.activity'])->prefix('affiliate')->name('affiliate.')->group(function () {
     Route::get('register', [\App\Http\Controllers\Affiliate\RegisterController::class, 'create'])
         ->name('register');
     Route::post('register', [\App\Http\Controllers\Affiliate\RegisterController::class, 'store'])
         ->name('register.store');
 });
 
-Route::middleware(['auth', 'verified', 'user', 'affiliate.user'])->prefix('affiliate')->name('affiliate.')->group(function () {
+Route::middleware(['auth', 'verified', 'user', 'affiliate.user', 'user.activity'])->prefix('affiliate')->name('affiliate.')->group(function () {
     Route::get('/', [\App\Http\Controllers\Affiliate\DashboardController::class, 'index'])
         ->name('dashboard');
     Route::get('profile', [\App\Http\Controllers\Affiliate\ProfileController::class, 'show'])
@@ -1003,7 +1016,7 @@ Route::middleware(['auth', 'verified', 'user', 'affiliate.user'])->prefix('affil
     Route::get('support', [\App\Http\Controllers\Affiliate\SupportController::class, 'index'])
         ->name('support');
 });
-Route::middleware(['auth', 'verified', 'user'])->group(function () {
+Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function () {
     Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])
         ->name('chat.index');
     Route::get('/chat/start/{type}/{id?}', [\App\Http\Controllers\ChatController::class, 'start'])
@@ -1024,16 +1037,22 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
     Route::get('/wisata/history', [\App\Http\Controllers\PublicWisataHistoryController::class, 'index'])
         ->name('public.wisata.history');
     Route::get('/booking/review', [\App\Http\Controllers\BookingController::class, 'review'])
+        ->middleware('maintenance.transactions')
         ->name('booking.review');
     Route::post('/booking/confirm', [\App\Http\Controllers\BookingController::class, 'confirm'])
+        ->middleware('maintenance.transactions')
         ->name('booking.confirm');
     Route::post('/booking/voucher', [\App\Http\Controllers\BookingController::class, 'applyVoucher'])
+        ->middleware('maintenance.transactions')
         ->name('booking.voucher.apply');
     Route::post('/booking/voucher/remove', [\App\Http\Controllers\BookingController::class, 'removeVoucher'])
+        ->middleware('maintenance.transactions')
         ->name('booking.voucher.remove');
     Route::get('/booking/{booking}/payment', [\App\Http\Controllers\BookingController::class, 'payment'])
+        ->middleware('maintenance.transactions')
         ->name('booking.payment');
     Route::post('/booking/{booking}/payment', [\App\Http\Controllers\BookingController::class, 'pay'])
+        ->middleware('maintenance.transactions')
         ->name('booking.pay');
     Route::post('/booking/{booking}/cancel', [\App\Http\Controllers\BookingController::class, 'cancel'])
         ->name('booking.cancel');
@@ -1043,12 +1062,16 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('booking.show');
 
     Route::get('/events/booking/review', [\App\Http\Controllers\EventPublicBookingController::class, 'review'])
+        ->middleware('maintenance.transactions')
         ->name('events.booking.review');
     Route::post('/events/booking/confirm', [\App\Http\Controllers\EventPublicBookingController::class, 'confirm'])
+        ->middleware('maintenance.transactions')
         ->name('events.booking.confirm');
     Route::get('/events/booking/{booking}/payment', [\App\Http\Controllers\EventPublicBookingController::class, 'payment'])
+        ->middleware('maintenance.transactions')
         ->name('events.booking.payment');
     Route::post('/events/booking/{booking}/payment', [\App\Http\Controllers\EventPublicBookingController::class, 'pay'])
+        ->middleware('maintenance.transactions')
         ->name('events.booking.pay');
     Route::get('/events/booking/{booking}/ticket', [\App\Http\Controllers\EventPublicBookingController::class, 'ticket'])
         ->name('events.booking.ticket');
@@ -1056,10 +1079,13 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('events.booking.show');
 
     Route::get('/academy/booking/review', [\App\Http\Controllers\AcademyPublicBookingController::class, 'review'])
+        ->middleware('maintenance.transactions')
         ->name('academy.booking.review');
     Route::post('/academy/booking/confirm', [\App\Http\Controllers\AcademyPublicBookingController::class, 'confirm'])
+        ->middleware('maintenance.transactions')
         ->name('academy.booking.confirm');
     Route::get('/academy/booking/{booking}/payment', [\App\Http\Controllers\AcademyPublicBookingController::class, 'payment'])
+        ->middleware('maintenance.transactions')
         ->name('academy.booking.payment');
     Route::get('/academy/booking/{booking}/ticket', [\App\Http\Controllers\AcademyPublicBookingController::class, 'ticket'])
         ->name('academy.booking.ticket');
@@ -1067,12 +1093,16 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('academy.booking.show');
 
     Route::get('/special-programs/booking/review', [\App\Http\Controllers\SpecialProgramBookingController::class, 'review'])
+        ->middleware('maintenance.transactions')
         ->name('special-programs.booking.review');
     Route::post('/special-programs/booking/confirm', [\App\Http\Controllers\SpecialProgramBookingController::class, 'confirm'])
+        ->middleware('maintenance.transactions')
         ->name('special-programs.booking.confirm');
     Route::get('/special-programs/booking/{booking}/payment', [\App\Http\Controllers\SpecialProgramBookingController::class, 'payment'])
+        ->middleware('maintenance.transactions')
         ->name('special-programs.booking.payment');
     Route::post('/special-programs/booking/{booking}/payment', [\App\Http\Controllers\SpecialProgramBookingController::class, 'pay'])
+        ->middleware('maintenance.transactions')
         ->name('special-programs.booking.pay');
     Route::get('/special-programs/booking/{booking}/ticket', [\App\Http\Controllers\SpecialProgramBookingController::class, 'ticket'])
         ->name('special-programs.booking.ticket');
@@ -1080,12 +1110,16 @@ Route::middleware(['auth', 'verified', 'user'])->group(function () {
         ->name('special-programs.booking.show');
 
     Route::get('/wisata/booking/review', [\App\Http\Controllers\WisataBookingController::class, 'review'])
+        ->middleware('maintenance.transactions')
         ->name('wisata.booking.review');
     Route::post('/wisata/booking/confirm', [\App\Http\Controllers\WisataBookingController::class, 'confirm'])
+        ->middleware('maintenance.transactions')
         ->name('wisata.booking.confirm');
     Route::get('/wisata/booking/{booking}/payment', [\App\Http\Controllers\WisataBookingController::class, 'payment'])
+        ->middleware('maintenance.transactions')
         ->name('wisata.booking.payment');
     Route::post('/wisata/booking/{booking}/payment', [\App\Http\Controllers\WisataBookingController::class, 'pay'])
+        ->middleware('maintenance.transactions')
         ->name('wisata.booking.pay');
     Route::get('/wisata/booking/{booking}/ticket', [\App\Http\Controllers\WisataBookingController::class, 'ticket'])
         ->name('wisata.booking.ticket');

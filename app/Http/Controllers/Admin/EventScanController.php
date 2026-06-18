@@ -23,7 +23,7 @@ class EventScanController extends Controller
         }
 
         return Inertia::render('admin/events/scans/index', [
-            'scans' => $query->paginate(30)->withQueryString(),
+            'scans' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'events' => Event::query()
                 ->where('event_type', 'event')
                 ->select('id', 'title')

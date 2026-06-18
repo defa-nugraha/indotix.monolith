@@ -16,7 +16,7 @@ class WisataContentController extends Controller
     {
         $destinations = MitraWisataOnboarding::query()
             ->latest('id')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (MitraWisataOnboarding $item) => [
                 'id' => $item->id,
@@ -35,7 +35,7 @@ class WisataContentController extends Controller
         $reviews = WisataReview::query()
             ->with('destination')
             ->latest('id')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (WisataReview $review) => [
                 'id' => $review->id,

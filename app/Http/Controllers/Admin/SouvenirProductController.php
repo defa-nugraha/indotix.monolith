@@ -33,7 +33,7 @@ class SouvenirProductController extends Controller
             $query->where('category_id', $categoryId);
         }
 
-        $products = $query->orderByDesc('id')->paginate(10)->withQueryString()->through(
+        $products = $query->orderByDesc('id')->paginate(\App\Support\PaginationOptions::perPage())->withQueryString()->through(
             fn (SouvenirProduct $product) => [
                 'id' => $product->id,
                 'name' => $product->name,

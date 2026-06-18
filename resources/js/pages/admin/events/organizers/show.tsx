@@ -44,10 +44,29 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Detail', href: '#' },
 ];
 
-export default function EventOrganizerShow({ organizer }: { organizer: Organizer }) {
-    const previewUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
+const statusTone = (status?: string | null) => {
+    if (status === 'verified') return 'bg-emerald-50 text-emerald-700';
+    if (status === 'pending') return 'bg-amber-50 text-amber-700';
+    if (status === 'suspended' || status === 'rejected')
+        return 'bg-rose-50 text-rose-700';
+    return 'bg-slate-50 text-slate-600';
+};
 
-    const DocumentPreview = ({ label, path }: { label: string; path?: string | null }) => {
+export default function EventOrganizerShow({
+    organizer,
+}: {
+    organizer: Organizer;
+}) {
+    const previewUrl = (path?: string | null) =>
+        path ? `/storage/${path}` : null;
+
+    const DocumentPreview = ({
+        label,
+        path,
+    }: {
+        label: string;
+        path?: string | null;
+    }) => {
         if (!path) {
             return (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center text-xs text-slate-500">
@@ -61,137 +80,351 @@ export default function EventOrganizerShow({ organizer }: { organizer: Organizer
             <div className="rounded-2xl border border-slate-100 bg-white p-3 text-center shadow-sm">
                 <p className="text-xs font-semibold text-slate-600">{label}</p>
                 {isPdf ? (
-                    <a href={url ?? '#'} className="mt-2 inline-flex rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600">
+                    <a
+                        href={url ?? '#'}
+                        className="mt-2 inline-flex rounded-lg border border-slate-200 px-3 py-1 text-xs text-slate-600"
+                    >
                         Lihat PDF
                     </a>
                 ) : (
-                    <img src={url ?? ''} alt={label} className="mt-2 h-24 w-full rounded-lg object-cover" />
+                    <img
+                        src={url ?? ''}
+                        alt={label}
+                        className="mt-2 h-24 w-full rounded-lg object-cover"
+                    />
                 )}
             </div>
+        );
+    };
+
+    const handleVerify = async (action: 'approve' | 'reject') => {
+        const status = action === 'approve' ? 'verified' : 'suspended';
+        const result =
+            action === 'approve'
+                ? await Swal.fire({
+                      title: 'Setujui mitra event?',
+                      text: 'Dokumen pendaftaran EO akan diverifikasi.',
+                      icon: 'question',
+                      showCancelButton: true,
+                      confirmButtonText: 'Setujui',
+                      cancelButtonText: 'Batal',
+                  })
+                : await Swal.fire({
+                      title: 'Tolak mitra event?',
+                      input: 'textarea',
+                      inputLabel: 'Alasan penolakan',
+                      inputPlaceholder:
+                          'Tulis alasan agar mitra bisa memperbaiki dokumen.',
+                      showCancelButton: true,
+                      confirmButtonText: 'Tolak',
+                      cancelButtonText: 'Batal',
+                      inputValidator: (value: string | null) => {
+                          if (!value) {
+                              return 'Alasan penolakan wajib diisi.';
+                          }
+                          return null;
+                      },
+                  });
+
+        if (!result.isConfirmed) return;
+
+        router.post(
+            `/admin/events/organizers/${organizer.id}/status`,
+            {
+                status,
+                notes: action === 'reject' ? result.value : null,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Status verifikasi diperbarui.',
+                        confirmButtonText: 'OK',
+                    });
+                },
+                onError: () => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: 'Gagal memperbarui status verifikasi.',
+                        confirmButtonText: 'OK',
+                    });
+                },
+            },
         );
     };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Detail EO" />
-            <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
+            <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8 text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <div className="flex items-start justify-between gap-6">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-slate-900">{organizer.name}</h1>
-                            <p className="text-sm text-slate-500">{organizer.email ?? '-'}</p>
-                            <p className="text-sm text-slate-500">{organizer.phone ?? '-'}</p>
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
+                                Detail Mitra Event
+                            </p>
+                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                                {organizer.name}
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                {organizer.email ?? '-'}
+                                {organizer.phone ? ` · ${organizer.phone}` : ''}
+                            </p>
                         </div>
-                        <Badge className={organizer.status === 'verified' ? 'bg-emerald-50 text-emerald-700' : organizer.status === 'suspended' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}>
-                            {organizer.status}
-                        </Badge>
+                        <div className="flex flex-wrap gap-2">
+                            <Badge className={statusTone(organizer.status)}>
+                                {organizer.status}
+                            </Badge>
+                            {organizer.onboarding?.verification_status && (
+                                <Badge
+                                    className={statusTone(
+                                        organizer.onboarding
+                                            .verification_status,
+                                    )}
+                                >
+                                    {organizer.onboarding.verification_status}
+                                </Badge>
+                            )}
+                        </div>
                     </div>
                 </section>
 
-                {organizer.onboarding && (
-                    <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Data Pendaftaran EO</h2>
-                        <div className="mt-4 grid gap-4 md:grid-cols-2">
-                            <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Penanggung Jawab</p>
-                                <div className="mt-3 space-y-1">
-                                    <div>Nama: {organizer.onboarding.responsible_name ?? '-'}</div>
-                                    <div>HP: {organizer.onboarding.responsible_phone ?? '-'}</div>
-                                    <div>Jabatan: {organizer.onboarding.responsible_role ?? '-'}</div>
+                <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+                    <div className="space-y-6">
+                        {organizer.onboarding && (
+                            <>
+                                <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                                    <h2 className="text-lg font-semibold text-slate-900">
+                                        Penanggung Jawab
+                                    </h2>
+                                    <div className="mt-4 grid gap-3 text-sm text-slate-600">
+                                        <div>
+                                            <span className="font-semibold">
+                                                Nama:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .responsible_name ?? '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                HP:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .responsible_phone ?? '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                Jabatan:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .responsible_role ?? '-'}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">EO / Organisasi</p>
-                                <div className="mt-3 space-y-1">
-                                    <div>Nama EO: {organizer.onboarding.eo_name ?? '-'}</div>
-                                    <div>Jenis: {organizer.onboarding.organizer_type ?? '-'}</div>
-                                    <div>Tahun berdiri: {organizer.onboarding.founded_year ?? '-'}</div>
-                                    <div>Deskripsi: {organizer.onboarding.eo_description ?? '-'}</div>
-                                </div>
-                            </div>
-                            <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Legalitas</p>
-                                <div className="mt-3 space-y-1">
-                                    <div>Jenis: {organizer.onboarding.legal_doc_type ?? '-'}</div>
-                                    <div>Nomor: {organizer.onboarding.legal_doc_number ?? '-'}</div>
-                                </div>
-                            </div>
-                            <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Kontak Operasional</p>
-                                <div className="mt-3 space-y-1">
-                                    <div>PIC: {organizer.onboarding.operational_phone ?? '-'}</div>
-                                    <div>Email: {organizer.onboarding.operational_email ?? '-'}</div>
-                                    <div>Jam: {organizer.onboarding.operational_hours ?? '-'}</div>
-                                </div>
-                            </div>
-                            <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm md:col-span-2">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Rekening</p>
-                                <div className="mt-3 grid gap-2 md:grid-cols-2">
-                                    <div>Bank: {organizer.onboarding.bank_name ?? '-'}</div>
-                                    <div>Nomor: {organizer.onboarding.bank_account_number ?? '-'}</div>
-                                    <div>Nama: {organizer.onboarding.bank_account_name ?? '-'}</div>
-                                    <div>Relasi: {organizer.onboarding.bank_account_relation ?? '-'}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-6 grid gap-4 md:grid-cols-3">
-                            <DocumentPreview label="Dokumen Legal" path={organizer.onboarding.legal_doc_path} />
-                            <DocumentPreview label="KTP" path={organizer.onboarding.ktp_path} />
-                            <DocumentPreview label="Selfie + KTP" path={organizer.onboarding.selfie_ktp_path} />
-                        </div>
-                    </section>
-                )}
 
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h2 className="text-lg font-semibold text-slate-900">Aksi Status</h2>
-                    <div className="mt-4 flex flex-wrap gap-3">
-                        {['pending', 'verified', 'suspended'].map((status) => (
+                                <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                                    <h2 className="text-lg font-semibold text-slate-900">
+                                        EO / Organisasi
+                                    </h2>
+                                    <div className="mt-4 grid gap-3 text-sm text-slate-600">
+                                        <div>
+                                            <span className="font-semibold">
+                                                Nama EO:
+                                            </span>{' '}
+                                            {organizer.onboarding.eo_name ??
+                                                '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                Jenis:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .organizer_type ?? '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                Tahun berdiri:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .founded_year ?? '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                Deskripsi:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .eo_description ?? '-'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                                    <h2 className="text-lg font-semibold text-slate-900">
+                                        Legalitas & Operasional
+                                    </h2>
+                                    <div className="mt-4 grid gap-3 text-sm text-slate-600">
+                                        <div>
+                                            <span className="font-semibold">
+                                                Jenis dokumen:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .legal_doc_type ?? '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                Nomor dokumen:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .legal_doc_number ?? '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                Kontak:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .operational_phone ?? '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                Email:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .operational_email ?? '-'}
+                                        </div>
+                                        <div>
+                                            <span className="font-semibold">
+                                                Jam:
+                                            </span>{' '}
+                                            {organizer.onboarding
+                                                .operational_hours ?? '-'}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                                    <h2 className="text-lg font-semibold text-slate-900">
+                                        Dokumen
+                                    </h2>
+                                    <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-4">
+                                        <DocumentPreview
+                                            label="Dokumen Legal"
+                                            path={
+                                                organizer.onboarding
+                                                    .legal_doc_path
+                                            }
+                                        />
+                                        <DocumentPreview
+                                            label="KTP"
+                                            path={organizer.onboarding.ktp_path}
+                                        />
+                                        <DocumentPreview
+                                            label="Selfie + KTP"
+                                            path={
+                                                organizer.onboarding
+                                                    .selfie_ktp_path
+                                            }
+                                        />
+                                    </div>
+                                    {(organizer.onboarding
+                                        .verification_reason ||
+                                        organizer.notes) && (
+                                        <div className="mt-4 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                                            Alasan penolakan:{' '}
+                                            {organizer.onboarding
+                                                .verification_reason ??
+                                                organizer.notes}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    <div className="space-y-6">
+                        <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-900">
+                                Aksi Verifikasi
+                            </h3>
+                            <div className="mt-4 flex flex-col gap-3">
+                                <Button
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                    onClick={() => handleVerify('approve')}
+                                >
+                                    Setujui
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                    onClick={() => handleVerify('reject')}
+                                >
+                                    Tolak
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-900">
+                                Rekening
+                            </h3>
+                            <div className="mt-2 text-sm text-slate-600">
+                                <div>
+                                    {organizer.onboarding?.bank_name ?? '-'}
+                                </div>
+                                <div>
+                                    {organizer.onboarding
+                                        ?.bank_account_number ?? '-'}
+                                </div>
+                                <div>
+                                    {organizer.onboarding?.bank_account_name ??
+                                        '-'}
+                                </div>
+                                <div>
+                                    {organizer.onboarding
+                                        ?.bank_account_relation ?? '-'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                            <h3 className="text-sm font-semibold text-slate-900">
+                                Status EO
+                            </h3>
+                            <div className="mt-2 text-sm text-slate-600">
+                                {organizer.status}
+                            </div>
+                            {organizer.notes && (
+                                <div className="mt-2 text-xs text-slate-500">
+                                    Catatan: {organizer.notes}
+                                </div>
+                            )}
                             <Button
-                                key={status}
                                 type="button"
-                                variant={status === 'verified' ? 'default' : 'outline'}
-                                className={status === 'verified' ? 'bg-sky-600 text-white hover:bg-sky-700' : ''}
+                                variant="outline"
+                                className="mt-4 w-full border-amber-200 text-amber-700 hover:bg-amber-50"
                                 onClick={() => {
                                     Swal.fire({
-                                        title: 'Ubah status EO?',
-                                        text: `Status akan diubah menjadi ${status}.`,
+                                        title: 'Kembalikan ke pending?',
+                                        text: 'Status EO akan dikembalikan ke pending untuk review ulang.',
                                         icon: 'question',
                                         showCancelButton: true,
-                                        confirmButtonText: 'Ya, simpan',
+                                        confirmButtonText: 'Ya, pending',
                                         cancelButtonText: 'Batal',
                                     }).then((result) => {
-                                        if (!result.isConfirmed) {
-                                            return;
-                                        }
+                                        if (!result.isConfirmed) return;
                                         router.post(
                                             `/admin/events/organizers/${organizer.id}/status`,
-                                            { status },
-                                            {
-                                                preserveScroll: true,
-                                                onSuccess: () => {
-                                                    Swal.fire({
-                                                        icon: 'success',
-                                                        title: 'Berhasil',
-                                                        text: 'Status berhasil diperbarui.',
-                                                        confirmButtonText: 'OK',
-                                                    });
-                                                },
-                                                onError: () => {
-                                                    Swal.fire({
-                                                        icon: 'error',
-                                                        title: 'Gagal',
-                                                        text: 'Gagal memperbarui status.',
-                                                        confirmButtonText: 'OK',
-                                                    });
-                                                },
-                                            }
+                                            { status: 'pending', notes: null },
+                                            { preserveScroll: true },
                                         );
                                     });
                                 }}
                             >
-                                {status}
+                                Set Pending
                             </Button>
-                        ))}
+                        </div>
                     </div>
                 </section>
             </div>

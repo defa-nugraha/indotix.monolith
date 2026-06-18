@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MitraOnboarding;
 use App\Models\Regency;
 use App\Services\MediaCompressionService;
+use App\Support\CommissionInfo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -70,6 +71,7 @@ class MitraOnboardingController extends Controller
         return Inertia::render('mitra/onboarding', [
             'onboarding' => $onboarding,
             'cities' => $cities,
+            'commissionInfo' => CommissionInfo::hotel(),
             'status' => $request->session()->get('status'),
         ]);
     }

@@ -27,7 +27,7 @@ class ReviewController extends Controller
             ->where('product_type', $type)
             ->whereIn('product_id', $productIds)
             ->latest('id')
-            ->paginate(20)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
         $titles = ProductReviewService::resolveTitles($type, $productIds);

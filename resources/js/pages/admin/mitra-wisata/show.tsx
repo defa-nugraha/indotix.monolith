@@ -95,7 +95,7 @@ const DocItem = ({ label, path }: { label: string; path?: string | null }) => {
                 </div>
             )}
             <div className="min-w-0">
-                <p className="text-[11px] font-semibold tracking-[0.15em] text-slate-400 uppercase">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase">
                     {label}
                 </p>
                 {hasFile ? (
@@ -255,7 +255,7 @@ export default function AdminMitraWisataShow({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Detail Mitra Wisata
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">

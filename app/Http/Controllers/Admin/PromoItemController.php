@@ -81,7 +81,7 @@ class PromoItemController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:1', 'max:3', Rule::notIn($usedOrders)],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['required', 'image', $dimensionRule],
+            'image' => ['required', 'image', 'max:5120', $dimensionRule],
         ], [
             'image.dimensions' => $dimensionMessage,
             'sort_order.not_in' => 'Urutan promo sudah digunakan. Pilih urutan lain.',
@@ -139,17 +139,18 @@ class PromoItemController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:1', 'max:3', Rule::notIn($usedOrders)],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', $dimensionRule],
+            'image' => ['nullable', 'image', 'max:5120', $dimensionRule],
         ], [
             'image.dimensions' => $dimensionMessage,
             'sort_order.not_in' => 'Urutan promo sudah digunakan. Pilih urutan lain.',
         ]);
 
         if ($request->hasFile('image')) {
-            if ($promoItem->image_path) {
-                Storage::disk('public')->delete($promoItem->image_path);
-            }
+            $previousPath = $promoItem->image_path;
             $promoItem->image_path = $mediaCompression->store($request->file('image'), 'promo-items', 'public');
+            if ($previousPath) {
+                Storage::disk('public')->delete($previousPath);
+            }
         }
 
         $promoItem->fill([

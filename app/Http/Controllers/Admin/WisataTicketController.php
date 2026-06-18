@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MitraWisataOnboarding;
 use App\Models\WisataTicket;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,12 +17,15 @@ class WisataTicketController extends Controller
     public function index(Request $request): Response
     {
         $query = WisataTicket::query()
-            ->with(['destination.user:id,name,email']);
+            ->with(['destination.user:id,name,email'])
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request));
 
         if ($search = $request->string('search')->toString()) {
-            $query->where('name', 'like', "%{$search}%")
-                ->orWhereHas('destination', fn ($builder) => $builder->where('destination_name', 'like', "%{$search}%"))
-                ->orWhereHas('destination.user', fn ($builder) => $builder->where('name', 'like', "%{$search}%"));
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhereHas('destination', fn ($destination) => $destination->where('destination_name', 'like', "%{$search}%"))
+                    ->orWhereHas('destination.user', fn ($user) => $user->where('name', 'like', "%{$search}%"));
+            });
         }
 
         if ($status = $request->string('status')->toString()) {
@@ -27,7 +33,7 @@ class WisataTicketController extends Controller
         }
 
         $tickets = $query->latest('id')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(function (WisataTicket $ticket) {
                 return [
@@ -60,9 +66,12 @@ class WisataTicketController extends Controller
 
     public function create(): Response
     {
-        $destinations = \App\Models\MitraWisataOnboarding::query()
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
+        $destinations = AdminDataScope::applyCreatedBy(
+            MitraWisataOnboarding::query()
+                ->where('verification_status', 'verified')
+                ->where('is_suspended', false),
+            request(),
+        )
             ->orderBy('destination_name')
             ->get(['id', 'destination_name'])
             ->map(fn ($item) => [
@@ -78,8 +87,13 @@ class WisataTicketController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $destinationRule = Rule::exists('mitra_wisata_onboardings', 'id');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $destinationRule = $destinationRule->where('created_by', $request->user()?->id ?? 0);
+        }
+
         $data = $request->validate([
-            'mitra_wisata_onboarding_id' => ['required', 'exists:mitra_wisata_onboardings,id'],
+            'mitra_wisata_onboarding_id' => ['required', $destinationRule],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
@@ -113,6 +127,10 @@ class WisataTicketController extends Controller
 
     public function update(Request $request, WisataTicket $ticket): RedirectResponse
     {
+        if ($ticket->destination) {
+            AdminDataScope::authorizeCreatedBy($ticket->destination, $request);
+        }
+
         $data = $request->validate([
             'is_active' => ['nullable', 'boolean'],
             'max_quota_override' => ['nullable', 'integer', 'min:0'],
@@ -126,6 +144,10 @@ class WisataTicketController extends Controller
 
     public function destroy(Request $request, WisataTicket $ticket): RedirectResponse
     {
+        if ($ticket->destination) {
+            AdminDataScope::authorizeCreatedBy($ticket->destination, $request);
+        }
+
         $data = $request->validate([
             'reason' => ['required', 'string', 'max:500'],
         ]);

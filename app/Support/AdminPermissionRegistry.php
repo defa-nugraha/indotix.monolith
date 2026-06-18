@@ -59,8 +59,11 @@ class AdminPermissionRegistry
             return false;
         }
 
+        $fallbackFeature = Str::before($feature, '_');
+
         return $role->permissions
-            ->contains(fn ($permission) => $permission->feature === $feature && $permission->action === $action);
+            ->contains(fn ($permission) => $permission->action === $action
+                && ($permission->feature === $feature || $permission->feature === $fallbackFeature));
     }
 
     public static function resolveRequest(Request $request): ?array

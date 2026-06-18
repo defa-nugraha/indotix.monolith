@@ -12,7 +12,7 @@ class AuditController extends Controller
     public function index(): Response
     {
         return Inertia::render('admin/wisata-affiliates/audit', [
-            'logs' => WisataAffiliateAuditLog::query()->latest('id')->paginate(30)->withQueryString(),
+            'logs' => WisataAffiliateAuditLog::query()->latest('id')->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
         ]);
     }
 }

@@ -31,7 +31,7 @@ class SpecialAdminController extends Controller
             $query->where('role', $request->string('role')->toString());
         }
 
-        $paginator = $query->latest('id')->paginate(12)->withQueryString();
+        $paginator = $query->latest('id')->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
         $admins = $paginator->through(function (User $user) {
             return [
                 'id' => $user->id,

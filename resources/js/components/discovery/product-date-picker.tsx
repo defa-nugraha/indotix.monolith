@@ -19,6 +19,7 @@ type SingleDatePickerProps = {
     value?: string | null;
     onChange: (value: string) => void;
     recommendations?: ProductDateRecommendationMap;
+    showRecommendations?: boolean;
     minDate?: Date;
     className?: string;
     align?: 'left' | 'right';
@@ -29,6 +30,7 @@ type RangeDatePickerProps = {
     endDate?: string | null;
     onChange: (value: { startDate: string; endDate: string }) => void;
     recommendations?: ProductDateRecommendationMap;
+    showRecommendations?: boolean;
     minDate?: Date;
     className?: string;
     align?: 'left' | 'right';
@@ -91,21 +93,24 @@ function formatPriceLabel(price?: number | null): string {
 function DateCellContent({
     date,
     recommendation,
+    plain = false,
 }: {
     date: Date;
     recommendation?: ProductDateRecommendation;
+    plain?: boolean;
 }) {
     return (
         <div
             className={cn(
                 'product-date-calendar__content',
+                plain && 'product-date-calendar__content--plain',
                 recommendation && 'product-date-calendar__content--featured',
             )}
         >
             <span className="product-date-calendar__day">
                 {format(date, 'd')}
             </span>
-            {recommendation ? (
+            {recommendation && !plain ? (
                 <div className="product-date-calendar__preview">
                     <img
                         src={
@@ -155,6 +160,7 @@ export function DiscoverySingleDatePicker({
     value,
     onChange,
     recommendations = {},
+    showRecommendations = true,
     minDate,
     className,
     align = 'left',
@@ -202,7 +208,11 @@ export function DiscoverySingleDatePicker({
                         dayContentRenderer={(date: Date) => (
                             <DateCellContent
                                 date={date}
-                                recommendation={recommendations[dateKey(date)]}
+                                recommendation={
+                                    showRecommendations
+                                        ? recommendations[dateKey(date)]
+                                        : undefined
+                                }
                             />
                         )}
                     />
@@ -217,6 +227,7 @@ export function DiscoveryRangeDatePicker({
     endDate,
     onChange,
     recommendations = {},
+    showRecommendations = true,
     minDate,
     className,
     align = 'right',
@@ -260,7 +271,10 @@ export function DiscoveryRangeDatePicker({
             {open ? (
                 <div
                     className={cn(
-                        'product-date-picker-popover absolute z-50 mt-2 w-[min(94vw,32rem)] rounded-[28px] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)]',
+                        'product-date-picker-popover absolute z-50 mt-2 rounded-[28px] border border-slate-200 bg-white p-3 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)]',
+                        showRecommendations
+                            ? 'w-[min(94vw,32rem)]'
+                            : 'w-[min(94vw,27rem)] p-5',
                         popoverPosition(align),
                     )}
                 >
@@ -272,7 +286,11 @@ export function DiscoveryRangeDatePicker({
                         moveRangeOnFirstSelection={false}
                         rangeColors={['#0284c7']}
                         showDateDisplay={false}
-                        className="product-date-calendar product-date-calendar--range"
+                        className={cn(
+                            'product-date-calendar product-date-calendar--range',
+                            !showRecommendations &&
+                                'product-date-calendar--plain-range',
+                        )}
                         onChange={(item: {
                             selection?: { startDate?: Date; endDate?: Date };
                         }) => {
@@ -288,7 +306,12 @@ export function DiscoveryRangeDatePicker({
                         dayContentRenderer={(date: Date) => (
                             <DateCellContent
                                 date={date}
-                                recommendation={recommendations[dateKey(date)]}
+                                recommendation={
+                                    showRecommendations
+                                        ? recommendations[dateKey(date)]
+                                        : undefined
+                                }
+                                plain={!showRecommendations}
                             />
                         )}
                     />

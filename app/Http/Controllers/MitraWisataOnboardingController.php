@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MitraWisataOnboarding;
 use App\Services\MediaCompressionService;
+use App\Support\CommissionInfo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Inertia\Response;
 
 class MitraWisataOnboardingController extends Controller
 {
+    private const MAX_IMAGE_KILOBYTES = 5120;
+
     public function show(Request $request): Response
     {
         $user = $request->user();
@@ -53,6 +56,7 @@ class MitraWisataOnboardingController extends Controller
             'onboarding' => $onboarding,
             'provinces' => $provinces,
             'cities' => $cities,
+            'commissionInfo' => CommissionInfo::wisata($onboarding->id),
             'status' => $request->session()->get('status'),
         ]);
     }
@@ -100,11 +104,17 @@ class MitraWisataOnboardingController extends Controller
             'holiday_notes' => ['nullable', 'string', 'max:255'],
             'facilities' => ['nullable', 'array'],
             'facilities.*' => ['string'],
-            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'photo_gate_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_area_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_ticket_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'contact_phone' => ['nullable', 'string', 'max:50'],
             'contact_hours' => ['nullable', 'string', 'max:100'],
+        ], [
+            'photo_gate_file.max' => 'Ukuran foto gerbang maksimal 5 MB.',
+            'photo_area_file.max' => 'Ukuran foto area utama maksimal 5 MB.',
+            'photo_ticket_file.max' => 'Ukuran foto loket maksimal 5 MB.',
+            '*.image' => 'File harus berupa gambar.',
+            '*.mimes' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
         ]);
 
         $onboarding->fill([
@@ -157,14 +167,17 @@ class MitraWisataOnboardingController extends Controller
         ]);
 
         $data = $request->validate([
-            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
-            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'selfie_ktp_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'legal_doc_type' => ['nullable', 'in:nib,sk_desa,surat_pokdarwis,izin_wisata,dokumen_kawasan'],
             'legal_doc_number' => ['nullable', 'string', 'max:255'],
-            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
+            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'bank_name' => ['nullable', 'string', 'max:255'],
             'bank_account_number' => ['nullable', 'string', 'max:100'],
             'bank_account_name' => ['nullable', 'string', 'max:255'],
+        ], [
+            '*.max' => 'Ukuran setiap dokumen maksimal 5 MB.',
+            '*.mimes' => 'Format dokumen tidak sesuai.',
         ]);
 
         $onboarding->fill([

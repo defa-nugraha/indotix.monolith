@@ -1,66 +1,111 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
-
-type ProcessingState = {
-    active: boolean;
-    label: string;
-};
-
-const getLabel = (method?: string): string => {
-    const key = (method ?? '').toLowerCase();
-    if (key === 'delete') return 'Menghapus...';
-    if (key === 'post' || key === 'put' || key === 'patch') return 'Menyimpan...';
-    return 'Memproses...';
-};
+import { useEffect, useRef } from 'react';
 
 export default function GlobalProcessingOverlay() {
-    const [state, setState] = useState<ProcessingState>({
-        active: false,
-        label: 'Memproses...',
-    });
-    const pendingRef = useRef(0);
+    const actionPendingRef = useRef(0);
+    const activeActionRef = useRef<HTMLElement | null>(null);
+    const disabledStateRef = useRef(new WeakMap<HTMLElement, boolean>());
+
+    const markActionLoading = () => {
+        const element = activeActionRef.current;
+        if (!element) return;
+
+        element.dataset.actionLoading = 'true';
+        element.setAttribute('aria-busy', 'true');
+        element.setAttribute('aria-disabled', 'true');
+
+        if (
+            element instanceof HTMLButtonElement ||
+            element instanceof HTMLInputElement
+        ) {
+            disabledStateRef.current.set(element, element.disabled);
+            element.disabled = true;
+        }
+    };
+
+    const clearActionLoading = () => {
+        const element = activeActionRef.current;
+        if (!element) return;
+
+        delete element.dataset.actionLoading;
+        element.removeAttribute('aria-busy');
+        element.removeAttribute('aria-disabled');
+
+        if (
+            element instanceof HTMLButtonElement ||
+            element instanceof HTMLInputElement
+        ) {
+            element.disabled = disabledStateRef.current.get(element) ?? false;
+        }
+
+        activeActionRef.current = null;
+    };
 
     useEffect(() => {
-        const start = (event: any) => {
-            const method = event?.detail?.visit?.method ?? 'get';
-            if (String(method).toLowerCase() === 'get') return;
-            pendingRef.current += 1;
-            setState({ active: true, label: getLabel(method) });
+        const rememberClickTarget = (event: MouseEvent) => {
+            const target = event.target;
+            if (!(target instanceof Element)) return;
+
+            const action = target.closest<HTMLElement>(
+                'button, a[href], [role="button"], input[type="submit"], input[type="button"]',
+            );
+            if (action?.closest('[data-skip-action-loading="true"]')) {
+                activeActionRef.current = null;
+                return;
+            }
+            if (action) {
+                activeActionRef.current = action;
+            }
+        };
+
+        const rememberSubmitTarget = (event: SubmitEvent) => {
+            const submitter = event.submitter;
+            if (submitter instanceof HTMLElement) {
+                activeActionRef.current = submitter;
+                return;
+            }
+
+            if (event.target instanceof HTMLFormElement) {
+                activeActionRef.current =
+                    event.target.querySelector<HTMLElement>(
+                        'button[type="submit"], input[type="submit"]',
+                    );
+            }
+        };
+
+        const start = () => {
+            actionPendingRef.current += 1;
+            markActionLoading();
             document.body.style.cursor = 'progress';
         };
 
-        const finish = (event: any) => {
-            const method = event?.detail?.visit?.method ?? 'get';
-            if (String(method).toLowerCase() === 'get') return;
-            pendingRef.current = Math.max(0, pendingRef.current - 1);
-            if (pendingRef.current === 0) {
-                setState((prev) => ({ ...prev, active: false }));
+        const finish = () => {
+            actionPendingRef.current = Math.max(
+                0,
+                actionPendingRef.current - 1,
+            );
+            if (actionPendingRef.current === 0) {
+                clearActionLoading();
                 document.body.style.cursor = '';
             }
         };
 
+        document.addEventListener('click', rememberClickTarget, true);
+        document.addEventListener('submit', rememberSubmitTarget, true);
         const removeStart = router.on('start', start);
         const removeFinish = router.on('finish', finish);
         const removeCancel = router.on('cancel', finish);
 
         return () => {
+            document.removeEventListener('click', rememberClickTarget, true);
+            document.removeEventListener('submit', rememberSubmitTarget, true);
             removeStart();
             removeFinish();
             removeCancel();
+            clearActionLoading();
             document.body.style.cursor = '';
         };
     }, []);
 
-    if (!state.active) return null;
-
-    return (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-            <div className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-lg">
-                <span className="inline-flex size-5 animate-spin rounded-full border-2 border-slate-300 border-t-sky-600" />
-                <span className="text-sm font-semibold text-slate-700">
-                    {state.label}
-                </span>
-            </div>
-        </div>
-    );
+    return null;
 }

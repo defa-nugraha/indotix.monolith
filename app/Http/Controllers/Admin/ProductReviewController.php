@@ -38,7 +38,7 @@ class ProductReviewController extends Controller
             });
         }
 
-        $reviews = $query->paginate(20)->withQueryString();
+        $reviews = $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
 
         $collection = $reviews->getCollection();
         $titlesByType = $collection

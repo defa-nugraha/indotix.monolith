@@ -13,15 +13,27 @@ class EventCommission extends Model
         'value',
         'starts_at',
         'ends_at',
+        'is_forever',
     ];
 
     protected $casts = [
         'starts_at' => 'date',
         'ends_at' => 'date',
+        'is_forever' => 'boolean',
     ];
 
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class);
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 }

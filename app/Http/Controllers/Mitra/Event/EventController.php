@@ -24,7 +24,7 @@ class EventController extends Controller
         $events = Event::query()
             ->where('event_organizer_id', $organizer->id)
             ->latest('id')
-            ->paginate(15)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
         return Inertia::render('mitra/events/index', [

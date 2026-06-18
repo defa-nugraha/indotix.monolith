@@ -51,7 +51,7 @@ export default function AdminWisataBookingShow({ booking, cityName }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Booking Tiket
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">{booking.booking_code}</h1>
@@ -67,37 +67,37 @@ export default function AdminWisataBookingShow({ booking, cityName }: Props) {
                     <h2 className="text-lg font-semibold text-slate-900">Detail Booking</h2>
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Destinasi</p>
+                            <p className="text-xs uppercase text-slate-400">Destinasi</p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {booking.destination?.destination_name ?? '-'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Kota</p>
+                            <p className="text-xs uppercase text-slate-400">Kota</p>
                             <p className="text-sm font-semibold text-slate-900">
                                 {cityName ?? booking.destination?.city_code ?? '-'}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Produk Tiket</p>
+                            <p className="text-xs uppercase text-slate-400">Produk Tiket</p>
                             <p className="text-sm font-semibold text-slate-900">{booking.ticket?.name ?? '-'}</p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Tanggal Kunjungan</p>
+                            <p className="text-xs uppercase text-slate-400">Tanggal Kunjungan</p>
                             <p className="text-sm font-semibold text-slate-900">{booking.visit_date}</p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Jumlah</p>
+                            <p className="text-xs uppercase text-slate-400">Jumlah</p>
                             <p className="text-sm font-semibold text-slate-900">{booking.quantity} tiket</p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Harga / tiket</p>
+                            <p className="text-xs uppercase text-slate-400">Harga / tiket</p>
                             <p className="text-sm font-semibold text-slate-900">
                                 Rp {booking.unit_price.toLocaleString('id-ID')}
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs uppercase tracking-wider text-slate-400">Total</p>
+                            <p className="text-xs uppercase text-slate-400">Total</p>
                             <p className="text-sm font-semibold text-slate-900">
                                 Rp {booking.total_price.toLocaleString('id-ID')}
                             </p>

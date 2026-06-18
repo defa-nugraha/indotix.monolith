@@ -53,7 +53,7 @@ export default function AffiliateLinks({
             <Head title="Link Afiliasi" />
             <div className="space-y-6">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Link Afiliasi</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Link Afiliasi</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">Bagikan link untuk dapat komisi</h1>
                     <p className="mt-1 text-sm text-slate-500">Gunakan link ini untuk tracking penjualan wisata afiliasi.</p>
                 </div>
@@ -77,7 +77,7 @@ export default function AffiliateLinks({
                     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Referral Link</p>
+                                <p className="text-xs font-semibold uppercase text-slate-400">Referral Link</p>
                                 <p className="mt-2 break-all text-sm font-semibold text-slate-900">{referralUrl}</p>
                                 <p className="mt-2 text-xs text-slate-500">
                                     Model: {link.attribution_model.replace('_', ' ')} · Cookie {link.cookie_days} hari

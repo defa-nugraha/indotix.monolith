@@ -18,6 +18,9 @@ Route::prefix('auth')->group(function () {
     });
 });
 
+Route::post('mobile/errors', [\App\Http\Controllers\Api\MobileErrorLogController::class, 'store'])
+    ->middleware('throttle:30,1');
+
 Route::prefix('discovery')->group(function () {
     Route::get('global/suggestions', [\App\Http\Controllers\Api\DiscoveryController::class, 'globalSuggestions']);
     Route::get('metadata', [\App\Http\Controllers\Api\DiscoveryController::class, 'metadata']);
@@ -50,11 +53,11 @@ Route::prefix('products')->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('hotel/bookings')->group(function () {
-    Route::post('quote', [\App\Http\Controllers\Api\HotelBookingController::class, 'quote']);
-    Route::post('/', [\App\Http\Controllers\Api\HotelBookingController::class, 'store']);
+    Route::post('quote', [\App\Http\Controllers\Api\HotelBookingController::class, 'quote'])->middleware('maintenance.transactions');
+    Route::post('/', [\App\Http\Controllers\Api\HotelBookingController::class, 'store'])->middleware('maintenance.transactions');
     Route::get('/', [\App\Http\Controllers\Api\HotelBookingController::class, 'index']);
     Route::get('{booking}', [\App\Http\Controllers\Api\HotelBookingController::class, 'show']);
-    Route::post('{booking}/pay', [\App\Http\Controllers\Api\HotelBookingController::class, 'pay']);
+    Route::post('{booking}/pay', [\App\Http\Controllers\Api\HotelBookingController::class, 'pay'])->middleware('maintenance.transactions');
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\HotelBookingController::class, 'cancel']);
     Route::get('{booking}/invoice', [\App\Http\Controllers\Api\HotelBookingController::class, 'invoice']);
 });
@@ -74,6 +77,11 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('push')->group(function 
 
 Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::put('/', [\App\Http\Controllers\Api\ProfileController::class, 'update']);
+    Route::get('addresses', [\App\Http\Controllers\Api\ProfileController::class, 'addresses']);
+    Route::post('addresses', [\App\Http\Controllers\Api\ProfileController::class, 'storeAddress']);
+    Route::put('addresses/{address}', [\App\Http\Controllers\Api\ProfileController::class, 'updateAddress']);
+    Route::post('addresses/{address}/default', [\App\Http\Controllers\Api\ProfileController::class, 'setDefaultAddress']);
+    Route::delete('addresses/{address}', [\App\Http\Controllers\Api\ProfileController::class, 'destroyAddress']);
     Route::post('password/otp', [\App\Http\Controllers\Api\ProfileController::class, 'sendPasswordOtp']);
     Route::put('password', [\App\Http\Controllers\Api\ProfileController::class, 'updatePassword']);
     Route::delete('/', [\App\Http\Controllers\Api\ProfileController::class, 'destroy']);
@@ -83,45 +91,59 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('admin')->group(function
     Route::post('notifications', [\App\Http\Controllers\Api\AdminNotificationController::class, 'store']);
 });
 
+Route::middleware(['auth:sanctum', 'verified'])->prefix('affiliate')->group(function () {
+    Route::get('overview', [\App\Http\Controllers\Api\AffiliateController::class, 'overview']);
+    Route::get('destinations', [\App\Http\Controllers\Api\AffiliateController::class, 'destinations']);
+    Route::post('register', [\App\Http\Controllers\Api\AffiliateController::class, 'register']);
+    Route::get('profile', [\App\Http\Controllers\Api\AffiliateController::class, 'profile']);
+    Route::put('profile', [\App\Http\Controllers\Api\AffiliateController::class, 'updateProfile']);
+    Route::get('links', [\App\Http\Controllers\Api\AffiliateController::class, 'links']);
+    Route::post('links', [\App\Http\Controllers\Api\AffiliateController::class, 'createLink']);
+    Route::get('catalog', [\App\Http\Controllers\Api\AffiliateController::class, 'catalog']);
+    Route::get('commissions', [\App\Http\Controllers\Api\AffiliateController::class, 'commissions']);
+    Route::get('payouts', [\App\Http\Controllers\Api\AffiliateController::class, 'payouts']);
+    Route::post('payouts', [\App\Http\Controllers\Api\AffiliateController::class, 'requestPayout']);
+});
+
 Route::middleware(['auth:sanctum', 'verified'])->prefix('reviews')->group(function () {
     Route::get('/', [\App\Http\Controllers\Api\ReviewController::class, 'index']);
     Route::post('/', [\App\Http\Controllers\Api\ReviewController::class, 'store']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/bookings')->group(function () {
-    Route::post('quote', [\App\Http\Controllers\Api\WisataBookingController::class, 'quote']);
-    Route::post('/', [\App\Http\Controllers\Api\WisataBookingController::class, 'store']);
+    Route::post('quote', [\App\Http\Controllers\Api\WisataBookingController::class, 'quote'])->middleware('maintenance.transactions');
+    Route::post('/', [\App\Http\Controllers\Api\WisataBookingController::class, 'store'])->middleware('maintenance.transactions');
     Route::get('/', [\App\Http\Controllers\Api\WisataBookingController::class, 'index']);
     Route::get('{booking}', [\App\Http\Controllers\Api\WisataBookingController::class, 'show']);
-    Route::post('{booking}/pay', [\App\Http\Controllers\Api\WisataBookingController::class, 'pay']);
+    Route::post('{booking}/pay', [\App\Http\Controllers\Api\WisataBookingController::class, 'pay'])->middleware('maintenance.transactions');
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\WisataBookingController::class, 'cancel']);
     Route::get('{booking}/ticket', [\App\Http\Controllers\Api\WisataBookingController::class, 'ticket']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('events/bookings')->group(function () {
-    Route::post('quote', [\App\Http\Controllers\Api\EventBookingController::class, 'quote']);
-    Route::post('/', [\App\Http\Controllers\Api\EventBookingController::class, 'store']);
+    Route::post('quote', [\App\Http\Controllers\Api\EventBookingController::class, 'quote'])->middleware('maintenance.transactions');
+    Route::post('/', [\App\Http\Controllers\Api\EventBookingController::class, 'store'])->middleware('maintenance.transactions');
     Route::get('/', [\App\Http\Controllers\Api\EventBookingController::class, 'index']);
     Route::get('{booking}', [\App\Http\Controllers\Api\EventBookingController::class, 'show']);
-    Route::post('{booking}/pay', [\App\Http\Controllers\Api\EventBookingController::class, 'pay']);
+    Route::post('{booking}/pay', [\App\Http\Controllers\Api\EventBookingController::class, 'pay'])->middleware('maintenance.transactions');
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\EventBookingController::class, 'cancel']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('special-programs/bookings')->group(function () {
-    Route::post('quote', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'quote']);
-    Route::post('/', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'store']);
+    Route::post('quote', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'quote'])->middleware('maintenance.transactions');
+    Route::post('/', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'store'])->middleware('maintenance.transactions');
     Route::get('/', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'index']);
     Route::get('{booking}', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'show']);
-    Route::post('{booking}/pay', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'pay']);
+    Route::post('{booking}/pay', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'pay'])->middleware('maintenance.transactions');
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\SpecialProgramBookingController::class, 'cancel']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('souvenir/orders')->group(function () {
-    Route::post('quote', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'quote']);
-    Route::post('/', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'store']);
+    Route::post('quote', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'quote'])->middleware('maintenance.transactions');
+    Route::post('/', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'store'])->middleware('maintenance.transactions');
     Route::get('/', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'index']);
     Route::get('{order}', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'show']);
-    Route::post('{order}/pay', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'pay']);
+    Route::post('{order}/pay', [\App\Http\Controllers\Api\SouvenirBookingController::class, 'pay'])->middleware('maintenance.transactions');
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('souvenir/cart')->group(function () {
@@ -133,11 +155,11 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('souvenir/cart')->group(
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('academy/bookings')->group(function () {
-    Route::post('quote', [\App\Http\Controllers\Api\AcademyBookingController::class, 'quote']);
-    Route::post('/', [\App\Http\Controllers\Api\AcademyBookingController::class, 'store']);
+    Route::post('quote', [\App\Http\Controllers\Api\AcademyBookingController::class, 'quote'])->middleware('maintenance.transactions');
+    Route::post('/', [\App\Http\Controllers\Api\AcademyBookingController::class, 'store'])->middleware('maintenance.transactions');
     Route::get('/', [\App\Http\Controllers\Api\AcademyBookingController::class, 'index']);
     Route::get('{booking}', [\App\Http\Controllers\Api\AcademyBookingController::class, 'show']);
-    Route::post('{booking}/pay', [\App\Http\Controllers\Api\AcademyBookingController::class, 'pay']);
+    Route::post('{booking}/pay', [\App\Http\Controllers\Api\AcademyBookingController::class, 'pay'])->middleware('maintenance.transactions');
     Route::post('{booking}/cancel', [\App\Http\Controllers\Api\AcademyBookingController::class, 'cancel']);
     Route::get('{booking}/ticket', [\App\Http\Controllers\Api\AcademyBookingController::class, 'ticket']);
     Route::get('{booking}/qr', [\App\Http\Controllers\Api\AcademyBookingController::class, 'qr']);

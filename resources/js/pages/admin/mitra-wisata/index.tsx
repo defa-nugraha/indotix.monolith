@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import InputError from '@/components/input-error';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import Swal from 'sweetalert2';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -81,6 +88,63 @@ export default function AdminMitraWisataIndex({
         });
     };
 
+    const handlePayout = async (
+        row: MitraRow,
+        action: 'approve' | 'reject',
+    ) => {
+        const result =
+            action === 'approve'
+                ? await Swal.fire({
+                      title: 'Setujui payout mitra wisata?',
+                      text: `Rekening payout ${row.name} akan diverifikasi.`,
+                      icon: 'question',
+                      showCancelButton: true,
+                      confirmButtonText: 'Setujui',
+                      cancelButtonText: 'Batal',
+                  })
+                : await Swal.fire({
+                      title: 'Tolak payout mitra wisata?',
+                      input: 'textarea',
+                      inputLabel: 'Alasan penolakan',
+                      inputPlaceholder:
+                          'Tulis alasan agar mitra bisa memperbaiki data payout.',
+                      showCancelButton: true,
+                      confirmButtonText: 'Tolak',
+                      cancelButtonText: 'Batal',
+                      inputValidator: (value: string | null) => {
+                          if (!value) {
+                              return 'Alasan penolakan wajib diisi.';
+                          }
+                          return null;
+                      },
+                  });
+
+        if (!result.isConfirmed) return;
+
+        router.post(
+            `/admin/mitra-wisata/${row.id}/payout`,
+            {
+                action,
+                reason: action === 'reject' ? result.value : null,
+            },
+            {
+                preserveScroll: true,
+                onSuccess: () =>
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: 'Status payout diperbarui.',
+                        icon: 'success',
+                    }),
+                onError: () =>
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: 'Tidak dapat memperbarui status payout.',
+                        icon: 'error',
+                    }),
+            },
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Mitra Wisata">
@@ -93,23 +157,28 @@ export default function AdminMitraWisataIndex({
                 <section className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Mitra Wisata
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
                                 Review pendaftaran destinasi wisata
                             </h1>
                             <p className="text-sm text-slate-600">
-                                Verifikasi destinasi, dokumen, dan status payout mitra wisata.
+                                Verifikasi destinasi, dokumen, dan status payout
+                                mitra wisata.
                             </p>
                         </div>
                         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-sky-600 text-white hover:bg-sky-700">Tambah Mitra Wisata</Button>
+                                <Button className="bg-sky-600 text-white hover:bg-sky-700">
+                                    Tambah Mitra Wisata
+                                </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-xl">
                                 <DialogHeader>
-                                    <DialogTitle>Tambah Mitra Wisata</DialogTitle>
+                                    <DialogTitle>
+                                        Tambah Mitra Wisata
+                                    </DialogTitle>
                                 </DialogHeader>
                                 <form
                                     className="grid gap-4"
@@ -125,76 +194,158 @@ export default function AdminMitraWisataIndex({
                                     }}
                                 >
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Nama</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Nama
+                                        </label>
                                         <input
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.name}
-                                            onChange={(event) => createForm.setData('name', event.target.value)}
+                                            onChange={(event) =>
+                                                createForm.setData(
+                                                    'name',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={createForm.errors.name} />
+                                        <InputError
+                                            message={createForm.errors.name}
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Email</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Email
+                                        </label>
                                         <input
                                             type="email"
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.email}
-                                            onChange={(event) => createForm.setData('email', event.target.value)}
+                                            onChange={(event) =>
+                                                createForm.setData(
+                                                    'email',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={createForm.errors.email} />
+                                        <InputError
+                                            message={createForm.errors.email}
+                                        />
                                     </div>
                                     <div className="grid gap-2 md:grid-cols-2">
                                         <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Nomor HP
+                                            </label>
                                             <input
                                                 className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                                 value={createForm.data.phone}
-                                                onChange={(event) => createForm.setData('phone', event.target.value)}
+                                                onChange={(event) =>
+                                                    createForm.setData(
+                                                        'phone',
+                                                        event.target.value,
+                                                    )
+                                                }
                                             />
-                                            <InputError message={createForm.errors.phone} />
+                                            <InputError
+                                                message={
+                                                    createForm.errors.phone
+                                                }
+                                            />
                                         </div>
                                         <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">Password</label>
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Password
+                                            </label>
                                             <input
                                                 type="password"
                                                 className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                                 value={createForm.data.password}
-                                                onChange={(event) => createForm.setData('password', event.target.value)}
+                                                onChange={(event) =>
+                                                    createForm.setData(
+                                                        'password',
+                                                        event.target.value,
+                                                    )
+                                                }
                                                 placeholder="Kosongkan untuk auto"
                                             />
-                                            <InputError message={createForm.errors.password} />
+                                            <InputError
+                                                message={
+                                                    createForm.errors.password
+                                                }
+                                            />
                                         </div>
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Nama Destinasi (opsional)</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Nama Destinasi (opsional)
+                                        </label>
                                         <input
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                            value={createForm.data.destination_name}
-                                            onChange={(event) => createForm.setData('destination_name', event.target.value)}
+                                            value={
+                                                createForm.data.destination_name
+                                            }
+                                            onChange={(event) =>
+                                                createForm.setData(
+                                                    'destination_name',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={createForm.errors.destination_name} />
+                                        <InputError
+                                            message={
+                                                createForm.errors
+                                                    .destination_name
+                                            }
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Kategori Destinasi</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Kategori Destinasi
+                                        </label>
                                         <select
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                            value={createForm.data.destination_type}
-                                            onChange={(event) => createForm.setData('destination_type', event.target.value)}
+                                            value={
+                                                createForm.data.destination_type
+                                            }
+                                            onChange={(event) =>
+                                                createForm.setData(
+                                                    'destination_type',
+                                                    event.target.value,
+                                                )
+                                            }
                                         >
                                             <option value="">Pilih</option>
                                             <option value="alam">Alam</option>
-                                            <option value="edukasi">Edukasi</option>
-                                            <option value="budaya">Budaya</option>
-                                            <option value="wahana">Wahana</option>
+                                            <option value="edukasi">
+                                                Edukasi
+                                            </option>
+                                            <option value="budaya">
+                                                Budaya
+                                            </option>
+                                            <option value="wahana">
+                                                Wahana
+                                            </option>
                                             <option value="event">Event</option>
                                         </select>
-                                        <InputError message={createForm.errors.destination_type} />
+                                        <InputError
+                                            message={
+                                                createForm.errors
+                                                    .destination_type
+                                            }
+                                        />
                                     </div>
                                     <DialogFooter className="gap-2 sm:justify-end">
-                                        <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setCreateOpen(false)}
+                                        >
                                             Batal
                                         </Button>
-                                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={createForm.processing}>
+                                        <Button
+                                            type="submit"
+                                            className="bg-sky-600 text-white hover:bg-sky-700"
+                                            disabled={createForm.processing}
+                                        >
                                             Simpan
                                         </Button>
                                     </DialogFooter>
@@ -205,9 +356,12 @@ export default function AdminMitraWisataIndex({
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <form onSubmit={applyFilters} className="grid gap-4 md:grid-cols-4">
+                    <form
+                        onSubmit={applyFilters}
+                        className="grid gap-4 md:grid-cols-4"
+                    >
                         <div className="grid gap-2 md:col-span-3">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Cari mitra
                             </label>
                             <input
@@ -218,7 +372,7 @@ export default function AdminMitraWisataIndex({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Status akun
                             </label>
                             <select
@@ -235,7 +389,7 @@ export default function AdminMitraWisataIndex({
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Status verifikasi
                             </label>
                             <select
@@ -252,7 +406,7 @@ export default function AdminMitraWisataIndex({
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Status payout
                             </label>
                             <select
@@ -269,7 +423,10 @@ export default function AdminMitraWisataIndex({
                             </select>
                         </div>
                         <div className="grid items-end">
-                            <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                            <Button
+                                type="submit"
+                                className="bg-sky-600 text-white hover:bg-sky-700"
+                            >
                                 Terapkan filter
                             </Button>
                         </div>
@@ -279,42 +436,128 @@ export default function AdminMitraWisataIndex({
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
-                                    <th className="px-4 py-3 text-left">Mitra</th>
-                                    <th className="px-4 py-3 text-left">Destinasi</th>
-                                    <th className="px-4 py-3 text-left">Lokasi</th>
-                                    <th className="px-4 py-3 text-left">Verifikasi</th>
-                                    <th className="px-4 py-3 text-left">Akun</th>
-                                    <th className="px-4 py-3 text-left">Payout</th>
-                                    <th className="px-4 py-3 text-left">Aksi</th>
+                                    <th className="px-4 py-3 text-left">
+                                        Mitra
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Destinasi
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Lokasi
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Verifikasi
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Akun
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Payout
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {mitra.data.map((row) => (
-                                    <tr key={row.id} className="border-t border-slate-100">
+                                    <tr
+                                        key={row.id}
+                                        className="border-t border-slate-100"
+                                    >
                                         <td className="px-4 py-3">
-                                            <div className="font-semibold text-slate-900">{row.name}</div>
-                                            <div className="text-xs text-slate-500">{row.email}</div>
+                                            <div className="font-semibold text-slate-900">
+                                                {row.name}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                {row.email}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="text-sm text-slate-700">{row.destination_name ?? 'Belum diisi'}</div>
-                                            <div className="text-xs text-slate-500">{row.destination_type ?? '-'}</div>
+                                            <div className="text-sm text-slate-700">
+                                                {row.destination_name ??
+                                                    'Belum diisi'}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                {row.destination_type ?? '-'}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="text-sm text-slate-700">{row.city_name ?? 'Belum diisi'}</div>
-                                            <div className="text-xs text-slate-500">{row.province_name ?? '-'}</div>
+                                            <div className="text-sm text-slate-700">
+                                                {row.city_name ?? 'Belum diisi'}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                {row.province_name ?? '-'}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge className={statusTone(row.verification_status)}>{row.verification_status}</Badge>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <Badge className={row.is_suspended ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}>
-                                                {row.is_suspended ? 'suspended' : 'active'}
+                                            <Badge
+                                                className={statusTone(
+                                                    row.verification_status,
+                                                )}
+                                            >
+                                                {row.verification_status}
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge className={statusTone(row.payout_status)}>{row.payout_status}</Badge>
+                                            <Badge
+                                                className={
+                                                    row.is_suspended
+                                                        ? 'bg-red-50 text-red-700'
+                                                        : 'bg-emerald-50 text-emerald-700'
+                                                }
+                                            >
+                                                {row.is_suspended
+                                                    ? 'suspended'
+                                                    : 'active'}
+                                            </Badge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex flex-col gap-2">
+                                                <Badge
+                                                    className={statusTone(
+                                                        row.payout_status,
+                                                    )}
+                                                >
+                                                    {row.payout_status}
+                                                </Badge>
+                                                {[
+                                                    'pending',
+                                                    'rejected',
+                                                ].includes(
+                                                    row.payout_status,
+                                                ) && (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            className="h-8 bg-emerald-600 px-3 text-xs text-white hover:bg-emerald-700"
+                                                            onClick={() =>
+                                                                handlePayout(
+                                                                    row,
+                                                                    'approve',
+                                                                )
+                                                            }
+                                                        >
+                                                            Verifikasi Payout
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="h-8 border-red-200 px-3 text-xs text-red-600 hover:bg-red-50"
+                                                            onClick={() =>
+                                                                handlePayout(
+                                                                    row,
+                                                                    'reject',
+                                                                )
+                                                            }
+                                                        >
+                                                            Tolak
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex flex-wrap gap-2">
@@ -323,7 +566,14 @@ export default function AdminMitraWisataIndex({
                                                     variant="outline"
                                                     className="border-sky-200 text-slate-700 hover:bg-sky-50"
                                                 >
-                                                    <Link href={`/admin/mitra-wisata/${row.id}`}>Detail</Link>
+                                                    <Link
+                                                        href={`/admin/mitra-wisata/${row.id}`}
+                                                    >
+                                                        {row.verification_status ===
+                                                        'verified'
+                                                            ? 'Detail'
+                                                            : 'Validasi Dokumen'}
+                                                    </Link>
                                                 </Button>
                                                 <Button
                                                     size="sm"
@@ -331,29 +581,48 @@ export default function AdminMitraWisataIndex({
                                                     onClick={() => {
                                                         Swal.fire({
                                                             icon: 'warning',
-                                                            title: 'Hapus mitra wisata?',
-                                                            text: 'Mitra akan dihapus permanen jika tidak punya data terkait.',
+                                                            title: 'Hapus mitra wisata dan semua datanya?',
+                                                            html: `Mitra <b>${row.name}</b> akan dihapus permanen. Semua destinasi, tiket, booking, payout, komisi, afiliasi, review, dispute, staff, dokumen, dan file upload terkait ikut dihapus.`,
                                                             showCancelButton: true,
-                                                            confirmButtonText: 'Hapus',
-                                                            cancelButtonText: 'Batal',
+                                                            confirmButtonText:
+                                                                'Hapus permanen',
+                                                            cancelButtonText:
+                                                                'Batal',
+                                                            confirmButtonColor:
+                                                                '#dc2626',
                                                         }).then((result) => {
-                                                            if (result.isConfirmed) {
-                                                                router.delete(`/admin/mitra-wisata/${row.id}`, {
-                                                                    onSuccess: () => {
-                                                                        Swal.fire({
-                                                                            icon: 'success',
-                                                                            title: 'Terhapus',
-                                                                            text: 'Mitra wisata dihapus.',
-                                                                        });
+                                                            if (
+                                                                result.isConfirmed
+                                                            ) {
+                                                                router.delete(
+                                                                    `/admin/mitra-wisata/${row.id}`,
+                                                                    {
+                                                                        onSuccess:
+                                                                            () => {
+                                                                                Swal.fire(
+                                                                                    {
+                                                                                        icon: 'success',
+                                                                                        title: 'Terhapus',
+                                                                                        text: 'Mitra wisata dihapus.',
+                                                                                    },
+                                                                                );
+                                                                            },
+                                                                        onError:
+                                                                            (
+                                                                                errors,
+                                                                            ) => {
+                                                                                Swal.fire(
+                                                                                    {
+                                                                                        icon: 'error',
+                                                                                        title: 'Gagal',
+                                                                                        text:
+                                                                                            errors.mitra ??
+                                                                                            'Mitra wisata gagal dihapus.',
+                                                                                    },
+                                                                                );
+                                                                            },
                                                                     },
-                                                                    onError: (errors) => {
-                                                                        Swal.fire({
-                                                                            icon: 'error',
-                                                                            title: 'Gagal',
-                                                                            text: errors.mitra ?? 'Mitra wisata gagal dihapus.',
-                                                                        });
-                                                                    },
-                                                                });
+                                                                );
                                                             }
                                                         });
                                                     }}
@@ -366,7 +635,10 @@ export default function AdminMitraWisataIndex({
                                 ))}
                                 {mitra.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                                        <td
+                                            colSpan={7}
+                                            className="px-4 py-8 text-center text-slate-500"
+                                        >
                                             Belum ada mitra wisata.
                                         </td>
                                     </tr>

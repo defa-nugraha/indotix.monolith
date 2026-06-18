@@ -21,7 +21,7 @@ class PublicBlogController extends Controller
             })
             ->orderByDesc('published_at')
             ->orderByDesc('id')
-            ->paginate(12)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->through(function (BlogPost $post) {
                 return [
                     'id' => $post->id,

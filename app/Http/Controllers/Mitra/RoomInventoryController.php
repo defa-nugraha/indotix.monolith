@@ -43,7 +43,7 @@ class RoomInventoryController extends Controller
         }
 
         $inventories = $query
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (RoomInventory $inventory) => $this->toPayload($inventory));
 

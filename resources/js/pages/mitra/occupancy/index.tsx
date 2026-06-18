@@ -56,7 +56,7 @@ export default function MitraOccupancyIndex({ hotelOptions, selectedHotelId, mon
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Kalender Okupansi</p>
+                            <p className="text-xs font-semibold uppercase text-sky-600">Kalender Okupansi</p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">Pantau kamar terisi per hari</h1>
                             <p className="text-sm text-slate-500">Visual cepat untuk mengatur harga dan ketersediaan.</p>
                         </div>
@@ -70,7 +70,7 @@ export default function MitraOccupancyIndex({ hotelOptions, selectedHotelId, mon
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form onSubmit={applyFilters} className="grid gap-4 md:grid-cols-3">
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Hotel</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Hotel</label>
                             <select
                                 name="hotel_id"
                                 defaultValue={selectedHotelId ?? ''}
@@ -85,7 +85,7 @@ export default function MitraOccupancyIndex({ hotelOptions, selectedHotelId, mon
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Bulan</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Bulan</label>
                             <input
                                 type="month"
                                 name="month"

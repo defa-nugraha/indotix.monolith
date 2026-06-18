@@ -31,7 +31,7 @@ class SpecialProgramBookingController extends Controller
             $query->whereDate('visit_date', $date);
         }
 
-        $bookings = $query->paginate(20)
+        $bookings = $query->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(function (SpecialProgramBooking $booking) {
                 return [

@@ -5,7 +5,14 @@ import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/input-error';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import Swal from 'sweetalert2';
 
 type Organizer = {
@@ -18,7 +25,10 @@ type Organizer = {
 };
 
 type Props = {
-    organizers: { data: Organizer[]; links: Array<{ url: string | null; label: string; active: boolean }> };
+    organizers: {
+        data: Organizer[];
+        links: Array<{ url: string | null; label: string; active: boolean }>;
+    };
     filters: { status?: string };
 };
 
@@ -44,85 +54,153 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <h1 className="text-2xl font-semibold text-slate-900">Mitra Event (EO)</h1>
-                            <p className="text-sm text-slate-500">Review dan approval mitra event.</p>
+                            <h1 className="text-2xl font-semibold text-slate-900">
+                                Mitra Event (EO)
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                Review dan approval mitra event.
+                            </p>
                         </div>
                         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-sky-600 text-white hover:bg-sky-700">Tambah Mitra Event</Button>
+                                <Button className="bg-sky-600 text-white hover:bg-sky-700">
+                                    Tambah Mitra Event
+                                </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-xl">
                                 <DialogHeader>
-                                    <DialogTitle>Tambah Mitra Event</DialogTitle>
+                                    <DialogTitle>
+                                        Tambah Mitra Event
+                                    </DialogTitle>
                                 </DialogHeader>
                                 <form
                                     className="grid gap-4"
                                     onSubmit={(event) => {
                                         event.preventDefault();
-                                        createForm.post('/admin/events/organizers', {
-                                            preserveScroll: true,
-                                            onSuccess: () => {
-                                                createForm.reset();
-                                                setCreateOpen(false);
+                                        createForm.post(
+                                            '/admin/events/organizers',
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    createForm.reset();
+                                                    setCreateOpen(false);
+                                                },
                                             },
-                                        });
+                                        );
                                     }}
                                 >
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Nama Penanggung Jawab</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Nama Penanggung Jawab
+                                        </label>
                                         <input
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.name}
-                                            onChange={(event) => createForm.setData('name', event.target.value)}
+                                            onChange={(event) =>
+                                                createForm.setData(
+                                                    'name',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={createForm.errors.name} />
+                                        <InputError
+                                            message={createForm.errors.name}
+                                        />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Email</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Email
+                                        </label>
                                         <input
                                             type="email"
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.email}
-                                            onChange={(event) => createForm.setData('email', event.target.value)}
+                                            onChange={(event) =>
+                                                createForm.setData(
+                                                    'email',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={createForm.errors.email} />
+                                        <InputError
+                                            message={createForm.errors.email}
+                                        />
                                     </div>
                                     <div className="grid gap-2 md:grid-cols-2">
                                         <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Nomor HP
+                                            </label>
                                             <input
                                                 className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                                 value={createForm.data.phone}
-                                                onChange={(event) => createForm.setData('phone', event.target.value)}
+                                                onChange={(event) =>
+                                                    createForm.setData(
+                                                        'phone',
+                                                        event.target.value,
+                                                    )
+                                                }
                                             />
-                                            <InputError message={createForm.errors.phone} />
+                                            <InputError
+                                                message={
+                                                    createForm.errors.phone
+                                                }
+                                            />
                                         </div>
                                         <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">Password</label>
+                                            <label className="text-sm font-semibold text-slate-700">
+                                                Password
+                                            </label>
                                             <input
                                                 type="password"
                                                 className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                                 value={createForm.data.password}
-                                                onChange={(event) => createForm.setData('password', event.target.value)}
+                                                onChange={(event) =>
+                                                    createForm.setData(
+                                                        'password',
+                                                        event.target.value,
+                                                    )
+                                                }
                                                 placeholder="Kosongkan untuk auto"
                                             />
-                                            <InputError message={createForm.errors.password} />
+                                            <InputError
+                                                message={
+                                                    createForm.errors.password
+                                                }
+                                            />
                                         </div>
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">Nama EO (opsional)</label>
+                                        <label className="text-sm font-semibold text-slate-700">
+                                            Nama EO (opsional)
+                                        </label>
                                         <input
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.eo_name}
-                                            onChange={(event) => createForm.setData('eo_name', event.target.value)}
+                                            onChange={(event) =>
+                                                createForm.setData(
+                                                    'eo_name',
+                                                    event.target.value,
+                                                )
+                                            }
                                         />
-                                        <InputError message={createForm.errors.eo_name} />
+                                        <InputError
+                                            message={createForm.errors.eo_name}
+                                        />
                                     </div>
                                     <DialogFooter className="gap-2 sm:justify-end">
-                                        <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => setCreateOpen(false)}
+                                        >
                                             Batal
                                         </Button>
-                                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={createForm.processing}>
+                                        <Button
+                                            type="submit"
+                                            className="bg-sky-600 text-white hover:bg-sky-700"
+                                            disabled={createForm.processing}
+                                        >
                                             Simpan
                                         </Button>
                                     </DialogFooter>
@@ -135,16 +213,27 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                         onSubmit={(event) => {
                             event.preventDefault();
                             const data = new FormData(event.currentTarget);
-                            router.get('/admin/events/organizers', Object.fromEntries(data.entries()), { preserveState: true });
+                            router.get(
+                                '/admin/events/organizers',
+                                Object.fromEntries(data.entries()),
+                                { preserveState: true },
+                            );
                         }}
                     >
-                        <select name="status" defaultValue={filters.status ?? ''} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                        <select
+                            name="status"
+                            defaultValue={filters.status ?? ''}
+                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                        >
                             <option value="">Semua status</option>
                             <option value="pending">Pending</option>
                             <option value="verified">Verified</option>
                             <option value="suspended">Suspended</option>
                         </select>
-                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                        <Button
+                            type="submit"
+                            className="bg-sky-600 text-white hover:bg-sky-700"
+                        >
                             Filter
                         </Button>
                     </form>
@@ -153,73 +242,123 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-hidden rounded-2xl border border-slate-100">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
                                     <th className="px-4 py-3 text-left">EO</th>
-                                    <th className="px-4 py-3 text-left">Kontak</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
-                                    <th className="px-4 py-3 text-left">Aksi</th>
+                                    <th className="px-4 py-3 text-left">
+                                        Kontak
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Status
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {organizers.data.map((item) => (
-                                    <tr key={item.id} className="border-t border-slate-100">
+                                    <tr
+                                        key={item.id}
+                                        className="border-t border-slate-100"
+                                    >
                                         <td className="px-4 py-3">
-                                            <div className="font-semibold text-slate-900">{item.name}</div>
+                                            <div className="font-semibold text-slate-900">
+                                                {item.name}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="text-slate-600">{item.email ?? '-'}</div>
-                                            <div className="text-xs text-slate-400">{item.phone ?? '-'}</div>
+                                            <div className="text-slate-600">
+                                                {item.email ?? '-'}
+                                            </div>
+                                            <div className="text-xs text-slate-400">
+                                                {item.phone ?? '-'}
+                                            </div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Badge className={item.status === 'verified' ? 'bg-emerald-50 text-emerald-700' : item.status === 'suspended' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'}>
+                                            <Badge
+                                                className={
+                                                    item.status === 'verified'
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : item.status ===
+                                                            'suspended'
+                                                          ? 'bg-rose-50 text-rose-700'
+                                                          : 'bg-amber-50 text-amber-700'
+                                                }
+                                            >
                                                 {item.status}
                                             </Badge>
                                             {item.verification_status && (
                                                 <div className="mt-1 text-xs text-slate-400">
-                                                    Verifikasi: {item.verification_status}
+                                                    Verifikasi:{' '}
+                                                    {item.verification_status}
                                                 </div>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex flex-wrap gap-2">
-                                                <Link
-                                                    href={`/admin/events/organizers/${item.id}`}
-                                                    className="text-sky-600 hover:underline"
+                                                <Button
+                                                    asChild
+                                                    variant="outline"
+                                                    className="border-sky-200 text-slate-700 hover:bg-sky-50"
                                                 >
-                                                    Detail
-                                                </Link>
+                                                    <Link
+                                                        href={`/admin/events/organizers/${item.id}`}
+                                                    >
+                                                        {item.status ===
+                                                        'verified'
+                                                            ? 'Detail'
+                                                            : 'Validasi Dokumen'}
+                                                    </Link>
+                                                </Button>
                                                 <Button
                                                     size="sm"
                                                     variant="destructive"
                                                     onClick={() => {
                                                         Swal.fire({
                                                             icon: 'warning',
-                                                            title: 'Hapus mitra event?',
-                                                            text: 'Mitra akan dihapus permanen jika tidak punya data terkait.',
+                                                            title: 'Hapus mitra event dan semua datanya?',
+                                                            html: `Mitra <b>${item.name}</b> akan dihapus permanen. Semua event, tiket, booking, pembayaran, attendee, scan, refund, dispute, komisi, settlement, staff, dokumen, dan file upload terkait ikut dihapus.`,
                                                             showCancelButton: true,
-                                                            confirmButtonText: 'Hapus',
-                                                            cancelButtonText: 'Batal',
+                                                            confirmButtonText:
+                                                                'Hapus permanen',
+                                                            cancelButtonText:
+                                                                'Batal',
+                                                            confirmButtonColor:
+                                                                '#dc2626',
                                                         }).then((result) => {
-                                                            if (result.isConfirmed) {
-                                                                router.delete(`/admin/events/organizers/${item.id}`, {
-                                                                    onSuccess: () => {
-                                                                        Swal.fire({
-                                                                            icon: 'success',
-                                                                            title: 'Terhapus',
-                                                                            text: 'Mitra event dihapus.',
-                                                                        });
+                                                            if (
+                                                                result.isConfirmed
+                                                            ) {
+                                                                router.delete(
+                                                                    `/admin/events/organizers/${item.id}`,
+                                                                    {
+                                                                        onSuccess:
+                                                                            () => {
+                                                                                Swal.fire(
+                                                                                    {
+                                                                                        icon: 'success',
+                                                                                        title: 'Terhapus',
+                                                                                        text: 'Mitra event dihapus.',
+                                                                                    },
+                                                                                );
+                                                                            },
+                                                                        onError:
+                                                                            (
+                                                                                errors,
+                                                                            ) => {
+                                                                                Swal.fire(
+                                                                                    {
+                                                                                        icon: 'error',
+                                                                                        title: 'Gagal',
+                                                                                        text:
+                                                                                            errors.organizer ??
+                                                                                            'Mitra event gagal dihapus.',
+                                                                                    },
+                                                                                );
+                                                                            },
                                                                     },
-                                                                    onError: (errors) => {
-                                                                        Swal.fire({
-                                                                            icon: 'error',
-                                                                            title: 'Gagal',
-                                                                            text:
-                                                                                errors.organizer ??
-                                                                                'Mitra event gagal dihapus.',
-                                                                        });
-                                                                    },
-                                                                });
+                                                                );
                                                             }
                                                         });
                                                     }}
@@ -232,7 +371,10 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                                 ))}
                                 {organizers.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={4} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td
+                                            colSpan={4}
+                                            className="px-4 py-8 text-center text-sm text-slate-500"
+                                        >
                                             Belum ada data EO.
                                         </td>
                                     </tr>

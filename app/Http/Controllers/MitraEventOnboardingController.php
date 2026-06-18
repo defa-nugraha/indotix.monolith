@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MitraEventOnboarding;
 use App\Services\MediaCompressionService;
+use App\Support\CommissionInfo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -33,6 +34,7 @@ class MitraEventOnboardingController extends Controller
 
         return Inertia::render('mitra/event-onboarding', [
             'onboarding' => $onboarding,
+            'commissionInfo' => CommissionInfo::event(),
             'status' => $request->session()->get('status'),
         ]);
     }

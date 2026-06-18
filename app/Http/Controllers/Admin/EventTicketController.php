@@ -25,7 +25,7 @@ class EventTicketController extends Controller
         }
 
         return Inertia::render('admin/events/tickets/index', [
-            'tickets' => $query->paginate(20)->withQueryString(),
+            'tickets' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'events' => Event::query()
                 ->where('event_type', 'event')
                 ->select('id', 'title')

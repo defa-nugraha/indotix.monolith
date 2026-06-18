@@ -1,8 +1,18 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import InputError from '@/components/input-error';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import type { BreadcrumbItem } from '@/types';
 
 type UserRow = {
@@ -40,6 +50,41 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function AdminUsersIndex({ users, filters }: PageProps) {
+    const [createOpen, setCreateOpen] = useState(false);
+    const [editingUser, setEditingUser] = useState<UserRow | null>(null);
+    const createForm = useForm({
+        name: '',
+        email: '',
+        phone: '',
+        gender: '',
+        password: '',
+    });
+    const editForm = useForm({
+        name: '',
+        email: '',
+        phone: '',
+        gender: '',
+        password: '',
+    });
+
+    const openEdit = (user: UserRow) => {
+        setEditingUser(user);
+        editForm.clearErrors();
+        editForm.setData({
+            name: user.name,
+            email: user.email,
+            phone: user.phone ?? '',
+            gender: user.gender ?? '',
+            password: '',
+        });
+    };
+
+    const closeEdit = () => {
+        setEditingUser(null);
+        editForm.reset();
+        editForm.clearErrors();
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Kelola User" />
@@ -47,9 +92,49 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Users</p>
+                            <p className="text-xs font-semibold uppercase text-sky-600">Users</p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">Kelola User</h1>
                         </div>
+                        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+                            <DialogTrigger asChild>
+                                <Button className="bg-sky-600 text-white hover:bg-sky-700">
+                                    Tambah User
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-xl">
+                                <DialogHeader>
+                                    <DialogTitle>Tambah User</DialogTitle>
+                                </DialogHeader>
+                                <form
+                                    className="grid gap-4"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        createForm.post('/admin/users', {
+                                            preserveScroll: true,
+                                            onSuccess: () => {
+                                                createForm.reset();
+                                                setCreateOpen(false);
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Tersimpan',
+                                                    text: 'User dibuat dan email otomatis terverifikasi.',
+                                                });
+                                            },
+                                        });
+                                    }}
+                                >
+                                    <UserFormFields form={createForm} passwordLabel="Password" passwordPlaceholder="Minimal 8 karakter" />
+                                    <DialogFooter className="gap-2">
+                                        <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
+                                            Batal
+                                        </Button>
+                                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={createForm.processing}>
+                                            Simpan
+                                        </Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                     <form
                         className="mt-6 grid gap-3 md:grid-cols-[1.2fr_0.6fr_0.6fr_auto]"
@@ -92,7 +177,7 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                                 <tr>
                                     <th className="px-4 py-3 text-left">User</th>
                                     <th className="px-4 py-3 text-left">Kontak</th>
@@ -133,15 +218,24 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                                                 </Button>
                                                 <Button
                                                     size="sm"
+                                                    variant="outline"
+                                                    className="border-slate-200 text-slate-700 hover:bg-slate-50"
+                                                    onClick={() => openEdit(row)}
+                                                >
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    size="sm"
                                                     variant="destructive"
                                                     onClick={() => {
                                                         Swal.fire({
                                                             icon: 'warning',
-                                                            title: 'Hapus user?',
-                                                            text: 'User akan dihapus permanen jika tidak punya transaksi.',
+                                                            title: 'Hapus user dan semua datanya?',
+                                                            html: `User <b>${row.name}</b> akan dihapus permanen. Semua transaksi, pesanan, booking, review, alamat, notifikasi, OTP, device token, riwayat pencarian, dan chat terkait ikut dihapus.`,
                                                             showCancelButton: true,
-                                                            confirmButtonText: 'Hapus',
+                                                            confirmButtonText: 'Hapus permanen',
                                                             cancelButtonText: 'Batal',
+                                                            confirmButtonColor: '#dc2626',
                                                         }).then((result) => {
                                                             if (result.isConfirmed) {
                                                                 router.delete(`/admin/users/${row.id}`, {
@@ -181,7 +275,119 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                         </table>
                     </div>
                 </section>
+                <Dialog open={editingUser !== null} onOpenChange={(open) => !open && closeEdit()}>
+                    <DialogContent className="sm:max-w-xl">
+                        <DialogHeader>
+                            <DialogTitle>Edit User</DialogTitle>
+                        </DialogHeader>
+                        <form
+                            className="grid gap-4"
+                            onSubmit={(event) => {
+                                event.preventDefault();
+                                if (!editingUser) return;
+                                editForm.put(`/admin/users/${editingUser.id}`, {
+                                    preserveScroll: true,
+                                    onSuccess: () => {
+                                        closeEdit();
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: 'Tersimpan',
+                                            text: 'User diperbarui dan email otomatis terverifikasi.',
+                                        });
+                                    },
+                                });
+                            }}
+                        >
+                            <UserFormFields form={editForm} passwordLabel="Password baru" passwordPlaceholder="Kosongkan jika tidak diubah" />
+                            <DialogFooter className="gap-2">
+                                <Button type="button" variant="outline" onClick={closeEdit}>
+                                    Batal
+                                </Button>
+                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={editForm.processing}>
+                                    Simpan Perubahan
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
+    );
+}
+
+type UserFormShape = {
+    name: string;
+    email: string;
+    phone: string;
+    gender: string;
+    password: string;
+};
+
+function UserFormFields({
+    form,
+    passwordLabel,
+    passwordPlaceholder,
+}: {
+    form: ReturnType<typeof useForm<UserFormShape>>;
+    passwordLabel: string;
+    passwordPlaceholder: string;
+}) {
+    return (
+        <>
+            <div className="grid gap-2">
+                <label className="text-sm font-semibold text-slate-700">Nama</label>
+                <input
+                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                    value={form.data.name}
+                    onChange={(event) => form.setData('name', event.target.value)}
+                />
+                <InputError message={form.errors.name} />
+            </div>
+            <div className="grid gap-2">
+                <label className="text-sm font-semibold text-slate-700">Email</label>
+                <input
+                    type="email"
+                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                    value={form.data.email}
+                    onChange={(event) => form.setData('email', event.target.value)}
+                />
+                <InputError message={form.errors.email} />
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+                <div className="grid gap-2">
+                    <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                    <input
+                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                        value={form.data.phone}
+                        onChange={(event) => form.setData('phone', event.target.value)}
+                    />
+                    <InputError message={form.errors.phone} />
+                </div>
+                <div className="grid gap-2">
+                    <label className="text-sm font-semibold text-slate-700">Jenis Kelamin</label>
+                    <select
+                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                        value={form.data.gender}
+                        onChange={(event) => form.setData('gender', event.target.value)}
+                    >
+                        <option value="">Tidak diisi</option>
+                        <option value="male">Laki-laki</option>
+                        <option value="female">Perempuan</option>
+                    </select>
+                    <InputError message={form.errors.gender} />
+                </div>
+            </div>
+            <div className="grid gap-2">
+                <label className="text-sm font-semibold text-slate-700">{passwordLabel}</label>
+                <input
+                    type="password"
+                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                    value={form.data.password}
+                    placeholder={passwordPlaceholder}
+                    onChange={(event) => form.setData('password', event.target.value)}
+                />
+                <InputError message={form.errors.password} />
+            </div>
+        </>
     );
 }

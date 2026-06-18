@@ -35,7 +35,7 @@ export default function Register() {
                             className="h-12 w-auto"
                         />
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-700">
+                            <p className="text-xs font-semibold uppercase text-sky-700">
                                 Indotix
                             </p>
                             <p className="text-sm text-slate-500">
@@ -100,7 +100,7 @@ export default function Register() {
                 <div className="flex w-full max-w-md items-center justify-center">
                     <div className="w-full rounded-3xl border border-sky-100/80 bg-white/90 p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <div className="space-y-2 text-left">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Registrasi
                             </p>
                             <h2 className="text-2xl font-semibold text-slate-900 font-['Space_Grotesk']">
@@ -113,7 +113,7 @@ export default function Register() {
                         </div>
 
                         <div className="mt-6 space-y-3">
-                            <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                            <Label className="text-xs font-semibold uppercase text-slate-500">
                                 Jenis akun
                             </Label>
                             <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-50/80 p-2">

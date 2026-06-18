@@ -31,6 +31,7 @@ type Hotel = {
 };
 
 type FormData = {
+    _method?: string;
     vendor_id: string;
     name: string;
     description: string;
@@ -62,6 +63,8 @@ type CitySelectOption = { value: string; label: string };
 
 const textareaClass =
     'border-input placeholder:text-muted-foreground flex min-h-[96px] w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]';
+const maxImageCount = 10;
+const maxImageSize = 5 * 1024 * 1024;
 
 export default function EditHotel({
     hotel,
@@ -79,7 +82,8 @@ export default function EditHotel({
         { title: 'Edit', href: '#' },
     ];
     const [isMapOpen, setIsMapOpen] = useState(false);
-    const { data, setData, put, processing, errors, transform } = useForm<FormData>({
+    const { data, setData, post, processing, errors, transform } = useForm<FormData>({
+        _method: 'put',
         vendor_id: hotel.vendor_id ? String(hotel.vendor_id) : mitraId ? String(mitraId) : '',
         name: hotel.name ?? '',
         description: hotel.description ?? '',
@@ -102,6 +106,27 @@ export default function EditHotel({
     const handleImagesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files ? Array.from(event.target.files) : [];
         if (files.length === 0) {
+            return;
+        }
+        const oversized = files.find((file) => file.size > maxImageSize);
+        if (oversized) {
+            Swal.fire({
+                title: 'Foto terlalu besar',
+                text: 'Ukuran setiap foto hotel maksimal 5 MB.',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+            });
+            event.target.value = '';
+            return;
+        }
+        if (hotel.images.length + data.images.length + files.length > maxImageCount) {
+            Swal.fire({
+                title: 'Foto terlalu banyak',
+                text: 'Maksimal 10 foto per hotel. Hapus foto lama sebelum menambah foto baru.',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+            });
+            event.target.value = '';
             return;
         }
         setData('images', [...data.images, ...files]);
@@ -174,7 +199,7 @@ export default function EditHotel({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Data Hotel
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -202,7 +227,8 @@ export default function EditHotel({
                                 (tax) => tax.name.trim() !== '' || String(tax.rate).trim() !== '',
                             ),
                         }));
-                        put(`${basePath}/${hotel.id}`, {
+                        post(`${basePath}/${hotel.id}`, {
+                            forceFormData: true,
                             onSuccess: () => {
                                 Swal.fire({
                                     title: 'Berhasil',
@@ -339,6 +365,9 @@ export default function EditHotel({
                                 }
                                 placeholder="-6.200000"
                             />
+                            <p className="text-xs text-slate-500">
+                                Akan terisi otomatis setelah memilih lokasi lewat peta.
+                            </p>
                             <InputError message={errors.latitude} />
                         </div>
 
@@ -354,6 +383,9 @@ export default function EditHotel({
                                 }
                                 placeholder="106.816666"
                             />
+                            <p className="text-xs text-slate-500">
+                                Akan terisi otomatis setelah memilih lokasi lewat peta.
+                            </p>
                             <InputError message={errors.longitude} />
                         </div>
 
@@ -603,6 +635,9 @@ export default function EditHotel({
                             </div>
                         ) : null}
                         <InputError message={errors.images} />
+                        <p className="text-xs text-slate-400">
+                            Maksimal 10 foto, ukuran masing-masing maksimal 5 MB.
+                        </p>
                     </div>
 
                     <div className="space-y-3">

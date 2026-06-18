@@ -281,7 +281,7 @@ export default function LocationPickerModal({
 
                 <div className="grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
                     <div>
-                        <p className="text-xs uppercase tracking-wider text-slate-400">
+                        <p className="text-xs uppercase text-slate-400">
                             Latitude
                         </p>
                         <p className="font-semibold text-slate-900">
@@ -289,7 +289,7 @@ export default function LocationPickerModal({
                         </p>
                     </div>
                     <div>
-                        <p className="text-xs uppercase tracking-wider text-slate-400">
+                        <p className="text-xs uppercase text-slate-400">
                             Longitude
                         </p>
                         <p className="font-semibold text-slate-900">

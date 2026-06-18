@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class SpecialProgramBookingController extends Controller
@@ -262,6 +263,7 @@ class SpecialProgramBookingController extends Controller
 
         if ($this->isExpired($booking)) {
             $booking->update(['status' => 'expired', 'payment_status' => 'expired']);
+
             return response()->json(['message' => 'Booking sudah kedaluwarsa.'], 422);
         }
 
@@ -292,6 +294,12 @@ class SpecialProgramBookingController extends Controller
         try {
             $charge = $midtransService->snap($payload);
         } catch (\Throwable $exception) {
+            Log::warning('Midtrans special program snap payment failed', [
+                'booking_id' => $booking->id,
+                'order_id' => $orderId,
+                'message' => $exception->getMessage(),
+            ]);
+
             return response()->json(['message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.'], 500);
         }
 

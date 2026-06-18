@@ -16,7 +16,7 @@ class NotificationController extends Controller
             ->where('user_id', $request->user()->id)
             ->where('type', 'like', 'affiliate_%')
             ->latest('id')
-            ->paginate(20)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
         return Inertia::render('affiliate/notifications', [

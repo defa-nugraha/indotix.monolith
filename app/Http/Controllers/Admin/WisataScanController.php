@@ -33,7 +33,7 @@ class WisataScanController extends Controller
             ->all();
 
         $scans = $query->latest('scanned_at')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(function (WisataTicketScan $scan) {
                 $isDouble = in_array($scan->wisata_booking_id, $doubleScanBookingIds, true);

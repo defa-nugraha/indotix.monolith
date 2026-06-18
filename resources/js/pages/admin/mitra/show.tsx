@@ -88,7 +88,7 @@ const Preview = ({ label, path }: { label: string; path?: string | null }) => {
                 </div>
             )}
             <div className="min-w-0">
-                <p className="text-[11px] font-semibold tracking-[0.15em] text-slate-400 uppercase">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase">
                     {label}
                 </p>
                 {hasFile ? (
@@ -288,7 +288,7 @@ export default function AdminMitraShow({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Mitra
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -359,7 +359,7 @@ export default function AdminMitraShow({
                     </div>
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Nama Hotel
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -367,7 +367,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Jenis Properti
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -375,7 +375,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Kota
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -385,7 +385,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Alamat singkat
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -393,7 +393,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Perkiraan kamar
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -409,28 +409,18 @@ export default function AdminMitraShow({
                         <h2 className="text-lg font-semibold text-slate-900">
                             Tahap 2 - Verifikasi Hotel
                         </h2>
-                        {onboarding.verification_status === 'pending' && (
-                            <div className="flex flex-wrap gap-2">
-                                <Button
-                                    className="!border-emerald-500 !bg-emerald-500 !text-white shadow-sm hover:!bg-sky-600"
-                                    onClick={() => handleVerify('approve')}
-                                >
-                                    Setujui
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="border-red-200 text-red-600 hover:bg-red-50"
-                                    onClick={() => handleVerify('reject')}
-                                >
-                                    Tolak
-                                </Button>
-                            </div>
-                        )}
+                        <Badge
+                            className={statusTone(
+                                onboarding.verification_status,
+                            )}
+                        >
+                            {onboarding.verification_status}
+                        </Badge>
                     </div>
 
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Nama sesuai KTP
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -438,7 +428,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 NIK
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -446,7 +436,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Jabatan
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -454,7 +444,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Legalitas
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -462,7 +452,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Nomor dokumen
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -470,7 +460,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div className="md:col-span-2">
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Alamat lengkap
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -478,7 +468,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div className="md:col-span-2">
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Pin Maps
                             </p>
                             {onboarding.maps_pin_url ? (
@@ -502,7 +492,7 @@ export default function AdminMitraShow({
                             )}
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Nomor resepsionis
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -510,7 +500,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Jam operasional
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -518,7 +508,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 PIC reservasi
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -558,6 +548,31 @@ export default function AdminMitraShow({
                                 {onboarding.verification_reason}
                             </div>
                         )}
+
+                    <div className="mt-6 rounded-3xl border border-sky-100/80 bg-slate-50/70 p-5">
+                        <h3 className="text-sm font-semibold text-slate-900">
+                            Aksi Verifikasi
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-500">
+                            Setujui dokumen jika data sudah benar, atau tolak
+                            dengan alasan agar mitra bisa mengajukan ulang.
+                        </p>
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                            <Button
+                                className="bg-sky-600 text-white hover:bg-sky-700"
+                                onClick={() => handleVerify('approve')}
+                            >
+                                Setujui
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                onClick={() => handleVerify('reject')}
+                            >
+                                Tolak
+                            </Button>
+                        </div>
+                    </div>
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
@@ -565,28 +580,14 @@ export default function AdminMitraShow({
                         <h2 className="text-lg font-semibold text-slate-900">
                             Tahap 3 - Setup Finansial
                         </h2>
-                        {onboarding.payout_status === 'pending' && (
-                            <div className="flex flex-wrap gap-2">
-                                <Button
-                                    className="!border-emerald-500 !bg-emerald-500 !text-white shadow-sm hover:!bg-sky-600"
-                                    onClick={() => handlePayout('approve')}
-                                >
-                                    Setujui
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="border-red-200 text-red-600 hover:bg-red-50"
-                                    onClick={() => handlePayout('reject')}
-                                >
-                                    Tolak
-                                </Button>
-                            </div>
-                        )}
+                        <Badge className={statusTone(onboarding.payout_status)}>
+                            {onboarding.payout_status}
+                        </Badge>
                     </div>
 
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Nama bank
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -594,7 +595,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Nomor rekening
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -603,7 +604,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Nama pemilik rekening
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -611,7 +612,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 NPWP
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -619,7 +620,7 @@ export default function AdminMitraShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Tipe pajak
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -634,6 +635,31 @@ export default function AdminMitraShow({
                                 Alasan penolakan: {onboarding.payout_reason}
                             </div>
                         )}
+
+                    <div className="mt-6 rounded-3xl border border-sky-100/80 bg-slate-50/70 p-5">
+                        <h3 className="text-sm font-semibold text-slate-900">
+                            Payout
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-500">
+                            Verifikasi rekening payout jika data bank sudah
+                            sesuai, atau tolak dengan alasan perbaikan.
+                        </p>
+                        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+                            <Button
+                                className="bg-sky-600 text-white hover:bg-sky-700"
+                                onClick={() => handlePayout('approve')}
+                            >
+                                Setujui Payout
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                onClick={() => handlePayout('reject')}
+                            >
+                                Tolak Payout
+                            </Button>
+                        </div>
+                    </div>
                 </section>
             </div>
         </AppLayout>

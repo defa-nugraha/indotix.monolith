@@ -8,7 +8,7 @@ export default function AffiliateSupport() {
             <Head title="Bantuan Afiliasi" />
             <div className="space-y-6">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Bantuan</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Bantuan</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">Butuh bantuan?</h1>
                 </div>
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-6 py-6 text-sm text-slate-600">

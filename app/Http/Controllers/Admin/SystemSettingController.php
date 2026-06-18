@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SystemSetting;
+use App\Services\MaintenanceMode;
+use App\Services\SystemResetService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,14 +21,17 @@ class SystemSettingController extends Controller
         'wisata_booking_timeout_minutes' => '15',
         'wisata_max_quota_per_ticket' => '1000',
         'wisata_refund_policy' => 'Manual review',
+        'public_whatsapp_number' => '',
+        MaintenanceMode::ENABLED_KEY => '0',
+        MaintenanceMode::MESSAGE_KEY => MaintenanceMode::DEFAULT_MESSAGE,
     ];
 
-    public function index(): Response
+    public function index(SystemResetService $systemReset): Response
     {
         foreach (self::DEFAULTS as $key => $value) {
             SystemSetting::query()->firstOrCreate(
                 ['key' => $key],
-                ['value' => $value, 'type' => 'number']
+                ['value' => $value, 'type' => $this->settingType($key)]
             );
         }
 
@@ -43,7 +49,12 @@ class SystemSettingController extends Controller
                 'wisata_booking_timeout_minutes' => (int) ($settings['wisata_booking_timeout_minutes'] ?? self::DEFAULTS['wisata_booking_timeout_minutes']),
                 'wisata_max_quota_per_ticket' => (int) ($settings['wisata_max_quota_per_ticket'] ?? self::DEFAULTS['wisata_max_quota_per_ticket']),
                 'wisata_refund_policy' => (string) ($settings['wisata_refund_policy'] ?? self::DEFAULTS['wisata_refund_policy']),
+                'public_whatsapp_number' => (string) ($settings['public_whatsapp_number'] ?? self::DEFAULTS['public_whatsapp_number']),
+                MaintenanceMode::ENABLED_KEY => filter_var($settings[MaintenanceMode::ENABLED_KEY] ?? self::DEFAULTS[MaintenanceMode::ENABLED_KEY], FILTER_VALIDATE_BOOL),
+                MaintenanceMode::MESSAGE_KEY => (string) ($settings[MaintenanceMode::MESSAGE_KEY] ?? self::DEFAULTS[MaintenanceMode::MESSAGE_KEY]),
             ],
+            'resetStats' => $systemReset->stats(),
+            'canResetSystem' => request()->user()?->role === 'admin',
         ]);
     }
 
@@ -56,15 +67,42 @@ class SystemSettingController extends Controller
             'wisata_booking_timeout_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
             'wisata_max_quota_per_ticket' => ['required', 'integer', 'min:1'],
             'wisata_refund_policy' => ['required', 'string', 'max:255'],
+            'public_whatsapp_number' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+().\\s-]*$/'],
+            MaintenanceMode::ENABLED_KEY => ['required', 'boolean'],
+            MaintenanceMode::MESSAGE_KEY => ['required', 'string', 'max:500'],
         ]);
 
         foreach ($data as $key => $value) {
             SystemSetting::query()->updateOrCreate(
                 ['key' => $key],
-                ['value' => (string) $value, 'type' => 'number', 'updated_by' => $request->user()->id]
+                ['value' => (string) $value, 'type' => $this->settingType($key), 'updated_by' => $request->user()->id]
             );
         }
 
         return back()->with('status', 'settings-updated');
+    }
+
+    public function reset(Request $request, SystemResetService $systemReset): RedirectResponse
+    {
+        abort_unless($request->user()?->role === 'admin', 403);
+
+        $request->validate([
+            'confirmation' => ['required', 'string', 'in:RESET SISTEM'],
+            'sections' => ['required', 'array', 'min:1'],
+            'sections.*' => ['required', 'string', Rule::in($systemReset->sectionKeys())],
+        ]);
+
+        $result = $systemReset->reset($request->input('sections', []));
+
+        return back()->with('status', 'system-reset')->with('reset_result', $result);
+    }
+
+    private function settingType(string $key): string
+    {
+        return match ($key) {
+            MaintenanceMode::ENABLED_KEY => 'boolean',
+            MaintenanceMode::MESSAGE_KEY, 'wisata_refund_policy', 'public_whatsapp_number' => 'string',
+            default => 'number',
+        };
     }
 }

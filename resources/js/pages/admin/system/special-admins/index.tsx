@@ -191,7 +191,7 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Admin Spesialis
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900">
@@ -343,7 +343,7 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form onSubmit={applyFilters} className="grid gap-4 md:grid-cols-3">
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Cari admin
                             </label>
                             <input
@@ -354,7 +354,7 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Role
                             </label>
                             <select
@@ -381,7 +381,7 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                            <thead className="text-xs uppercase tracking-wider text-slate-400">
+                            <thead className="text-xs uppercase text-slate-400">
                                 <tr>
                                     <th className="py-3 pr-4">Admin</th>
                                     <th className="py-3 pr-4">Role</th>
@@ -456,22 +456,6 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
                             </tbody>
                         </table>
                     </div>
-
-                    {admins.links?.length > 0 && (
-                        <div className="mt-6 flex flex-wrap gap-2">
-                            {admins.links.map((link) => (
-                                <Button
-                                    key={link.label}
-                                    variant={link.active ? 'default' : 'outline'}
-                                    size="sm"
-                                    disabled={!link.url}
-                                    onClick={() => link.url && router.get(link.url)}
-                                >
-                                    <span dangerouslySetInnerHTML={{ __html: link.label }} />
-                                </Button>
-                            ))}
-                        </div>
-                    )}
                 </section>
             </div>
         </AppLayout>

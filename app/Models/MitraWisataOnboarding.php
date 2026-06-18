@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -68,6 +69,8 @@ class MitraWisataOnboarding extends Model
         'photo_ticket_hidden',
         'is_temporarily_closed',
         'closure_note',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -126,6 +129,15 @@ class MitraWisataOnboarding extends Model
     public function tickets()
     {
         return $this->hasMany(WisataTicket::class);
+    }
+
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query
+            ->where('verification_status', 'verified')
+            ->where('is_live', true)
+            ->where('is_suspended', false)
+            ->where('is_temporarily_closed', false);
     }
 
     public function staff()

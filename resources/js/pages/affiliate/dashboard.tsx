@@ -22,7 +22,7 @@ export default function AffiliateDashboard({ affiliate, stats }: Props) {
             <Head title="Dashboard Afiliasi" />
             <div className="space-y-6">
                 <div data-coach="dashboard-hero">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Dashboard Afiliasi</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Dashboard Afiliasi</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">
                         Halo {auth?.user?.name ?? affiliate.name}
                     </h1>
@@ -38,7 +38,7 @@ export default function AffiliateDashboard({ affiliate, stats }: Props) {
                         { label: 'Konversi', value: `${stats.conversion_rate}%` },
                     ].map((item) => (
                         <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
+                            <p className="text-xs font-semibold uppercase text-slate-400">{item.label}</p>
                             <p className="mt-2 text-2xl font-semibold text-slate-900">{item.value}</p>
                         </div>
                     ))}
@@ -51,7 +51,7 @@ export default function AffiliateDashboard({ affiliate, stats }: Props) {
                         { label: 'Komisi Pending', value: stats.pending_commission },
                     ].map((item) => (
                         <div key={item.label} className="rounded-2xl border border-slate-200 bg-white px-4 py-5 shadow-sm">
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{item.label}</p>
+                            <p className="text-xs font-semibold uppercase text-slate-400">{item.label}</p>
                             <p className="mt-2 text-2xl font-semibold text-slate-900">
                                 Rp {item.value.toLocaleString('id-ID')}
                             </p>

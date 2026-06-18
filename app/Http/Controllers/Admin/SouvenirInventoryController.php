@@ -24,7 +24,7 @@ class SouvenirInventoryController extends Controller
         $logs = SouvenirStockMovement::query()
             ->with(['product:id,name', 'variant:id,name', 'product.category'])
             ->latest()
-            ->paginate(15)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
         return Inertia::render('admin/souvenir/inventory/index', [

@@ -4,15 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
-use App\Models\MitraWisataStaff;
 use App\Models\User;
-use App\Models\WisataAffiliate;
-use App\Models\WisataBooking;
-use App\Models\WisataCommissionRule;
-use App\Models\WisataDispute;
-use App\Models\WisataPayout;
-use App\Models\WisataReview;
-use App\Models\WisataTicket;
+use App\Services\MitraDeletionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -53,7 +46,7 @@ class MitraWisataController extends Controller
             $query->where('is_suspended', $isSuspended);
         }
 
-        $paginator = $query->latest()->paginate(10)->withQueryString();
+        $paginator = $query->latest()->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
         $cityCodes = $paginator->getCollection()
             ->map(fn (User $user) => $user->mitraWisataOnboarding?->city_code)
             ->filter()
@@ -253,49 +246,12 @@ class MitraWisataController extends Controller
         return back()->with('status', 'suspension-updated');
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user, MitraDeletionService $mitraDeletion): RedirectResponse
     {
         abort_unless($user->role === 'mitra', 404);
         abort_unless($user->mitra_onboarding_type === 'wisata', 404);
 
-        $onboarding = MitraWisataOnboarding::query()->where('user_id', $user->id)->first();
-        if (! $onboarding) {
-            $user->delete();
-
-            return back()->with('status', 'mitra-wisata-deleted');
-        }
-
-        $counts = [
-            'booking' => WisataBooking::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->count(),
-            'tiket' => WisataTicket::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->count(),
-            'payout' => WisataPayout::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->count(),
-            'dispute' => WisataDispute::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->count(),
-            'review' => WisataReview::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->count(),
-            'afiliasi' => WisataAffiliate::query()->where('wisata_id', $onboarding->id)->count(),
-            'komisi' => WisataCommissionRule::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->count(),
-            'staff' => MitraWisataStaff::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->count(),
-        ];
-
-        $blocked = array_filter($counts, fn ($count) => $count > 0);
-        if ($blocked) {
-            $details = collect($blocked)
-                ->map(fn ($count, $key) => "{$key} ({$count})")
-                ->implode(', ');
-
-            return back()->withErrors([
-                'mitra' => "Mitra tidak dapat dihapus karena masih memiliki data: {$details}.",
-            ]);
-        }
-
-        WisataAffiliate::query()->where('wisata_id', $onboarding->id)->delete();
-        WisataCommissionRule::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->delete();
-        WisataReview::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->delete();
-        WisataDispute::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->delete();
-        WisataPayout::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->delete();
-        MitraWisataStaff::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->delete();
-        WisataTicket::query()->where('mitra_wisata_onboarding_id', $onboarding->id)->delete();
-        $onboarding->delete();
-        $user->delete();
+        $mitraDeletion->deleteWisataMitra($user);
 
         return back()->with('status', 'mitra-wisata-deleted');
     }

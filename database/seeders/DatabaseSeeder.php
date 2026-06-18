@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call(UserRoleSeeder::class);
         $this->call(IndonesiaRegionSeeder::class);
+        $this->call(MitraDemoUserSeeder::class);
         $this->call(BookingSeeder::class);
         $this->call(WisataBookingSeeder::class);
         $this->call(EventSeeder::class);

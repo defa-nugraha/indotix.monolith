@@ -422,7 +422,7 @@ class DiscoveryService
     {
         [$title, $description] = match ($type) {
             'events' => ['Pilihan utama minggu ini', 'Mulai dari event yang paling layak dibuka lebih dulu.'],
-            'hotels' => ['Pilihan menginap yang menonjol', 'Hotel terdepan untuk perencanaan cepat tanpa harus scroll jauh.'],
+            'hotels' => ['Rekomendasi hotel untuk perjalananmu', 'Pilihan hotel yang mudah dibandingkan untuk rencana menginapmu.'],
             'wisata' => ['Spotlight destinasi yang paling menggoda', 'Destinasi pembuka untuk menyalakan rasa ingin pergi.'],
             'academy' => ['Kelas yang paling layak diprioritaskan', 'Mulai dari kelas yang sedang relevan untuk kebutuhan belajar.'],
             'special-programs' => ['Program yang pantas jadi perhatian utama', 'Sorot penawaran yang paling kuat nilainya saat ini.'],
@@ -572,9 +572,7 @@ class DiscoveryService
     private function wisataQuery(): Builder
     {
         return MitraWisataOnboarding::query()
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
-            ->where('is_temporarily_closed', false)
+            ->publiclyVisible()
             ->withCount(['bookings as booking_score' => fn ($query) => $query->whereIn('status', ['paid', 'completed'])])
             ->with(['tickets' => fn ($query) => $query->where('is_active', true)->where('is_closed', false)])
             ->withMin(['tickets as min_price' => fn ($query) => $query->where('is_active', true)->where('is_closed', false)], 'price');
@@ -1512,6 +1510,7 @@ class DiscoveryService
                 ->where('wisata_tickets.is_active', true)
                 ->where('wisata_tickets.is_closed', false)
                 ->where('mitra_wisata_onboardings.verification_status', 'verified')
+                ->where('mitra_wisata_onboardings.is_live', true)
                 ->where('mitra_wisata_onboardings.is_suspended', false)
                 ->where('mitra_wisata_onboardings.is_temporarily_closed', false);
         });

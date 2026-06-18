@@ -6,7 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CommissionInfoCard, {
+    type CommissionInfo,
+} from '@/components/commission-info-card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import Swal from 'sweetalert2';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
@@ -15,7 +24,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dokumen Pendaftaran Event', href: '/mitra/event/onboarding' },
 ];
 
-const stepTitles = ['Akun Penanggung Jawab', 'Data EO & Legalitas', 'Identitas Personal', 'Rekening Payout'];
+const stepTitles = [
+    'Akun Penanggung Jawab',
+    'Data EO & Legalitas',
+    'Identitas Personal',
+    'Rekening Payout',
+];
 
 type Onboarding = {
     id: number;
@@ -73,9 +87,11 @@ const bankRelationOptions = [
 export default function MitraEventOnboarding({
     onboarding,
     status,
+    commissionInfo,
 }: {
     onboarding: Onboarding;
     status?: string;
+    commissionInfo?: CommissionInfo | null;
 }) {
     const [activeStep, setActiveStep] = useState(onboarding.current_step || 1);
 
@@ -88,7 +104,9 @@ export default function MitraEventOnboarding({
     const step2Form = useForm({
         eo_name: onboarding.eo_name ?? '',
         organizer_type: onboarding.organizer_type ?? '',
-        founded_year: onboarding.founded_year ? String(onboarding.founded_year) : '',
+        founded_year: onboarding.founded_year
+            ? String(onboarding.founded_year)
+            : '',
         eo_description: onboarding.eo_description ?? '',
         legal_doc_type: onboarding.legal_doc_type ?? '',
         legal_doc_number: onboarding.legal_doc_number ?? '',
@@ -126,7 +144,8 @@ export default function MitraEventOnboarding({
         };
     }, [filePreviews]);
 
-    const getPublicUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
+    const getPublicUrl = (path?: string | null) =>
+        path ? `/storage/${path}` : null;
 
     const FilePicker = ({
         id,
@@ -157,9 +176,14 @@ export default function MitraEventOnboarding({
                     type="file"
                     accept={accept}
                     className="hidden"
-                    onChange={(event) => onChange(event.target.files?.[0] ?? null)}
+                    onChange={(event) =>
+                        onChange(event.target.files?.[0] ?? null)
+                    }
                 />
-                <label htmlFor={id} className="flex cursor-pointer flex-col items-center">
+                <label
+                    htmlFor={id}
+                    className="flex cursor-pointer flex-col items-center"
+                >
                     {hasPreview ? (
                         <>
                             {isPdf ? (
@@ -203,12 +227,18 @@ export default function MitraEventOnboarding({
     const handleFileChange = (
         key: keyof typeof filePreviews,
         file: File | null,
-        fieldName: keyof typeof step2Form.data | keyof typeof step3Form.data
+        fieldName: keyof typeof step2Form.data | keyof typeof step3Form.data,
     ) => {
         if (fieldName in step2Form.data) {
-            step2Form.setData(fieldName as keyof typeof step2Form.data, file as never);
+            step2Form.setData(
+                fieldName as keyof typeof step2Form.data,
+                file as never,
+            );
         } else {
-            step3Form.setData(fieldName as keyof typeof step3Form.data, file as never);
+            step3Form.setData(
+                fieldName as keyof typeof step3Form.data,
+                file as never,
+            );
         }
         if (!file) {
             setFilePreviews((prev) => ({ ...prev, [key]: undefined }));
@@ -228,7 +258,9 @@ export default function MitraEventOnboarding({
 
     const getFirstError = (errors: Record<string, string>): string => {
         const firstKey = Object.keys(errors)[0];
-        return firstKey ? errors[firstKey] : 'Terjadi kesalahan. Silakan coba lagi.';
+        return firstKey
+            ? errors[firstKey]
+            : 'Terjadi kesalahan. Silakan coba lagi.';
     };
 
     const submitVerification = () => {
@@ -244,25 +276,53 @@ export default function MitraEventOnboarding({
                             preserveScroll: true,
                             forceFormData: true,
                             onSuccess: () =>
-                                step4Form.post('/mitra/event/onboarding/step-4', {
-                                    preserveScroll: true,
-                                    onSuccess: () =>
-                                        router.post('/mitra/event/onboarding/submit-verification', {}, {
-                                            onSuccess: () => {
-                                                showSuccess('Terkirim', 'Dokumen verifikasi dikirim untuk review.');
-                                                router.reload({ only: ['onboarding'] });
-                                            },
-                                            onError: (errors) =>
-                                                showError('Gagal mengirim', getFirstError(errors)),
-                                        }),
-                                    onError: (errors) =>
-                                        showError('Gagal menyimpan', getFirstError(errors)),
-                                }),
-                            onError: (errors) => showError('Gagal menyimpan', getFirstError(errors)),
+                                step4Form.post(
+                                    '/mitra/event/onboarding/step-4',
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () =>
+                                            router.post(
+                                                '/mitra/event/onboarding/submit-verification',
+                                                {},
+                                                {
+                                                    onSuccess: () => {
+                                                        showSuccess(
+                                                            'Terkirim',
+                                                            'Dokumen verifikasi dikirim untuk review.',
+                                                        );
+                                                        router.reload({
+                                                            only: [
+                                                                'onboarding',
+                                                            ],
+                                                        });
+                                                    },
+                                                    onError: (errors) =>
+                                                        showError(
+                                                            'Gagal mengirim',
+                                                            getFirstError(
+                                                                errors,
+                                                            ),
+                                                        ),
+                                                },
+                                            ),
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal menyimpan',
+                                                getFirstError(errors),
+                                            ),
+                                    },
+                                ),
+                            onError: (errors) =>
+                                showError(
+                                    'Gagal menyimpan',
+                                    getFirstError(errors),
+                                ),
                         }),
-                    onError: (errors) => showError('Gagal menyimpan', getFirstError(errors)),
+                    onError: (errors) =>
+                        showError('Gagal menyimpan', getFirstError(errors)),
                 }),
-            onError: (errors) => showError('Gagal menyimpan', getFirstError(errors)),
+            onError: (errors) =>
+                showError('Gagal menyimpan', getFirstError(errors)),
         });
     };
 
@@ -273,25 +333,105 @@ export default function MitraEventOnboarding({
         return Boolean(value && String(value).trim().length > 0);
     };
 
-    const hasFile = (file?: File | null, path?: string | null) => Boolean(file || path);
+    const hasFile = (file?: File | null, path?: string | null) =>
+        Boolean(file || path);
 
     const eventChecklist = [
-        { label: 'Nama penanggung jawab', ok: isFilled(onboarding.responsible_name) || isFilled(step1Form.data.responsible_name) },
-        { label: 'Nomor HP penanggung jawab', ok: isFilled(onboarding.responsible_phone) || isFilled(step1Form.data.responsible_phone) },
-        { label: 'Jabatan penanggung jawab', ok: isFilled(onboarding.responsible_role) || isFilled(step1Form.data.responsible_role) },
-        { label: 'Nama EO/Organisasi', ok: isFilled(onboarding.eo_name) || isFilled(step2Form.data.eo_name) },
-        { label: 'Jenis penyelenggara', ok: isFilled(onboarding.organizer_type) || isFilled(step2Form.data.organizer_type) },
-        { label: 'Dokumen legalitas', ok: hasFile(step2Form.data.legal_doc_file, onboarding.legal_doc_path) },
-        { label: 'Nomor dokumen legal', ok: isFilled(onboarding.legal_doc_number) || isFilled(step2Form.data.legal_doc_number) },
-        { label: 'Jenis dokumen legal', ok: isFilled(onboarding.legal_doc_type) || isFilled(step2Form.data.legal_doc_type) },
-        { label: 'KTP penanggung jawab', ok: hasFile(step3Form.data.ktp_file, onboarding.ktp_path) },
-        { label: 'Nama bank', ok: isFilled(onboarding.bank_name) || isFilled(step4Form.data.bank_name) },
-        { label: 'Nomor rekening', ok: isFilled(onboarding.bank_account_number) || isFilled(step4Form.data.bank_account_number) },
-        { label: 'Nama pemilik rekening', ok: isFilled(onboarding.bank_account_name) || isFilled(step4Form.data.bank_account_name) },
-        { label: 'Hubungan rekening', ok: isFilled(onboarding.bank_account_relation) || isFilled(step4Form.data.bank_account_relation) },
-        { label: 'Nomor PIC operasional', ok: isFilled(onboarding.operational_phone) || isFilled(step2Form.data.operational_phone) },
-        { label: 'Email support EO', ok: isFilled(onboarding.operational_email) || isFilled(step2Form.data.operational_email) },
-        { label: 'Jam operasional', ok: isFilled(onboarding.operational_hours) || isFilled(step2Form.data.operational_hours) },
+        {
+            label: 'Nama penanggung jawab',
+            ok:
+                isFilled(onboarding.responsible_name) ||
+                isFilled(step1Form.data.responsible_name),
+        },
+        {
+            label: 'Nomor HP penanggung jawab',
+            ok:
+                isFilled(onboarding.responsible_phone) ||
+                isFilled(step1Form.data.responsible_phone),
+        },
+        {
+            label: 'Jabatan penanggung jawab',
+            ok:
+                isFilled(onboarding.responsible_role) ||
+                isFilled(step1Form.data.responsible_role),
+        },
+        {
+            label: 'Nama EO/Organisasi',
+            ok:
+                isFilled(onboarding.eo_name) ||
+                isFilled(step2Form.data.eo_name),
+        },
+        {
+            label: 'Jenis penyelenggara',
+            ok:
+                isFilled(onboarding.organizer_type) ||
+                isFilled(step2Form.data.organizer_type),
+        },
+        {
+            label: 'Dokumen legalitas',
+            ok: hasFile(
+                step2Form.data.legal_doc_file,
+                onboarding.legal_doc_path,
+            ),
+        },
+        {
+            label: 'Nomor dokumen legal',
+            ok:
+                isFilled(onboarding.legal_doc_number) ||
+                isFilled(step2Form.data.legal_doc_number),
+        },
+        {
+            label: 'Jenis dokumen legal',
+            ok:
+                isFilled(onboarding.legal_doc_type) ||
+                isFilled(step2Form.data.legal_doc_type),
+        },
+        {
+            label: 'KTP penanggung jawab',
+            ok: hasFile(step3Form.data.ktp_file, onboarding.ktp_path),
+        },
+        {
+            label: 'Nama bank',
+            ok:
+                isFilled(onboarding.bank_name) ||
+                isFilled(step4Form.data.bank_name),
+        },
+        {
+            label: 'Nomor rekening',
+            ok:
+                isFilled(onboarding.bank_account_number) ||
+                isFilled(step4Form.data.bank_account_number),
+        },
+        {
+            label: 'Nama pemilik rekening',
+            ok:
+                isFilled(onboarding.bank_account_name) ||
+                isFilled(step4Form.data.bank_account_name),
+        },
+        {
+            label: 'Hubungan rekening',
+            ok:
+                isFilled(onboarding.bank_account_relation) ||
+                isFilled(step4Form.data.bank_account_relation),
+        },
+        {
+            label: 'Nomor PIC operasional',
+            ok:
+                isFilled(onboarding.operational_phone) ||
+                isFilled(step2Form.data.operational_phone),
+        },
+        {
+            label: 'Email support EO',
+            ok:
+                isFilled(onboarding.operational_email) ||
+                isFilled(step2Form.data.operational_email),
+        },
+        {
+            label: 'Jam operasional',
+            ok:
+                isFilled(onboarding.operational_hours) ||
+                isFilled(step2Form.data.operational_hours),
+        },
     ];
 
     const isEventVerificationReady = eventChecklist.every((item) => item.ok);
@@ -315,14 +455,15 @@ export default function MitraEventOnboarding({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Pendaftaran Mitra Event
                             </p>
-                            <h1 className="text-2xl font-semibold text-slate-900 font-['Space_Grotesk']">
+                            <h1 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900">
                                 Lengkapi data EO sebelum membuat event
                             </h1>
                             <p className="mt-2 text-sm text-slate-500">
-                                Isi data secara bertahap agar proses verifikasi lebih cepat.
+                                Isi data secara bertahap agar proses verifikasi
+                                lebih cepat.
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -330,8 +471,16 @@ export default function MitraEventOnboarding({
                                 <Button
                                     key={title}
                                     type="button"
-                                    variant={activeStep === index + 1 ? 'default' : 'outline'}
-                                    className={activeStep === index + 1 ? 'bg-sky-600 text-white' : ''}
+                                    variant={
+                                        activeStep === index + 1
+                                            ? 'default'
+                                            : 'outline'
+                                    }
+                                    className={
+                                        activeStep === index + 1
+                                            ? 'bg-sky-600 text-white'
+                                            : ''
+                                    }
                                     onClick={() => setActiveStep(index + 1)}
                                 >
                                     {title}
@@ -343,19 +492,28 @@ export default function MitraEventOnboarding({
 
                 {activeStep === 1 && (
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Identitas Penanggung Jawab</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Identitas Penanggung Jawab
+                        </h2>
                         <p className="text-sm text-slate-500">
-                            Informasi ini untuk memastikan siapa yang bertanggung jawab atas event.
+                            Informasi ini untuk memastikan siapa yang
+                            bertanggung jawab atas event.
                         </p>
                         <form
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                step1Form.post('/mitra/event/onboarding/step-1', {
-                                    preserveScroll: true,
-                                    onSuccess: () => setActiveStep(2),
-                                    onError: (errors) =>
-                                        showError('Gagal menyimpan', getFirstError(errors)),
-                                });
+                                step1Form.post(
+                                    '/mitra/event/onboarding/step-1',
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => setActiveStep(2),
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal menyimpan',
+                                                getFirstError(errors),
+                                            ),
+                                    },
+                                );
                             }}
                             className="mt-6 grid gap-4 md:grid-cols-2"
                         >
@@ -363,41 +521,68 @@ export default function MitraEventOnboarding({
                                 <Label>Nama lengkap penanggung jawab</Label>
                                 <Input
                                     value={step1Form.data.responsible_name}
-                                    onChange={(event) => step1Form.setData('responsible_name', event.target.value)}
+                                    onChange={(event) =>
+                                        step1Form.setData(
+                                            'responsible_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nama penanggung jawab"
                                 />
-                                <InputError message={step1Form.errors.responsible_name} />
+                                <InputError
+                                    message={step1Form.errors.responsible_name}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Nomor HP</Label>
                                 <Input
                                     value={step1Form.data.responsible_phone}
-                                    onChange={(event) => step1Form.setData('responsible_phone', event.target.value)}
+                                    onChange={(event) =>
+                                        step1Form.setData(
+                                            'responsible_phone',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="08xxxxxxxxxx"
                                 />
-                                <InputError message={step1Form.errors.responsible_phone} />
+                                <InputError
+                                    message={step1Form.errors.responsible_phone}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Jabatan</Label>
                                 <Select
                                     value={step1Form.data.responsible_role}
-                                    onValueChange={(value) => step1Form.setData('responsible_role', value)}
+                                    onValueChange={(value) =>
+                                        step1Form.setData(
+                                            'responsible_role',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih jabatan" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {roleOptions.map((option) => (
-                                            <SelectItem key={option.id} value={option.id}>
+                                            <SelectItem
+                                                key={option.id}
+                                                value={option.id}
+                                            >
                                                 {option.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError message={step1Form.errors.responsible_role} />
+                                <InputError
+                                    message={step1Form.errors.responsible_role}
+                                />
                             </div>
-                            <div className="md:col-span-2 flex justify-end">
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                            <div className="flex justify-end md:col-span-2">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
                                     Simpan
                                 </Button>
                             </div>
@@ -407,20 +592,32 @@ export default function MitraEventOnboarding({
 
                 {activeStep === 2 && (
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Data EO & Legalitas</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Data EO & Legalitas
+                        </h2>
                         <p className="text-sm text-slate-500">
-                            Lengkapi informasi organisasi serta dokumen legal minimal 1 bukti.
+                            Lengkapi informasi organisasi serta dokumen legal
+                            minimal 1 bukti.
                         </p>
+                        <div className="mt-4">
+                            <CommissionInfoCard info={commissionInfo} />
+                        </div>
                         <form
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                step2Form.post('/mitra/event/onboarding/step-2', {
-                                    preserveScroll: true,
-                                    forceFormData: true,
-                                    onSuccess: () => setActiveStep(3),
-                                    onError: (errors) =>
-                                        showError('Gagal menyimpan', getFirstError(errors)),
-                                });
+                                step2Form.post(
+                                    '/mitra/event/onboarding/step-2',
+                                    {
+                                        preserveScroll: true,
+                                        forceFormData: true,
+                                        onSuccess: () => setActiveStep(3),
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal menyimpan',
+                                                getFirstError(errors),
+                                            ),
+                                    },
+                                );
                             }}
                             className="mt-6 grid gap-4 md:grid-cols-2"
                         >
@@ -428,121 +625,208 @@ export default function MitraEventOnboarding({
                                 <Label>Nama EO / Organisasi</Label>
                                 <Input
                                     value={step2Form.data.eo_name}
-                                    onChange={(event) => step2Form.setData('eo_name', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'eo_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nama EO"
                                 />
-                                <InputError message={step2Form.errors.eo_name} />
+                                <InputError
+                                    message={step2Form.errors.eo_name}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Jenis penyelenggara</Label>
                                 <Select
                                     value={step2Form.data.organizer_type}
-                                    onValueChange={(value) => step2Form.setData('organizer_type', value)}
+                                    onValueChange={(value) =>
+                                        step2Form.setData(
+                                            'organizer_type',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih jenis penyelenggara" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {organizerOptions.map((option) => (
-                                            <SelectItem key={option.id} value={option.id}>
+                                            <SelectItem
+                                                key={option.id}
+                                                value={option.id}
+                                            >
                                                 {option.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError message={step2Form.errors.organizer_type} />
+                                <InputError
+                                    message={step2Form.errors.organizer_type}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Tahun berdiri (opsional)</Label>
                                 <Input
                                     value={step2Form.data.founded_year}
-                                    onChange={(event) => step2Form.setData('founded_year', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'founded_year',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="2010"
                                 />
-                                <InputError message={step2Form.errors.founded_year} />
+                                <InputError
+                                    message={step2Form.errors.founded_year}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Deskripsi singkat EO</Label>
                                 <Input
                                     value={step2Form.data.eo_description}
-                                    onChange={(event) => step2Form.setData('eo_description', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'eo_description',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Ceritakan EO kamu secara singkat"
                                 />
-                                <InputError message={step2Form.errors.eo_description} />
+                                <InputError
+                                    message={step2Form.errors.eo_description}
+                                />
                             </div>
 
                             <div className="grid gap-2">
                                 <Label>Jenis dokumen legal</Label>
                                 <Select
                                     value={step2Form.data.legal_doc_type}
-                                    onValueChange={(value) => step2Form.setData('legal_doc_type', value)}
+                                    onValueChange={(value) =>
+                                        step2Form.setData(
+                                            'legal_doc_type',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih dokumen legal" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {legalDocOptions.map((option) => (
-                                            <SelectItem key={option.id} value={option.id}>
+                                            <SelectItem
+                                                key={option.id}
+                                                value={option.id}
+                                            >
                                                 {option.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError message={step2Form.errors.legal_doc_type} />
+                                <InputError
+                                    message={step2Form.errors.legal_doc_type}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Nomor dokumen</Label>
                                 <Input
                                     value={step2Form.data.legal_doc_number}
-                                    onChange={(event) => step2Form.setData('legal_doc_number', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'legal_doc_number',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nomor dokumen"
                                 />
-                                <InputError message={step2Form.errors.legal_doc_number} />
+                                <InputError
+                                    message={step2Form.errors.legal_doc_number}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
-                                <Label>Upload dokumen legal (PDF/JPG/PNG)</Label>
+                                <Label>
+                                    Upload dokumen legal (PDF/JPG/PNG)
+                                </Label>
                                 <FilePicker
                                     id="legal_doc_file"
                                     label="Select File here"
                                     helper="Files Supported: PDF, JPG, PNG"
                                     accept="image/*,.pdf"
-                                    fileName={step2Form.data.legal_doc_file?.name}
-                                    previewUrl={filePreviews.legal ?? getPublicUrl(onboarding.legal_doc_path)}
-                                    onChange={(file) => handleFileChange('legal', file, 'legal_doc_file')}
+                                    fileName={
+                                        step2Form.data.legal_doc_file?.name
+                                    }
+                                    previewUrl={
+                                        filePreviews.legal ??
+                                        getPublicUrl(onboarding.legal_doc_path)
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'legal',
+                                            file,
+                                            'legal_doc_file',
+                                        )
+                                    }
                                 />
-                                <InputError message={step2Form.errors.legal_doc_file} />
+                                <InputError
+                                    message={step2Form.errors.legal_doc_file}
+                                />
                             </div>
 
                             <div className="grid gap-2">
                                 <Label>Nomor PIC operasional</Label>
                                 <Input
                                     value={step2Form.data.operational_phone}
-                                    onChange={(event) => step2Form.setData('operational_phone', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'operational_phone',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="08xxxxxxxxxx"
                                 />
-                                <InputError message={step2Form.errors.operational_phone} />
+                                <InputError
+                                    message={step2Form.errors.operational_phone}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Email support EO</Label>
                                 <Input
                                     value={step2Form.data.operational_email}
-                                    onChange={(event) => step2Form.setData('operational_email', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'operational_email',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="support@email.com"
                                 />
-                                <InputError message={step2Form.errors.operational_email} />
+                                <InputError
+                                    message={step2Form.errors.operational_email}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Jam bisa dihubungi</Label>
                                 <Input
                                     value={step2Form.data.operational_hours}
-                                    onChange={(event) => step2Form.setData('operational_hours', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'operational_hours',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="09.00 - 21.00 WIB"
                                 />
-                                <InputError message={step2Form.errors.operational_hours} />
+                                <InputError
+                                    message={step2Form.errors.operational_hours}
+                                />
                             </div>
 
-                            <div className="md:col-span-2 flex justify-end">
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                            <div className="flex justify-end md:col-span-2">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
                                     Simpan
                                 </Button>
                             </div>
@@ -552,20 +836,29 @@ export default function MitraEventOnboarding({
 
                 {activeStep === 3 && (
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Identitas Personal</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Identitas Personal
+                        </h2>
                         <p className="text-sm text-slate-500">
-                            Upload KTP penanggung jawab (selfie + KTP opsional tapi disarankan).
+                            Upload KTP penanggung jawab (selfie + KTP opsional
+                            tapi disarankan).
                         </p>
                         <form
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                step3Form.post('/mitra/event/onboarding/step-3', {
-                                    preserveScroll: true,
-                                    forceFormData: true,
-                                    onSuccess: () => setActiveStep(4),
-                                    onError: (errors) =>
-                                        showError('Gagal menyimpan', getFirstError(errors)),
-                                });
+                                step3Form.post(
+                                    '/mitra/event/onboarding/step-3',
+                                    {
+                                        preserveScroll: true,
+                                        forceFormData: true,
+                                        onSuccess: () => setActiveStep(4),
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal menyimpan',
+                                                getFirstError(errors),
+                                            ),
+                                    },
+                                );
                             }}
                             className="mt-6 grid gap-4 md:grid-cols-2"
                         >
@@ -577,10 +870,21 @@ export default function MitraEventOnboarding({
                                     helper="Files Supported: PDF, JPG, PNG"
                                     accept="image/*,.pdf"
                                     fileName={step3Form.data.ktp_file?.name}
-                                    previewUrl={filePreviews.ktp ?? getPublicUrl(onboarding.ktp_path)}
-                                    onChange={(file) => handleFileChange('ktp', file, 'ktp_file')}
+                                    previewUrl={
+                                        filePreviews.ktp ??
+                                        getPublicUrl(onboarding.ktp_path)
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'ktp',
+                                            file,
+                                            'ktp_file',
+                                        )
+                                    }
                                 />
-                                <InputError message={step3Form.errors.ktp_file} />
+                                <InputError
+                                    message={step3Form.errors.ktp_file}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Selfie + KTP (opsional)</Label>
@@ -589,14 +893,30 @@ export default function MitraEventOnboarding({
                                     label="Select File here"
                                     helper="Files Supported: JPG, PNG"
                                     accept="image/*"
-                                    fileName={step3Form.data.selfie_ktp_file?.name}
-                                    previewUrl={filePreviews.selfie ?? getPublicUrl(onboarding.selfie_ktp_path)}
-                                    onChange={(file) => handleFileChange('selfie', file, 'selfie_ktp_file')}
+                                    fileName={
+                                        step3Form.data.selfie_ktp_file?.name
+                                    }
+                                    previewUrl={
+                                        filePreviews.selfie ??
+                                        getPublicUrl(onboarding.selfie_ktp_path)
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'selfie',
+                                            file,
+                                            'selfie_ktp_file',
+                                        )
+                                    }
                                 />
-                                <InputError message={step3Form.errors.selfie_ktp_file} />
+                                <InputError
+                                    message={step3Form.errors.selfie_ktp_file}
+                                />
                             </div>
-                            <div className="md:col-span-2 flex justify-end">
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                            <div className="flex justify-end md:col-span-2">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
                                     Simpan
                                 </Button>
                             </div>
@@ -606,18 +926,27 @@ export default function MitraEventOnboarding({
 
                 {activeStep === 4 && (
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Data Rekening Payout</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Data Rekening Payout
+                        </h2>
                         <p className="text-sm text-slate-500">
-                            Pastikan data rekening jelas untuk settlement dan refund.
+                            Pastikan data rekening jelas untuk settlement dan
+                            refund.
                         </p>
                         <form
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                step4Form.post('/mitra/event/onboarding/step-4', {
-                                    preserveScroll: true,
-                                    onError: (errors) =>
-                                        showError('Gagal menyimpan', getFirstError(errors)),
-                                });
+                                step4Form.post(
+                                    '/mitra/event/onboarding/step-4',
+                                    {
+                                        preserveScroll: true,
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal menyimpan',
+                                                getFirstError(errors),
+                                            ),
+                                    },
+                                );
                             }}
                             className="mt-6 grid gap-4 md:grid-cols-2"
                         >
@@ -625,50 +954,88 @@ export default function MitraEventOnboarding({
                                 <Label>Nama bank</Label>
                                 <Input
                                     value={step4Form.data.bank_name}
-                                    onChange={(event) => step4Form.setData('bank_name', event.target.value)}
+                                    onChange={(event) =>
+                                        step4Form.setData(
+                                            'bank_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nama bank"
                                 />
-                                <InputError message={step4Form.errors.bank_name} />
+                                <InputError
+                                    message={step4Form.errors.bank_name}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Nomor rekening</Label>
                                 <Input
                                     value={step4Form.data.bank_account_number}
-                                    onChange={(event) => step4Form.setData('bank_account_number', event.target.value)}
+                                    onChange={(event) =>
+                                        step4Form.setData(
+                                            'bank_account_number',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nomor rekening"
                                 />
-                                <InputError message={step4Form.errors.bank_account_number} />
+                                <InputError
+                                    message={
+                                        step4Form.errors.bank_account_number
+                                    }
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Nama pemilik rekening</Label>
                                 <Input
                                     value={step4Form.data.bank_account_name}
-                                    onChange={(event) => step4Form.setData('bank_account_name', event.target.value)}
+                                    onChange={(event) =>
+                                        step4Form.setData(
+                                            'bank_account_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nama pemilik rekening"
                                 />
-                                <InputError message={step4Form.errors.bank_account_name} />
+                                <InputError
+                                    message={step4Form.errors.bank_account_name}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Hubungan rekening</Label>
                                 <Select
                                     value={step4Form.data.bank_account_relation}
-                                    onValueChange={(value) => step4Form.setData('bank_account_relation', value)}
+                                    onValueChange={(value) =>
+                                        step4Form.setData(
+                                            'bank_account_relation',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih hubungan rekening" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {bankRelationOptions.map((option) => (
-                                            <SelectItem key={option.id} value={option.id}>
+                                            <SelectItem
+                                                key={option.id}
+                                                value={option.id}
+                                            >
                                                 {option.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <InputError message={step4Form.errors.bank_account_relation} />
+                                <InputError
+                                    message={
+                                        step4Form.errors.bank_account_relation
+                                    }
+                                />
                             </div>
-                            <div className="md:col-span-2 flex justify-end">
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                            <div className="flex justify-end md:col-span-2">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
                                     Simpan
                                 </Button>
                             </div>
@@ -680,9 +1047,12 @@ export default function MitraEventOnboarding({
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                             <div>
-                                <h3 className="text-lg font-semibold text-slate-900">Kirim untuk Verifikasi</h3>
+                                <h3 className="text-lg font-semibold text-slate-900">
+                                    Kirim untuk Verifikasi
+                                </h3>
                                 <p className="text-sm text-slate-500">
-                                    Setelah semua data lengkap, kirim agar admin dapat memverifikasi.
+                                    Setelah semua data lengkap, kirim agar admin
+                                    dapat memverifikasi.
                                 </p>
                             </div>
                             <div className="flex gap-3">
@@ -700,12 +1070,15 @@ export default function MitraEventOnboarding({
                         </div>
                         {!isEventVerificationReady && (
                             <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                <p className="text-xs font-semibold text-slate-400 uppercase">
                                     Checklist kelengkapan
                                 </p>
                                 <div className="mt-3 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
                                     {eventChecklist.map((item) => (
-                                        <div key={item.label} className="flex items-center gap-2">
+                                        <div
+                                            key={item.label}
+                                            className="flex items-center gap-2"
+                                        >
                                             {item.ok ? (
                                                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                                             ) : (

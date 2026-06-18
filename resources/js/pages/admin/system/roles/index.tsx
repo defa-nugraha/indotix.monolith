@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -52,7 +52,7 @@ type PaginationLink = {
 
 type PermissionMatrix = {
     actions: Array<{ key: string; label: string }>;
-    features: Array<{ key: string; label: string }>;
+    features: Array<{ key: string; label: string; parent?: string | null }>;
 };
 
 type Props = {
@@ -109,6 +109,23 @@ export default function RoleManagementIndex({
             })),
         ];
     }, [roleOptions, roles]);
+
+    const groupedFeatures = useMemo(() => {
+        return permissionMatrix.features.reduce<
+            Array<{ group: string; features: PermissionMatrix['features'] }>
+        >((groups, feature) => {
+            const group = feature.parent ?? feature.label;
+            const existing = groups.find((item) => item.group === group);
+
+            if (existing) {
+                existing.features.push(feature);
+                return groups;
+            }
+
+            groups.push({ group, features: [feature] });
+            return groups;
+        }, []);
+    }, [permissionMatrix.features]);
 
     const roleLabelMap = useMemo(() => {
         return assignmentOptions.reduce<Record<string, string>>(
@@ -195,6 +212,28 @@ export default function RoleManagementIndex({
                   )
                 : form.data.permissions.filter(
                       (item) => !featurePermissions.includes(item),
+                  ),
+        );
+    };
+
+    const toggleFeatureGroup = (
+        features: PermissionMatrix['features'],
+        checked: boolean,
+    ) => {
+        const groupPermissions = features.flatMap((feature) =>
+            permissionMatrix.actions.map(
+                (action) => `${feature.key}.${action.key}`,
+            ),
+        );
+
+        form.setData(
+            'permissions',
+            checked
+                ? Array.from(
+                      new Set([...form.data.permissions, ...groupPermissions]),
+                  )
+                : form.data.permissions.filter(
+                      (item) => !groupPermissions.includes(item),
                   ),
         );
     };
@@ -297,7 +336,7 @@ export default function RoleManagementIndex({
             <Head title="Manajemen Role" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8 text-slate-900">
                 <section className="rounded-2xl border border-sky-100 bg-white p-6 shadow-sm">
-                    <p className="text-xs font-semibold tracking-[0.25em] text-sky-600 uppercase">
+                    <p className="text-xs font-semibold text-sky-600 uppercase">
                         RBAC Admin
                     </p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -414,7 +453,7 @@ export default function RoleManagementIndex({
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="grid gap-2">
-                                    <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                                    <label className="text-xs font-semibold text-slate-400 uppercase">
                                         Nama Role
                                     </label>
                                     <input
@@ -452,7 +491,7 @@ export default function RoleManagementIndex({
                             </div>
 
                             <div className="grid gap-2">
-                                <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                                <label className="text-xs font-semibold text-slate-400 uppercase">
                                     Deskripsi
                                 </label>
                                 <textarea
@@ -470,7 +509,7 @@ export default function RoleManagementIndex({
 
                             <div className="overflow-x-auto rounded-lg border border-slate-100">
                                 <table className="min-w-full text-left text-sm">
-                                    <thead className="bg-slate-50 text-xs tracking-wider text-slate-400 uppercase">
+                                    <thead className="bg-slate-50 text-xs text-slate-400 uppercase">
                                         <tr>
                                             <th className="py-3 pr-4 pl-4">
                                                 Fitur
@@ -488,34 +527,45 @@ export default function RoleManagementIndex({
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {permissionMatrix.features.map(
-                                            (feature) => {
-                                                const featureKeys =
-                                                    permissionMatrix.actions.map(
-                                                        (action) =>
-                                                            `${feature.key}.${action.key}`,
-                                                    );
-                                                const allChecked =
-                                                    featureKeys.every((key) =>
-                                                        form.data.permissions.includes(
-                                                            key,
+                                        {groupedFeatures.map((group) => {
+                                            const groupKeys =
+                                                group.features.flatMap(
+                                                    (feature) =>
+                                                        permissionMatrix.actions.map(
+                                                            (action) =>
+                                                                `${feature.key}.${action.key}`,
                                                         ),
-                                                    );
+                                                );
+                                            const groupChecked =
+                                                groupKeys.length > 0 &&
+                                                groupKeys.some((key) =>
+                                                    form.data.permissions.includes(
+                                                        key,
+                                                    ),
+                                                );
 
-                                                return (
-                                                    <tr key={feature.key}>
-                                                        <td className="py-3 pr-4 pl-4">
-                                                            <label className="flex items-center gap-2 font-medium text-slate-700">
+                                            return (
+                                                <Fragment key={group.group}>
+                                                    <tr className="bg-slate-50/70">
+                                                        <td
+                                                            colSpan={
+                                                                permissionMatrix
+                                                                    .actions
+                                                                    .length + 1
+                                                            }
+                                                            className="px-4 py-2"
+                                                        >
+                                                            <label className="flex items-center gap-2 text-sm font-semibold text-slate-900">
                                                                 <input
                                                                     type="checkbox"
                                                                     checked={
-                                                                        allChecked
+                                                                        groupChecked
                                                                     }
                                                                     onChange={(
                                                                         event,
                                                                     ) =>
-                                                                        toggleFeature(
-                                                                            feature.key,
+                                                                        toggleFeatureGroup(
+                                                                            group.features,
                                                                             event
                                                                                 .target
                                                                                 .checked,
@@ -523,45 +573,96 @@ export default function RoleManagementIndex({
                                                                     }
                                                                     className="h-4 w-4 rounded border-slate-300"
                                                                 />
-                                                                {feature.label}
+                                                                {group.group}
                                                             </label>
                                                         </td>
-                                                        {permissionMatrix.actions.map(
-                                                            (action) => {
-                                                                const permission = `${feature.key}.${action.key}`;
-
-                                                                return (
-                                                                    <td
-                                                                        key={
-                                                                            permission
-                                                                        }
-                                                                        className="px-3 py-3 text-center"
-                                                                    >
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            checked={form.data.permissions.includes(
-                                                                                permission,
-                                                                            )}
-                                                                            onChange={(
-                                                                                event,
-                                                                            ) =>
-                                                                                togglePermission(
-                                                                                    permission,
-                                                                                    event
-                                                                                        .target
-                                                                                        .checked,
-                                                                                )
-                                                                            }
-                                                                            className="h-4 w-4 rounded border-slate-300"
-                                                                        />
-                                                                    </td>
-                                                                );
-                                                            },
-                                                        )}
                                                     </tr>
-                                                );
-                                            },
-                                        )}
+                                                    {group.features.map(
+                                                        (feature) => {
+                                                            const featureKeys =
+                                                                permissionMatrix.actions.map(
+                                                                    (action) =>
+                                                                        `${feature.key}.${action.key}`,
+                                                                );
+                                                            const anyChecked =
+                                                                featureKeys.some(
+                                                                    (key) =>
+                                                                        form.data.permissions.includes(
+                                                                            key,
+                                                                        ),
+                                                                );
+
+                                                            return (
+                                                                <tr
+                                                                    key={
+                                                                        feature.key
+                                                                    }
+                                                                >
+                                                                    <td className="py-3 pr-4 pl-8">
+                                                                        <label className="flex items-center gap-2 font-medium text-slate-700">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={
+                                                                                    anyChecked
+                                                                                }
+                                                                                onChange={(
+                                                                                    event,
+                                                                                ) =>
+                                                                                    toggleFeature(
+                                                                                        feature.key,
+                                                                                        event
+                                                                                            .target
+                                                                                            .checked,
+                                                                                    )
+                                                                                }
+                                                                                className="h-4 w-4 rounded border-slate-300"
+                                                                            />
+                                                                            {
+                                                                                feature.label
+                                                                            }
+                                                                        </label>
+                                                                    </td>
+                                                                    {permissionMatrix.actions.map(
+                                                                        (
+                                                                            action,
+                                                                        ) => {
+                                                                            const permission = `${feature.key}.${action.key}`;
+
+                                                                            return (
+                                                                                <td
+                                                                                    key={
+                                                                                        permission
+                                                                                    }
+                                                                                    className="px-3 py-3 text-center"
+                                                                                >
+                                                                                    <input
+                                                                                        type="checkbox"
+                                                                                        checked={form.data.permissions.includes(
+                                                                                            permission,
+                                                                                        )}
+                                                                                        onChange={(
+                                                                                            event,
+                                                                                        ) =>
+                                                                                            togglePermission(
+                                                                                                permission,
+                                                                                                event
+                                                                                                    .target
+                                                                                                    .checked,
+                                                                                            )
+                                                                                        }
+                                                                                        className="h-4 w-4 rounded border-slate-300"
+                                                                                    />
+                                                                                </td>
+                                                                            );
+                                                                        },
+                                                                    )}
+                                                                </tr>
+                                                            );
+                                                        },
+                                                    )}
+                                                </Fragment>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
@@ -594,7 +695,7 @@ export default function RoleManagementIndex({
                         className="grid gap-4 md:grid-cols-3"
                     >
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Cari user
                             </label>
                             <input
@@ -605,7 +706,7 @@ export default function RoleManagementIndex({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Role
                             </label>
                             <select
@@ -647,7 +748,7 @@ export default function RoleManagementIndex({
 
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                            <thead className="text-xs tracking-wider text-slate-400 uppercase">
+                            <thead className="text-xs text-slate-400 uppercase">
                                 <tr>
                                     <th className="py-3 pr-4">User</th>
                                     <th className="py-3 pr-4">Role Saat Ini</th>
@@ -772,30 +873,6 @@ export default function RoleManagementIndex({
                             </tbody>
                         </table>
                     </div>
-
-                    {users.links?.length > 0 && (
-                        <div className="mt-6 flex flex-wrap gap-2">
-                            {users.links.map((link) => (
-                                <Button
-                                    key={link.label}
-                                    variant={
-                                        link.active ? 'default' : 'outline'
-                                    }
-                                    size="sm"
-                                    disabled={!link.url}
-                                    onClick={() =>
-                                        link.url && router.get(link.url)
-                                    }
-                                >
-                                    <span
-                                        dangerouslySetInnerHTML={{
-                                            __html: link.label,
-                                        }}
-                                    />
-                                </Button>
-                            ))}
-                        </div>
-                    )}
                 </section>
             </div>
         </AppLayout>

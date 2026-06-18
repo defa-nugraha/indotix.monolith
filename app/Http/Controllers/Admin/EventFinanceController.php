@@ -18,10 +18,26 @@ class EventFinanceController extends Controller
     {
         return Inertia::render('admin/events/finance/commissions', [
             'commissions' => EventCommission::query()
-                ->with('event')
-                ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
+                ->with(['event', 'createdBy:id,name', 'updatedBy:id,name'])
+                ->where(function ($query) {
+                    $query->whereNull('event_id')
+                        ->orWhereHas('event', fn ($q) => $q->where('event_type', 'event'));
+                })
                 ->latest()
-                ->get(),
+                ->get()
+                ->map(fn (EventCommission $commission) => [
+                    'id' => $commission->id,
+                    'type' => $commission->type,
+                    'value' => $commission->value,
+                    'starts_at' => $commission->starts_at?->toDateString(),
+                    'ends_at' => $commission->ends_at?->toDateString(),
+                    'is_forever' => $commission->is_forever,
+                    'event' => $commission->event ? [
+                        'title' => $commission->event->title,
+                    ] : null,
+                    'created_by_name' => $commission->createdBy?->name,
+                    'updated_by_name' => $commission->updatedBy?->name,
+                ]),
             'events' => Event::query()
                 ->where('event_type', 'event')
                 ->select('id', 'title')
@@ -36,9 +52,16 @@ class EventFinanceController extends Controller
             'event_id' => ['nullable', 'integer', 'exists:events,id'],
             'type' => ['required', 'in:percentage,fixed'],
             'value' => ['required', 'numeric', 'min:0'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date'],
+            'is_forever' => ['boolean'],
+            'starts_at' => [\Illuminate\Validation\Rule::requiredIf(fn () => ! $request->boolean('is_forever')), 'nullable', 'date'],
+            'ends_at' => [\Illuminate\Validation\Rule::requiredIf(fn () => ! $request->boolean('is_forever')), 'nullable', 'date', 'after_or_equal:starts_at'],
         ]);
+
+        $data['is_forever'] = $request->boolean('is_forever');
+        if ($data['is_forever']) {
+            $data['starts_at'] = null;
+            $data['ends_at'] = null;
+        }
 
         $commission = EventCommission::create($data);
 
@@ -56,7 +79,7 @@ class EventFinanceController extends Controller
     public function settlements(): Response
     {
         return Inertia::render('admin/events/finance/settlements', [
-            'settlements' => EventSettlement::query()->with('organizer')->latest()->paginate(20),
+            'settlements' => EventSettlement::query()->with('organizer')->latest()->paginate(\App\Support\PaginationOptions::perPage()),
         ]);
     }
 

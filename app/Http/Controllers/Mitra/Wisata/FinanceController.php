@@ -22,28 +22,27 @@ class FinanceController extends Controller
         $paidBookings = WisataBooking::query()
             ->where('mitra_wisata_onboarding_id', $destination->id)
             ->whereIn('status', ['paid', 'completed'])
-            ->get(['total_price']);
+            ->get(['total_price', 'visit_date', 'created_at']);
 
         $gross = $paidBookings->sum('total_price');
 
-        $commissionRule = WisataCommissionRule::query()
-            ->where('mitra_wisata_onboarding_id', $destination->id)
-            ->latest('id')
-            ->first();
-
-        if (! $commissionRule) {
-            $commissionRule = WisataCommissionRule::query()
-                ->whereNull('mitra_wisata_onboarding_id')
-                ->latest('id')
-                ->first();
-        }
-
         $commission = 0;
-        if ($commissionRule) {
-            if ($commissionRule->type === 'percentage') {
-                $commission = (int) round($gross * ($commissionRule->value / 100));
+        $commissionRule = null;
+        foreach ($paidBookings as $booking) {
+            $date = $booking->visit_date?->toDateString()
+                ?? $booking->created_at?->toDateString()
+                ?? now()->toDateString();
+            $rule = $this->resolveCommissionRule($destination->id, $date);
+            $commissionRule ??= $rule;
+
+            if (! $rule) {
+                continue;
+            }
+
+            if ($rule->type === 'percentage') {
+                $commission += (int) round($booking->total_price * ($rule->value / 100));
             } else {
-                $commission = (int) ($commissionRule->value * max(1, $paidBookings->count()));
+                $commission += (int) $rule->value;
             }
         }
 
@@ -65,6 +64,43 @@ class FinanceController extends Controller
                 'value' => $commissionRule->value,
             ] : null,
         ]);
+    }
+
+    private function resolveCommissionRule(int $destinationId, string $date): ?WisataCommissionRule
+    {
+        $rule = WisataCommissionRule::query()
+            ->where('mitra_wisata_onboarding_id', $destinationId)
+            ->where(function ($query) use ($date) {
+                $query->where('is_forever', true)
+                    ->orWhereNull('start_date')
+                    ->orWhere('start_date', '<=', $date);
+            })
+            ->where(function ($query) use ($date) {
+                $query->where('is_forever', true)
+                    ->orWhereNull('end_date')
+                    ->orWhere('end_date', '>=', $date);
+            })
+            ->latest('id')
+            ->first();
+
+        if ($rule) {
+            return $rule;
+        }
+
+        return WisataCommissionRule::query()
+            ->whereNull('mitra_wisata_onboarding_id')
+            ->where(function ($query) use ($date) {
+                $query->where('is_forever', true)
+                    ->orWhereNull('start_date')
+                    ->orWhere('start_date', '<=', $date);
+            })
+            ->where(function ($query) use ($date) {
+                $query->where('is_forever', true)
+                    ->orWhereNull('end_date')
+                    ->orWhere('end_date', '>=', $date);
+            })
+            ->latest('id')
+            ->first();
     }
 
     public function payouts(Request $request): Response

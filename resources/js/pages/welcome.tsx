@@ -76,6 +76,7 @@ type EventCard = {
     city_name?: string | null;
     start_at?: string | null;
     min_price?: number | null;
+    image_url?: string | null;
 };
 type AcademyCard = {
     id: number;
@@ -193,6 +194,10 @@ export default function Welcome({
     );
     const [showMobileDownloadPrompt, setShowMobileDownloadPrompt] =
         useState(false);
+    const [activePromoVideo, setActivePromoVideo] = useState<{
+        title: string;
+        src: string;
+    } | null>(null);
     const bannerSlides: BannerSlide[] =
         banners.length > 0
             ? banners.map((banner) => ({
@@ -543,7 +548,7 @@ export default function Welcome({
                 <DialogContent className="max-w-[calc(100%-1.5rem)] rounded-3xl border-slate-200 p-0 sm:max-w-sm">
                     <div className="overflow-hidden rounded-3xl">
                         <div className="bg-[linear-gradient(135deg,#0B3B8F,#1D73D6,#4CC9F0)] px-6 py-5 text-white">
-                            <p className="text-xs font-semibold tracking-[0.22em] text-white/80 uppercase">
+                            <p className="text-xs font-semibold text-white/80 uppercase">
                                 Download Aplikasi
                             </p>
                             <DialogHeader className="mt-2 text-left">
@@ -827,28 +832,64 @@ export default function Welcome({
                                 <div className="flex gap-4 overflow-x-auto p-4 md:grid md:overflow-visible">
                                     <div className="min-w-[85vw] overflow-hidden rounded-2xl bg-slate-100 md:min-w-0">
                                         {promoVideoData.image_path ? (
-                                            <video
-                                                src={`/storage/${promoVideoData.image_path}`}
-                                                className="aspect-video w-full bg-white object-contain"
-                                                autoPlay
-                                                muted
-                                                loop
-                                                playsInline
-                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setActivePromoVideo({
+                                                        title:
+                                                            promoVideoData.title ||
+                                                            'Video promo',
+                                                        src: `/storage/${promoVideoData.image_path}`,
+                                                    })
+                                                }
+                                                className="group relative block w-full overflow-hidden text-left"
+                                                aria-label="Putar video promo utama"
+                                            >
+                                                <video
+                                                    src={`/storage/${promoVideoData.image_path}`}
+                                                    className="aspect-video w-full bg-white object-contain"
+                                                    autoPlay
+                                                    muted
+                                                    loop
+                                                    playsInline
+                                                />
+                                                <span className="absolute inset-0 flex items-center justify-center bg-slate-950/0 opacity-0 transition group-hover:bg-slate-950/20 group-hover:opacity-100 group-focus-visible:bg-slate-950/20 group-focus-visible:opacity-100">
+                                                    <span className="rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm">
+                                                        Putar video
+                                                    </span>
+                                                </span>
+                                            </button>
                                         ) : (
                                             <div className="aspect-video w-full bg-white" />
                                         )}
                                     </div>
                                     <div className="min-w-[85vw] overflow-hidden rounded-2xl bg-slate-100 md:min-w-0">
                                         {promoVideoData.secondary_video_path ? (
-                                            <video
-                                                src={`/storage/${promoVideoData.secondary_video_path}`}
-                                                className="aspect-video w-full bg-white object-contain"
-                                                autoPlay
-                                                muted
-                                                loop
-                                                playsInline
-                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setActivePromoVideo({
+                                                        title: 'Video promo lainnya',
+                                                        src: `/storage/${promoVideoData.secondary_video_path}`,
+                                                    })
+                                                }
+                                                className="group relative block w-full overflow-hidden text-left"
+                                                aria-label="Putar video promo lainnya"
+                                            >
+                                                <video
+                                                    src={`/storage/${promoVideoData.secondary_video_path}`}
+                                                    className="aspect-video w-full bg-white object-contain"
+                                                    autoPlay
+                                                    muted
+                                                    loop
+                                                    playsInline
+                                                />
+                                                <span className="absolute inset-0 flex items-center justify-center bg-slate-950/0 opacity-0 transition group-hover:bg-slate-950/20 group-hover:opacity-100 group-focus-visible:bg-slate-950/20 group-focus-visible:opacity-100">
+                                                    <span className="rounded-full bg-white/95 px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm">
+                                                        Putar video
+                                                    </span>
+                                                </span>
+                                            </button>
                                         ) : (
                                             <div className="aspect-video w-full bg-white" />
                                         )}
@@ -940,6 +981,36 @@ export default function Welcome({
                                 </div>
                             </div>
                         </section>
+
+                        <Dialog
+                            open={Boolean(activePromoVideo)}
+                            onOpenChange={(open) => {
+                                if (!open) {
+                                    setActivePromoVideo(null);
+                                }
+                            }}
+                        >
+                            <DialogContent className="max-w-4xl border-0 bg-slate-950 p-0 text-white">
+                                <DialogHeader className="px-5 pt-5">
+                                    <DialogTitle>
+                                        {activePromoVideo?.title ?? 'Video promo'}
+                                    </DialogTitle>
+                                    <DialogDescription className="text-slate-300">
+                                        Gunakan kontrol video untuk putar, jeda, volume, atau layar penuh.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                {activePromoVideo && (
+                                    <video
+                                        key={activePromoVideo.src}
+                                        src={activePromoVideo.src}
+                                        className="aspect-video w-full bg-black"
+                                        controls
+                                        autoPlay
+                                        playsInline
+                                    />
+                                )}
+                            </DialogContent>
+                        </Dialog>
 
                         <section className="mt-10 rounded-2xl bg-white p-6 shadow-sm">
                             <div className="flex items-center justify-between">
@@ -1131,7 +1202,10 @@ export default function Welcome({
                                     >
                                         <div className="h-40 overflow-hidden bg-gradient-to-br from-indigo-600 to-sky-500">
                                             <img
-                                                src="/images/placeholder-card.jpg"
+                                                src={
+                                                    event.image_url ??
+                                                    '/images/placeholder-card.jpg'
+                                                }
                                                 alt={event.title}
                                                 className="h-full w-full object-cover"
                                             />

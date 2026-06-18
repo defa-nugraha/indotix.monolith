@@ -29,14 +29,35 @@ class FinanceController extends Controller
 
         $commissionTotal = 0;
         foreach ($bookings as $booking) {
+            $date = $booking->created_at?->toDateString() ?? now()->toDateString();
             $rule = EventCommission::query()
                 ->where('event_id', $booking->event_id)
+                ->where(function ($query) use ($date) {
+                    $query->where('is_forever', true)
+                        ->orWhereNull('starts_at')
+                        ->orWhere('starts_at', '<=', $date);
+                })
+                ->where(function ($query) use ($date) {
+                    $query->where('is_forever', true)
+                        ->orWhereNull('ends_at')
+                        ->orWhere('ends_at', '>=', $date);
+                })
                 ->latest('id')
                 ->first();
 
             if (! $rule) {
                 $rule = EventCommission::query()
                     ->whereNull('event_id')
+                    ->where(function ($query) use ($date) {
+                        $query->where('is_forever', true)
+                            ->orWhereNull('starts_at')
+                            ->orWhere('starts_at', '<=', $date);
+                    })
+                    ->where(function ($query) use ($date) {
+                        $query->where('is_forever', true)
+                            ->orWhereNull('ends_at')
+                            ->orWhere('ends_at', '>=', $date);
+                    })
                     ->latest('id')
                     ->first();
             }

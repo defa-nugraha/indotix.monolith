@@ -37,7 +37,7 @@ export default function MitraBankAccount({ bank, payout_status }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Pengaturan Rekening</p>
+                            <p className="text-xs font-semibold uppercase text-sky-600">Pengaturan Rekening</p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">Rekening payout</h1>
                             <p className="text-sm text-slate-500">Pastikan data rekening Anda sesuai untuk proses payout.</p>
                         </div>
@@ -51,7 +51,7 @@ export default function MitraBankAccount({ bank, payout_status }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Nama Bank</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Nama Bank</label>
                             <input
                                 value={data.bank_name}
                                 onChange={(event) => setData('bank_name', event.target.value)}
@@ -61,7 +61,7 @@ export default function MitraBankAccount({ bank, payout_status }: Props) {
                             {errors.bank_name && <p className="text-xs text-rose-600">{errors.bank_name}</p>}
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Nomor Rekening</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Nomor Rekening</label>
                             <input
                                 value={data.bank_account_number}
                                 onChange={(event) => setData('bank_account_number', event.target.value)}
@@ -71,7 +71,7 @@ export default function MitraBankAccount({ bank, payout_status }: Props) {
                             {errors.bank_account_number && <p className="text-xs text-rose-600">{errors.bank_account_number}</p>}
                         </div>
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Nama Pemilik Rekening</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Nama Pemilik Rekening</label>
                             <input
                                 value={data.bank_account_name}
                                 onChange={(event) => setData('bank_account_name', event.target.value)}

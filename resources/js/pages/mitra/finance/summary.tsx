@@ -48,7 +48,7 @@ export default function MitraFinanceSummary({ filters, hotelOptions, summary, da
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Keuangan Mitra</p>
+                            <p className="text-xs font-semibold uppercase text-sky-600">Keuangan Mitra</p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">Ringkasan pendapatan</h1>
                             <p className="text-sm text-slate-500">Pantau pemasukan, komisi, dan payout bersih.</p>
                         </div>
@@ -62,7 +62,7 @@ export default function MitraFinanceSummary({ filters, hotelOptions, summary, da
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form onSubmit={applyFilters} className="grid gap-4 md:grid-cols-5">
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Hotel</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Hotel</label>
                             <select
                                 name="hotel_id"
                                 defaultValue={filters.hotel_id ?? ''}
@@ -77,7 +77,7 @@ export default function MitraFinanceSummary({ filters, hotelOptions, summary, da
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Periode</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Periode</label>
                             <select
                                 name="period"
                                 defaultValue={filters.period}
@@ -89,7 +89,7 @@ export default function MitraFinanceSummary({ filters, hotelOptions, summary, da
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Dari</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Dari</label>
                             <input
                                 type="date"
                                 name="date_from"
@@ -98,7 +98,7 @@ export default function MitraFinanceSummary({ filters, hotelOptions, summary, da
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Sampai</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Sampai</label>
                             <input
                                 type="date"
                                 name="date_to"
@@ -146,7 +146,7 @@ export default function MitraFinanceSummary({ filters, hotelOptions, summary, da
                             <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${card.accent}`}>
                                 <card.icon className="size-5" />
                             </div>
-                            <p className="mt-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">{card.title}</p>
+                            <p className="mt-3 text-xs font-semibold uppercase text-slate-400">{card.title}</p>
                             <p className="mt-1 text-2xl font-semibold text-slate-900">{card.value}</p>
                         </div>
                     ))}
@@ -159,7 +159,7 @@ export default function MitraFinanceSummary({ filters, hotelOptions, summary, da
                     </div>
                     <div className="mt-4 overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                            <thead className="text-xs uppercase tracking-wider text-slate-400">
+                            <thead className="text-xs uppercase text-slate-400">
                                 <tr>
                                     <th className="py-3 pr-4">Tanggal</th>
                                     <th className="py-3 pr-4">Booking</th>

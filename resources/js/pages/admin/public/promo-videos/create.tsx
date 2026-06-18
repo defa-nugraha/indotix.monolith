@@ -14,6 +14,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Tambah', href: '/admin/public/promo-videos/create' },
 ];
 
+const maxVideoBytes = 100 * 1024 * 1024;
+const maxVideoSizeLabel = '100 MB';
+
 export default function PromoVideoCreate() {
     const form = useForm({
         title: '',
@@ -34,6 +37,20 @@ export default function PromoVideoCreate() {
         if (!file) {
             form.setData(field, null);
             form.clearErrors(field);
+            return;
+        }
+
+        if (file.size > maxVideoBytes) {
+            form.setError(field, `Ukuran video maksimal ${maxVideoSizeLabel}.`);
+            form.setData(field, null);
+            if (input) {
+                input.value = '';
+            }
+            Swal.fire({
+                icon: 'error',
+                title: 'Video terlalu besar',
+                text: `Ukuran video maksimal ${maxVideoSizeLabel}.`,
+            });
             return;
         }
 
@@ -88,7 +105,11 @@ export default function PromoVideoCreate() {
                             form.post('/admin/public/promo-videos', {
                                 forceFormData: true,
                                 onSuccess: () =>
-                                    Swal.fire({ title: 'Berhasil', text: 'Promo video ditambahkan.', icon: 'success' }),
+                                    Swal.fire({
+                                        title: 'Berhasil',
+                                        text: 'Promo video ditambahkan. Jika ukuran file besar, kompresi berjalan di background.',
+                                        icon: 'success',
+                                    }),
                                 onError: () =>
                                     Swal.fire({ title: 'Gagal', text: 'Promo video gagal ditambahkan.', icon: 'error' }),
                             });
@@ -121,7 +142,7 @@ export default function PromoVideoCreate() {
                                     validateVideoFile(event.target.files?.[0] ?? null, 'video', { width: 1280, height: 720 }, event.currentTarget)
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9).</p>
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9), maksimal {maxVideoSizeLabel}.</p>
                             <InputError message={form.errors.video} />
                         </div>
                         <div className="grid gap-2">
@@ -133,7 +154,7 @@ export default function PromoVideoCreate() {
                                     validateVideoFile(event.target.files?.[0] ?? null, 'secondary_video', { width: 1280, height: 720 }, event.currentTarget)
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9).</p>
+                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1280 × 720 px (16:9), maksimal {maxVideoSizeLabel}.</p>
                             <InputError message={form.errors.secondary_video} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">

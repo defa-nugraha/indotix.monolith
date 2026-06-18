@@ -8,5 +8,9 @@ export type SharedData = {
     name: string;
     auth: Auth;
     sidebarOpen: boolean;
+    maintenance_mode?: {
+        enabled: boolean;
+        message: string;
+    };
     [key: string]: unknown;
 };

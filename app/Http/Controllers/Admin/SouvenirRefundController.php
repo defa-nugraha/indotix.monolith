@@ -18,7 +18,7 @@ class SouvenirRefundController extends Controller
         $refunds = SouvenirRefund::query()
             ->with(['order'])
             ->latest()
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
         $orders = SouvenirOrder::query()->latest()->get(['id']);

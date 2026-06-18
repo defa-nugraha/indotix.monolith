@@ -29,7 +29,7 @@ class SpecialProgramScanController extends Controller
         }
 
         return Inertia::render('admin/special-programs/scans/index', [
-            'scans' => $query->paginate(30)->withQueryString(),
+            'scans' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'programs' => SpecialProgram::query()
                 ->select('id', 'name')
                 ->orderBy('name')

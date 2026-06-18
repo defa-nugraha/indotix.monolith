@@ -126,7 +126,7 @@ class TicketController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        if ($ticket->mitra_wisata_onboarding_id !== $destination->id) {
+        if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
             abort(403);
         }
 
@@ -167,7 +167,7 @@ class TicketController extends Controller
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        if ($ticket->mitra_wisata_onboarding_id !== $destination->id) {
+        if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
             abort(403);
         }
 

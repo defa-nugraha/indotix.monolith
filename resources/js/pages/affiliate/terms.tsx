@@ -8,7 +8,7 @@ export default function AffiliateTerms() {
             <Head title="Ketentuan Afiliasi" />
             <div className="space-y-6">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Ketentuan</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Ketentuan</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">Syarat & ketentuan afiliasi</h1>
                 </div>
                 <div className="space-y-3 text-sm text-slate-600">

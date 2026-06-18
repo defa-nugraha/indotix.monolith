@@ -103,7 +103,7 @@ export default function AdminChatIndex({
             if (pollingRef.current) return;
             pollingRef.current = window.setInterval(() => {
                 router.reload({ only: ['messages', 'conversations'] });
-            }, 6000);
+            }, 1000);
         };
 
         const stopPolling = () => {

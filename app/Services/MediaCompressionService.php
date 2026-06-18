@@ -10,10 +10,12 @@ class MediaCompressionService
 {
     private int $thresholdBytes = 2097152;
 
+    private int $maxCompressPixels = 25000000;
+
     public function store(UploadedFile $file, string $directory, string $disk = 'public'): string
     {
         if ($file->getSize() <= $this->thresholdBytes) {
-            return $file->store($directory, $disk);
+            return $this->storeOriginal($file, $directory, $disk);
         }
 
         $mime = $file->getMimeType() ?? '';
@@ -30,7 +32,7 @@ class MediaCompressionService
         }
 
         if (str_starts_with($mime, 'video/')) {
-            $compressed = $this->compressVideo($file);
+            $compressed = $this->compressVideoPath($file->getPathname(), $file->getSize());
             if ($compressed) {
                 try {
                     return Storage::disk($disk)->putFile($directory, new File($compressed));
@@ -40,7 +42,32 @@ class MediaCompressionService
             }
         }
 
+        return $this->storeOriginal($file, $directory, $disk);
+    }
+
+    public function storeOriginal(UploadedFile $file, string $directory, string $disk = 'public'): string
+    {
         return $file->store($directory, $disk);
+    }
+
+    public function compressStoredVideo(string $disk, string $path, string $directory): ?string
+    {
+        $storage = Storage::disk($disk);
+        if (! $storage->exists($path) || $storage->size($path) <= $this->thresholdBytes) {
+            return null;
+        }
+
+        $sourcePath = $storage->path($path);
+        $compressed = $this->compressVideoPath($sourcePath, $storage->size($path));
+        if (! $compressed) {
+            return null;
+        }
+
+        try {
+            return $storage->putFile($directory, new File($compressed));
+        } finally {
+            @unlink($compressed);
+        }
     }
 
     private function compressImage(UploadedFile $file): ?string
@@ -51,6 +78,10 @@ class MediaCompressionService
 
         $mime = $file->getMimeType() ?? '';
         $sourcePath = $file->getPathname();
+
+        if (! $this->canSafelyCompressImage($sourcePath)) {
+            return null;
+        }
 
         switch ($mime) {
             case 'image/jpeg':
@@ -68,6 +99,7 @@ class MediaCompressionService
                     $quality -= 10;
                 } while (true);
                 imagedestroy($image);
+
                 return $tempPath;
             case 'image/png':
                 $image = @imagecreatefrompng($sourcePath);
@@ -84,6 +116,7 @@ class MediaCompressionService
                     $compression += 1;
                 } while (true);
                 imagedestroy($image);
+
                 return $tempPath;
             case 'image/webp':
                 if (! function_exists('imagecreatefromwebp') || ! function_exists('imagewebp')) {
@@ -103,20 +136,68 @@ class MediaCompressionService
                     $quality -= 10;
                 } while (true);
                 imagedestroy($image);
+
                 return $tempPath;
             default:
                 return null;
         }
     }
 
-    private function compressVideo(UploadedFile $file): ?string
+    private function canSafelyCompressImage(string $sourcePath): bool
+    {
+        $size = @getimagesize($sourcePath);
+        if (! $size) {
+            return false;
+        }
+
+        $width = (int) ($size[0] ?? 0);
+        $height = (int) ($size[1] ?? 0);
+        if ($width <= 0 || $height <= 0) {
+            return false;
+        }
+
+        $pixels = $width * $height;
+        if ($pixels > $this->maxCompressPixels) {
+            return false;
+        }
+
+        $memoryLimit = $this->memoryLimitBytes();
+        if ($memoryLimit <= 0) {
+            return true;
+        }
+
+        $estimatedBytes = $pixels * 5;
+
+        return $estimatedBytes < ($memoryLimit * 0.4);
+    }
+
+    private function memoryLimitBytes(): int
+    {
+        $limit = trim((string) ini_get('memory_limit'));
+        if ($limit === '' || $limit === '-1') {
+            return 0;
+        }
+
+        $unit = strtolower(substr($limit, -1));
+        $value = (int) $limit;
+
+        return match ($unit) {
+            'g' => $value * 1024 * 1024 * 1024,
+            'm' => $value * 1024 * 1024,
+            'k' => $value * 1024,
+            default => $value,
+        };
+    }
+
+    private function compressVideoPath(string $inputPath, ?int $originalSize = null): ?string
     {
         $binary = $this->resolveFfmpegBinary();
         if (! $binary) {
             return null;
         }
 
-        $inputPath = $file->getPathname();
+        @set_time_limit(0);
+
         $base = tempnam(sys_get_temp_dir(), 'vid_');
         if (! $base) {
             return null;
@@ -135,6 +216,13 @@ class MediaCompressionService
 
         if ($exitCode !== 0 || ! file_exists($outputPath)) {
             @unlink($outputPath);
+
+            return null;
+        }
+
+        if ($originalSize !== null && filesize($outputPath) >= $originalSize) {
+            @unlink($outputPath);
+
             return null;
         }
 
@@ -156,6 +244,7 @@ class MediaCompressionService
         }
 
         $path = trim((string) @shell_exec('command -v ffmpeg'));
+
         return $path !== '' ? $path : null;
     }
 }

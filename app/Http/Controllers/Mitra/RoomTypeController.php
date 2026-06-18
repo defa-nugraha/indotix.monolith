@@ -44,10 +44,7 @@ class RoomTypeController extends Controller
             $roomTypesQuery->where('hotel_id', (int) $request->input('hotel_id'));
         }
 
-        $perPage = (int) $request->input('per_page', 10);
-        if (! in_array($perPage, [10, 25, 50, 100], true)) {
-            $perPage = 10;
-        }
+        $perPage = \App\Support\PaginationOptions::perPage($request);
 
         $roomTypes = $roomTypesQuery
             ->paginate($perPage)

@@ -26,7 +26,7 @@ class SouvenirVariantController extends Controller
                 ->orWhere('sku', 'like', "%{$search}%");
         }
 
-        $variants = $query->orderByDesc('id')->paginate(10)->withQueryString();
+        $variants = $query->orderByDesc('id')->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
 
         $products = SouvenirProduct::query()->orderBy('name')->get(['id', 'name']);
 

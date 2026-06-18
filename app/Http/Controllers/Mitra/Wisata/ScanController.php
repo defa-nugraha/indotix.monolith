@@ -29,7 +29,7 @@ class ScanController extends Controller
         }
 
         $scans = $query->latest('scanned_at')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (WisataTicketScan $scan) => [
                 'id' => $scan->id,

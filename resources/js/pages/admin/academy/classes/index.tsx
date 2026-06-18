@@ -133,13 +133,30 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
 
     const submit = () => {
         if (editing) {
-            form.put(`/admin/academy/classes/${editing.id}`, {
+            form.transform((data) => ({
+                ...data,
+                _method: 'put',
+            }));
+            form.post(`/admin/academy/classes/${editing.id}`, {
                 forceFormData: true,
                 onSuccess: () => {
                     Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Kelas diperbarui.' });
                     setIsFormOpen(false);
                 },
-                onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Periksa data.' }),
+                onError: (errors: Record<string, string | string[]>) => {
+                    const message =
+                        Object.values(errors).flat().join('\n') ||
+                        'Periksa data kelas, jadwal, kapasitas, dan gambar.';
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: message,
+                    });
+                },
+                onFinish: () => {
+                    form.transform((data) => data);
+                },
             });
         } else {
             form.post('/admin/academy/classes', {
@@ -148,7 +165,17 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                     Swal.fire({ icon: 'success', title: 'Tersimpan', text: 'Kelas dibuat.' });
                     setIsFormOpen(false);
                 },
-                onError: () => Swal.fire({ icon: 'error', title: 'Gagal', text: 'Periksa data.' }),
+                onError: (errors: Record<string, string | string[]>) => {
+                    const message =
+                        Object.values(errors).flat().join('\n') ||
+                        'Periksa data kelas, jadwal, kapasitas, dan gambar.';
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: message,
+                    });
+                },
             });
         }
     };
@@ -160,7 +187,7 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Academy</p>
+                            <p className="text-xs font-semibold uppercase text-sky-600">Academy</p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">Master Kelas</h1>
                             <p className="text-sm text-slate-500">Kelola kelas dan jadwal.</p>
                         </div>

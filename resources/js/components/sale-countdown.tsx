@@ -64,7 +64,7 @@ export default function SaleCountdown({ target, label = 'Berakhir', compact = fa
         <div
             className={`inline-flex items-center gap-2 rounded-full border border-sky-100 bg-gradient-to-r from-sky-50 via-white to-indigo-50 ${sizeClasses} font-semibold text-slate-700 shadow-sm ${className}`}
         >
-            <span className="text-[10px] uppercase tracking-[0.25em] text-sky-600">
+            <span className="text-[10px] uppercase text-sky-600">
                 {label}
             </span>
             <span className="text-slate-300">•</span>

@@ -15,7 +15,7 @@ export default function AffiliateNotifications({ notifications }: { notification
             <Head title="Notifikasi Afiliasi" />
             <div className="space-y-6">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Notifikasi</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Notifikasi</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">Update terbaru afiliasi</h1>
                 </div>
 

@@ -29,7 +29,7 @@ export default function PayoutCreate({ hotelOptions }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Generate payout
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -64,7 +64,7 @@ export default function PayoutCreate({ hotelOptions }: Props) {
                 >
                     <div className="grid gap-6 md:grid-cols-2">
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Hotel
                             </label>
                             <select
@@ -83,7 +83,7 @@ export default function PayoutCreate({ hotelOptions }: Props) {
                             {errors.hotel_id && <p className="text-xs text-red-500">{errors.hotel_id}</p>}
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Mulai
                             </label>
                             <input
@@ -96,7 +96,7 @@ export default function PayoutCreate({ hotelOptions }: Props) {
                             {errors.period_start && <p className="text-xs text-red-500">{errors.period_start}</p>}
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Sampai
                             </label>
                             <input
@@ -109,7 +109,7 @@ export default function PayoutCreate({ hotelOptions }: Props) {
                             {errors.period_end && <p className="text-xs text-red-500">{errors.period_end}</p>}
                         </div>
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Catatan
                             </label>
                             <textarea

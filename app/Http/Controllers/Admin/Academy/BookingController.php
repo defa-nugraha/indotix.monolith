@@ -29,7 +29,7 @@ class BookingController extends Controller
         }
 
         return Inertia::render('admin/academy/bookings/index', [
-            'bookings' => $query->paginate(20)->withQueryString(),
+            'bookings' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'classes' => AcademyClass::query()->select('id', 'title')->orderBy('title')->get(),
             'filters' => [
                 'status' => $status,

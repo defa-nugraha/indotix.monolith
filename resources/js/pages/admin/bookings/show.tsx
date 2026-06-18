@@ -205,7 +205,7 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Detail Booking
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -241,7 +241,7 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                             <div className="flex items-start gap-3">
                                 <Hotel className="mt-1 size-4 text-sky-500" />
                                 <div>
-                                    <p className="text-xs uppercase tracking-wider text-slate-400">Hotel</p>
+                                    <p className="text-xs uppercase text-slate-400">Hotel</p>
                                     <p className="font-semibold">{booking.hotel?.name ?? '-'}</p>
                                     <p className="text-xs text-slate-500">{booking.hotel?.address ?? '-'}</p>
                                 </div>
@@ -249,7 +249,7 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                             <div className="flex items-start gap-3">
                                 <CalendarDays className="mt-1 size-4 text-sky-500" />
                                 <div>
-                                    <p className="text-xs uppercase tracking-wider text-slate-400">Tanggal</p>
+                                    <p className="text-xs uppercase text-slate-400">Tanggal</p>
                                     <p className="font-semibold">{booking.check_in ?? '-'} → {booking.check_out ?? '-'}</p>
                                     <p className="text-xs text-slate-500">{booking.nights ?? 0} malam · {booking.rooms_count ?? 0} kamar</p>
                                 </div>
@@ -257,7 +257,7 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                             <div className="flex items-start gap-3">
                                 <Users className="mt-1 size-4 text-sky-500" />
                                 <div>
-                                    <p className="text-xs uppercase tracking-wider text-slate-400">Tamu</p>
+                                    <p className="text-xs uppercase text-slate-400">Tamu</p>
                                     <p className="font-semibold">{booking.guest?.name ?? '-'}</p>
                                     <p className="text-xs text-slate-500">{booking.guests_count ?? 0} tamu</p>
                                 </div>
@@ -265,7 +265,7 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                             <div className="flex items-start gap-3">
                                 <Banknote className="mt-1 size-4 text-sky-500" />
                                 <div>
-                                    <p className="text-xs uppercase tracking-wider text-slate-400">Total</p>
+                                    <p className="text-xs uppercase text-slate-400">Total</p>
                                     <p className="font-semibold">Rp {booking.total?.toLocaleString('id-ID') ?? '-'}</p>
                                     <p className="text-xs text-slate-500">Subtotal Rp {booking.subtotal?.toLocaleString('id-ID') ?? '-'}</p>
                                 </div>

@@ -33,7 +33,7 @@ export default function AdminWisataFinanceReports({ metrics }: Props) {
                     <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                         {cards.map((card) => (
                             <div key={card.label} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                                <p className="text-xs uppercase tracking-wider text-slate-400">{card.label}</p>
+                                <p className="text-xs uppercase text-slate-400">{card.label}</p>
                                 <p className="mt-2 text-xl font-semibold text-slate-900">
                                     Rp {card.value.toLocaleString('id-ID')}
                                 </p>

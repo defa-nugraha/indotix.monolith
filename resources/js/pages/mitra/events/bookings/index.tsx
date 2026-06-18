@@ -32,7 +32,7 @@ export default function MitraEventBookingsIndex({ bookings, filters }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Booking</p>
+                            <p className="text-xs font-semibold uppercase text-sky-600">Booking</p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">Monitoring Booking Event</h1>
                             <p className="text-sm text-slate-500">Pantau status booking peserta.</p>
                         </div>

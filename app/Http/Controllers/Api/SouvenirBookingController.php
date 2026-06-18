@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class SouvenirBookingController extends Controller
@@ -253,6 +254,7 @@ class SouvenirBookingController extends Controller
 
         if ($order->status === 'pending_payment' && $order->payment_deadline && $order->payment_deadline->isPast()) {
             $order->update(['status' => 'expired', 'payment_status' => 'expired']);
+
             return response()->json(['message' => 'Pesanan sudah kedaluwarsa.'], 422);
         }
 
@@ -280,7 +282,7 @@ class SouvenirBookingController extends Controller
         $payload = [
             'transaction_details' => [
                 'order_id' => $orderId,
-                'gross_amount' => $order->total_price,
+                'gross_amount' => (int) $order->total_price,
             ],
             'customer_details' => [
                 'first_name' => $order->guest_name ?? $order->user?->name ?? 'Customer',
@@ -289,14 +291,20 @@ class SouvenirBookingController extends Controller
             'item_details' => $order->items->map(fn ($item) => [
                 'id' => $item->sku ?? (string) $item->id,
                 'name' => $item->product_name,
-                'price' => $item->unit_price,
-                'quantity' => $item->quantity,
+                'price' => (int) $item->unit_price,
+                'quantity' => (int) $item->quantity,
             ])->all(),
         ];
 
         try {
             $snap = $midtransService->snap($payload);
         } catch (\Throwable $exception) {
+            Log::warning('Midtrans souvenir snap payment failed', [
+                'order_id' => $order->id,
+                'midtrans_order_id' => $orderId,
+                'message' => $exception->getMessage(),
+            ]);
+
             return response()->json(['message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.'], 500);
         }
 

@@ -128,7 +128,7 @@ export default function AdminReviews({ filters, typeOptions, statusOptions, revi
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form onSubmit={applyFilters} className="grid gap-4 md:grid-cols-4">
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Tipe</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Tipe</label>
                             <select
                                 name="type"
                                 defaultValue={filters.type ?? ''}
@@ -143,7 +143,7 @@ export default function AdminReviews({ filters, typeOptions, statusOptions, revi
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Status</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Status</label>
                             <select
                                 name="status"
                                 defaultValue={filters.status ?? ''}
@@ -158,7 +158,7 @@ export default function AdminReviews({ filters, typeOptions, statusOptions, revi
                             </select>
                         </div>
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Cari</label>
+                            <label className="text-xs font-semibold uppercase text-slate-400">Cari</label>
                             <input
                                 name="q"
                                 defaultValue={filters.q ?? ''}

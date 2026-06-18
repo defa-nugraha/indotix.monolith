@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class EventBookingController extends Controller
@@ -234,6 +235,7 @@ class EventBookingController extends Controller
 
         if ($booking->status === 'pending_payment' && $booking->payment_deadline && $booking->payment_deadline->isPast()) {
             $booking->update(['status' => 'expired', 'payment_status' => 'expired']);
+
             return response()->json(['message' => 'Booking sudah kedaluwarsa.'], 422);
         }
 
@@ -264,6 +266,12 @@ class EventBookingController extends Controller
         try {
             $charge = $midtransService->snap($payload);
         } catch (\Throwable $exception) {
+            Log::warning('Midtrans event snap payment failed', [
+                'booking_id' => $booking->id,
+                'order_id' => $orderId,
+                'message' => $exception->getMessage(),
+            ]);
+
             return response()->json(['message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.'], 500);
         }
 
@@ -396,7 +404,7 @@ class EventBookingController extends Controller
             'item_details' => [
                 [
                     'id' => (string) $booking->ticket?->id,
-                    'price' => (int) $booking->total_price / max(1, (int) $booking->quantity),
+                    'price' => intdiv((int) $booking->total_price, max(1, (int) $booking->quantity)),
                     'quantity' => (int) $booking->quantity,
                     'name' => $booking->ticket?->name ?? 'Tiket Event',
                 ],

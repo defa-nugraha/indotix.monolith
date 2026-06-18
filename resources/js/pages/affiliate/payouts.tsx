@@ -35,18 +35,18 @@ export default function AffiliatePayouts({
             <Head title="Payout Afiliator" />
             <div className="space-y-6">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Payout</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Payout</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">Riwayat pencairan komisi</h1>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Saldo bisa ditarik</p>
+                        <p className="text-xs font-semibold uppercase text-slate-400">Saldo bisa ditarik</p>
                         <p className="mt-2 text-2xl font-semibold text-slate-900">Rp {available.toLocaleString('id-ID')}</p>
                         <p className="mt-1 text-xs text-slate-500">Minimum payout: Rp {min_payout.toLocaleString('id-ID')}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Rekening</p>
+                        <p className="text-xs font-semibold uppercase text-slate-400">Rekening</p>
                         <p className="mt-1 text-sm font-semibold text-slate-900">{affiliate.bank_name ?? '-'}</p>
                         <p className="text-xs text-slate-500">{affiliate.bank_account_number ?? '-'}</p>
                         <p className="text-xs text-slate-500">{affiliate.bank_account_name ?? '-'}</p>

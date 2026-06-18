@@ -25,7 +25,7 @@ class AttendeeController extends Controller
         }
 
         return Inertia::render('admin/academy/attendees/index', [
-            'attendees' => $query->paginate(20)->withQueryString(),
+            'attendees' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'classes' => AcademyClass::query()->select('id', 'title')->orderBy('title')->get(),
             'filters' => [
                 'class_id' => $classId ?: null,

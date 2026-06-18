@@ -32,7 +32,7 @@ class EventBookingController extends Controller
         }
 
         return Inertia::render('admin/events/bookings/index', [
-            'bookings' => $query->paginate(20)->withQueryString(),
+            'bookings' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'events' => Event::query()
                 ->where('event_type', 'event')
                 ->select('id', 'title')

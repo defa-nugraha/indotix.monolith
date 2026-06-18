@@ -26,6 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'user' => \App\Http\Middleware\EnsureUser::class,
             'affiliate.user' => \App\Http\Middleware\EnsureAffiliateUser::class,
             'admin.log' => \App\Http\Middleware\LogAdminActivity::class,
+            'user.activity' => \App\Http\Middleware\LogUserActivity::class,
+            'maintenance.transactions' => \App\Http\Middleware\EnsureTransactionsAvailable::class,
         ]);
 
         $middleware->web(append: [

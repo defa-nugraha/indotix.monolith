@@ -381,7 +381,7 @@ export default function HotelShow({
                                                                 ),
                                                             );
                                                         }}
-                                                        months={2}
+                                                        months={1}
                                                         direction="horizontal"
                                                         minDate={new Date()}
                                                         rangeColors={[

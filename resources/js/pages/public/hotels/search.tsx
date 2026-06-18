@@ -19,10 +19,7 @@ import {
     type DiscoveryIntentChip,
     type DiscoveryTheme,
 } from '@/components/discovery/discovery-experience';
-import {
-    DiscoveryRangeDatePicker,
-    createRollingRecommendationMap,
-} from '@/components/discovery/product-date-picker';
+import { DiscoveryRangeDatePicker } from '@/components/discovery/product-date-picker';
 import {
     ActiveFilterChips,
     DiscoveryEmptyState,
@@ -313,22 +310,6 @@ export default function HotelSearch({
     );
 
     const filtered = useMemo(() => sortHotels(hotels, sort), [hotels, sort]);
-    const dateRecommendations = useMemo(() => {
-        const pool =
-            recommendations.length > 0 ? recommendations : filtered.slice(0, 6);
-
-        return createRollingRecommendationMap(pool, {
-            startDate: new Date(form.check_in),
-            days: 24,
-            mapItem: (item) => ({
-                id: item.id,
-                title: item.name,
-                imageUrl: item.image_url,
-                price: item.min_price ?? null,
-            }),
-        });
-    }, [filtered, form.check_in, recommendations]);
-
     const activeFilters = useMemo(
         () => [
             ...formatAppliedDiscoveryFilters(meta?.applied_filters),
@@ -410,9 +391,7 @@ export default function HotelSearch({
                                                     check_out: endDate,
                                                 }))
                                             }
-                                            recommendations={
-                                                dateRecommendations
-                                            }
+                                            showRecommendations={false}
                                             minDate={new Date()}
                                         />
                                         <div className="text-[11px] text-slate-400">

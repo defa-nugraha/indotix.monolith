@@ -21,8 +21,7 @@ class RegisterController extends Controller
         }
 
         $destinations = MitraWisataOnboarding::query()
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
+            ->publiclyVisible()
             ->orderBy('destination_name')
             ->get()
             ->map(function (MitraWisataOnboarding $destination) {
@@ -58,9 +57,8 @@ class RegisterController extends Controller
         ]);
 
         $destination = MitraWisataOnboarding::query()
+            ->publiclyVisible()
             ->where('id', $data['wisata_id'])
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
             ->firstOrFail();
 
         WisataAffiliate::create([

@@ -120,7 +120,7 @@ export function DiscoveryStoryHero({
             <div className="pointer-events-none absolute -bottom-16 left-4 h-36 w-36 rounded-full bg-black/10 blur-3xl" />
             <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
                 <div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-[0.18em] uppercase text-white/90">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase text-white/90">
                         <Sparkles className="h-3.5 w-3.5" />
                         <span>{editorial?.eyebrow ?? theme.badge}</span>
                     </div>
@@ -157,7 +157,7 @@ export function DiscoveryStoryHero({
                     <div className="rounded-3xl border border-white/18 bg-black/10 p-4 backdrop-blur-sm">
                         <div className="flex items-center gap-2 text-white/85">
                             <Clock3 className="h-4 w-4" />
-                            <span className="text-xs font-semibold uppercase tracking-[0.14em]">
+                            <span className="text-xs font-semibold uppercase">
                                 Mudah dijelajahi
                             </span>
                         </div>
@@ -169,7 +169,7 @@ export function DiscoveryStoryHero({
                     <div className="rounded-3xl border border-white/18 bg-white/8 p-4 backdrop-blur-sm">
                         <div className="flex items-center gap-2 text-white/85">
                             <MapPinned className="h-4 w-4" />
-                            <span className="text-xs font-semibold uppercase tracking-[0.14em]">
+                            <span className="text-xs font-semibold uppercase">
                                 Sedang tersedia
                             </span>
                         </div>
@@ -260,7 +260,7 @@ export function DiscoveryFeaturedShowcase({
             <div className="flex h-full flex-col rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-5">
                 <div className="flex flex-1 flex-col gap-5">
                     <div>
-                        <div className="flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-slate-400 uppercase">
+                        <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
                             <Sparkles className="h-4 w-4" />
                         <span>{section?.title ?? 'Rekomendasi pilihan'}</span>
                     </div>
@@ -279,7 +279,7 @@ export function DiscoveryFeaturedShowcase({
                                     key={`${card.label}-${card.value}`}
                                     className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5"
                                 >
-                                    <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+                                    <p className="text-[11px] font-bold text-slate-400 uppercase">
                                         {card.label}
                                     </p>
                                     <div className="mt-2">
@@ -314,7 +314,7 @@ export function DiscoveryFeaturedShowcase({
 
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-4">
                     <div>
-                        <p className="text-[11px] font-bold tracking-[0.16em] text-slate-400 uppercase">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase">
                             Mulai dari
                         </p>
                         <span className="mt-2 block text-lg font-semibold text-slate-900 sm:text-[1.75rem]">
@@ -345,7 +345,7 @@ export function DiscoveryFeaturedShowcase({
                 <div className="absolute inset-x-4 bottom-4 rounded-[24px] border border-white/14 bg-black/32 p-4 text-white backdrop-blur-md sm:inset-x-5 sm:bottom-5 sm:p-4.5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
-                            <p className="text-xs font-bold tracking-[0.16em] text-white/70 uppercase">
+                            <p className="text-xs font-bold text-white/70 uppercase">
                                 Pilihan utama
                             </p>
                             <p className="mt-2 line-clamp-2 text-lg font-semibold leading-tight sm:text-xl">
@@ -455,7 +455,7 @@ export function DiscoveryMiniCard({
                 </div>
                 <div className="flex items-center justify-between gap-3">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
+                        <p className="text-xs font-semibold uppercase text-slate-400">
                             Mulai dari
                         </p>
                         <p className="text-sm font-semibold text-slate-900">

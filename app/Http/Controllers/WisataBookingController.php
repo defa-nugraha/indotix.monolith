@@ -37,14 +37,9 @@ class WisataBookingController extends Controller
         ]);
 
         $destination = MitraWisataOnboarding::query()
+            ->publiclyVisible()
             ->where('id', $data['destination_id'])
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
             ->firstOrFail();
-
-        if ($destination->is_temporarily_closed) {
-            return back()->withErrors(['destination_id' => 'Destinasi sedang tutup sementara.']);
-        }
 
         $ticket = WisataTicket::query()->where('id', $data['ticket_id'])->firstOrFail();
         if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
@@ -86,7 +81,7 @@ class WisataBookingController extends Controller
             return redirect()->route('wisata.search')->withErrors(['booking' => 'Data pemesanan tidak ditemukan.']);
         }
 
-        $destination = MitraWisataOnboarding::query()->findOrFail($draft['destination_id']);
+        $destination = MitraWisataOnboarding::query()->publiclyVisible()->findOrFail($draft['destination_id']);
         $ticket = WisataTicket::query()->findOrFail($draft['ticket_id']);
 
         $total = (int) $ticket->price * (int) $draft['quantity'];
@@ -147,7 +142,7 @@ class WisataBookingController extends Controller
                     ]);
                 }
 
-                $destination = MitraWisataOnboarding::query()->findOrFail($draft['destination_id']);
+                $destination = MitraWisataOnboarding::query()->publiclyVisible()->findOrFail($draft['destination_id']);
                 $ticket = WisataTicket::query()->findOrFail($draft['ticket_id']);
                 $total = (int) $ticket->price * (int) $draft['quantity'];
                 $snap = $this->createSnapPayment($existingBooking, $midtransService);
@@ -250,7 +245,7 @@ class WisataBookingController extends Controller
             ]);
         }
 
-        $destination = MitraWisataOnboarding::query()->findOrFail($draft['destination_id']);
+        $destination = MitraWisataOnboarding::query()->publiclyVisible()->findOrFail($draft['destination_id']);
         $ticket = WisataTicket::query()->findOrFail($draft['ticket_id']);
         $total = (int) $ticket->price * (int) $draft['quantity'];
         $snap = $this->createSnapPayment($booking, $midtransService);

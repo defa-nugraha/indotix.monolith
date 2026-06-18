@@ -26,7 +26,7 @@ class LinkController extends Controller
         $link = $affiliate->links->sortByDesc('id')->first();
         $destinationId = $affiliate->wisata_id;
         $destination = $destinationId
-            ? MitraWisataOnboarding::query()->select('id', 'slug')->find($destinationId)
+            ? MitraWisataOnboarding::query()->publiclyVisible()->select('id', 'slug')->find($destinationId)
             : null;
 
         return Inertia::render('affiliate/links', [

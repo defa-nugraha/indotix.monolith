@@ -34,7 +34,7 @@ class PayoutController extends Controller
         }
 
         $payouts = $query
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (Payout $payout) => [
                 'id' => $payout->id,

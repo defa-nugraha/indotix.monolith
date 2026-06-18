@@ -14,6 +14,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Edit', href: '#' },
 ];
 
+const maxImageBytes = 5 * 1024 * 1024;
+const maxImageSizeLabel = '5 MB';
+
 type PromoItem = {
     id: number;
     title: string | null;
@@ -30,7 +33,31 @@ export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
         sort_order: promoItem.sort_order ?? 0,
         is_active: promoItem.is_active ?? true,
         image: null as File | null,
+        _method: 'put',
     });
+
+    const handleImageChange = (file: File | null, input: HTMLInputElement) => {
+        if (!file) {
+            form.setData('image', null);
+            form.clearErrors('image');
+            return;
+        }
+
+        if (file.size > maxImageBytes) {
+            form.setData('image', null);
+            form.setError('image', `Ukuran gambar maksimal ${maxImageSizeLabel}.`);
+            input.value = '';
+            Swal.fire({
+                icon: 'error',
+                title: 'Gambar terlalu besar',
+                text: `Ukuran gambar maksimal ${maxImageSizeLabel}.`,
+            });
+            return;
+        }
+
+        form.clearErrors('image');
+        form.setData('image', file);
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -47,7 +74,7 @@ export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
                             event.preventDefault();
-                            form.put(`/admin/public/promo-items/${promoItem.id}`, {
+                            form.post(`/admin/public/promo-items/${promoItem.id}`, {
                                 forceFormData: true,
                                 onSuccess: () =>
                                     Swal.fire({ title: 'Berhasil', text: 'Promo diperbarui.', icon: 'success' }),
@@ -81,9 +108,14 @@ export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
                         </div>
                         <div className="grid gap-2">
                             <Label>Ganti gambar (opsional)</Label>
-                            <Input type="file" accept="image/*" onChange={(event) => form.setData('image', event.target.files?.[0] ?? null)} />
+                            <Input
+                                type="file"
+                                accept="image/*"
+                                onChange={(event) => handleImageChange(event.target.files?.[0] ?? null, event.currentTarget)}
+                            />
                             <p className="text-xs text-slate-500">
-                                Ukuran rekomendasi: Urutan 1-2 → 600 × 800 px (rasio 3:4), Urutan 3 → 1200 × 400 px (rasio 3:1).
+                                Ukuran rekomendasi: Urutan 1-2 → 600 × 800 px (rasio 3:4), Urutan 3 → 1200 × 400 px (rasio 3:1). Maksimal{' '}
+                                {maxImageSizeLabel}.
                             </p>
                             <InputError message={form.errors.image} />
                         </div>
@@ -91,7 +123,9 @@ export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
                             <input type="checkbox" checked={form.data.is_active} onChange={(event) => form.setData('is_active', event.target.checked)} />
                             Aktif
                         </label>
-                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">Simpan Perubahan</Button>
+                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700" disabled={form.processing}>
+                            {form.processing ? 'Menyimpan...' : 'Simpan Perubahan'}
+                        </Button>
                     </form>
                 </section>
             </div>

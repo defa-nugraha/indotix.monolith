@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SpecialProgram;
 use App\Models\SpecialProgramVariant;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,14 +19,15 @@ class SpecialProgramTicketController extends Controller
         $programId = $request->integer('program_id');
         $query = SpecialProgramVariant::query()
             ->with('program')
+            ->whereHas('program', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
             ->latest();
         if ($programId) {
             $query->where('special_program_id', $programId);
         }
 
         return Inertia::render('admin/special-programs/tickets/index', [
-            'tickets' => $query->paginate(20)->withQueryString(),
-            'programs' => SpecialProgram::query()
+            'tickets' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
+            'programs' => AdminDataScope::applyCreatedBy(SpecialProgram::query(), $request)
                 ->select('id', 'name')
                 ->orderBy('name')
                 ->get(),
@@ -36,6 +39,12 @@ class SpecialProgramTicketController extends Controller
 
     public function update(Request $request, SpecialProgramVariant $ticket): RedirectResponse
     {
+        $ticket->loadMissing('program');
+        if (! $ticket->program) {
+            abort(404);
+        }
+        AdminDataScope::authorizeCreatedBy($ticket->program, $request);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'price' => ['required', 'integer', 'min:0'],
@@ -55,8 +64,13 @@ class SpecialProgramTicketController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        $programRule = Rule::exists('special_programs', 'id');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $programRule = $programRule->where('created_by', $request->user()?->id ?? 0);
+        }
+
         $data = $request->validate([
-            'program_id' => ['required', 'exists:special_programs,id'],
+            'program_id' => ['required', $programRule],
             'name' => ['required', 'string', 'max:255'],
             'price' => ['required', 'integer', 'min:0'],
             'quota' => ['nullable', 'integer', 'min:0'],
@@ -80,6 +94,12 @@ class SpecialProgramTicketController extends Controller
 
     public function destroy(SpecialProgramVariant $ticket): RedirectResponse
     {
+        $ticket->loadMissing('program');
+        if (! $ticket->program) {
+            abort(404);
+        }
+        AdminDataScope::authorizeCreatedBy($ticket->program, request());
+
         $ticket->delete();
 
         return back()->with('status', 'special-program-ticket-deleted');

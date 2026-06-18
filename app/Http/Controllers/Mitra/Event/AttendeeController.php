@@ -26,7 +26,7 @@ class AttendeeController extends Controller
         }
 
         $attendees = $query->latest('id')
-            ->paginate(20)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
         return Inertia::render('mitra/events/attendees/index', [

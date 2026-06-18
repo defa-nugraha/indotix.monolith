@@ -56,7 +56,7 @@ class SpecialProgramFinanceController extends Controller
     public function settlements(): Response
     {
         return Inertia::render('admin/special-programs/finance/settlements', [
-            'settlements' => EventSettlement::query()->with('organizer')->latest()->paginate(20),
+            'settlements' => EventSettlement::query()->with('organizer')->latest()->paginate(\App\Support\PaginationOptions::perPage()),
         ]);
     }
 

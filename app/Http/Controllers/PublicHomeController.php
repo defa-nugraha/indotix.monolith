@@ -66,9 +66,7 @@ class PublicHomeController extends Controller
                 'image_url' => $hotel->images->first()?->image_url ? '/storage/'.$hotel->images->first()->image_url : null,
             ]);
         $wisataCards = MitraWisataOnboarding::query()
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
-            ->where('is_temporarily_closed', false)
+            ->publiclyVisible()
             ->with(['tickets'])
             ->latest()
             ->take(3)
@@ -110,6 +108,7 @@ class PublicHomeController extends Controller
                         ->value('name'),
                     'start_at' => $event->start_at?->toDateString(),
                     'min_price' => $minPrice ? (int) round($minPrice) : null,
+                    'image_url' => $event->image_path ? Storage::url($event->image_path) : null,
                 ];
             });
 

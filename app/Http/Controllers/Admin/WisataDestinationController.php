@@ -7,6 +7,7 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\Regency;
 use App\Models\User;
 use App\Services\MediaCompressionService;
+use App\Support\AdminDataScope;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,16 +15,22 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class WisataDestinationController extends Controller
 {
+    private const MAX_IMAGE_KILOBYTES = 5120;
+    private const MAX_OTHER_PHOTO_COUNT = 5;
+
     public function index(Request $request): Response
     {
-        $query = MitraWisataOnboarding::query()
-            ->with(['user:id,name,email']);
+        $query = AdminDataScope::applyCreatedBy(
+            MitraWisataOnboarding::query()->with(['user:id,name,email']),
+            $request,
+        );
 
         if ($search = $request->string('search')->toString()) {
             $query->where(function ($builder) use ($search) {
@@ -41,7 +48,7 @@ class WisataDestinationController extends Controller
         }
 
         $destinations = $query->latest('id')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(function (MitraWisataOnboarding $item) {
                 return [
@@ -114,6 +121,7 @@ class WisataDestinationController extends Controller
     public function show(string $destination): Response
     {
         $destination = $this->resolveDestination($destination);
+        AdminDataScope::authorizeCreatedBy($destination, request());
         $destination->load(['user:id,name,email']);
         $destination->setAttribute('encrypted_id', Crypt::encryptString((string) $destination->id));
 
@@ -165,6 +173,7 @@ class WisataDestinationController extends Controller
     public function update(Request $request, string $destination, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $destination = $this->resolveDestination($destination);
+        AdminDataScope::authorizeCreatedBy($destination, $request);
         $data = $this->validateDestination($request, false);
 
         $payload = Arr::except($data, [
@@ -215,7 +224,7 @@ class WisataDestinationController extends Controller
         if (! is_array($newFiles)) {
             $newFiles = $newFiles ? [$newFiles] : [];
         }
-        if (count($remainingOthers) + count($newFiles) > 5) {
+        if (count($remainingOthers) + count($newFiles) > self::MAX_OTHER_PHOTO_COUNT) {
             throw ValidationException::withMessages([
                 'photo_other_files' => 'Maksimal 5 foto lainnya.',
             ]);
@@ -243,6 +252,7 @@ class WisataDestinationController extends Controller
     public function suspend(Request $request, string $destination): RedirectResponse
     {
         $destination = $this->resolveDestination($destination);
+        AdminDataScope::authorizeCreatedBy($destination, $request);
         $data = $request->validate([
             'action' => ['required', 'in:suspend,unsuspend'],
             'reason' => ['nullable', 'string', 'max:500'],
@@ -268,6 +278,7 @@ class WisataDestinationController extends Controller
     public function destroy(string $destination): RedirectResponse
     {
         $destination = $this->resolveDestination($destination);
+        AdminDataScope::authorizeCreatedBy($destination, request());
         if ($destination->tickets()->exists() || $destination->bookings()->exists()) {
             return back()->withErrors([
                 'destination' => 'Destinasi tidak dapat dihapus karena sudah memiliki tiket atau booking.',
@@ -307,8 +318,13 @@ class WisataDestinationController extends Controller
 
     private function validateDestination(Request $request, bool $creating): array
     {
+        $mitraRule = Rule::exists('users', 'id')->where('role', 'mitra');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $mitraRule = $mitraRule->where('created_by', $request->user()?->id ?? 0);
+        }
+
         return $request->validate([
-            'user_id' => [$creating ? 'required' : 'sometimes', 'integer', 'exists:users,id'],
+            'user_id' => [$creating ? 'required' : 'sometimes', 'integer', $mitraRule],
             'destination_name' => ['required', 'string', 'max:255'],
             'destination_type' => ['required', 'in:alam,edukasi,budaya,wahana,event'],
             'description' => ['nullable', 'string', 'max:1000'],
@@ -326,13 +342,20 @@ class WisataDestinationController extends Controller
             'contact_hours' => ['nullable', 'string', 'max:100'],
             'verification_status' => ['nullable', 'in:draft,pending,verified,rejected'],
             'is_live' => ['nullable', 'boolean'],
-            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_other_files' => ['nullable', 'array', 'max:5'],
-            'photo_other_files.*' => ['file', 'mimes:jpg,jpeg,png'],
-            'photo_other_remove' => ['nullable', 'array', 'max:5'],
+            'photo_gate_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_area_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_ticket_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_other_files' => ['nullable', 'array', 'max:'.self::MAX_OTHER_PHOTO_COUNT],
+            'photo_other_files.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_other_remove' => ['nullable', 'array', 'max:'.self::MAX_OTHER_PHOTO_COUNT],
             'photo_other_remove.*' => ['string'],
+        ], [
+            'photo_gate_file.max' => 'Ukuran foto gerbang maksimal 5 MB.',
+            'photo_area_file.max' => 'Ukuran foto area utama maksimal 5 MB.',
+            'photo_ticket_file.max' => 'Ukuran foto loket maksimal 5 MB.',
+            'photo_other_files.*.max' => 'Ukuran setiap foto lainnya maksimal 5 MB.',
+            '*.image' => 'File harus berupa gambar.',
+            '*.mimes' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
         ]);
     }
 
@@ -358,6 +381,7 @@ class WisataDestinationController extends Controller
     {
         return User::query()
             ->where('role', 'mitra')
+            ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => $query->where('created_by', request()->user()?->id ?? 0))
             ->orderBy('name')
             ->get(['id', 'name', 'email'])
             ->map(fn (User $user) => [

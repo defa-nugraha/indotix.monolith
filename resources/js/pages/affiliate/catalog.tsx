@@ -32,7 +32,7 @@ export default function AffiliateCatalog({
             <Head title="Katalog Wisata" />
             <div className="space-y-6">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Katalog Wisata</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Katalog Wisata</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">Produk yang bisa kamu promosikan</h1>
                     <p className="mt-1 text-sm text-slate-500">Gunakan materi ini sebagai referensi promosi.</p>
                 </div>
@@ -54,7 +54,7 @@ export default function AffiliateCatalog({
                                 />
                             )}
                             <div className="flex-1 space-y-2">
-                                <div className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">Destinasi</div>
+                                <div className="text-xs font-semibold uppercase text-slate-400">Destinasi</div>
                                 <h2 className="text-xl font-semibold text-slate-900">{destination.destination_name}</h2>
                                 <p className="text-sm text-slate-500">{destination.address_full ?? '-'}</p>
                                 <div className="flex flex-wrap gap-2 text-xs text-slate-500">

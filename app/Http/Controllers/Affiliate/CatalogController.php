@@ -25,7 +25,7 @@ class CatalogController extends Controller
         $commission = null;
 
         if ($affiliate->wisata_id) {
-            $destination = MitraWisataOnboarding::query()->find($affiliate->wisata_id);
+            $destination = MitraWisataOnboarding::query()->publiclyVisible()->find($affiliate->wisata_id);
             if ($destination) {
                 $tickets = WisataTicket::query()
                     ->where('mitra_wisata_onboarding_id', $destination->id)

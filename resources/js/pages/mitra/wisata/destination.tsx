@@ -1,4 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
+import type { ChangeEvent } from 'react';
 import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -76,6 +77,10 @@ const dayOptions = [
     { id: 'sun', label: 'Minggu' },
 ];
 
+const maxImageSize = 5 * 1024 * 1024;
+const maxOtherPhotoCount = 5;
+const maxImageSizeLabel = '5 MB';
+
 export default function MitraWisataDestination({
     destination,
     provinces,
@@ -86,6 +91,7 @@ export default function MitraWisataDestination({
     cities: Option[];
 }) {
     const form = useForm({
+        _method: 'put',
         destination_name: destination.destination_name ?? '',
         destination_type: destination.destination_type ?? '',
         description: destination.description ?? '',
@@ -121,6 +127,54 @@ export default function MitraWisataDestination({
         ]);
     };
 
+    const showFileWarning = (text: string) => {
+        void Swal.fire({
+            icon: 'warning',
+            title: 'File belum sesuai',
+            text,
+            confirmButtonText: 'OK',
+        });
+    };
+
+    const handleSinglePhotoChange = (
+        field:
+            | 'photo_gate_file'
+            | 'photo_area_file'
+            | 'photo_ticket_file',
+        event: ChangeEvent<HTMLInputElement>,
+    ) => {
+        const file = event.target.files?.[0] ?? null;
+        if (file && file.size > maxImageSize) {
+            event.target.value = '';
+            form.setData(field, null);
+            showFileWarning(`Ukuran setiap foto maksimal ${maxImageSizeLabel}.`);
+            return;
+        }
+
+        form.setData(field, file);
+    };
+
+    const handleOtherPhotosChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(event.target.files ?? []);
+        const oversizedFile = files.find((file) => file.size > maxImageSize);
+
+        if (oversizedFile) {
+            event.target.value = '';
+            form.setData('photo_other_files', []);
+            showFileWarning(`Ukuran setiap foto lainnya maksimal ${maxImageSizeLabel}.`);
+            return;
+        }
+
+        if (otherPhotos.length + files.length > maxOtherPhotoCount) {
+            event.target.value = '';
+            form.setData('photo_other_files', []);
+            showFileWarning(`Foto lainnya maksimal ${maxOtherPhotoCount} file.`);
+            return;
+        }
+
+        form.setData('photo_other_files', files);
+    };
+
     const citySelectOptions: CitySelectOption[] = cities.map((city) => ({
         value: city.id,
         label: city.label,
@@ -145,7 +199,7 @@ export default function MitraWisataDestination({
     };
 
     const submit = () => {
-        form.put('/mitra/wisata/destination', {
+        form.post('/mitra/wisata/destination', {
             forceFormData: true,
             onSuccess: () =>
                 Swal.fire({
@@ -171,7 +225,7 @@ export default function MitraWisataDestination({
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div>
-                        <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                        <p className="text-xs font-semibold text-sky-600 uppercase">
                             Wisata
                         </p>
                         <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -510,12 +564,15 @@ export default function MitraWisataDestination({
                                     accept="image/*"
                                     className="mt-2"
                                     onChange={(event) =>
-                                        form.setData(
+                                        handleSinglePhotoChange(
                                             'photo_gate_file',
-                                            event.target.files?.[0] ?? null,
+                                            event,
                                         )
                                     }
                                 />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Maksimal {maxImageSizeLabel}.
+                                </p>
                             </div>
                             <div>
                                 <Label>Foto Area Utama</Label>
@@ -535,12 +592,15 @@ export default function MitraWisataDestination({
                                     accept="image/*"
                                     className="mt-2"
                                     onChange={(event) =>
-                                        form.setData(
+                                        handleSinglePhotoChange(
                                             'photo_area_file',
-                                            event.target.files?.[0] ?? null,
+                                            event,
                                         )
                                     }
                                 />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Maksimal {maxImageSizeLabel}.
+                                </p>
                             </div>
                             <div>
                                 <Label>Foto Loket/Validasi</Label>
@@ -560,12 +620,15 @@ export default function MitraWisataDestination({
                                     accept="image/*"
                                     className="mt-2"
                                     onChange={(event) =>
-                                        form.setData(
+                                        handleSinglePhotoChange(
                                             'photo_ticket_file',
-                                            event.target.files?.[0] ?? null,
+                                            event,
                                         )
                                     }
                                 />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Maksimal {maxImageSizeLabel}.
+                                </p>
                             </div>
                         </div>
                         <div className="grid gap-2 md:col-span-2">
@@ -600,13 +663,11 @@ export default function MitraWisataDestination({
                                 accept="image/*"
                                 multiple
                                 className="mt-2"
-                                onChange={(event) =>
-                                    form.setData(
-                                        'photo_other_files',
-                                        Array.from(event.target.files ?? []),
-                                    )
-                                }
+                                onChange={handleOtherPhotosChange}
                             />
+                            <p className="text-xs text-slate-500">
+                                Maksimal {maxOtherPhotoCount} foto, {maxImageSizeLabel} per file.
+                            </p>
                             <InputError
                                 message={form.errors.photo_other_files}
                             />

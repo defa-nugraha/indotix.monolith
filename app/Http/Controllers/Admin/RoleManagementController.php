@@ -41,7 +41,7 @@ class RoleManagementController extends Controller
             }
         }
 
-        $paginator = $userQuery->latest('id')->paginate(12)->withQueryString();
+        $paginator = $userQuery->latest('id')->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
         $users = $paginator->through(function (User $user) {
             return [
                 'id' => $user->id,
@@ -209,7 +209,11 @@ class RoleManagementController extends Controller
                 ->values()
                 ->all(),
             'features' => collect(AdminPermissionRegistry::features())
-                ->map(fn (array $feature, string $key) => ['key' => $key, 'label' => $feature['label']])
+                ->map(fn (array $feature, string $key) => [
+                    'key' => $key,
+                    'label' => $feature['label'],
+                    'parent' => $feature['parent'] ?? null,
+                ])
                 ->values()
                 ->all(),
         ];

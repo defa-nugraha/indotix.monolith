@@ -67,7 +67,7 @@ export default function CreateRoomInventory({ roomTypeOptions, isMitra = false, 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Inventory per Tanggal
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">

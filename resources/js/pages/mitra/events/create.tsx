@@ -98,7 +98,7 @@ export default function MitraEventCreate({ organizer, event, cityOptions, organi
             <Head title="Form Event" />
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Event</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Event</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">
                         {event ? 'Edit Event' : 'Buat Event'} - {organizer.name ?? ''}
                     </h1>

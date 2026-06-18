@@ -6,6 +6,7 @@ use App\Models\Hotel;
 use App\Models\User;
 use App\Models\HotelImage;
 use App\Services\MediaCompressionService;
+use App\Support\AdminDataScope;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ use Inertia\Response;
 class HotelController extends Controller
 {
     private const STATUSES = ['draft', 'active', 'suspended'];
+    private const MAX_IMAGE_COUNT = 10;
+    private const MAX_IMAGE_KILOBYTES = 5120;
 
     private const FACILITY_CODES = [
         'WIFI',
@@ -34,7 +37,10 @@ class HotelController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = Hotel::query()->with('facilities')->latest();
+        $query = AdminDataScope::applyCreatedBy(
+            Hotel::query()->with('facilities')->latest(),
+            $request,
+        );
 
         if ($request->filled('search')) {
             $search = $request->string('search')->toString();
@@ -58,7 +64,7 @@ class HotelController extends Controller
         }
 
         $hotels = $query
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (Hotel $hotel) => $this->toPayload($hotel));
 
@@ -98,6 +104,12 @@ class HotelController extends Controller
         unset($validated['images']);
         unset($validated['taxes']);
 
+        if (count($images) > self::MAX_IMAGE_COUNT) {
+            return back()
+                ->withErrors(['images' => 'Maksimal 10 foto per hotel.'])
+                ->withInput();
+        }
+
         $hotel = Hotel::create($validated);
 
         $this->syncFacilities($hotel, $facilityCodes);
@@ -109,6 +121,8 @@ class HotelController extends Controller
 
     public function edit(Hotel $hotel): Response
     {
+        AdminDataScope::authorizeCreatedBy($hotel, request());
+
         $hotel->load('facilities', 'images', 'taxes');
 
         return Inertia::render('hotels/edit', [
@@ -122,6 +136,8 @@ class HotelController extends Controller
 
     public function update(Request $request, Hotel $hotel, MediaCompressionService $mediaCompression): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($hotel, $request);
+
         $validated = $this->validateHotel($request);
         $facilityCodes = $validated['facility_codes'] ?? [];
         $images = $validated['images'] ?? [];
@@ -129,6 +145,12 @@ class HotelController extends Controller
         unset($validated['facility_codes']);
         unset($validated['images']);
         unset($validated['taxes']);
+
+        if ($hotel->images()->count() + count($images) > self::MAX_IMAGE_COUNT) {
+            return back()
+                ->withErrors(['images' => 'Maksimal 10 foto per hotel. Hapus foto lama sebelum menambah foto baru.'])
+                ->withInput();
+        }
 
         $hotel->update($validated);
         $this->syncFacilities($hotel, $facilityCodes);
@@ -140,6 +162,8 @@ class HotelController extends Controller
 
     public function destroyImage(Hotel $hotel, HotelImage $hotelImage): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($hotel, request());
+
         if ((int) $hotelImage->hotel_id !== (int) $hotel->id) {
             return redirect()->route('hotels.edit', $hotel);
         }
@@ -155,6 +179,8 @@ class HotelController extends Controller
 
     public function destroy(Hotel $hotel): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($hotel, request());
+
         $hotel->delete();
 
         return redirect()->route('hotels.index');
@@ -162,11 +188,16 @@ class HotelController extends Controller
 
     private function validateHotel(Request $request): array
     {
+        $vendorRule = Rule::exists('users', 'id')->where('role', 'mitra');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $vendorRule = $vendorRule->where('created_by', $request->user()?->id ?? 0);
+        }
+
         return $request->validate([
             'vendor_id' => [
                 'nullable',
                 'integer',
-                Rule::exists('users', 'id')->where('role', 'mitra'),
+                $vendorRule,
             ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -183,8 +214,13 @@ class HotelController extends Controller
             'taxes' => ['nullable', 'array'],
             'taxes.*.name' => ['required_with:taxes.*.rate', 'string', 'max:120'],
             'taxes.*.rate' => ['required_with:taxes.*.name', 'numeric', 'min:0', 'max:100'],
-            'images' => ['nullable', 'array'],
-            'images.*' => ['file', 'image'],
+            'images' => ['nullable', 'array', 'max:'.self::MAX_IMAGE_COUNT],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+        ], [
+            'images.max' => 'Maksimal 10 foto per hotel.',
+            'images.*.image' => 'File foto hotel harus berupa gambar.',
+            'images.*.mimes' => 'Foto hotel harus berformat JPG, JPEG, PNG, atau WEBP.',
+            'images.*.max' => 'Ukuran setiap foto hotel maksimal 5 MB.',
         ]);
     }
 
@@ -293,6 +329,7 @@ class HotelController extends Controller
         return User::query()
             ->select('id', 'name', 'email')
             ->where('role', 'mitra')
+            ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => $query->where('created_by', request()->user()?->id ?? 0))
             ->orderBy('name')
             ->get()
             ->map(fn (User $user) => [

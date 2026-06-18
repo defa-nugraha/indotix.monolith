@@ -241,7 +241,7 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
                                 <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-700">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <div className="text-xs uppercase tracking-wider text-emerald-500">Voucher aktif</div>
+                                            <div className="text-xs uppercase text-emerald-500">Voucher aktif</div>
                                             <div className="mt-1 text-base font-semibold">{voucher.code}</div>
                                             <div className="text-xs text-emerald-600">
                                                 Potongan Rp {voucher.discount_amount?.toLocaleString('id-ID')}

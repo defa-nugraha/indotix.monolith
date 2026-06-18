@@ -99,7 +99,7 @@ export default function AdminUserShow({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div>
-                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 User
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -127,11 +127,12 @@ export default function AdminUserShow({
                                 onClick={() => {
                                     Swal.fire({
                                         icon: 'warning',
-                                        title: 'Hapus user?',
-                                        text: 'User akan dihapus permanen jika tidak memiliki transaksi.',
+                                        title: 'Hapus user dan semua datanya?',
+                                        html: `User <b>${user.name}</b> akan dihapus permanen. Semua transaksi, pesanan, booking, review, alamat, notifikasi, OTP, device token, riwayat pencarian, dan chat terkait ikut dihapus.`,
                                         showCancelButton: true,
-                                        confirmButtonText: 'Hapus',
+                                        confirmButtonText: 'Hapus permanen',
                                         cancelButtonText: 'Batal',
+                                        confirmButtonColor: '#dc2626',
                                     }).then((result) => {
                                         if (result.isConfirmed) {
                                             router.delete(

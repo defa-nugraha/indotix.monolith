@@ -30,7 +30,7 @@ class BookingController extends Controller
         }
 
         $bookings = $query->latest('id')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (WisataBooking $booking) => [
                 'id' => $booking->id,

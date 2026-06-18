@@ -3,16 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Booking;
-use App\Models\CommissionRule;
-use App\Models\Hotel;
-use App\Models\HotelFacility;
-use App\Models\HotelImage;
 use App\Models\MitraOnboarding;
-use App\Models\Payout;
-use App\Models\RoomType;
 use App\Models\User;
-use App\Models\Voucher;
+use App\Services\MitraDeletionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -56,7 +49,7 @@ class MitraController extends Controller
             $query->where('is_suspended', $isSuspended);
         }
 
-        $paginator = $query->latest()->paginate(10)->withQueryString();
+        $paginator = $query->latest()->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
         $cityCodes = $paginator->getCollection()
             ->map(fn (User $user) => $user->mitraOnboarding?->city_code)
             ->filter()
@@ -233,36 +226,12 @@ class MitraController extends Controller
         return back()->with('status', 'suspension-updated');
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request, User $user, MitraDeletionService $mitraDeletion): RedirectResponse
     {
         abort_unless($user->role === 'mitra', 404);
         abort_unless($user->mitra_onboarding_type === null || $user->mitra_onboarding_type === 'hotel', 404);
 
-        $hotelIds = Hotel::query()->where('vendor_id', $user->id)->pluck('id');
-        $counts = [
-            'hotel' => $hotelIds->count(),
-            'kamar' => RoomType::query()->whereIn('hotel_id', $hotelIds)->count(),
-            'booking' => Booking::query()->whereIn('hotel_id', $hotelIds)->count(),
-            'payout' => Payout::query()->whereIn('hotel_id', $hotelIds)->count(),
-            'voucher' => Voucher::query()->whereIn('hotel_id', $hotelIds)->count(),
-            'komisi' => CommissionRule::query()->whereIn('hotel_id', $hotelIds)->count(),
-            'fasilitas' => HotelFacility::query()->whereIn('hotel_id', $hotelIds)->count(),
-            'gambar' => HotelImage::query()->whereIn('hotel_id', $hotelIds)->count(),
-        ];
-
-        $blocked = array_filter($counts, fn ($count) => $count > 0);
-        if ($blocked) {
-            $details = collect($blocked)
-                ->map(fn ($count, $key) => "{$key} ({$count})")
-                ->implode(', ');
-
-            return back()->withErrors([
-                'mitra' => "Mitra tidak dapat dihapus karena masih memiliki data: {$details}.",
-            ]);
-        }
-
-        MitraOnboarding::query()->where('user_id', $user->id)->delete();
-        $user->delete();
+        $mitraDeletion->deleteHotelMitra($user);
 
         return back()->with('status', 'mitra-deleted');
     }

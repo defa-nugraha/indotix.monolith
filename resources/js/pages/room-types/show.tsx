@@ -51,7 +51,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Detail Tipe Kamar
                             </p>
                             <div className="mt-2 flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                <p className="text-xs uppercase text-slate-400">
                                     Status
                                 </p>
                                 <Badge variant="secondary" className="mt-2">
@@ -97,7 +97,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                                 </Badge>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                <p className="text-xs uppercase text-slate-400">
                                     Total kamar
                                 </p>
                                 <p className="mt-2 text-lg font-semibold">
@@ -105,7 +105,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                <p className="text-xs uppercase text-slate-400">
                                     Maksimal tamu
                                 </p>
                                 <p className="mt-2 text-lg font-semibold">
@@ -113,7 +113,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                <p className="text-xs uppercase text-slate-400">
                                     Tipe bed
                                 </p>
                                 <p className="mt-2 text-lg font-semibold">
@@ -121,7 +121,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                <p className="text-xs uppercase text-slate-400">
                                     Dewasa termasuk
                                 </p>
                                 <p className="mt-2 text-lg font-semibold">
@@ -129,7 +129,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                <p className="text-xs uppercase text-slate-400">
                                     Maks extra bed
                                 </p>
                                 <p className="mt-2 text-lg font-semibold">
@@ -137,7 +137,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                                 </p>
                             </div>
                             <div>
-                                <p className="text-xs uppercase tracking-wider text-slate-400">
+                                <p className="text-xs uppercase text-slate-400">
                                     Batas usia anak
                                 </p>
                                 <p className="mt-2 text-lg font-semibold">
@@ -146,7 +146,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                             </div>
                         </div>
                         <div className="mt-6">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">
+                            <p className="text-xs uppercase text-slate-400">
                                 Harga
                             </p>
                             <div className="mt-2 flex flex-col gap-1">
@@ -161,7 +161,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                             </div>
                         </div>
                         <div className="mt-6">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">
+                            <p className="text-xs uppercase text-slate-400">
                                 Biaya Tambahan
                             </p>
                             <div className="mt-2 grid gap-2 text-sm text-slate-600">
@@ -171,7 +171,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                             </div>
                         </div>
                         <div className="mt-6">
-                            <p className="text-xs uppercase tracking-wider text-slate-400">
+                            <p className="text-xs uppercase text-slate-400">
                                 Deskripsi
                             </p>
                             <p className="mt-2 text-sm text-slate-600">
@@ -181,7 +181,7 @@ export default function RoomTypeShow({ roomType, isMitra = false, basePath = '/r
                     </div>
 
                     <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <p className="text-xs uppercase tracking-wider text-slate-400">
+                        <p className="text-xs uppercase text-slate-400">
                             Galeri Foto
                         </p>
                         {roomType.images.length === 0 ? (

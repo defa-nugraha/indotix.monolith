@@ -17,8 +17,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
-use Spatie\LaravelPdf\Facades\Pdf;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Spatie\LaravelPdf\Facades\Pdf;
 
 class WisataBookingController extends Controller
 {
@@ -59,17 +60,12 @@ class WisataBookingController extends Controller
         $data['ticket_id'] = $ticketId;
 
         $destination = MitraWisataOnboarding::query()
+            ->publiclyVisible()
             ->where('id', $data['destination_id'])
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
             ->first();
 
         if (! $destination) {
             return response()->json(['message' => 'Destinasi tidak tersedia.'], 422);
-        }
-
-        if ($destination->is_temporarily_closed) {
-            return response()->json(['message' => 'Destinasi sedang tutup sementara.'], 422);
         }
 
         $ticket = WisataTicket::query()->find($data['ticket_id']);
@@ -130,17 +126,12 @@ class WisataBookingController extends Controller
         $data['guest_phone'] = $profilePhone;
 
         $destination = MitraWisataOnboarding::query()
+            ->publiclyVisible()
             ->where('id', $data['destination_id'])
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
             ->first();
 
         if (! $destination) {
             return response()->json(['message' => 'Destinasi tidak tersedia.'], 422);
-        }
-
-        if ($destination->is_temporarily_closed) {
-            return response()->json(['message' => 'Destinasi sedang tutup sementara.'], 422);
         }
 
         $link = $this->resolveAffiliateLinkFromCode($data['referral_code'] ?? null);
@@ -246,6 +237,7 @@ class WisataBookingController extends Controller
 
         if ($booking->isExpired()) {
             $booking->update(['status' => 'expired', 'payment_status' => 'expired']);
+
             return response()->json(['message' => 'Booking sudah kedaluwarsa.'], 422);
         }
 
@@ -276,6 +268,12 @@ class WisataBookingController extends Controller
         try {
             $charge = $midtransService->snap($payload);
         } catch (\Throwable $exception) {
+            Log::warning('Midtrans wisata snap payment failed', [
+                'booking_id' => $booking->id,
+                'order_id' => $orderId,
+                'message' => $exception->getMessage(),
+            ]);
+
             return response()->json(['message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.'], 500);
         }
 

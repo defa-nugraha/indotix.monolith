@@ -218,7 +218,7 @@ export default function PublicHeader({
                     <div className="absolute top-full left-0 right-0 z-50 mt-3 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_80px_-34px_rgba(15,23,42,0.35)]">
                         {topbarProducts.length > 0 && (
                             <div className="border-b border-slate-100 p-4">
-                                <div className="px-1 text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase">
+                                <div className="px-1 text-[11px] font-bold text-slate-400 uppercase">
                                     Rekomendasi produk
                                 </div>
                                 <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -258,7 +258,7 @@ export default function PublicHeader({
 
                         {topbarKeywords.length > 0 && (
                             <div className="p-4">
-                                <div className="px-1 text-[11px] font-bold tracking-[0.18em] text-slate-400 uppercase">
+                                <div className="px-1 text-[11px] font-bold text-slate-400 uppercase">
                                     Pencarian populer
                                 </div>
                                 <div className="mt-3 flex flex-wrap gap-2">
@@ -291,7 +291,7 @@ export default function PublicHeader({
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
             <div className="mx-auto w-full max-w-6xl px-4 py-4 md:px-8">
                 <div className="flex items-center gap-4">
-                    <Link href="/" className="flex items-center gap-2">
+                    <Link href="/" className="flex items-center gap-2" data-skip-action-loading="true">
                         <img src="/logo.png" alt="Indotix" className="h-10 w-32 object-contain md:h-11 md:w-36" />
                     </Link>
 

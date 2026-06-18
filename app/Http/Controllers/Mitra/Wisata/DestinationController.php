@@ -14,6 +14,9 @@ use Inertia\Response;
 
 class DestinationController extends Controller
 {
+    private const MAX_IMAGE_KILOBYTES = 5120;
+    private const MAX_OTHER_PHOTO_COUNT = 5;
+
     public function edit(Request $request): Response
     {
         $user = $request->user();
@@ -67,13 +70,20 @@ class DestinationController extends Controller
             'contact_hours' => ['nullable', 'string', 'max:100'],
             'is_temporarily_closed' => ['nullable', 'boolean'],
             'closure_note' => ['nullable', 'string', 'max:255'],
-            'photo_gate_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_area_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_ticket_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_other_files' => ['nullable', 'array', 'max:5'],
-            'photo_other_files.*' => ['file', 'mimes:jpg,jpeg,png'],
-            'photo_other_remove' => ['nullable', 'array', 'max:5'],
+            'photo_gate_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_area_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_ticket_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_other_files' => ['nullable', 'array', 'max:'.self::MAX_OTHER_PHOTO_COUNT],
+            'photo_other_files.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_other_remove' => ['nullable', 'array', 'max:'.self::MAX_OTHER_PHOTO_COUNT],
             'photo_other_remove.*' => ['string'],
+        ], [
+            'photo_gate_file.max' => 'Ukuran foto gerbang maksimal 5 MB.',
+            'photo_area_file.max' => 'Ukuran foto area utama maksimal 5 MB.',
+            'photo_ticket_file.max' => 'Ukuran foto loket maksimal 5 MB.',
+            'photo_other_files.*.max' => 'Ukuran setiap foto lainnya maksimal 5 MB.',
+            '*.image' => 'File harus berupa gambar.',
+            '*.mimes' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',
         ]);
 
         $destination->fill([
@@ -126,7 +136,7 @@ class DestinationController extends Controller
         if (! is_array($newFiles)) {
             $newFiles = $newFiles ? [$newFiles] : [];
         }
-        if (count($remainingOthers) + count($newFiles) > 5) {
+        if (count($remainingOthers) + count($newFiles) > self::MAX_OTHER_PHOTO_COUNT) {
             return back()->withErrors([
                 'photo_other_files' => 'Maksimal 5 foto lainnya.',
             ]);

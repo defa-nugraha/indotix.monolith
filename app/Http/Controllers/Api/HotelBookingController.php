@@ -13,12 +13,14 @@ use App\Models\UserNotification;
 use App\Models\Voucher;
 use App\Services\BookingService;
 use App\Services\MidtransService;
-use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
+use Spatie\LaravelPdf\Facades\Pdf;
+use Throwable;
 
 class HotelBookingController extends Controller
 {
@@ -75,7 +77,7 @@ class HotelBookingController extends Controller
             return response()->json(['message' => 'Tipe kamar tidak sesuai hotel.'], 422);
         }
 
-        $hotel = Hotel::query()->with('taxes')->find($data['hotel_id']);
+        $hotel = Hotel::query()->find($data['hotel_id']);
         if (! $hotel) {
             return response()->json(['message' => 'Hotel tidak tersedia.'], 422);
         }
@@ -92,6 +94,12 @@ class HotelBookingController extends Controller
             );
         } catch (RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
+        } catch (Throwable $exception) {
+            $this->logHotelBookingException($request, 'quote', $exception, $data);
+
+            return response()->json([
+                'message' => 'Gagal menghitung ringkasan pemesanan. Silakan coba lagi.',
+            ], 500);
         }
 
         $voucherPayload = null;
@@ -197,7 +205,7 @@ class HotelBookingController extends Controller
             return response()->json(['message' => 'Tipe kamar tidak sesuai hotel.'], 422);
         }
 
-        $hotel = Hotel::query()->with('taxes')->find($data['hotel_id']);
+        $hotel = Hotel::query()->find($data['hotel_id']);
         if (! $hotel) {
             return response()->json(['message' => 'Hotel tidak tersedia.'], 422);
         }
@@ -301,6 +309,12 @@ class HotelBookingController extends Controller
             });
         } catch (RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
+        } catch (Throwable $exception) {
+            $this->logHotelBookingException($request, 'booking', $exception, $data);
+
+            return response()->json([
+                'message' => 'Gagal membuat pemesanan hotel. Silakan coba lagi.',
+            ], 500);
         }
 
         UserNotification::create([
@@ -361,6 +375,7 @@ class HotelBookingController extends Controller
 
         if ($booking->isExpired()) {
             $this->expireBooking($booking);
+
             return response()->json(['message' => 'Booking sudah kedaluwarsa.'], 422);
         }
 
@@ -391,6 +406,12 @@ class HotelBookingController extends Controller
         try {
             $charge = $midtransService->snap($payload);
         } catch (\Throwable $exception) {
+            Log::warning('Midtrans hotel snap payment failed', [
+                'booking_id' => $booking->id,
+                'order_id' => $orderId,
+                'message' => $exception->getMessage(),
+            ]);
+
             return response()->json(['message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.'], 500);
         }
 
@@ -571,9 +592,17 @@ class HotelBookingController extends Controller
 
     private function resolveServiceFee(): int
     {
-        $value = SystemSetting::query()
-            ->where('key', 'service_fee')
-            ->value('value');
+        try {
+            $value = SystemSetting::query()
+                ->where('key', 'service_fee')
+                ->value('value');
+        } catch (Throwable $exception) {
+            Log::warning('Unable to resolve hotel service fee setting', [
+                'message' => $exception->getMessage(),
+            ]);
+
+            return 0;
+        }
 
         if ($value === null) {
             return 0;
@@ -584,10 +613,22 @@ class HotelBookingController extends Controller
 
     private function buildTaxBreakdown(Hotel $hotel, int $taxableSubtotal): array
     {
-        $items = $hotel->taxes
+        try {
+            $taxes = $hotel->taxes;
+        } catch (Throwable $exception) {
+            Log::warning('Unable to resolve hotel tax breakdown', [
+                'hotel_id' => $hotel->id,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return [[], 0];
+        }
+
+        $items = $taxes
             ->map(function ($tax) use ($taxableSubtotal) {
                 $rate = (float) $tax->rate;
                 $amount = (int) round($taxableSubtotal * ($rate / 100));
+
                 return [
                     'name' => $tax->name,
                     'rate' => $rate,
@@ -600,6 +641,19 @@ class HotelBookingController extends Controller
         $total = array_sum(array_map(fn ($item) => $item['amount'], $items));
 
         return [$items, $total];
+    }
+
+    private function logHotelBookingException(Request $request, string $context, Throwable $exception, array $data = []): void
+    {
+        Log::error("Hotel booking {$context} failed", [
+            'user_id' => $request->user()?->id,
+            'context' => $context,
+            'message' => $exception->getMessage(),
+            'exception' => get_class($exception),
+            'payload' => collect($data)
+                ->except(['voucher_code'])
+                ->all(),
+        ]);
     }
 
     private function expireBooking(Booking $booking): void

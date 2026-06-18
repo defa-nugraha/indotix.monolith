@@ -151,7 +151,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8 text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                        <p className="text-xs font-semibold uppercase text-sky-600">
                             Promo & Voucher
                         </p>
                         <h1 className="text-2xl font-semibold text-slate-900">
@@ -166,7 +166,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <form onSubmit={submit} className="grid gap-4 md:grid-cols-8">
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Kode
                             </label>
                             <input
@@ -178,7 +178,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Tipe
                             </label>
                             <select
@@ -194,7 +194,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Diskon
                             </label>
                             <input
@@ -208,7 +208,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Min Transaksi
                             </label>
                             <input
@@ -224,7 +224,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Kuota
                             </label>
                             <input
@@ -238,7 +238,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Limit / user
                             </label>
                             <input
@@ -251,7 +251,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Mulai
                             </label>
                             <input
@@ -262,7 +262,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Sampai
                             </label>
                             <input
@@ -273,7 +273,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                             />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
                                 Hotel (opsional)
                             </label>
                             <select
@@ -313,7 +313,7 @@ export default function VoucherIndex({ vouchers, hotelOptions, typeOptions }: Pr
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                            <thead className="text-xs uppercase tracking-wider text-slate-400">
+                            <thead className="text-xs uppercase text-slate-400">
                                 <tr>
                                     <th className="py-3 pr-4">Kode</th>
                                     <th className="py-3 pr-4">Diskon</th>

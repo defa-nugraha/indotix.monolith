@@ -30,7 +30,7 @@ class AffiliateController extends Controller
         }
 
         return Inertia::render('admin/wisata-affiliates/index', [
-            'affiliates' => $query->paginate(20)->withQueryString(),
+            'affiliates' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'users' => \App\Models\User::query()
                 ->where('role', 'user')
                 ->select('id', 'name', 'email')

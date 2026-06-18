@@ -311,7 +311,7 @@ export function DiscoverySearchField({
                             key={group.label}
                             className="border-b border-slate-100 p-2 last:border-b-0"
                         >
-                            <div className="flex items-center gap-2 px-2 py-1 text-[11px] font-bold tracking-wide text-slate-400 uppercase">
+                            <div className="flex items-center gap-2 px-2 py-1 text-[11px] font-bold text-slate-400 uppercase">
                                 {group.icon}
                                 <span>{group.label}</span>
                             </div>

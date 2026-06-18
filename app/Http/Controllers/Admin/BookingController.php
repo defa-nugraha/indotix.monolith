@@ -46,7 +46,7 @@ class BookingController extends Controller
         }
 
         $bookings = $query
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (Booking $booking) => $this->toPayload($booking));
 

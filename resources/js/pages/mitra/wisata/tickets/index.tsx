@@ -64,7 +64,7 @@ export default function MitraWisataTicketsIndex({ destination, tickets }: Props)
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Wisata
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">

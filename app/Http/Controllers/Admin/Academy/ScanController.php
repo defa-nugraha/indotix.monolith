@@ -28,7 +28,7 @@ class ScanController extends Controller
         }
 
         return Inertia::render('admin/academy/scans/index', [
-            'scans' => $query->paginate(20)->withQueryString(),
+            'scans' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'classes' => AcademyClass::query()->select('id', 'title')->orderBy('title')->get(),
             'filters' => [
                 'class_id' => $classId ?: null,

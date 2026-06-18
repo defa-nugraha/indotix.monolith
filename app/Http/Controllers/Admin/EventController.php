@@ -29,7 +29,7 @@ class EventController extends Controller
         }
 
         return Inertia::render('admin/events/index', [
-            'events' => $query->paginate(20)->withQueryString(),
+            'events' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'filters' => [
                 'status' => $status,
             ],

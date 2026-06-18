@@ -33,7 +33,7 @@ export default function MitraEventTicketsIndex({ tickets }: Props) {
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Tiket</p>
+                            <p className="text-xs font-semibold uppercase text-sky-600">Tiket</p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">Produk Tiket Event</h1>
                             <p className="text-sm text-slate-500">Kelola harga dan kuota tiket.</p>
                         </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SpecialProgram;
 use App\Models\SpecialProgramVariant;
 use App\Models\User;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,7 @@ class SpecialProgramController extends Controller
     {
         $status = $request->string('status')->toString();
         $category = $request->string('category')->toString();
-        $query = SpecialProgram::query()->latest();
+        $query = AdminDataScope::applyCreatedBy(SpecialProgram::query()->latest(), $request);
         if ($status) {
             $query->where('is_active', $status === 'published');
         }
@@ -29,7 +30,7 @@ class SpecialProgramController extends Controller
         }
 
         return Inertia::render('admin/special-programs/index', [
-            'programs' => $query->paginate(20)->withQueryString(),
+            'programs' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'filters' => [
                 'status' => $status,
                 'category' => $category,
@@ -82,6 +83,8 @@ class SpecialProgramController extends Controller
 
     public function edit(SpecialProgram $program): Response
     {
+        AdminDataScope::authorizeCreatedBy($program, request());
+
         $program->load(['variants.facilities', 'facilities', 'inventories']);
 
         return Inertia::render('admin/special-programs/create', [
@@ -131,6 +134,8 @@ class SpecialProgramController extends Controller
 
     public function update(Request $request, SpecialProgram $program): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($program, $request);
+
         $data = $this->validateProgram($request, false);
 
         return DB::transaction(function () use ($request, $program, $data) {
@@ -168,6 +173,8 @@ class SpecialProgramController extends Controller
 
     public function show(SpecialProgram $program): Response
     {
+        AdminDataScope::authorizeCreatedBy($program, request());
+
         $program->load(['variants.facilities', 'facilities', 'inventories']);
 
         return Inertia::render('admin/special-programs/show', [
@@ -215,6 +222,8 @@ class SpecialProgramController extends Controller
 
     public function destroy(SpecialProgram $program): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($program, request());
+
         if ($program->image_path) {
             Storage::disk('public')->delete($program->image_path);
         }
@@ -225,6 +234,8 @@ class SpecialProgramController extends Controller
 
     public function updateStatus(Request $request, SpecialProgram $program): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($program, $request);
+
         $data = $request->validate([
             'is_active' => ['required', 'boolean'],
         ]);

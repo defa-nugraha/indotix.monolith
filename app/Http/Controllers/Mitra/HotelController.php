@@ -18,6 +18,8 @@ use Inertia\Response;
 class HotelController extends Controller
 {
     private const STATUSES = ['draft', 'active', 'suspended'];
+    private const MAX_IMAGE_COUNT = 10;
+    private const MAX_IMAGE_KILOBYTES = 5120;
 
     private const FACILITY_CODES = [
         'WIFI',
@@ -59,7 +61,7 @@ class HotelController extends Controller
         }
 
         $hotels = $query
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (Hotel $hotel) => $this->toPayload($hotel));
 
@@ -117,6 +119,12 @@ class HotelController extends Controller
         unset($validated['facility_codes']);
         unset($validated['images']);
 
+        if (count($images) > self::MAX_IMAGE_COUNT) {
+            return back()
+                ->withErrors(['images' => 'Maksimal 10 foto per hotel.'])
+                ->withInput();
+        }
+
         $hotel = Hotel::create($validated);
 
         $this->syncFacilities($hotel, $facilityCodes);
@@ -160,6 +168,12 @@ class HotelController extends Controller
         $images = $validated['images'] ?? [];
         unset($validated['facility_codes']);
         unset($validated['images']);
+
+        if ($hotel->images()->count() + count($images) > self::MAX_IMAGE_COUNT) {
+            return back()
+                ->withErrors(['images' => 'Maksimal 10 foto per hotel. Hapus foto lama sebelum menambah foto baru.'])
+                ->withInput();
+        }
 
         $hotel->update($validated);
         $this->syncFacilities($hotel, $facilityCodes);
@@ -216,8 +230,13 @@ class HotelController extends Controller
             'status' => ['required', Rule::in(self::STATUSES)],
             'facility_codes' => ['nullable', 'array'],
             'facility_codes.*' => ['string', Rule::in(self::FACILITY_CODES)],
-            'images' => ['nullable', 'array'],
-            'images.*' => ['file', 'image'],
+            'images' => ['nullable', 'array', 'max:'.self::MAX_IMAGE_COUNT],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+        ], [
+            'images.max' => 'Maksimal 10 foto per hotel.',
+            'images.*.image' => 'File foto hotel harus berupa gambar.',
+            'images.*.mimes' => 'Foto hotel harus berformat JPG, JPEG, PNG, atau WEBP.',
+            'images.*.max' => 'Ukuran setiap foto hotel maksimal 5 MB.',
         ]);
     }
 

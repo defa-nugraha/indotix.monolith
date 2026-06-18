@@ -20,7 +20,7 @@ class SouvenirOrderController extends Controller
             $query->where('status', $status);
         }
 
-        $orders = $query->latest()->paginate(10)->withQueryString();
+        $orders = $query->latest()->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
 
         return Inertia::render('admin/souvenir/orders/index', [
             'orders' => $orders,
@@ -39,7 +39,7 @@ class SouvenirOrderController extends Controller
             $query->where('status', $status);
         }
 
-        $orders = $query->latest()->paginate(10)->withQueryString();
+        $orders = $query->latest()->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
 
         return Inertia::render('admin/souvenir/orders/index', [
             'orders' => $orders,

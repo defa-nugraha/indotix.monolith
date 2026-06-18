@@ -210,7 +210,7 @@ export default function NotificationControl({
             <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8 text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="space-y-2">
-                        <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                        <p className="text-xs font-semibold text-sky-600 uppercase">
                             Notification Control
                         </p>
                         <h1 className="text-2xl font-semibold text-slate-900">
@@ -224,7 +224,7 @@ export default function NotificationControl({
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="space-y-2">
-                        <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                        <p className="text-xs font-semibold text-sky-600 uppercase">
                             Push Notification
                         </p>
                         <h2 className="text-xl font-semibold text-slate-900">
@@ -240,7 +240,7 @@ export default function NotificationControl({
                         className="mt-6 grid gap-4 md:grid-cols-3"
                     >
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Judul
                             </label>
                             <input
@@ -257,7 +257,7 @@ export default function NotificationControl({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Tipe
                             </label>
                             <select
@@ -277,7 +277,7 @@ export default function NotificationControl({
                             </select>
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Target
                             </label>
                             <div className="flex h-9 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm text-slate-600">
@@ -285,7 +285,7 @@ export default function NotificationControl({
                             </div>
                         </div>
                         <div className="grid gap-2 md:col-span-3">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Pesan
                             </label>
                             <textarea
@@ -329,7 +329,7 @@ export default function NotificationControl({
                         className="grid gap-4 md:grid-cols-3"
                     >
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Key
                             </label>
                             <input
@@ -346,7 +346,7 @@ export default function NotificationControl({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Subject
                             </label>
                             <input
@@ -362,7 +362,7 @@ export default function NotificationControl({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Channel
                             </label>
                             <select
@@ -379,7 +379,7 @@ export default function NotificationControl({
                             </select>
                         </div>
                         <div className="grid gap-2 md:col-span-3">
-                            <label className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
+                            <label className="text-xs font-semibold text-slate-400 uppercase">
                                 Body
                             </label>
                             <textarea
@@ -432,7 +432,7 @@ export default function NotificationControl({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                            <thead className="text-xs tracking-wider text-slate-400 uppercase">
+                            <thead className="text-xs text-slate-400 uppercase">
                                 <tr>
                                     <th className="py-3 pr-4">Key</th>
                                     <th className="py-3 pr-4">Channel</th>

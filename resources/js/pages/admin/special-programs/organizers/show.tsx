@@ -93,7 +93,7 @@ export default function EventOrganizerShow({ organizer }: { organizer: Organizer
                         <h2 className="text-lg font-semibold text-slate-900">Data Pendaftaran EO</h2>
                         <div className="mt-4 grid gap-4 md:grid-cols-2">
                             <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Penanggung Jawab</p>
+                                <p className="text-xs font-semibold uppercase text-slate-400">Penanggung Jawab</p>
                                 <div className="mt-3 space-y-1">
                                     <div>Nama: {organizer.onboarding.responsible_name ?? '-'}</div>
                                     <div>HP: {organizer.onboarding.responsible_phone ?? '-'}</div>
@@ -101,7 +101,7 @@ export default function EventOrganizerShow({ organizer }: { organizer: Organizer
                                 </div>
                             </div>
                             <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">EO / Organisasi</p>
+                                <p className="text-xs font-semibold uppercase text-slate-400">EO / Organisasi</p>
                                 <div className="mt-3 space-y-1">
                                     <div>Nama EO: {organizer.onboarding.eo_name ?? '-'}</div>
                                     <div>Jenis: {organizer.onboarding.organizer_type ?? '-'}</div>
@@ -110,14 +110,14 @@ export default function EventOrganizerShow({ organizer }: { organizer: Organizer
                                 </div>
                             </div>
                             <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Legalitas</p>
+                                <p className="text-xs font-semibold uppercase text-slate-400">Legalitas</p>
                                 <div className="mt-3 space-y-1">
                                     <div>Jenis: {organizer.onboarding.legal_doc_type ?? '-'}</div>
                                     <div>Nomor: {organizer.onboarding.legal_doc_number ?? '-'}</div>
                                 </div>
                             </div>
                             <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Kontak Operasional</p>
+                                <p className="text-xs font-semibold uppercase text-slate-400">Kontak Operasional</p>
                                 <div className="mt-3 space-y-1">
                                     <div>PIC: {organizer.onboarding.operational_phone ?? '-'}</div>
                                     <div>Email: {organizer.onboarding.operational_email ?? '-'}</div>
@@ -125,7 +125,7 @@ export default function EventOrganizerShow({ organizer }: { organizer: Organizer
                                 </div>
                             </div>
                             <div className="rounded-2xl border border-slate-100 bg-white p-4 text-sm text-slate-700 shadow-sm md:col-span-2">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Rekening</p>
+                                <p className="text-xs font-semibold uppercase text-slate-400">Rekening</p>
                                 <div className="mt-3 grid gap-2 md:grid-cols-2">
                                     <div>Bank: {organizer.onboarding.bank_name ?? '-'}</div>
                                     <div>Nomor: {organizer.onboarding.bank_account_number ?? '-'}</div>

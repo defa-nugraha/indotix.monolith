@@ -6,7 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
-import { Select as UiSelect, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CommissionInfoCard, {
+    type CommissionInfo,
+} from '@/components/commission-info-card';
+import {
+    Select as UiSelect,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import Swal from 'sweetalert2';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import Select from 'react-select';
@@ -16,7 +25,11 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dokumen Pendaftaran Wisata', href: '/mitra/wisata/onboarding' },
 ];
 
-const stepTitles = ['Akun Mitra', 'Data Destinasi Wisata', 'Legalitas & Keuangan'];
+const stepTitles = [
+    'Akun Mitra',
+    'Data Destinasi Wisata',
+    'Legalitas & Keuangan',
+];
 
 type Option = { id: string; label: string };
 type CitySelectOption = { value: string; label: string };
@@ -93,17 +106,22 @@ const dayOptions = [
     { id: 'sun', label: 'Minggu' },
 ];
 
+const maxUploadSize = 5 * 1024 * 1024;
+const maxUploadSizeLabel = '5 MB';
+
 function StepBadge({ status, label }: { status: string; label: string }) {
     const style =
         status === 'verified'
             ? 'bg-emerald-50 text-emerald-700'
             : status === 'pending'
-            ? 'bg-amber-50 text-amber-700'
-            : status === 'rejected'
-            ? 'bg-red-50 text-red-700'
-            : 'bg-sky-50 text-sky-700';
+              ? 'bg-amber-50 text-amber-700'
+              : status === 'rejected'
+                ? 'bg-red-50 text-red-700'
+                : 'bg-sky-50 text-sky-700';
     return (
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${style}`}>
+        <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${style}`}
+        >
             {label}
         </span>
     );
@@ -114,11 +132,13 @@ export default function MitraWisataOnboarding({
     provinces,
     cities,
     status,
+    commissionInfo,
 }: {
     onboarding: Onboarding;
     provinces: Option[];
     cities: Option[];
     status?: string;
+    commissionInfo?: CommissionInfo | null;
 }) {
     const [activeStep, setActiveStep] = useState(onboarding.current_step || 1);
 
@@ -167,12 +187,12 @@ export default function MitraWisataOnboarding({
                     {item.label}
                 </SelectItem>
             )),
-        [provinces]
+        [provinces],
     );
 
     const citySelectOptions: CitySelectOption[] = useMemo(
         () => cities.map((item) => ({ value: item.id, label: item.label })),
-        [cities]
+        [cities],
     );
 
     const isFilled = (value?: string | number | null) => {
@@ -182,7 +202,10 @@ export default function MitraWisataOnboarding({
         return Boolean(value && String(value).trim().length > 0);
     };
 
-    const selectedCity = citySelectOptions.find((option) => option.value === step2Form.data.city_code) ?? null;
+    const selectedCity =
+        citySelectOptions.find(
+            (option) => option.value === step2Form.data.city_code,
+        ) ?? null;
     const selectStyles = {
         control: (base: any) => ({
             ...base,
@@ -198,7 +221,8 @@ export default function MitraWisataOnboarding({
         menu: (base: any) => ({ ...base, zIndex: 50 }),
     };
 
-    const hasFile = (file?: File | null, path?: string | null) => Boolean(file || path);
+    const hasFile = (file?: File | null, path?: string | null) =>
+        Boolean(file || path);
 
     const [filePreviews, setFilePreviews] = useState<{
         gate?: string;
@@ -219,17 +243,44 @@ export default function MitraWisataOnboarding({
         };
     }, [filePreviews]);
 
-    const getPublicUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
+    const getPublicUrl = (path?: string | null) =>
+        path ? `/storage/${path}` : null;
 
     const handleFileChange = (
         key: keyof typeof filePreviews,
         file: File | null,
-        fieldName: keyof typeof step2Form.data | keyof typeof step3Form.data
+        fieldName: keyof typeof step2Form.data | keyof typeof step3Form.data,
     ) => {
+        if (file && file.size > maxUploadSize) {
+            if (fieldName in step2Form.data) {
+                step2Form.setData(
+                    fieldName as keyof typeof step2Form.data,
+                    null as never,
+                );
+            } else {
+                step3Form.setData(
+                    fieldName as keyof typeof step3Form.data,
+                    null as never,
+                );
+            }
+            setFilePreviews((prev) => ({ ...prev, [key]: undefined }));
+            showError(
+                'File terlalu besar',
+                `Ukuran maksimal file adalah ${maxUploadSizeLabel}.`,
+            );
+            return;
+        }
+
         if (fieldName in step2Form.data) {
-            step2Form.setData(fieldName as keyof typeof step2Form.data, file as never);
+            step2Form.setData(
+                fieldName as keyof typeof step2Form.data,
+                file as never,
+            );
         } else {
-            step3Form.setData(fieldName as keyof typeof step3Form.data, file as never);
+            step3Form.setData(
+                fieldName as keyof typeof step3Form.data,
+                file as never,
+            );
         }
         if (!file) {
             setFilePreviews((prev) => ({ ...prev, [key]: undefined }));
@@ -249,7 +300,9 @@ export default function MitraWisataOnboarding({
 
     const getFirstError = (errors: Record<string, string>): string => {
         const firstKey = Object.keys(errors)[0];
-        return firstKey ? errors[firstKey] : 'Terjadi kesalahan. Silakan coba lagi.';
+        return firstKey
+            ? errors[firstKey]
+            : 'Terjadi kesalahan. Silakan coba lagi.';
     };
 
     const submitVerification = () => {
@@ -265,21 +318,37 @@ export default function MitraWisataOnboarding({
                             preserveScroll: true,
                             forceFormData: true,
                             onSuccess: () =>
-                                router.post('/mitra/wisata/onboarding/submit-verification', {}, {
-                                    onSuccess: () => {
-                                        showSuccess('Terkirim', 'Dokumen verifikasi dikirim untuk review.');
-                                        router.reload({ only: ['onboarding'] });
+                                router.post(
+                                    '/mitra/wisata/onboarding/submit-verification',
+                                    {},
+                                    {
+                                        onSuccess: () => {
+                                            showSuccess(
+                                                'Terkirim',
+                                                'Dokumen verifikasi dikirim untuk review.',
+                                            );
+                                            router.reload({
+                                                only: ['onboarding'],
+                                            });
+                                        },
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal mengirim',
+                                                getFirstError(errors),
+                                            ),
                                     },
-                                    onError: (errors) =>
-                                        showError('Gagal mengirim', getFirstError(errors)),
-                                }),
+                                ),
                             onError: (errors) =>
-                                showError('Gagal menyimpan', getFirstError(errors)),
+                                showError(
+                                    'Gagal menyimpan',
+                                    getFirstError(errors),
+                                ),
                         }),
                     onError: (errors) =>
                         showError('Gagal menyimpan', getFirstError(errors)),
                 }),
-            onError: (errors) => showError('Gagal menyimpan', getFirstError(errors)),
+            onError: (errors) =>
+                showError('Gagal menyimpan', getFirstError(errors)),
         });
     };
 
@@ -301,7 +370,9 @@ export default function MitraWisataOnboarding({
         onChange: (file: File | null) => void;
     }) => {
         const hasPreview = Boolean(previewUrl);
-        const isPdf = fileName?.toLowerCase().endsWith('.pdf') || previewUrl?.toLowerCase().includes('.pdf');
+        const isPdf =
+            fileName?.toLowerCase().endsWith('.pdf') ||
+            previewUrl?.toLowerCase().includes('.pdf');
 
         return (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
@@ -310,9 +381,14 @@ export default function MitraWisataOnboarding({
                     type="file"
                     accept={accept}
                     className="hidden"
-                    onChange={(event) => onChange(event.target.files?.[0] ?? null)}
+                    onChange={(event) =>
+                        onChange(event.target.files?.[0] ?? null)
+                    }
                 />
-                <label htmlFor={id} className="flex cursor-pointer flex-col items-center">
+                <label
+                    htmlFor={id}
+                    className="flex cursor-pointer flex-col items-center"
+                >
                     {hasPreview ? (
                         <>
                             {isPdf ? (
@@ -332,8 +408,12 @@ export default function MitraWisataOnboarding({
                         </>
                     ) : (
                         <>
-                            <p className="text-sm font-semibold text-slate-900">{label}</p>
-                            <p className="mt-1 text-xs text-slate-500">{helper}</p>
+                            <p className="text-sm font-semibold text-slate-900">
+                                {label}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                                {helper}
+                            </p>
                             <span className="mt-4 inline-flex items-center justify-center rounded-md bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700">
                                 Pilih File
                             </span>
@@ -341,7 +421,9 @@ export default function MitraWisataOnboarding({
                     )}
                 </label>
                 {!hasPreview && fileName && (
-                    <p className="mt-2 text-xs font-medium text-slate-600">File dipilih: {fileName}</p>
+                    <p className="mt-2 text-xs font-medium text-slate-600">
+                        File dipilih: {fileName}
+                    </p>
                 )}
             </div>
         );
@@ -374,26 +456,67 @@ export default function MitraWisataOnboarding({
 
     const wisataChecklist = useMemo(() => {
         return [
-            { label: 'Nama penanggung jawab', ok: isFilled(onboarding.responsible_name) },
-            { label: 'Nomor HP penanggung jawab', ok: isFilled(onboarding.responsible_phone) },
-            { label: 'Jabatan penanggung jawab', ok: isFilled(onboarding.responsible_role) },
-            { label: 'Nama destinasi', ok: isFilled(onboarding.destination_name) },
-            { label: 'Jenis wisata', ok: isFilled(onboarding.destination_type) },
-            { label: 'Deskripsi singkat', ok: isFilled(onboarding.description) },
+            {
+                label: 'Nama penanggung jawab',
+                ok: isFilled(onboarding.responsible_name),
+            },
+            {
+                label: 'Nomor HP penanggung jawab',
+                ok: isFilled(onboarding.responsible_phone),
+            },
+            {
+                label: 'Jabatan penanggung jawab',
+                ok: isFilled(onboarding.responsible_role),
+            },
+            {
+                label: 'Nama destinasi',
+                ok: isFilled(onboarding.destination_name),
+            },
+            {
+                label: 'Jenis wisata',
+                ok: isFilled(onboarding.destination_type),
+            },
+            {
+                label: 'Deskripsi singkat',
+                ok: isFilled(onboarding.description),
+            },
             { label: 'Provinsi', ok: isFilled(onboarding.province_code) },
             { label: 'Kota/Kabupaten', ok: isFilled(onboarding.city_code) },
             { label: 'Alamat lengkap', ok: isFilled(onboarding.address_full) },
-            { label: 'Titik Google Maps', ok: isFilled(onboarding.maps_pin_url) },
-            { label: 'Hari buka', ok: Boolean(onboarding.open_days && onboarding.open_days.length > 0) },
+            {
+                label: 'Titik Google Maps',
+                ok: isFilled(onboarding.maps_pin_url),
+            },
+            {
+                label: 'Hari buka',
+                ok: Boolean(
+                    onboarding.open_days && onboarding.open_days.length > 0,
+                ),
+            },
             { label: 'Jam buka', ok: isFilled(onboarding.open_time) },
             { label: 'Jam tutup', ok: isFilled(onboarding.close_time) },
             { label: 'Foto gerbang', ok: isFilled(onboarding.photo_gate_path) },
-            { label: 'Foto area utama', ok: isFilled(onboarding.photo_area_path) },
-            { label: 'Foto loket/validasi', ok: isFilled(onboarding.photo_ticket_path) },
+            {
+                label: 'Foto area utama',
+                ok: isFilled(onboarding.photo_area_path),
+            },
+            {
+                label: 'Foto loket/validasi',
+                ok: isFilled(onboarding.photo_ticket_path),
+            },
             { label: 'Upload KTP', ok: isFilled(onboarding.ktp_path) },
-            { label: 'Jenis dokumen legalitas', ok: isFilled(onboarding.legal_doc_type) },
-            { label: 'Nomor dokumen legalitas', ok: isFilled(onboarding.legal_doc_number) },
-            { label: 'Upload dokumen legalitas', ok: isFilled(onboarding.legal_doc_path) },
+            {
+                label: 'Jenis dokumen legalitas',
+                ok: isFilled(onboarding.legal_doc_type),
+            },
+            {
+                label: 'Nomor dokumen legalitas',
+                ok: isFilled(onboarding.legal_doc_number),
+            },
+            {
+                label: 'Upload dokumen legalitas',
+                ok: isFilled(onboarding.legal_doc_path),
+            },
         ];
     }, [onboarding]);
 
@@ -404,11 +527,21 @@ export default function MitraWisataOnboarding({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Dokumen Mitra Wisata</p>
-                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">Pendaftaran Mitra Wisata</h1>
-                            <p className="text-sm text-slate-500">Lengkapi data agar destinasi bisa live dan menerima booking.</p>
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
+                                Dokumen Mitra Wisata
+                            </p>
+                            <h1 className="mt-2 text-2xl font-semibold text-slate-900">
+                                Pendaftaran Mitra Wisata
+                            </h1>
+                            <p className="text-sm text-slate-500">
+                                Lengkapi data agar destinasi bisa live dan
+                                menerima booking.
+                            </p>
                         </div>
-                        <StepBadge status={onboarding.verification_status} label={onboarding.verification_status} />
+                        <StepBadge
+                            status={onboarding.verification_status}
+                            label={onboarding.verification_status}
+                        />
                     </div>
                 </section>
 
@@ -433,61 +566,104 @@ export default function MitraWisataOnboarding({
 
                 {activeStep === 1 && (
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Data Akun Penanggung Jawab</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Data Akun Penanggung Jawab
+                        </h2>
                         <form
                             className="mt-6 grid gap-4 md:grid-cols-2"
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                step1Form.post('/mitra/wisata/onboarding/step-1', {
-                                    preserveScroll: true,
-                                    preserveState: false,
-                                    onSuccess: () => {
-                                        showSuccess('Tersimpan', 'Data akun mitra disimpan.');
-                                        router.reload({ only: ['onboarding'] });
+                                step1Form.post(
+                                    '/mitra/wisata/onboarding/step-1',
+                                    {
+                                        preserveScroll: true,
+                                        preserveState: false,
+                                        onSuccess: () => {
+                                            showSuccess(
+                                                'Tersimpan',
+                                                'Data akun mitra disimpan.',
+                                            );
+                                            router.reload({
+                                                only: ['onboarding'],
+                                            });
+                                        },
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal',
+                                                getFirstError(errors),
+                                            ),
                                     },
-                                    onError: (errors) => showError('Gagal', getFirstError(errors)),
-                                });
+                                );
                             }}
                         >
                             <div className="grid gap-2">
                                 <Label>Nama Lengkap Penanggung Jawab</Label>
                                 <Input
                                     value={step1Form.data.responsible_name}
-                                    onChange={(event) => step1Form.setData('responsible_name', event.target.value)}
+                                    onChange={(event) =>
+                                        step1Form.setData(
+                                            'responsible_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nama lengkap"
                                 />
-                                <InputError message={step1Form.errors.responsible_name} />
+                                <InputError
+                                    message={step1Form.errors.responsible_name}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Nomor HP</Label>
                                 <Input
                                     value={step1Form.data.responsible_phone}
-                                    onChange={(event) => step1Form.setData('responsible_phone', event.target.value)}
+                                    onChange={(event) =>
+                                        step1Form.setData(
+                                            'responsible_phone',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="08xxxxxxxxxx"
                                 />
-                                <InputError message={step1Form.errors.responsible_phone} />
+                                <InputError
+                                    message={step1Form.errors.responsible_phone}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Jabatan Penanggung Jawab</Label>
                                 <UiSelect
                                     value={step1Form.data.responsible_role}
-                                    onValueChange={(value) => step1Form.setData('responsible_role', value)}
+                                    onValueChange={(value) =>
+                                        step1Form.setData(
+                                            'responsible_role',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih jabatan" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {roleOptions.map((item) => (
-                                            <SelectItem key={item.id} value={item.id}>
+                                            <SelectItem
+                                                key={item.id}
+                                                value={item.id}
+                                            >
                                                 {item.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </UiSelect>
-                                <InputError message={step1Form.errors.responsible_role} />
+                                <InputError
+                                    message={step1Form.errors.responsible_role}
+                                />
                             </div>
-                            <div className="md:col-span-2 flex justify-end">
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">Simpan</Button>
+                            <div className="flex justify-end md:col-span-2">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
+                                    Simpan
+                                </Button>
                             </div>
                         </form>
                     </section>
@@ -495,76 +671,126 @@ export default function MitraWisataOnboarding({
 
                 {activeStep === 2 && (
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Data Destinasi Wisata</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Data Destinasi Wisata
+                        </h2>
                         <form
                             className="mt-6 grid gap-4 md:grid-cols-2"
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                step2Form.post('/mitra/wisata/onboarding/step-2', {
-                                    forceFormData: true,
-                                    preserveScroll: true,
-                                    preserveState: false,
-                                    onSuccess: () => {
-                                        showSuccess('Tersimpan', 'Data destinasi berhasil disimpan.');
-                                        router.reload({ only: ['onboarding'] });
+                                step2Form.post(
+                                    '/mitra/wisata/onboarding/step-2',
+                                    {
+                                        forceFormData: true,
+                                        preserveScroll: true,
+                                        preserveState: false,
+                                        onSuccess: () => {
+                                            showSuccess(
+                                                'Tersimpan',
+                                                'Data destinasi berhasil disimpan.',
+                                            );
+                                            router.reload({
+                                                only: ['onboarding'],
+                                            });
+                                        },
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal',
+                                                getFirstError(errors),
+                                            ),
                                     },
-                                    onError: (errors) => showError('Gagal', getFirstError(errors)),
-                                });
+                                );
                             }}
                         >
                             <div className="grid gap-2">
                                 <Label>Nama Destinasi Wisata</Label>
                                 <Input
                                     value={step2Form.data.destination_name}
-                                    onChange={(event) => step2Form.setData('destination_name', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'destination_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nama destinasi"
                                 />
-                                <InputError message={step2Form.errors.destination_name} />
+                                <InputError
+                                    message={step2Form.errors.destination_name}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Jenis Wisata</Label>
                                 <UiSelect
                                     value={step2Form.data.destination_type}
-                                    onValueChange={(value) => step2Form.setData('destination_type', value)}
+                                    onValueChange={(value) =>
+                                        step2Form.setData(
+                                            'destination_type',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih jenis" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {destinationTypes.map((item) => (
-                                            <SelectItem key={item.id} value={item.id}>
+                                            <SelectItem
+                                                key={item.id}
+                                                value={item.id}
+                                            >
                                                 {item.label}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
                                 </UiSelect>
-                                <InputError message={step2Form.errors.destination_type} />
+                                <InputError
+                                    message={step2Form.errors.destination_type}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Deskripsi Singkat</Label>
                                 <textarea
                                     className="min-h-[120px] rounded-md border border-input bg-transparent px-3 py-2 text-sm"
                                     value={step2Form.data.description}
-                                    onChange={(event) => step2Form.setData('description', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'description',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Ceritakan tentang destinasi wisata"
                                 />
-                                <InputError message={step2Form.errors.description} />
+                                <InputError
+                                    message={step2Form.errors.description}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Highlight / Daya Tarik Utama</Label>
                                 <textarea
                                     className="min-h-[100px] rounded-md border border-input bg-transparent px-3 py-2 text-sm"
                                     value={step2Form.data.highlights}
-                                    onChange={(event) => step2Form.setData('highlights', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'highlights',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Contoh: spot foto, sunset, wahana air"
                                 />
-                                <InputError message={step2Form.errors.highlights} />
+                                <InputError
+                                    message={step2Form.errors.highlights}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Provinsi</Label>
                                 <UiSelect
                                     value={step2Form.data.province_code}
-                                    onValueChange={(value) => step2Form.setData('province_code', value)}
+                                    onValueChange={(value) =>
+                                        step2Form.setData(
+                                            'province_code',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih provinsi" />
@@ -573,7 +799,9 @@ export default function MitraWisataOnboarding({
                                         {provinceItems}
                                     </SelectContent>
                                 </UiSelect>
-                                <InputError message={step2Form.errors.province_code} />
+                                <InputError
+                                    message={step2Form.errors.province_code}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Kota/Kabupaten</Label>
@@ -583,45 +811,81 @@ export default function MitraWisataOnboarding({
                                     options={citySelectOptions}
                                     value={selectedCity}
                                     placeholder="Pilih kota/kabupaten"
-                                    onChange={(option) => step2Form.setData('city_code', option?.value ?? '')}
+                                    onChange={(option) =>
+                                        step2Form.setData(
+                                            'city_code',
+                                            option?.value ?? '',
+                                        )
+                                    }
                                     styles={selectStyles}
                                 />
-                                <InputError message={step2Form.errors.city_code} />
+                                <InputError
+                                    message={step2Form.errors.city_code}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Alamat Lengkap</Label>
                                 <Input
                                     value={step2Form.data.address_full}
-                                    onChange={(event) => step2Form.setData('address_full', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'address_full',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Alamat lengkap"
                                 />
-                                <InputError message={step2Form.errors.address_full} />
+                                <InputError
+                                    message={step2Form.errors.address_full}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Titik Google Maps</Label>
                                 <Input
                                     value={step2Form.data.maps_pin_url}
-                                    onChange={(event) => step2Form.setData('maps_pin_url', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'maps_pin_url',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Link Google Maps"
                                 />
-                                <InputError message={step2Form.errors.maps_pin_url} />
+                                <InputError
+                                    message={step2Form.errors.maps_pin_url}
+                                />
                             </div>
 
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Hari Buka</Label>
                                 <div className="flex flex-wrap gap-3">
                                     {dayOptions.map((day) => (
-                                        <label key={day.id} className="inline-flex items-center gap-2 text-sm text-slate-600">
+                                        <label
+                                            key={day.id}
+                                            className="inline-flex items-center gap-2 text-sm text-slate-600"
+                                        >
                                             <input
                                                 type="checkbox"
-                                                checked={step2Form.data.open_days.includes(day.id)}
+                                                checked={step2Form.data.open_days.includes(
+                                                    day.id,
+                                                )}
                                                 onChange={(event) => {
-                                                    const checked = event.target.checked;
+                                                    const checked =
+                                                        event.target.checked;
                                                     step2Form.setData(
                                                         'open_days',
                                                         checked
-                                                            ? [...step2Form.data.open_days, day.id]
-                                                            : step2Form.data.open_days.filter((item) => item !== day.id)
+                                                            ? [
+                                                                  ...step2Form
+                                                                      .data
+                                                                      .open_days,
+                                                                  day.id,
+                                                              ]
+                                                            : step2Form.data.open_days.filter(
+                                                                  (item) =>
+                                                                      item !==
+                                                                      day.id,
+                                                              ),
                                                     );
                                                 }}
                                             />
@@ -629,51 +893,89 @@ export default function MitraWisataOnboarding({
                                         </label>
                                     ))}
                                 </div>
-                                <InputError message={step2Form.errors.open_days} />
+                                <InputError
+                                    message={step2Form.errors.open_days}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Jam Buka</Label>
                                 <Input
                                     value={step2Form.data.open_time}
-                                    onChange={(event) => step2Form.setData('open_time', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'open_time',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="08:00"
                                 />
-                                <InputError message={step2Form.errors.open_time} />
+                                <InputError
+                                    message={step2Form.errors.open_time}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Jam Tutup</Label>
                                 <Input
                                     value={step2Form.data.close_time}
-                                    onChange={(event) => step2Form.setData('close_time', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'close_time',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="17:00"
                                 />
-                                <InputError message={step2Form.errors.close_time} />
+                                <InputError
+                                    message={step2Form.errors.close_time}
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Catatan Hari Libur Khusus</Label>
                                 <Input
                                     value={step2Form.data.holiday_notes}
-                                    onChange={(event) => step2Form.setData('holiday_notes', event.target.value)}
+                                    onChange={(event) =>
+                                        step2Form.setData(
+                                            'holiday_notes',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Contoh: tutup saat Idul Fitri"
                                 />
-                                <InputError message={step2Form.errors.holiday_notes} />
+                                <InputError
+                                    message={step2Form.errors.holiday_notes}
+                                />
                             </div>
 
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Fasilitas Wisata</Label>
                                 <div className="flex flex-wrap gap-3">
                                     {facilityOptions.map((facility) => (
-                                        <label key={facility.id} className="inline-flex items-center gap-2 text-sm text-slate-600">
+                                        <label
+                                            key={facility.id}
+                                            className="inline-flex items-center gap-2 text-sm text-slate-600"
+                                        >
                                             <input
                                                 type="checkbox"
-                                                checked={step2Form.data.facilities.includes(facility.id)}
+                                                checked={step2Form.data.facilities.includes(
+                                                    facility.id,
+                                                )}
                                                 onChange={(event) => {
-                                                    const checked = event.target.checked;
+                                                    const checked =
+                                                        event.target.checked;
                                                     step2Form.setData(
                                                         'facilities',
                                                         checked
-                                                            ? [...step2Form.data.facilities, facility.id]
-                                                            : step2Form.data.facilities.filter((item) => item !== facility.id)
+                                                            ? [
+                                                                  ...step2Form
+                                                                      .data
+                                                                      .facilities,
+                                                                  facility.id,
+                                                              ]
+                                                            : step2Form.data.facilities.filter(
+                                                                  (item) =>
+                                                                      item !==
+                                                                      facility.id,
+                                                              ),
                                                     );
                                                 }}
                                             />
@@ -681,7 +983,9 @@ export default function MitraWisataOnboarding({
                                         </label>
                                     ))}
                                 </div>
-                                <InputError message={step2Form.errors.facilities} />
+                                <InputError
+                                    message={step2Form.errors.facilities}
+                                />
                             </div>
 
                             <div className="grid gap-2 md:col-span-2">
@@ -689,49 +993,99 @@ export default function MitraWisataOnboarding({
                                 <div className="grid gap-3 md:grid-cols-2">
                                     <Input
                                         value={step2Form.data.contact_phone}
-                                        onChange={(event) => step2Form.setData('contact_phone', event.target.value)}
+                                        onChange={(event) =>
+                                            step2Form.setData(
+                                                'contact_phone',
+                                                event.target.value,
+                                            )
+                                        }
                                         placeholder="Nomor petugas loket"
                                     />
                                     <Input
                                         value={step2Form.data.contact_hours}
-                                        onChange={(event) => step2Form.setData('contact_hours', event.target.value)}
+                                        onChange={(event) =>
+                                            step2Form.setData(
+                                                'contact_hours',
+                                                event.target.value,
+                                            )
+                                        }
                                         placeholder="Jam bisa dihubungi"
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid gap-4 md:grid-cols-3 md:col-span-2">
+                            <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
                                 <FilePicker
                                     id="photo_gate_file"
                                     label="Foto Gerbang/Pintu Masuk"
-                                    helper="Wajib, jpg/png"
+                                    helper={`Wajib, jpg/png/webp, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*"
-                                    fileName={step2Form.data.photo_gate_file?.name}
-                                    previewUrl={filePreviews.gate ?? getPublicUrl(onboarding.photo_gate_path)}
-                                    onChange={(file) => handleFileChange('gate', file, 'photo_gate_file')}
+                                    fileName={
+                                        step2Form.data.photo_gate_file?.name
+                                    }
+                                    previewUrl={
+                                        filePreviews.gate ??
+                                        getPublicUrl(onboarding.photo_gate_path)
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'gate',
+                                            file,
+                                            'photo_gate_file',
+                                        )
+                                    }
                                 />
                                 <FilePicker
                                     id="photo_area_file"
                                     label="Foto Area Utama"
-                                    helper="Wajib, jpg/png"
+                                    helper={`Wajib, jpg/png/webp, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*"
-                                    fileName={step2Form.data.photo_area_file?.name}
-                                    previewUrl={filePreviews.area ?? getPublicUrl(onboarding.photo_area_path)}
-                                    onChange={(file) => handleFileChange('area', file, 'photo_area_file')}
+                                    fileName={
+                                        step2Form.data.photo_area_file?.name
+                                    }
+                                    previewUrl={
+                                        filePreviews.area ??
+                                        getPublicUrl(onboarding.photo_area_path)
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'area',
+                                            file,
+                                            'photo_area_file',
+                                        )
+                                    }
                                 />
                                 <FilePicker
                                     id="photo_ticket_file"
                                     label="Foto Loket/Validasi"
-                                    helper="Wajib, jpg/png"
+                                    helper={`Wajib, jpg/png/webp, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*"
-                                    fileName={step2Form.data.photo_ticket_file?.name}
-                                    previewUrl={filePreviews.ticket ?? getPublicUrl(onboarding.photo_ticket_path)}
-                                    onChange={(file) => handleFileChange('ticket', file, 'photo_ticket_file')}
+                                    fileName={
+                                        step2Form.data.photo_ticket_file?.name
+                                    }
+                                    previewUrl={
+                                        filePreviews.ticket ??
+                                        getPublicUrl(
+                                            onboarding.photo_ticket_path,
+                                        )
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'ticket',
+                                            file,
+                                            'photo_ticket_file',
+                                        )
+                                    }
                                 />
                             </div>
 
-                            <div className="md:col-span-2 flex justify-end">
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">Simpan</Button>
+                            <div className="flex justify-end md:col-span-2">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
+                                    Simpan
+                                </Button>
                             </div>
                         </form>
                     </section>
@@ -739,80 +1093,150 @@ export default function MitraWisataOnboarding({
 
                 {activeStep === 3 && (
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">Legalitas & Keuangan</h2>
+                        <h2 className="text-lg font-semibold text-slate-900">
+                            Legalitas & Keuangan
+                        </h2>
+                        <div className="mt-4">
+                            <CommissionInfoCard info={commissionInfo} />
+                        </div>
                         <form
                             className="mt-6 grid gap-4 md:grid-cols-2"
                             onSubmit={(event) => {
                                 event.preventDefault();
-                                step3Form.post('/mitra/wisata/onboarding/step-3', {
-                                    forceFormData: true,
-                                    preserveScroll: true,
-                                    preserveState: false,
-                                    onSuccess: () => {
-                                        showSuccess('Tersimpan', 'Legalitas & rekening tersimpan.');
-                                        router.reload({ only: ['onboarding'] });
+                                step3Form.post(
+                                    '/mitra/wisata/onboarding/step-3',
+                                    {
+                                        forceFormData: true,
+                                        preserveScroll: true,
+                                        preserveState: false,
+                                        onSuccess: () => {
+                                            showSuccess(
+                                                'Tersimpan',
+                                                'Legalitas & rekening tersimpan.',
+                                            );
+                                            router.reload({
+                                                only: ['onboarding'],
+                                            });
+                                        },
+                                        onError: (errors) =>
+                                            showError(
+                                                'Gagal',
+                                                getFirstError(errors),
+                                            ),
                                     },
-                                    onError: (errors) => showError('Gagal', getFirstError(errors)),
-                                });
+                                );
                             }}
                         >
                             <div className="grid gap-4 md:col-span-2 md:grid-cols-2">
                                 <FilePicker
                                     id="ktp_file"
                                     label="KTP Penanggung Jawab"
-                                    helper="Wajib, jpg/png/pdf"
+                                    helper={`Wajib, jpg/png/webp/pdf, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*,application/pdf"
                                     fileName={step3Form.data.ktp_file?.name}
-                                    previewUrl={filePreviews.ktp ?? getPublicUrl(onboarding.ktp_path)}
-                                    onChange={(file) => handleFileChange('ktp', file, 'ktp_file')}
+                                    previewUrl={
+                                        filePreviews.ktp ??
+                                        getPublicUrl(onboarding.ktp_path)
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'ktp',
+                                            file,
+                                            'ktp_file',
+                                        )
+                                    }
                                 />
                                 <FilePicker
                                     id="selfie_ktp_file"
                                     label="Selfie + KTP"
-                                    helper="Disarankan, jpg/png"
+                                    helper={`Disarankan, jpg/png/webp, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*"
-                                    fileName={step3Form.data.selfie_ktp_file?.name}
-                                    previewUrl={filePreviews.selfie ?? getPublicUrl(onboarding.selfie_ktp_path)}
-                                    onChange={(file) => handleFileChange('selfie', file, 'selfie_ktp_file')}
+                                    fileName={
+                                        step3Form.data.selfie_ktp_file?.name
+                                    }
+                                    previewUrl={
+                                        filePreviews.selfie ??
+                                        getPublicUrl(onboarding.selfie_ktp_path)
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'selfie',
+                                            file,
+                                            'selfie_ktp_file',
+                                        )
+                                    }
                                 />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Jenis Dokumen Legalitas</Label>
                                 <UiSelect
                                     value={step3Form.data.legal_doc_type}
-                                    onValueChange={(value) => step3Form.setData('legal_doc_type', value)}
+                                    onValueChange={(value) =>
+                                        step3Form.setData(
+                                            'legal_doc_type',
+                                            value,
+                                        )
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih dokumen" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="nib">NIB</SelectItem>
-                                        <SelectItem value="sk_desa">SK Desa / BUMDes</SelectItem>
-                                        <SelectItem value="surat_pokdarwis">Surat Pokdarwis</SelectItem>
-                                        <SelectItem value="izin_wisata">Surat Izin Pengelolaan Wisata</SelectItem>
-                                        <SelectItem value="dokumen_kawasan">Dokumen Pengelola Kawasan</SelectItem>
+                                        <SelectItem value="sk_desa">
+                                            SK Desa / BUMDes
+                                        </SelectItem>
+                                        <SelectItem value="surat_pokdarwis">
+                                            Surat Pokdarwis
+                                        </SelectItem>
+                                        <SelectItem value="izin_wisata">
+                                            Surat Izin Pengelolaan Wisata
+                                        </SelectItem>
+                                        <SelectItem value="dokumen_kawasan">
+                                            Dokumen Pengelola Kawasan
+                                        </SelectItem>
                                     </SelectContent>
                                 </UiSelect>
-                                <InputError message={step3Form.errors.legal_doc_type} />
+                                <InputError
+                                    message={step3Form.errors.legal_doc_type}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Nomor Dokumen</Label>
                                 <Input
                                     value={step3Form.data.legal_doc_number}
-                                    onChange={(event) => step3Form.setData('legal_doc_number', event.target.value)}
+                                    onChange={(event) =>
+                                        step3Form.setData(
+                                            'legal_doc_number',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nomor dokumen"
                                 />
-                                <InputError message={step3Form.errors.legal_doc_number} />
+                                <InputError
+                                    message={step3Form.errors.legal_doc_number}
+                                />
                             </div>
                             <div className="md:col-span-2">
                                 <FilePicker
                                     id="legal_doc_file"
                                     label="Upload Dokumen Legalitas"
-                                    helper="Wajib, jpg/png/pdf"
+                                    helper={`Wajib, jpg/png/webp/pdf, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*,application/pdf"
-                                    fileName={step3Form.data.legal_doc_file?.name}
-                                    previewUrl={filePreviews.legal ?? getPublicUrl(onboarding.legal_doc_path)}
-                                    onChange={(file) => handleFileChange('legal', file, 'legal_doc_file')}
+                                    fileName={
+                                        step3Form.data.legal_doc_file?.name
+                                    }
+                                    previewUrl={
+                                        filePreviews.legal ??
+                                        getPublicUrl(onboarding.legal_doc_path)
+                                    }
+                                    onChange={(file) =>
+                                        handleFileChange(
+                                            'legal',
+                                            file,
+                                            'legal_doc_file',
+                                        )
+                                    }
                                 />
                             </div>
 
@@ -820,32 +1244,60 @@ export default function MitraWisataOnboarding({
                                 <Label>Nama Bank</Label>
                                 <Input
                                     value={step3Form.data.bank_name}
-                                    onChange={(event) => step3Form.setData('bank_name', event.target.value)}
+                                    onChange={(event) =>
+                                        step3Form.setData(
+                                            'bank_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Contoh: BCA"
                                 />
-                                <InputError message={step3Form.errors.bank_name} />
+                                <InputError
+                                    message={step3Form.errors.bank_name}
+                                />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Nomor Rekening</Label>
                                 <Input
                                     value={step3Form.data.bank_account_number}
-                                    onChange={(event) => step3Form.setData('bank_account_number', event.target.value)}
+                                    onChange={(event) =>
+                                        step3Form.setData(
+                                            'bank_account_number',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nomor rekening"
                                 />
-                                <InputError message={step3Form.errors.bank_account_number} />
+                                <InputError
+                                    message={
+                                        step3Form.errors.bank_account_number
+                                    }
+                                />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
                                 <Label>Nama Pemilik Rekening</Label>
                                 <Input
                                     value={step3Form.data.bank_account_name}
-                                    onChange={(event) => step3Form.setData('bank_account_name', event.target.value)}
+                                    onChange={(event) =>
+                                        step3Form.setData(
+                                            'bank_account_name',
+                                            event.target.value,
+                                        )
+                                    }
                                     placeholder="Nama pemilik rekening"
                                 />
-                                <InputError message={step3Form.errors.bank_account_name} />
+                                <InputError
+                                    message={step3Form.errors.bank_account_name}
+                                />
                             </div>
 
-                            <div className="md:col-span-2 flex justify-end">
-                                <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">Simpan</Button>
+                            <div className="flex justify-end md:col-span-2">
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                >
+                                    Simpan
+                                </Button>
                             </div>
                         </form>
                     </section>
@@ -855,9 +1307,12 @@ export default function MitraWisataOnboarding({
                     <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                             <div>
-                                <h3 className="text-lg font-semibold text-slate-900">Kirim untuk Verifikasi</h3>
+                                <h3 className="text-lg font-semibold text-slate-900">
+                                    Kirim untuk Verifikasi
+                                </h3>
                                 <p className="text-sm text-slate-500">
-                                    Setelah semua data lengkap, kirim agar admin dapat memverifikasi.
+                                    Setelah semua data lengkap, kirim agar admin
+                                    dapat memverifikasi.
                                 </p>
                             </div>
                             <div className="flex gap-3">
@@ -877,12 +1332,15 @@ export default function MitraWisataOnboarding({
                         </div>
                         {!isWisataVerificationReady && (
                             <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                <p className="text-xs font-semibold text-slate-400 uppercase">
                                     Checklist kelengkapan
                                 </p>
                                 <div className="mt-3 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
                                     {wisataChecklist.map((item) => (
-                                        <div key={item.label} className="flex items-center gap-2">
+                                        <div
+                                            key={item.label}
+                                            className="flex items-center gap-2"
+                                        >
                                             {item.ok ? (
                                                 <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                                             ) : (

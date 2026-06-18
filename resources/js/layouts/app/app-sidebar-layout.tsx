@@ -9,19 +9,24 @@ import { useEffect, useRef } from 'react';
 import { loadCkeditor, warmupCkeditor } from '@/lib/ckeditor-loader';
 import Swal from 'sweetalert2';
 import CoachMarks from '@/components/coach-marks';
+import FeatureSuggestion from '@/components/feature-suggestion';
+import TablePagination from '@/components/table-pagination';
 
 export default function AppSidebarLayout({
     children,
     breadcrumbs = [],
 }: AppLayoutProps) {
-    const { auth } = usePage<SharedData>().props;
+    const { auth, maintenance_mode: maintenanceMode } =
+        usePage<SharedData>().props;
     const role = auth?.user?.role;
     const isMitra = role === 'mitra';
+    const isAdminContext = role === 'admin' || role?.startsWith('admin_');
     const page = usePage();
     const currentUrl = page.url ?? window.location.pathname;
     const errors = (page.props as { errors?: Record<string, string> }).errors;
     const mitraError = errors?.mitra;
     const hasShownSuspendedRef = useRef(false);
+    const hasShownMaintenanceRef = useRef(false);
 
     useEffect(() => {
         const shouldPreload =
@@ -66,12 +71,44 @@ export default function AppSidebarLayout({
         }
     }, [isMitra, auth?.user, mitraError]);
 
+    useEffect(() => {
+        const isUserOrMitra = role === 'user' || role === 'mitra';
+        const isDashboard =
+            currentUrl === '/dashboard' ||
+            currentUrl.startsWith('/dashboard?') ||
+            currentUrl === '/mitra/dashboard' ||
+            currentUrl.startsWith('/mitra/dashboard?');
+
+        if (
+            !maintenanceMode?.enabled ||
+            !isUserOrMitra ||
+            !isDashboard ||
+            hasShownMaintenanceRef.current
+        ) {
+            return;
+        }
+
+        Swal.fire({
+            icon: 'info',
+            title: 'Sistem sedang maintenance',
+            text: maintenanceMode.message,
+            confirmButtonText: 'Mengerti',
+            allowOutsideClick: true,
+            allowEscapeKey: true,
+        });
+        hasShownMaintenanceRef.current = true;
+    }, [currentUrl, maintenanceMode?.enabled, maintenanceMode?.message, role]);
+
     return (
         <AppShell variant="sidebar" className="theme-light">
             {isMitra ? <AppSidebarMitra /> : <AppSidebarAdmin />}
             <AppContent variant="sidebar" className="overflow-x-hidden">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
+                {(isMitra || isAdminContext) && (
+                    <FeatureSuggestion context={isMitra ? 'mitra' : 'admin'} />
+                )}
                 {children}
+                <TablePagination />
             </AppContent>
             <CoachMarks context={isMitra ? 'mitra' : 'admin'} />
         </AppShell>

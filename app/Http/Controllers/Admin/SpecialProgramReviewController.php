@@ -35,7 +35,7 @@ class SpecialProgramReviewController extends Controller
             });
         }
 
-        $reviews = $query->paginate(20)->withQueryString();
+        $reviews = $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
         $titles = ProductReviewService::resolveTitles(
             'special_program',
             $reviews->getCollection()->pluck('product_id'),

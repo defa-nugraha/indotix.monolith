@@ -61,8 +61,7 @@ class PublicWisataController extends Controller
     public function show(Request $request, string $destination): Response|RedirectResponse
     {
         $destinationModel = MitraWisataOnboarding::query()
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
+            ->publiclyVisible()
             ->where('slug', $destination)
             ->first();
 
@@ -70,8 +69,7 @@ class PublicWisataController extends Controller
             $destinationId = $this->resolveAffiliateDestination($request, $destination);
             if ($destinationId) {
                 $destinationModel = MitraWisataOnboarding::query()
-                    ->where('verification_status', 'verified')
-                    ->where('is_suspended', false)
+                    ->publiclyVisible()
                     ->where('id', $destinationId)
                     ->first();
             }
@@ -81,8 +79,7 @@ class PublicWisataController extends Controller
             try {
                 $destinationId = Crypt::decryptString($destination);
                 $destinationModel = MitraWisataOnboarding::query()
-                    ->where('verification_status', 'verified')
-                    ->where('is_suspended', false)
+                    ->publiclyVisible()
                     ->where('id', $destinationId)
                     ->first();
             } catch (\Throwable $exception) {

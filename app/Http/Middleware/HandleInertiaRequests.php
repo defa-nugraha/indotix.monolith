@@ -5,9 +5,11 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use App\Models\UserNotification;
+use App\Models\SystemSetting;
 use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateLink;
 use App\Models\MitraWisataOnboarding;
+use App\Services\MaintenanceMode;
 use App\Support\AdminPermissionRegistry;
 
 class HandleInertiaRequests extends Middleware
@@ -104,6 +106,10 @@ class HandleInertiaRequests extends Middleware
                 ? WisataAffiliate::query()->where('user_id', $user->id)->value('status')
                 : null,
             'affiliate_referral' => $affiliateReferral,
+            'maintenance_mode' => app(MaintenanceMode::class)->payload(),
+            'public_whatsapp_number' => SystemSetting::query()
+                ->where('key', 'public_whatsapp_number')
+                ->value('value'),
             'unread_notifications' => $user
                 ? UserNotification::query()
                     ->where('user_id', $user->id)

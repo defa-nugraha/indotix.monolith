@@ -211,7 +211,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                 <section data-coach="dashboard-hero" className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-3">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 {headerBadge}
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl font-['Space_Grotesk']">
@@ -248,7 +248,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                                     <item.icon className="h-5 w-5" />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+                                    <p className="text-xs font-semibold uppercase text-slate-400">
                                         {item.title}
                                     </p>
                                     <p className="text-2xl font-semibold text-slate-900">
@@ -267,7 +267,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                     <section data-coach="dashboard-activity" className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">
+                                <p className="text-xs font-semibold uppercase text-sky-600">
                                     Aktivitas Terkini
                                 </p>
                                 <h2 className="mt-2 text-lg font-semibold text-slate-900">
@@ -312,7 +312,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
 
                     <section data-coach="dashboard-status" className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                         <div>
-                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Status Sistem
                             </p>
                             <h2 className="mt-2 text-lg font-semibold text-slate-900">

@@ -22,7 +22,7 @@ class TicketController extends Controller
         }
 
         return Inertia::render('admin/academy/tickets/index', [
-            'tickets' => $query->paginate(20)->withQueryString(),
+            'tickets' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'classes' => AcademyClass::query()->select('id', 'title')->orderBy('title')->get(),
             'filters' => ['class_id' => $classId ?: null],
         ]);

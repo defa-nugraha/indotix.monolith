@@ -12,7 +12,7 @@ class EventAuditController extends Controller
     public function index(): Response
     {
         return Inertia::render('admin/events/system/audit', [
-            'logs' => EventAuditLog::query()->latest()->paginate(30),
+            'logs' => EventAuditLog::query()->latest()->paginate(\App\Support\PaginationOptions::perPage()),
         ]);
     }
 }

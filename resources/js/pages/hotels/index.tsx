@@ -119,7 +119,7 @@ export default function HotelIndex({
                 <section className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Data Hotel
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
@@ -151,7 +151,7 @@ export default function HotelIndex({
                             className="grid gap-4 md:grid-cols-4"
                         >
                             <div className="grid gap-2 md:col-span-2">
-                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                <label className="text-xs font-semibold uppercase text-slate-400">
                                     Cari hotel
                                 </label>
                                 <input
@@ -162,7 +162,7 @@ export default function HotelIndex({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                <label className="text-xs font-semibold uppercase text-slate-400">
                                     Status
                                 </label>
                                 <select
@@ -180,7 +180,7 @@ export default function HotelIndex({
                             </div>
                             {!isMitra && (
                                 <div className="grid gap-2">
-                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                    <label className="text-xs font-semibold uppercase text-slate-400">
                                         Mitra
                                     </label>
                                     <select
@@ -198,7 +198,7 @@ export default function HotelIndex({
                                 </div>
                             )}
                             <div className="grid gap-2 md:col-span-2">
-                                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                                <label className="text-xs font-semibold uppercase text-slate-400">
                                     Kota/Kabupaten
                                 </label>
                                 <select
@@ -236,7 +236,7 @@ export default function HotelIndex({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
-                            <thead className="text-xs uppercase tracking-wider text-slate-400">
+                            <thead className="text-xs uppercase text-slate-400">
                                 <tr>
                                     <th className="py-3 pr-4">Hotel</th>
                                     <th className="py-3 pr-4">Kota</th>
@@ -337,28 +337,6 @@ export default function HotelIndex({
                             </tbody>
                         </table>
                     </div>
-
-                    {hotels.links?.length > 0 && (
-                        <div className="mt-6 flex flex-wrap gap-2">
-                            {hotels.links.map((link) => (
-                                <Button
-                                    key={link.label}
-                                    variant={link.active ? 'default' : 'outline'}
-                                    size="sm"
-                                    disabled={!link.url}
-                                    onClick={() =>
-                                        link.url && router.get(link.url)
-                                    }
-                                >
-                                    <span
-                                        dangerouslySetInnerHTML={{
-                                            __html: link.label,
-                                        }}
-                                    />
-                                </Button>
-                            ))}
-                        </div>
-                    )}
                 </section>
             </div>
         </AppLayout>

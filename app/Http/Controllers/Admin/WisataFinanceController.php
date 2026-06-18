@@ -23,7 +23,7 @@ class WisataFinanceController extends Controller
             ->all();
 
         $rules = WisataCommissionRule::query()
-            ->with('destination')
+            ->with(['destination', 'createdBy:id,name', 'updatedBy:id,name'])
             ->latest('id')
             ->get()
             ->map(fn (WisataCommissionRule $rule) => [
@@ -32,7 +32,10 @@ class WisataFinanceController extends Controller
                 'value' => $rule->value,
                 'start_date' => $rule->start_date?->toDateString(),
                 'end_date' => $rule->end_date?->toDateString(),
+                'is_forever' => $rule->is_forever,
                 'destination' => $rule->destination?->destination_name,
+                'created_by_name' => $rule->createdBy?->name,
+                'updated_by_name' => $rule->updatedBy?->name,
             ]);
 
         return Inertia::render('admin/wisata/finance/commissions', [
@@ -47,9 +50,16 @@ class WisataFinanceController extends Controller
             'mitra_wisata_onboarding_id' => ['nullable', 'exists:mitra_wisata_onboardings,id'],
             'type' => ['required', 'in:percentage,fixed'],
             'value' => ['required', 'integer', 'min:0'],
-            'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
+            'is_forever' => ['boolean'],
+            'start_date' => [\Illuminate\Validation\Rule::requiredIf(fn () => ! $request->boolean('is_forever')), 'nullable', 'date'],
+            'end_date' => [\Illuminate\Validation\Rule::requiredIf(fn () => ! $request->boolean('is_forever')), 'nullable', 'date', 'after_or_equal:start_date'],
         ]);
+
+        $data['is_forever'] = $request->boolean('is_forever');
+        if ($data['is_forever']) {
+            $data['start_date'] = null;
+            $data['end_date'] = null;
+        }
 
         WisataCommissionRule::create($data);
 
@@ -61,7 +71,7 @@ class WisataFinanceController extends Controller
         $payouts = WisataPayout::query()
             ->with('destination')
             ->latest('id')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (WisataPayout $payout) => [
                 'id' => $payout->id,

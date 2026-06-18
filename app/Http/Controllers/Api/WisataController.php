@@ -32,9 +32,7 @@ class WisataController extends Controller
         ])->validate();
 
         $destinations = MitraWisataOnboarding::query()
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
-            ->where('is_temporarily_closed', false)
+            ->publiclyVisible()
             ->when($data['q'] ?? null, fn ($query, $term) => $query->where('destination_name', 'like', "%{$term}%"))
             ->with('user:id,name')
             ->orderBy('destination_name')
@@ -104,16 +102,14 @@ class WisataController extends Controller
     public function show(Request $request, string $destination): JsonResponse
     {
         $destinationModel = MitraWisataOnboarding::query()
+            ->publiclyVisible()
             ->where('slug', $destination)
-            ->where('verification_status', 'verified')
-            ->where('is_suspended', false)
             ->first();
 
         if (! $destinationModel) {
             $destinationId = $this->resolveId($destination);
             $destinationModel = MitraWisataOnboarding::query()
-                ->where('verification_status', 'verified')
-                ->where('is_suspended', false)
+                ->publiclyVisible()
                 ->where('id', $destinationId)
                 ->firstOrFail();
         }

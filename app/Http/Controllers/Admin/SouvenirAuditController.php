@@ -14,7 +14,7 @@ class SouvenirAuditController extends Controller
         $logs = SouvenirAuditLog::query()
             ->with('user:id,name')
             ->latest()
-            ->paginate(15)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
         return Inertia::render('admin/souvenir/audit/index', [

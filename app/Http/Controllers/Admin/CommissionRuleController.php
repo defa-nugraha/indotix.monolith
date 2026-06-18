@@ -16,7 +16,7 @@ class CommissionRuleController extends Controller
     public function index(): Response
     {
         $rules = CommissionRule::query()
-            ->with('hotel')
+            ->with(['hotel', 'createdBy:id,name', 'updatedBy:id,name'])
             ->latest()
             ->get()
             ->map(fn (CommissionRule $rule) => [
@@ -27,7 +27,10 @@ class CommissionRuleController extends Controller
                 'value' => $rule->value,
                 'starts_at' => $rule->starts_at?->toDateString(),
                 'ends_at' => $rule->ends_at?->toDateString(),
+                'is_forever' => $rule->is_forever,
                 'is_active' => $rule->is_active,
+                'created_by_name' => $rule->createdBy?->name,
+                'updated_by_name' => $rule->updatedBy?->name,
             ]);
 
         return Inertia::render('admin/finance/commissions/index', [
@@ -62,14 +65,25 @@ class CommissionRuleController extends Controller
 
     private function validateRule(Request $request): array
     {
-        return $request->validate([
+        $data = $request->validate([
             'hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
             'type' => ['required', Rule::in(['percentage', 'fixed'])],
             'value' => ['required', 'numeric', 'min:0'],
-            'starts_at' => ['nullable', 'date'],
-            'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
+            'is_forever' => ['boolean'],
+            'starts_at' => [Rule::requiredIf(fn () => ! $request->boolean('is_forever')), 'nullable', 'date'],
+            'ends_at' => [Rule::requiredIf(fn () => ! $request->boolean('is_forever')), 'nullable', 'date', 'after_or_equal:starts_at'],
             'is_active' => ['boolean'],
         ]);
+
+        $data['is_forever'] = $request->boolean('is_forever');
+        $data['is_active'] = $request->boolean('is_active', true);
+
+        if ($data['is_forever']) {
+            $data['starts_at'] = null;
+            $data['ends_at'] = null;
+        }
+
+        return $data;
     }
 
     private function hotelOptions(): array

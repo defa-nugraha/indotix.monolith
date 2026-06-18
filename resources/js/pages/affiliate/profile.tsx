@@ -33,18 +33,18 @@ export default function AffiliateProfile({ affiliate }: { affiliate: Affiliate }
             <Head title="Profil Afiliasi" />
             <div className="space-y-6">
                 <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">Profil Afiliator</p>
+                    <p className="text-xs font-semibold uppercase text-sky-600">Profil Afiliator</p>
                     <h1 className="mt-2 text-2xl font-semibold text-slate-900">Data Afiliasi</h1>
                     <p className="mt-1 text-sm text-slate-500">Pastikan data rekening dan kontak selalu terbaru.</p>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Nama</p>
+                        <p className="text-xs font-semibold uppercase text-slate-400">Nama</p>
                         <p className="mt-1 text-base font-semibold text-slate-900">{affiliate.name}</p>
                     </div>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Email</p>
+                        <p className="text-xs font-semibold uppercase text-slate-400">Email</p>
                         <p className="mt-1 text-base font-semibold text-slate-900">{affiliate.email ?? '-'}</p>
                     </div>
                 </div>

@@ -28,7 +28,7 @@ class WisataExceptionController extends Controller
         }
 
         $bookings = $bookingQuery->latest('id')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (WisataBooking $booking) => [
                 'id' => $booking->id,
@@ -49,7 +49,7 @@ class WisataExceptionController extends Controller
         $disputes = WisataDispute::query()
             ->with(['booking', 'destination', 'ticket', 'user:id,name,email'])
             ->latest('id')
-            ->paginate(10)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (WisataDispute $dispute) => [
                 'id' => $dispute->id,

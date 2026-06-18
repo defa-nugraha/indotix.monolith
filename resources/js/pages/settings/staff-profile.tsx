@@ -70,7 +70,7 @@ export default function StaffProfile() {
 
             <div className="mx-auto w-full max-w-5xl space-y-6 px-4 py-8 md:px-8">
                 <section className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
-                    <p className="text-xs font-bold uppercase tracking-[0.35em] text-sky-600">Profil Akun</p>
+                    <p className="text-xs font-bold uppercase text-sky-600">Profil Akun</p>
                     <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-slate-950">Kelola profil operasional</h1>

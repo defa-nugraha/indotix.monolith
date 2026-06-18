@@ -66,7 +66,7 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                 <section className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-sky-600">
+                            <p className="text-xs font-semibold uppercase text-sky-600">
                                 Banner
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
@@ -88,7 +88,7 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                                 <tr>
                                     <th className="px-4 py-3 text-left">Preview</th>
                                     <th className="px-4 py-3 text-left">Judul</th>

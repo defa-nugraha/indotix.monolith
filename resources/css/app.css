@@ -182,6 +182,8 @@
 @layer base {
     .swal2-container {
         font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        z-index: 10000 !important;
+        pointer-events: auto !important;
     }
 
     .swal2-popup {
@@ -231,6 +233,35 @@
 }
 
 @layer components {
+    [data-action-loading='true'] {
+        pointer-events: none;
+        opacity: 0.72;
+    }
+
+    [data-action-loading='true']::before {
+        content: '';
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        flex: 0 0 auto;
+        margin-right: 0.45rem;
+        vertical-align: -0.15rem;
+        border: 2px solid currentColor;
+        border-right-color: transparent;
+        border-radius: 9999px;
+        animation: action-button-spin 0.7s linear infinite;
+    }
+
+    [data-action-loading='true']:has(.animate-spin)::before {
+        content: none;
+    }
+
+    @keyframes action-button-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
     .product-date-calendar {
         width: 100%;
     }
@@ -386,6 +417,172 @@
         min-width: min(100%, 28rem);
     }
 
+    .product-date-calendar--plain-range .rdrCalendarWrapper,
+    .product-date-calendar--plain-range .rdrDateRangeWrapper {
+        background: transparent;
+        color: #0f172a;
+    }
+
+    .product-date-calendar--plain-range .rdrMonths {
+        gap: 2rem;
+    }
+
+    .product-date-calendar--plain-range .rdrMonth {
+        width: 22rem !important;
+        min-width: 0;
+        padding: 0;
+    }
+
+    .product-date-calendar--plain-range .rdrMonthAndYearWrapper {
+        height: 2.75rem;
+        padding: 0 0 1rem;
+    }
+
+    .product-date-calendar--plain-range .rdrNextPrevButton {
+        width: 2rem;
+        height: 2rem;
+        margin: 0;
+        border-radius: 0.55rem;
+        background: #f1f5f9;
+    }
+
+    .product-date-calendar--plain-range .rdrNextPrevButton:hover {
+        background: #e2e8f0;
+    }
+
+    .product-date-calendar--plain-range .rdrMonthAndYearPickers {
+        gap: 1.5rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .product-date-calendar--plain-range .rdrMonthPicker select,
+    .product-date-calendar--plain-range .rdrYearPicker select {
+        color: #0f172a;
+        font-weight: 800;
+    }
+
+    .product-date-calendar--plain-range .rdrMonthName {
+        padding: 0.5rem 0 1rem;
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 800;
+    }
+
+    .product-date-calendar--plain-range .rdrWeekDays {
+        padding: 0;
+    }
+
+    .product-date-calendar--plain-range .rdrWeekDay {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .product-date-calendar--plain-range .rdrDays {
+        row-gap: 0.15rem;
+    }
+
+    .product-date-calendar--plain-range .rdrDay {
+        height: 2.75rem;
+        line-height: 1;
+    }
+
+    .product-date-calendar--plain-range .rdrDayNumber {
+        inset: 0;
+    }
+
+    .product-date-calendar__content--plain {
+        min-height: 2.75rem;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .product-date-calendar__content--plain .product-date-calendar__day {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #0f172a;
+    }
+
+    .product-date-calendar--plain-range
+        .rdrDayPassive
+        .product-date-calendar__content--plain
+        .product-date-calendar__day,
+    .product-date-calendar--plain-range
+        .rdrDayDisabled
+        .product-date-calendar__content--plain
+        .product-date-calendar__day {
+        color: #cbd5e1;
+    }
+
+    .product-date-calendar--plain-range
+        .rdrDay:not(.rdrDayPassive)
+        .rdrInRange
+        ~ .rdrDayNumber
+        .product-date-calendar__content--plain,
+    .product-date-calendar--plain-range
+        .rdrDay:not(.rdrDayPassive)
+        .rdrStartEdge
+        ~ .rdrDayNumber
+        .product-date-calendar__content--plain,
+    .product-date-calendar--plain-range
+        .rdrDay:not(.rdrDayPassive)
+        .rdrEndEdge
+        ~ .rdrDayNumber
+        .product-date-calendar__content--plain,
+    .product-date-calendar--plain-range
+        .rdrDay:not(.rdrDayPassive)
+        .rdrSelected
+        ~ .rdrDayNumber
+        .product-date-calendar__content--plain {
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .product-date-calendar--plain-range .rdrStartEdge,
+    .product-date-calendar--plain-range .rdrEndEdge,
+    .product-date-calendar--plain-range .rdrSelected {
+        border-radius: 9999px;
+    }
+
+    .product-date-calendar--plain-range .rdrInRange,
+    .product-date-calendar--plain-range .rdrStartEdge,
+    .product-date-calendar--plain-range .rdrEndEdge,
+    .product-date-calendar--plain-range .rdrSelected {
+        top: 0.4rem;
+        bottom: 0.4rem;
+        background: #0ea5e9 !important;
+    }
+
+    .product-date-calendar--plain-range
+        .rdrDay:not(.rdrDayPassive)
+        .rdrInRange
+        ~ .rdrDayNumber
+        .product-date-calendar__day,
+    .product-date-calendar--plain-range
+        .rdrDay:not(.rdrDayPassive)
+        .rdrStartEdge
+        ~ .rdrDayNumber
+        .product-date-calendar__day,
+    .product-date-calendar--plain-range
+        .rdrDay:not(.rdrDayPassive)
+        .rdrEndEdge
+        ~ .rdrDayNumber
+        .product-date-calendar__day,
+    .product-date-calendar--plain-range
+        .rdrDay:not(.rdrDayPassive)
+        .rdrSelected
+        ~ .rdrDayNumber
+        .product-date-calendar__day {
+        color: #ffffff;
+    }
+
     @media (max-width: 640px) {
         .product-date-calendar .rdrDay {
             height: 4.25rem;
@@ -403,6 +600,22 @@
         .product-date-calendar__price {
             font-size: 0.44rem;
             line-height: 0.54rem;
+        }
+
+        .product-date-calendar--plain-range .rdrMonths {
+            gap: 0;
+        }
+
+        .product-date-calendar--plain-range .rdrMonth {
+            width: 100% !important;
+        }
+
+        .product-date-calendar--plain-range .rdrDay {
+            height: 2.5rem;
+        }
+
+        .product-date-calendar__content--plain {
+            min-height: 2.5rem;
         }
     }
 }

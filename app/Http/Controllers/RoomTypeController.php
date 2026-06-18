@@ -6,6 +6,7 @@ use App\Models\Hotel;
 use App\Models\RoomImage;
 use App\Models\RoomType;
 use App\Services\MediaCompressionService;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -17,13 +18,11 @@ class RoomTypeController extends Controller
 {
     private const STATUSES = ['draft', 'active', 'suspended'];
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $roomTypesQuery = RoomType::query()
+        $roomTypesQuery = AdminDataScope::applyCreatedBy(RoomType::query(), $request)
             ->with(['hotel', 'images'])
             ->latest();
-
-        $request = request();
 
         if ($request->filled('search')) {
             $search = $request->string('search')->toString();
@@ -42,10 +41,7 @@ class RoomTypeController extends Controller
             $roomTypesQuery->where('hotel_id', (int) $request->input('hotel_id'));
         }
 
-        $perPage = (int) $request->input('per_page', 10);
-        if (! in_array($perPage, [10, 25, 50, 100], true)) {
-            $perPage = 10;
-        }
+        $perPage = \App\Support\PaginationOptions::perPage($request);
 
         $roomTypes = $roomTypesQuery
             ->paginate($perPage)
@@ -87,6 +83,7 @@ class RoomTypeController extends Controller
 
     public function edit(RoomType $roomType): Response
     {
+        AdminDataScope::authorizeCreatedBy($roomType, request());
         $roomType->load(['hotel', 'images']);
 
         return Inertia::render('room-types/edit', [
@@ -98,6 +95,7 @@ class RoomTypeController extends Controller
 
     public function show(RoomType $roomType): Response
     {
+        AdminDataScope::authorizeCreatedBy($roomType, request());
         $roomType->load(['hotel', 'images']);
 
         return Inertia::render('room-types/show', [
@@ -107,6 +105,7 @@ class RoomTypeController extends Controller
 
     public function update(Request $request, RoomType $roomType, MediaCompressionService $mediaCompression): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($roomType, $request);
         $validated = $this->validateRoomType($request);
         $images = $validated['images'] ?? [];
         unset($validated['images']);
@@ -119,6 +118,7 @@ class RoomTypeController extends Controller
 
     public function destroy(RoomType $roomType): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($roomType, request());
         $roomType->delete();
 
         return redirect()->route('room-types.index');
@@ -126,6 +126,8 @@ class RoomTypeController extends Controller
 
     public function destroyImage(RoomType $roomType, RoomImage $roomImage): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($roomType, request());
+
         if ($roomImage->room_type_id !== $roomType->id) {
             abort(404);
         }
@@ -141,8 +143,13 @@ class RoomTypeController extends Controller
 
     private function validateRoomType(Request $request): array
     {
+        $hotelRule = Rule::exists('hotels', 'id');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $hotelRule = $hotelRule->where('created_by', $request->user()?->id ?? 0);
+        }
+
         return $request->validate([
-            'hotel_id' => ['required', 'integer', 'exists:hotels,id'],
+            'hotel_id' => ['required', 'integer', $hotelRule],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'max_guest' => ['nullable', 'integer', 'min:1', 'max:50'],
@@ -188,7 +195,7 @@ class RoomTypeController extends Controller
 
     private function hotelOptions(): array
     {
-        return Hotel::query()
+        return AdminDataScope::applyCreatedBy(Hotel::query(), request())
             ->select('id', 'name')
             ->orderBy('name')
             ->get()

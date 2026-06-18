@@ -12,7 +12,7 @@ class AuditController extends Controller
     public function index(): Response
     {
         return Inertia::render('admin/academy/audit/index', [
-            'logs' => AcademyAuditLog::query()->latest('id')->paginate(30),
+            'logs' => AcademyAuditLog::query()->latest('id')->paginate(\App\Support\PaginationOptions::perPage()),
         ]);
     }
 }

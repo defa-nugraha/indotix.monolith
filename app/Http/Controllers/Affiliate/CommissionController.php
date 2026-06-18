@@ -24,7 +24,7 @@ class CommissionController extends Controller
             ->when($status, fn ($query) => $query->where('status', $status))
             ->with(['booking.ticket', 'booking.destination'])
             ->latest('id')
-            ->paginate(20)
+            ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
         return Inertia::render('affiliate/commissions', [

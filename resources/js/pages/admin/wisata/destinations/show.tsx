@@ -61,6 +61,10 @@ const statusTone = (status?: string | null) => {
     return 'bg-slate-50 text-slate-600';
 };
 
+const maxImageSize = 5 * 1024 * 1024;
+const maxOtherPhotoCount = 5;
+const maxImageSizeLabel = '5 MB';
+
 export default function AdminWisataDestinationShow({
     destination,
     provinces,
@@ -102,6 +106,50 @@ export default function AdminWisataDestinationShow({
         setRemovedOtherPhotos((prev) =>
             prev.includes(path) ? prev : [...prev, path],
         );
+    };
+
+    const showFileWarning = (text: string) => {
+        void Swal.fire({
+            icon: 'warning',
+            title: 'File belum sesuai',
+            text,
+            confirmButtonText: 'OK',
+        });
+    };
+
+    const validatePhotoFiles = (form: FormData) => {
+        const singlePhotoFields = [
+            'photo_gate_file',
+            'photo_area_file',
+            'photo_ticket_file',
+        ];
+
+        for (const field of singlePhotoFields) {
+            const file = form.get(field);
+            if (file instanceof File && file.size > maxImageSize) {
+                showFileWarning(`Ukuran setiap foto maksimal ${maxImageSizeLabel}.`);
+                return false;
+            }
+        }
+
+        const otherFiles = form
+            .getAll('photo_other_files[]')
+            .filter((item): item is File => item instanceof File && item.size > 0);
+        const oversizedOtherFile = otherFiles.find(
+            (file) => file.size > maxImageSize,
+        );
+
+        if (oversizedOtherFile) {
+            showFileWarning(`Ukuran setiap foto lainnya maksimal ${maxImageSizeLabel}.`);
+            return false;
+        }
+
+        if (otherPhotos.length + otherFiles.length > maxOtherPhotoCount) {
+            showFileWarning(`Foto lainnya maksimal ${maxOtherPhotoCount} file.`);
+            return false;
+        }
+
+        return true;
     };
 
     const handleSuspend = async () => {
@@ -148,7 +196,7 @@ export default function AdminWisataDestinationShow({
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-xs font-semibold tracking-[0.3em] text-sky-600 uppercase">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Destinasi Wisata
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
@@ -197,7 +245,7 @@ export default function AdminWisataDestinationShow({
                     </h2>
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Jenis wisata
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -205,7 +253,7 @@ export default function AdminWisataDestinationShow({
                             </p>
                         </div>
                         <div>
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Kota
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -213,7 +261,7 @@ export default function AdminWisataDestinationShow({
                             </p>
                         </div>
                         <div className="md:col-span-2">
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Alamat lengkap
                             </p>
                             <p className="text-sm font-semibold text-slate-900">
@@ -221,7 +269,7 @@ export default function AdminWisataDestinationShow({
                             </p>
                         </div>
                         <div className="md:col-span-2">
-                            <p className="text-xs tracking-wider text-slate-400 uppercase">
+                            <p className="text-xs text-slate-400 uppercase">
                                 Deskripsi
                             </p>
                             <p className="text-sm text-slate-700">
@@ -235,6 +283,9 @@ export default function AdminWisataDestinationShow({
                         onSubmit={(event) => {
                             event.preventDefault();
                             const form = new FormData(event.currentTarget);
+                            if (!validatePhotoFiles(form)) {
+                                return;
+                            }
                             if (!isCreate) {
                                 form.append('_method', 'PUT');
                             }
@@ -398,6 +449,9 @@ export default function AdminWisataDestinationShow({
                                     accept="image/*"
                                     className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Maksimal {maxImageSizeLabel}.
+                                </p>
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-slate-700">
@@ -420,6 +474,9 @@ export default function AdminWisataDestinationShow({
                                     accept="image/*"
                                     className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Maksimal {maxImageSizeLabel}.
+                                </p>
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-slate-700">
@@ -442,6 +499,9 @@ export default function AdminWisataDestinationShow({
                                     accept="image/*"
                                     className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Maksimal {maxImageSizeLabel}.
+                                </p>
                             </div>
                         </div>
                         <div className="grid gap-2 md:col-span-2">
@@ -480,6 +540,9 @@ export default function AdminWisataDestinationShow({
                                 multiple
                                 className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
+                            <p className="text-xs text-slate-500">
+                                Maksimal {maxOtherPhotoCount} foto, {maxImageSizeLabel} per file.
+                            </p>
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <label className="text-sm font-medium text-slate-700">
