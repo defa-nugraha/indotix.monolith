@@ -9,6 +9,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { formRoute } from '@/lib/form-route';
 import { regenerateRecoveryCodes } from '@/routes/two-factor';
 import AlertError from './alert-error';
 
@@ -81,7 +82,7 @@ export default function TwoFactorRecoveryCodes({
 
                     {canRegenerateCodes && (
                         <Form
-                            {...regenerateRecoveryCodes.form()}
+                            {...formRoute(regenerateRecoveryCodes())}
                             options={{ preserveScroll: true }}
                             onSuccess={fetchRecoveryCodes}
                         >

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useTwoFactorAuth } from '@/hooks/use-two-factor-auth';
 import PublicLayout from '@/layouts/public-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { formRoute } from '@/lib/form-route';
 import { disable, enable } from '@/routes/two-factor';
 
 type Props = {
@@ -63,7 +64,7 @@ export default function TwoFactor({
                             />
 
                             <div className="relative inline">
-                                <Form {...disable.form()}>
+                                <Form {...formRoute(disable())}>
                                     {({ processing }) => (
                                         <Button
                                             variant="destructive"
@@ -96,7 +97,7 @@ export default function TwoFactor({
                                     </Button>
                                 ) : (
                                     <Form
-                                        {...enable.form()}
+                                        {...formRoute(enable())}
                                         onSuccess={() =>
                                             setShowSetupModal(true)
                                         }

@@ -74,8 +74,6 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.souvenir.products.force-delete');
     Route::delete('admin/retail-shop/products/{product}/images/{image}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroyImage'])
         ->name('admin.souvenir.products.images.destroy');
-    Route::post('admin/retail-shop/products/{product}/images/{image}', [\App\Http\Controllers\Admin\SouvenirProductController::class, 'destroyImage'])
-        ->name('admin.souvenir.products.images.destroy.post');
 
     Route::get('admin/retail-shop/categories', [\App\Http\Controllers\Admin\SouvenirCategoryController::class, 'index'])
         ->name('admin.souvenir.categories.index');
@@ -650,8 +648,6 @@ Route::middleware(['auth', 'verified', 'mitra', 'user.activity'])->group(functio
         ->name('mitra.onboarding.step1');
     Route::patch('mitra/onboarding/step-2', [\App\Http\Controllers\MitraOnboardingController::class, 'updateStepTwo'])
         ->name('mitra.onboarding.step2');
-    Route::post('mitra/onboarding/step-2', [\App\Http\Controllers\MitraOnboardingController::class, 'updateStepTwo'])
-        ->name('mitra.onboarding.step2.post');
     Route::patch('mitra/onboarding/step-3', [\App\Http\Controllers\MitraOnboardingController::class, 'updateStepThree'])
         ->name('mitra.onboarding.step3');
     Route::post('mitra/onboarding/submit-verification', [\App\Http\Controllers\MitraOnboardingController::class, 'submitVerification'])
@@ -663,16 +659,10 @@ Route::middleware(['auth', 'verified', 'mitra', 'user.activity'])->group(functio
         ->name('mitra.wisata.onboarding');
     Route::patch('mitra/wisata/onboarding/step-1', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepOne'])
         ->name('mitra.wisata.onboarding.step1');
-    Route::post('mitra/wisata/onboarding/step-1', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepOne'])
-        ->name('mitra.wisata.onboarding.step1.post');
     Route::patch('mitra/wisata/onboarding/step-2', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepTwo'])
         ->name('mitra.wisata.onboarding.step2');
-    Route::post('mitra/wisata/onboarding/step-2', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepTwo'])
-        ->name('mitra.wisata.onboarding.step2.post');
     Route::patch('mitra/wisata/onboarding/step-3', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepThree'])
         ->name('mitra.wisata.onboarding.step3');
-    Route::post('mitra/wisata/onboarding/step-3', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'updateStepThree'])
-        ->name('mitra.wisata.onboarding.step3.post');
     Route::post('mitra/wisata/onboarding/submit-verification', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'submitVerification'])
         ->name('mitra.wisata.onboarding.submitVerification');
     Route::post('mitra/wisata/onboarding/submit-payout', [\App\Http\Controllers\MitraWisataOnboardingController::class, 'submitPayout'])
@@ -682,20 +672,12 @@ Route::middleware(['auth', 'verified', 'mitra', 'user.activity'])->group(functio
         ->name('mitra.event.onboarding');
     Route::patch('mitra/event/onboarding/step-1', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepOne'])
         ->name('mitra.event.onboarding.step1');
-    Route::post('mitra/event/onboarding/step-1', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepOne'])
-        ->name('mitra.event.onboarding.step1.post');
     Route::patch('mitra/event/onboarding/step-2', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepTwo'])
         ->name('mitra.event.onboarding.step2');
-    Route::post('mitra/event/onboarding/step-2', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepTwo'])
-        ->name('mitra.event.onboarding.step2.post');
     Route::patch('mitra/event/onboarding/step-3', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepThree'])
         ->name('mitra.event.onboarding.step3');
-    Route::post('mitra/event/onboarding/step-3', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepThree'])
-        ->name('mitra.event.onboarding.step3.post');
     Route::patch('mitra/event/onboarding/step-4', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepFour'])
         ->name('mitra.event.onboarding.step4');
-    Route::post('mitra/event/onboarding/step-4', [\App\Http\Controllers\MitraEventOnboardingController::class, 'updateStepFour'])
-        ->name('mitra.event.onboarding.step4.post');
     Route::post('mitra/event/onboarding/submit-verification', [\App\Http\Controllers\MitraEventOnboardingController::class, 'submitVerification'])
         ->name('mitra.event.onboarding.submitVerification');
 });

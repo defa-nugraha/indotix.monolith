@@ -19,6 +19,7 @@ import {
 import { useAppearance } from '@/hooks/use-appearance';
 import { useClipboard } from '@/hooks/use-clipboard';
 import { OTP_MAX_LENGTH } from '@/hooks/use-two-factor-auth';
+import { formRoute } from '@/lib/form-route';
 import { confirm } from '@/routes/two-factor';
 import AlertError from './alert-error';
 import { Spinner } from './ui/spinner';
@@ -156,7 +157,7 @@ function TwoFactorVerificationStep({
 
     return (
         <Form
-            {...confirm.form()}
+            {...formRoute(confirm())}
             onSuccess={() => onClose()}
             resetOnError
             resetOnSuccess

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
+import { formRoute } from '@/lib/form-route';
 
 type SelectOption = {
     value: string;
@@ -738,7 +739,7 @@ export default function Profile({
                             </p>
 
                             <Form
-                                {...ProfileController.update.form()}
+                                {...formRoute(ProfileController.update())}
                                 options={{ preserveScroll: true }}
                                 className="mt-6 grid gap-5"
                             >

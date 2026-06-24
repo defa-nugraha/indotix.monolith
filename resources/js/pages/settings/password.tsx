@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/public-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import { formRoute } from '@/lib/form-route';
 
 export default function Password() {
     const passwordInput = useRef<HTMLInputElement>(null);
@@ -30,7 +31,7 @@ export default function Password() {
                         />
 
                         <Form
-                            {...PasswordController.update.form()}
+                            {...formRoute(PasswordController.update())}
                             options={{
                                 preserveScroll: true,
                             }}
