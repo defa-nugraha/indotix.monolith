@@ -882,6 +882,10 @@ export default function CoachMarks({ context }: Props) {
             },
         };
     })();
+    const launcherPositionClass =
+        context === 'public'
+            ? 'left-5 bottom-5'
+            : 'right-5 bottom-5';
 
     return (
         <>
@@ -966,7 +970,7 @@ export default function CoachMarks({ context }: Props) {
 
             <button
                 type="button"
-                className="fixed right-5 bottom-5 z-[110] inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-3 text-sm font-bold text-white shadow-[0_18px_50px_-18px_rgba(2,132,199,0.9)] transition hover:bg-sky-700"
+                className={`fixed ${launcherPositionClass} z-[110] inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-3 text-sm font-bold text-white shadow-[0_18px_50px_-18px_rgba(2,132,199,0.9)] transition hover:bg-sky-700`}
                 onClick={() => startGuide(true)}
                 aria-label="Tampilkan panduan halaman"
             >
