@@ -3,7 +3,9 @@
 use App\Models\AdminPermission;
 use App\Models\AdminRole;
 use App\Models\User;
+use App\Support\AdminPermissionRegistry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -150,4 +152,104 @@ test('custom role permission controls access to sub features', function () {
     $this->actingAs($admin)
         ->get('/admin/wisata/destinations')
         ->assertForbidden();
+});
+
+test('custom role exposes hotel wisata and event sub feature permissions for admin sidebar', function () {
+    $role = AdminRole::query()->create([
+        'name' => 'Operator Multi Produk',
+        'slug' => 'operator-multi-produk',
+        'is_active' => true,
+    ]);
+
+    $permissions = collect(['hotel_properties', 'wisata_destinations', 'events_items'])
+        ->map(fn (string $feature) => AdminPermission::query()->firstOrCreate(
+            ['feature' => $feature, 'action' => 'view'],
+            ['label' => "{$feature}.view"],
+        ));
+
+    $role->permissions()->sync($permissions->pluck('id')->all());
+
+    $admin = User::factory()->create([
+        'role' => 'admin_custom',
+        'admin_role_id' => $role->id,
+        'email_verified_at' => now(),
+    ]);
+
+    expect(AdminPermissionRegistry::permissionKeysForUser($admin))
+        ->toContain('hotel_properties.view')
+        ->toContain('wisata_destinations.view')
+        ->toContain('events_items.view');
+
+    $this->actingAs($admin)
+        ->get('/dashboard')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.user.admin_permissions', fn ($permissions) =>
+                collect($permissions)->contains('hotel_properties.view')
+                && collect($permissions)->contains('wisata_destinations.view')
+                && collect($permissions)->contains('events_items.view')
+            ));
+});
+
+test('permission matrix exposes retail shop sub features with crud actions', function () {
+    $admin = superAdminForRoleTest();
+
+    $this->actingAs($admin)
+        ->get('/admin/system/roles')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('permissionMatrix.features', fn ($features) => collect($features)
+                ->contains(fn ($feature) => $feature['key'] === 'retail_products'
+                    && $feature['parent'] === 'Retail Shop')
+                && collect($features)->contains(fn ($feature) => $feature['key'] === 'retail_orders')
+                && collect($features)->contains(fn ($feature) => $feature['key'] === 'retail_system'))
+            ->where('permissionMatrix.actions', fn ($actions) => collect($actions)->pluck('key')->all() === [
+                'view',
+                'create',
+                'update',
+                'delete',
+            ]));
+});
+
+test('role management expands legacy permissions before editing role', function () {
+    $admin = superAdminForRoleTest();
+    $role = AdminRole::query()->create([
+        'name' => 'Role Lama Konten Publik',
+        'slug' => 'role-lama-konten-publik',
+        'is_active' => true,
+    ]);
+    $legacyPermission = AdminPermission::query()->create([
+        'feature' => 'public_content',
+        'action' => 'view',
+        'label' => 'Konten Publik - Lihat',
+    ]);
+    $role->permissions()->sync([$legacyPermission->id]);
+
+    $this->actingAs($admin)
+        ->get('/admin/system/roles')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('roles.0.permissions', fn ($permissions) => collect($permissions)
+                ->contains('public_banners.view')
+                && collect($permissions)->contains('public_promo_videos.view')
+                && ! collect($permissions)->contains('public_content.view')));
+
+    $this->actingAs($admin)
+        ->put("/admin/system/roles/{$role->id}", [
+            'name' => 'Role Lama Konten Publik Updated',
+            'description' => 'Legacy permission tetap bisa disimpan.',
+            'is_active' => true,
+            'permissions' => [
+                'public_content.view',
+                'system.view',
+            ],
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $role->refresh();
+    expect($role->permissions()->where('feature', 'public_banners')->where('action', 'view')->exists())->toBeTrue()
+        ->and($role->permissions()->where('feature', 'public_promo_videos')->where('action', 'view')->exists())->toBeTrue()
+        ->and($role->permissions()->where('feature', 'system_audit')->where('action', 'view')->exists())->toBeTrue()
+        ->and($role->permissions()->where('feature', 'public_content')->exists())->toBeFalse();
 });

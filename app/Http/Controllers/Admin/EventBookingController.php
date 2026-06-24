@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventBooking;
+use App\Support\AdminDataScope;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,7 +20,10 @@ class EventBookingController extends Controller
 
         $query = EventBooking::query()
             ->with(['event', 'ticket', 'user'])
-            ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
+            ->whereHas('event', fn ($q) => $q
+                ->where('event_type', 'event')
+                ->when(! AdminDataScope::canViewAll($request->user()), fn ($eventQuery) => $eventQuery
+                    ->whereHas('organizer', fn ($organizer) => $organizer->where('user_id', $request->user()?->id ?? 0))))
             ->latest();
         if ($status) {
             $query->where('status', $status);
@@ -35,6 +39,8 @@ class EventBookingController extends Controller
             'bookings' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'events' => Event::query()
                 ->where('event_type', 'event')
+                ->when(! AdminDataScope::canViewAll($request->user()), fn ($query) => $query
+                    ->whereHas('organizer', fn ($organizer) => $organizer->where('user_id', $request->user()?->id ?? 0)))
                 ->select('id', 'title')
                 ->orderBy('title')
                 ->get(),
@@ -50,6 +56,12 @@ class EventBookingController extends Controller
     {
         $booking->load(['event', 'ticket', 'user', 'attendees', 'scans']);
         abort_unless($booking->event?->event_type === 'event', 404);
+        $booking->event?->loadMissing('organizer');
+        abort_unless(
+            AdminDataScope::canViewAll(request()->user()) ||
+            (int) $booking->event?->organizer?->user_id === (int) (request()->user()?->id ?? 0),
+            404
+        );
 
         return Inertia::render('admin/events/bookings/show', [
             'booking' => $booking,

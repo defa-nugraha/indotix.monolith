@@ -7,6 +7,7 @@ use App\Models\Event;
 use App\Models\EventAuditLog;
 use App\Models\EventBooking;
 use App\Models\EventRefund;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,6 +23,13 @@ class EventExceptionController extends Controller
     public function updateEvent(Request $request, Event $event): RedirectResponse
     {
         abort_unless($event->event_type === 'event', 404);
+        $event->loadMissing('organizer');
+        abort_unless(
+            AdminDataScope::canViewAll($request->user()) ||
+            (int) $event->organizer?->user_id === (int) ($request->user()?->id ?? 0),
+            404
+        );
+
         $data = $request->validate([
             'status' => ['required', 'in:postponed,cancelled'],
             'reason' => ['required', 'string'],
@@ -45,7 +53,14 @@ class EventExceptionController extends Controller
 
     public function refund(Request $request, EventBooking $booking): RedirectResponse
     {
+        $booking->loadMissing('event.organizer');
         abort_unless($booking->event?->event_type === 'event', 404);
+        abort_unless(
+            AdminDataScope::canViewAll($request->user()) ||
+            (int) $booking->event?->organizer?->user_id === (int) ($request->user()?->id ?? 0),
+            404
+        );
+
         $data = $request->validate([
             'amount' => ['required', 'numeric', 'min:0'],
             'reason' => ['required', 'string'],

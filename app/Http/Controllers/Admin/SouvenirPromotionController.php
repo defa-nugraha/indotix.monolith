@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SouvenirAuditLog;
 use App\Models\SouvenirPromotion;
 use App\Models\SpecialProgram;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,7 +16,7 @@ class SouvenirPromotionController extends Controller
 {
     public function index(): Response
     {
-        $promotions = SouvenirPromotion::query()->latest()->get();
+        $promotions = AdminDataScope::applyCreatedBy(SouvenirPromotion::query(), request())->latest()->get();
         $programs = SpecialProgram::query()->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('admin/souvenir/promotions/index', [
@@ -46,6 +47,8 @@ class SouvenirPromotionController extends Controller
             'ends_at' => $data['ends_at'] ?? null,
             'rules' => $data['rules'] ?? null,
             'special_program_id' => $data['special_program_id'] ?? null,
+            'created_by' => $request->user()->id,
+            'updated_by' => $request->user()->id,
         ]);
 
         $this->logAudit($request, 'promotion_created', 'Promo souvenir dibuat.', [
@@ -57,6 +60,8 @@ class SouvenirPromotionController extends Controller
 
     public function update(Request $request, SouvenirPromotion $promotion): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($promotion, $request);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'type' => ['required', 'in:discount,bundling,special_program'],
@@ -77,6 +82,7 @@ class SouvenirPromotionController extends Controller
             'ends_at' => $data['ends_at'] ?? null,
             'rules' => $data['rules'] ?? null,
             'special_program_id' => $data['special_program_id'] ?? null,
+            'updated_by' => $request->user()->id,
         ]);
 
         $this->logAudit($request, 'promotion_updated', 'Promo souvenir diperbarui.', [
@@ -88,6 +94,8 @@ class SouvenirPromotionController extends Controller
 
     public function destroy(Request $request, SouvenirPromotion $promotion): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($promotion, $request);
+
         $promotion->delete();
 
         $this->logAudit($request, 'promotion_deleted', 'Promo souvenir dihapus.', [

@@ -69,6 +69,80 @@ export function AppSidebarAdmin() {
             permissions.some((permission) => permission.startsWith(`${feature}.`)),
         );
     const hasFeaturePermission = (feature: string) => hasAnyPermission([feature]);
+    const hasHotelPermission = () =>
+        hasAnyPermission([
+            'hotel_properties',
+            'hotel_rooms',
+            'hotel_bookings',
+            'hotel_finance',
+            'hotel_vouchers',
+        ]);
+    const hasWisataPermission = () =>
+        hasAnyPermission([
+            'wisata_destinations',
+            'wisata_tickets',
+            'wisata_bookings',
+            'wisata_finance',
+            'wisata_content',
+        ]);
+    const hasEventPermission = () =>
+        hasAnyPermission([
+            'events_items',
+            'events_tickets',
+            'events_bookings',
+            'events_finance',
+            'events_content',
+            'events_system',
+        ]);
+    const hasMitraPermission = () =>
+        hasAnyPermission(['mitra', 'mitra_wisata', 'mitra_events', 'mitra_all']);
+    const hasBlogPermission = () =>
+        hasAnyPermission(['blog_posts', 'blog_categories', 'blog_tags']);
+    const hasPublicPermission = () =>
+        hasAnyPermission([
+            'public_banners',
+            'public_promo_videos',
+            'public_promo_items',
+            'public_contacts',
+            'public_pages',
+        ]);
+    const hasSystemPermission = () =>
+        hasAnyPermission([
+            'system_audit',
+            'system_settings',
+            'system_notifications',
+            'system_roles',
+            'system_special_admins',
+        ]);
+    const hasSpecialProgramPermission = () =>
+        hasAnyPermission([
+            'special_programs',
+            'special_program_tickets',
+            'special_program_bookings',
+            'special_program_scans',
+            'special_program_reviews',
+        ]);
+    const hasRetailPermission = () =>
+        hasAnyPermission([
+            'retail_products',
+            'retail_categories',
+            'retail_variants',
+            'retail_inventory',
+            'retail_orders',
+            'retail_refunds',
+            'retail_promotions',
+            'retail_reports',
+            'retail_system',
+        ]);
+    const hasAcademyPermission = () =>
+        hasAnyPermission([
+            'academy_classes',
+            'academy_tickets',
+            'academy_bookings',
+            'academy_scans',
+            'academy_finance',
+            'academy_system',
+        ]);
     const mainNavItems = [
         dashboardNavItem,
         ...(isFullAdmin || hasFeaturePermission('users')
@@ -201,17 +275,17 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/academy/reports') ||
         isCurrentUrl('/admin/academy/system/audit') ||
         isCurrentUrl('/admin/academy/system/settings');
-    const showMitraSection = hasFeaturePermission('mitra');
-    const showHotelSection = hasFeaturePermission('hotel');
-    const showBlogSection = hasFeaturePermission('blog');
-    const showWisataSection = hasFeaturePermission('wisata');
+    const showMitraSection = hasMitraPermission();
+    const showHotelSection = hasHotelPermission();
+    const showBlogSection = hasBlogPermission();
+    const showWisataSection = hasWisataPermission();
     const showAffiliateSection = hasFeaturePermission('wisata_affiliates');
-    const showEventSection = hasFeaturePermission('events');
-    const showPublicSection = hasFeaturePermission('public_content');
-    const showSystemSection = hasFeaturePermission('system');
-    const showSpecialProgramSection = hasFeaturePermission('special_programs');
-    const showSouvenirSection = hasFeaturePermission('retail_shop');
-    const showAcademySection = hasFeaturePermission('academy');
+    const showEventSection = hasEventPermission();
+    const showPublicSection = hasPublicPermission();
+    const showSystemSection = hasSystemPermission();
+    const showSpecialProgramSection = hasSpecialProgramPermission();
+    const showSouvenirSection = hasRetailPermission();
+    const showAcademySection = hasAcademyPermission();
     const showAcademyFlatMenu = isAcademyAdmin && !isFullAdmin;
     const showRetailFlatMenu = isRetailAdmin && !isFullAdmin;
     const showSpecialFlatMenu = isSpecialAdmin && !isFullAdmin;

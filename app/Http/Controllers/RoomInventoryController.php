@@ -20,7 +20,7 @@ class RoomInventoryController extends Controller
     {
         $query = RoomInventory::query()
             ->with('roomType')
-            ->whereHas('roomType', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
+            ->whereHas('roomType', fn ($builder) => $this->applyRoomTypeScope($builder, $request))
             ->latest('date');
 
         if ($request->filled('hotel_id')) {
@@ -47,7 +47,7 @@ class RoomInventoryController extends Controller
 
         $groupQuery = RoomInventory::query()
             ->selectRaw('DATE_FORMAT(date, "%Y-%m") as month_key, COUNT(*) as total')
-            ->whereHas('roomType', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request));
+            ->whereHas('roomType', fn ($builder) => $this->applyRoomTypeScope($builder, $request));
 
         if ($request->filled('hotel_id')) {
             $hotelId = (int) $request->input('hotel_id');
@@ -165,7 +165,7 @@ class RoomInventoryController extends Controller
 
         RoomInventory::query()
             ->whereIn('id', $data['ids'])
-            ->whereHas('roomType', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
+            ->whereHas('roomType', fn ($builder) => $this->applyRoomTypeScope($builder, $request))
             ->delete();
 
         return redirect()->route('room-inventories.index');
@@ -176,7 +176,13 @@ class RoomInventoryController extends Controller
         $isBulk = $request->filled('date_from') || $request->filled('date_to');
         $roomTypeRule = Rule::exists('room_types', 'id');
         if (! AdminDataScope::canViewAll($request->user())) {
-            $roomTypeRule = $roomTypeRule->where('created_by', $request->user()?->id ?? 0);
+            $userId = $request->user()?->id ?? 0;
+            $ownedHotelIds = Hotel::query()
+                ->where('vendor_id', $userId)
+                ->select('id');
+            $roomTypeRule = $roomTypeRule->where(fn ($query) => $query
+                ->where('created_by', $userId)
+                ->orWhereIn('hotel_id', $ownedHotelIds));
         }
 
         if ($isBulk && $inventoryId === null) {
@@ -215,7 +221,7 @@ class RoomInventoryController extends Controller
 
     private function roomTypeOptions(): array
     {
-        return AdminDataScope::applyCreatedBy(RoomType::query(), request())
+        return $this->applyRoomTypeScope(RoomType::query(), request())
             ->with('hotel')
             ->orderBy('name')
             ->get()
@@ -228,7 +234,7 @@ class RoomInventoryController extends Controller
 
     private function hotelOptions(): array
     {
-        return AdminDataScope::applyCreatedBy(Hotel::query(), request())
+        return AdminDataScope::applyCreatedByOrColumn(Hotel::query(), request(), 'vendor_id')
             ->select('id', 'name')
             ->orderBy('name')
             ->get()
@@ -237,6 +243,21 @@ class RoomInventoryController extends Controller
                 'label' => $hotel->name,
             ])
             ->all();
+    }
+
+    private function applyRoomTypeScope($query, Request $request)
+    {
+        if (AdminDataScope::canViewAll($request->user())) {
+            return $query;
+        }
+
+        $userId = $request->user()?->id ?? 0;
+
+        return $query->where(function ($builder) use ($userId) {
+            $builder
+                ->where('created_by', $userId)
+                ->orWhereHas('hotel', fn ($hotel) => $hotel->where('vendor_id', $userId));
+        });
     }
 
     private function toPayload(RoomInventory $inventory): array
@@ -257,12 +278,22 @@ class RoomInventoryController extends Controller
 
     private function authorizeInventory(RoomInventory $inventory, Request $request): void
     {
-        $inventory->loadMissing('roomType');
+        $inventory->loadMissing('roomType.hotel');
 
         if (! $inventory->roomType) {
             abort(404);
         }
 
-        AdminDataScope::authorizeCreatedBy($inventory->roomType, $request);
+        if (AdminDataScope::canViewAll($request->user())) {
+            return;
+        }
+
+        $userId = $request->user()?->id ?? 0;
+
+        abort_unless(
+            (int) $inventory->roomType->created_by === (int) $userId
+            || (int) $inventory->roomType->hotel?->vendor_id === (int) $userId,
+            404,
+        );
     }
 }

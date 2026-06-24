@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SouvenirAuditLog;
 use App\Models\SouvenirProduct;
 use App\Models\SouvenirVariant;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,7 +16,9 @@ class SouvenirVariantController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = SouvenirVariant::query()->with('product:id,name');
+        $query = SouvenirVariant::query()
+            ->with('product:id,name')
+            ->whereHas('product', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request));
 
         if ($productId = $request->integer('product_id')) {
             $query->where('product_id', $productId);
@@ -28,7 +31,7 @@ class SouvenirVariantController extends Controller
 
         $variants = $query->orderByDesc('id')->paginate(\App\Support\PaginationOptions::perPage())->withQueryString();
 
-        $products = SouvenirProduct::query()->orderBy('name')->get(['id', 'name']);
+        $products = AdminDataScope::applyCreatedBy(SouvenirProduct::query(), $request)->orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('admin/souvenir/variants/index', [
             'variants' => $variants,
@@ -52,8 +55,10 @@ class SouvenirVariantController extends Controller
             'is_active' => ['nullable', 'boolean'],
         ]);
 
+        $product = AdminDataScope::applyCreatedBy(SouvenirProduct::query(), $request)->findOrFail($data['product_id']);
+
         $variant = SouvenirVariant::create([
-            'product_id' => $data['product_id'],
+            'product_id' => $product->id,
             'variant_type' => $data['variant_type'],
             'name' => $data['name'],
             'sku' => $data['sku'] ?? null,
@@ -72,6 +77,10 @@ class SouvenirVariantController extends Controller
 
     public function update(Request $request, SouvenirVariant $variant): RedirectResponse
     {
+        if ($variant->product) {
+            AdminDataScope::authorizeCreatedBy($variant->product, $request);
+        }
+
         $data = $request->validate([
             'variant_type' => ['sometimes', 'string', 'max:50'],
             'name' => ['sometimes', 'string', 'max:100'],
@@ -113,6 +122,10 @@ class SouvenirVariantController extends Controller
 
     public function destroy(Request $request, SouvenirVariant $variant): RedirectResponse
     {
+        if ($variant->product) {
+            AdminDataScope::authorizeCreatedBy($variant->product, $request);
+        }
+
         $variant->delete();
 
         $this->logAudit($request, 'variant_deleted', 'Variasi souvenir dihapus.', [

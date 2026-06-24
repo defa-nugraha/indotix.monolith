@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\CommissionRule;
 use App\Models\Hotel;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -13,10 +14,12 @@ use Inertia\Response;
 
 class CommissionRuleController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $rules = CommissionRule::query()
             ->with(['hotel', 'createdBy:id,name', 'updatedBy:id,name'])
+            ->when(! AdminDataScope::canViewAll($request->user()), fn ($query) => $query
+                ->whereHas('hotel', fn ($hotelQuery) => AdminDataScope::applyCreatedBy($hotelQuery, $request)))
             ->latest()
             ->get()
             ->map(fn (CommissionRule $rule) => [
@@ -50,14 +53,24 @@ class CommissionRuleController extends Controller
 
     public function update(Request $request, CommissionRule $commissionRule): RedirectResponse
     {
+        abort_if(! $commissionRule->hotel && ! AdminDataScope::canViewAll($request->user()), 404);
+        if ($commissionRule->hotel) {
+            AdminDataScope::authorizeCreatedBy($commissionRule->hotel, $request);
+        }
+
         $data = $this->validateRule($request);
         $commissionRule->update($data);
 
         return back()->with('status', 'commission-updated');
     }
 
-    public function destroy(CommissionRule $commissionRule): RedirectResponse
+    public function destroy(Request $request, CommissionRule $commissionRule): RedirectResponse
     {
+        abort_if(! $commissionRule->hotel && ! AdminDataScope::canViewAll($request->user()), 404);
+        if ($commissionRule->hotel) {
+            AdminDataScope::authorizeCreatedBy($commissionRule->hotel, $request);
+        }
+
         $commissionRule->delete();
 
         return back()->with('status', 'commission-deleted');
@@ -66,7 +79,7 @@ class CommissionRuleController extends Controller
     private function validateRule(Request $request): array
     {
         $data = $request->validate([
-            'hotel_id' => ['nullable', 'integer', 'exists:hotels,id'],
+            'hotel_id' => [Rule::requiredIf(fn () => ! AdminDataScope::canViewAll($request->user())), 'nullable', 'integer', 'exists:hotels,id'],
             'type' => ['required', Rule::in(['percentage', 'fixed'])],
             'value' => ['required', 'numeric', 'min:0'],
             'is_forever' => ['boolean'],
@@ -83,12 +96,18 @@ class CommissionRuleController extends Controller
             $data['ends_at'] = null;
         }
 
+        if (! empty($data['hotel_id'])) {
+            $hotel = Hotel::query()->findOrFail($data['hotel_id']);
+            AdminDataScope::authorizeCreatedBy($hotel, $request);
+        }
+
         return $data;
     }
 
     private function hotelOptions(): array
     {
         return Hotel::query()
+            ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => AdminDataScope::applyCreatedBy($query, request()))
             ->select('id', 'name')
             ->orderBy('name')
             ->get()

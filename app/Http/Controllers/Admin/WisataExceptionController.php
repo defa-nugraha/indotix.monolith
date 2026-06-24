@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\WisataBooking;
 use App\Models\WisataDispute;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,7 +16,9 @@ class WisataExceptionController extends Controller
 {
     public function index(Request $request): Response
     {
-        $bookingQuery = WisataBooking::query()->with(['destination', 'ticket', 'user:id,name,email']);
+        $bookingQuery = WisataBooking::query()
+            ->with(['destination', 'ticket', 'user:id,name,email'])
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request));
 
         if ($date = $request->string('visit_date')->toString()) {
             $bookingQuery->whereDate('visit_date', $date);
@@ -48,6 +51,7 @@ class WisataExceptionController extends Controller
 
         $disputes = WisataDispute::query()
             ->with(['booking', 'destination', 'ticket', 'user:id,name,email'])
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request))
             ->latest('id')
             ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
@@ -61,7 +65,7 @@ class WisataExceptionController extends Controller
                 'user' => $dispute->user?->name,
             ]);
 
-        $destinations = MitraWisataOnboarding::query()
+        $destinations = AdminDataScope::applyCreatedByOrUser(MitraWisataOnboarding::query(), $request)
             ->orderBy('destination_name')
             ->get(['id', 'destination_name'])
             ->map(fn ($item) => ['id' => $item->id, 'label' => $item->destination_name ?? 'Destinasi #' . $item->id])
@@ -81,6 +85,10 @@ class WisataExceptionController extends Controller
 
     public function cancel(Request $request, WisataBooking $booking): RedirectResponse
     {
+        if ($booking->destination) {
+            AdminDataScope::authorizeCreatedByOrUser($booking->destination, $request);
+        }
+
         $data = $request->validate([
             'reason' => ['required', 'string', 'max:500'],
         ]);
@@ -97,6 +105,10 @@ class WisataExceptionController extends Controller
 
     public function refund(Request $request, WisataBooking $booking): RedirectResponse
     {
+        if ($booking->destination) {
+            AdminDataScope::authorizeCreatedByOrUser($booking->destination, $request);
+        }
+
         $data = $request->validate([
             'reason' => ['required', 'string', 'max:500'],
             'amount' => ['nullable', 'integer', 'min:0'],
@@ -114,6 +126,10 @@ class WisataExceptionController extends Controller
 
     public function resolveDispute(Request $request, WisataDispute $dispute): RedirectResponse
     {
+        if ($dispute->destination) {
+            AdminDataScope::authorizeCreatedByOrUser($dispute->destination, $request);
+        }
+
         $data = $request->validate([
             'status' => ['required', 'in:investigating,resolved,rejected'],
             'resolution' => ['nullable', 'string', 'max:1000'],

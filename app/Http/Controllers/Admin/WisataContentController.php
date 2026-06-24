@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\WisataReview;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +15,7 @@ class WisataContentController extends Controller
 {
     public function index(Request $request): Response
     {
-        $destinations = MitraWisataOnboarding::query()
+        $destinations = AdminDataScope::applyCreatedByOrUser(MitraWisataOnboarding::query(), $request)
             ->latest('id')
             ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
@@ -34,6 +35,7 @@ class WisataContentController extends Controller
 
         $reviews = WisataReview::query()
             ->with('destination')
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request))
             ->latest('id')
             ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
@@ -54,6 +56,8 @@ class WisataContentController extends Controller
 
     public function hideContent(Request $request, MitraWisataOnboarding $destination): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedByOrUser($destination, $request);
+
         $data = $request->validate([
             'content_hidden' => ['required', 'boolean'],
             'reason' => ['nullable', 'string', 'max:500'],
@@ -75,6 +79,10 @@ class WisataContentController extends Controller
 
     public function updateReview(Request $request, WisataReview $review): RedirectResponse
     {
+        if ($review->destination) {
+            AdminDataScope::authorizeCreatedByOrUser($review->destination, $request);
+        }
+
         $data = $request->validate([
             'status' => ['required', 'in:active,flagged,removed'],
             'reason' => ['nullable', 'string', 'max:500'],

@@ -7,6 +7,7 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\WisataBooking;
 use App\Models\WisataCommissionRule;
 use App\Models\WisataPayout;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,7 +17,7 @@ class WisataFinanceController extends Controller
 {
     public function commissions(): Response
     {
-        $destinations = MitraWisataOnboarding::query()
+        $destinations = AdminDataScope::applyCreatedByOrUser(MitraWisataOnboarding::query(), request())
             ->orderBy('destination_name')
             ->get(['id', 'destination_name'])
             ->map(fn ($item) => ['id' => $item->id, 'label' => $item->destination_name ?? 'Destinasi #' . $item->id])
@@ -24,6 +25,8 @@ class WisataFinanceController extends Controller
 
         $rules = WisataCommissionRule::query()
             ->with(['destination', 'createdBy:id,name', 'updatedBy:id,name'])
+            ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => $query
+                ->whereHas('destination', fn ($destinationQuery) => AdminDataScope::applyCreatedByOrUser($destinationQuery, request())))
             ->latest('id')
             ->get()
             ->map(fn (WisataCommissionRule $rule) => [
@@ -46,8 +49,16 @@ class WisataFinanceController extends Controller
 
     public function storeCommission(Request $request): RedirectResponse
     {
+        $destinationRule = \Illuminate\Validation\Rule::exists('mitra_wisata_onboardings', 'id');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $userId = $request->user()?->id ?? 0;
+            $destinationRule = $destinationRule->where(fn ($query) => $query
+                ->where('created_by', $userId)
+                ->orWhere('user_id', $userId));
+        }
+
         $data = $request->validate([
-            'mitra_wisata_onboarding_id' => ['nullable', 'exists:mitra_wisata_onboardings,id'],
+            'mitra_wisata_onboarding_id' => [\Illuminate\Validation\Rule::requiredIf(fn () => ! AdminDataScope::canViewAll($request->user())), 'nullable', $destinationRule],
             'type' => ['required', 'in:percentage,fixed'],
             'value' => ['required', 'integer', 'min:0'],
             'is_forever' => ['boolean'],
@@ -70,6 +81,7 @@ class WisataFinanceController extends Controller
     {
         $payouts = WisataPayout::query()
             ->with('destination')
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, request()))
             ->latest('id')
             ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
@@ -84,7 +96,7 @@ class WisataFinanceController extends Controller
                 'destination' => $payout->destination?->destination_name,
             ]);
 
-        $destinations = MitraWisataOnboarding::query()
+        $destinations = AdminDataScope::applyCreatedByOrUser(MitraWisataOnboarding::query(), request())
             ->orderBy('destination_name')
             ->get(['id', 'destination_name'])
             ->map(fn ($item) => ['id' => $item->id, 'label' => $item->destination_name ?? 'Destinasi #' . $item->id])
@@ -98,8 +110,16 @@ class WisataFinanceController extends Controller
 
     public function generatePayout(Request $request): RedirectResponse
     {
+        $destinationRule = \Illuminate\Validation\Rule::exists('mitra_wisata_onboardings', 'id');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $userId = $request->user()?->id ?? 0;
+            $destinationRule = $destinationRule->where(fn ($query) => $query
+                ->where('created_by', $userId)
+                ->orWhere('user_id', $userId));
+        }
+
         $data = $request->validate([
-            'mitra_wisata_onboarding_id' => ['required', 'exists:mitra_wisata_onboardings,id'],
+            'mitra_wisata_onboarding_id' => ['required', $destinationRule],
             'period_start' => ['required', 'date'],
             'period_end' => ['required', 'date'],
         ]);
@@ -128,6 +148,10 @@ class WisataFinanceController extends Controller
 
     public function updatePayout(Request $request, WisataPayout $payout): RedirectResponse
     {
+        if ($payout->destination) {
+            AdminDataScope::authorizeCreatedByOrUser($payout->destination, $request);
+        }
+
         $data = $request->validate([
             'status' => ['required', 'in:approved,paid,rejected'],
             'notes' => ['nullable', 'string', 'max:500'],
@@ -141,14 +165,17 @@ class WisataFinanceController extends Controller
     public function reports(): Response
     {
         $gmv = WisataBooking::query()
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, request()))
             ->whereIn('status', ['paid', 'completed'])
             ->sum('total_price');
 
         $refund = WisataBooking::query()
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, request()))
             ->where('refund_status', 'processed')
             ->sum('refund_amount');
 
         $outstanding = WisataPayout::query()
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, request()))
             ->whereIn('status', ['pending', 'approved'])
             ->sum('net_payout');
 

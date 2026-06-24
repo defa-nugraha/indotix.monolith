@@ -16,6 +16,8 @@ class SouvenirPromotion extends Model
         'ends_at',
         'rules',
         'special_program_id',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [

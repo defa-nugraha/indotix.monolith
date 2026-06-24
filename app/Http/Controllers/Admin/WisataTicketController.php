@@ -18,7 +18,7 @@ class WisataTicketController extends Controller
     {
         $query = WisataTicket::query()
             ->with(['destination.user:id,name,email'])
-            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request));
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request));
 
         if ($search = $request->string('search')->toString()) {
             $query->where(function ($builder) use ($search) {
@@ -66,7 +66,7 @@ class WisataTicketController extends Controller
 
     public function create(): Response
     {
-        $destinations = AdminDataScope::applyCreatedBy(
+        $destinations = AdminDataScope::applyCreatedByOrUser(
             MitraWisataOnboarding::query()
                 ->where('verification_status', 'verified')
                 ->where('is_suspended', false),
@@ -89,7 +89,10 @@ class WisataTicketController extends Controller
     {
         $destinationRule = Rule::exists('mitra_wisata_onboardings', 'id');
         if (! AdminDataScope::canViewAll($request->user())) {
-            $destinationRule = $destinationRule->where('created_by', $request->user()?->id ?? 0);
+            $userId = $request->user()?->id ?? 0;
+            $destinationRule = $destinationRule->where(fn ($query) => $query
+                ->where('created_by', $userId)
+                ->orWhere('user_id', $userId));
         }
 
         $data = $request->validate([
@@ -128,7 +131,7 @@ class WisataTicketController extends Controller
     public function update(Request $request, WisataTicket $ticket): RedirectResponse
     {
         if ($ticket->destination) {
-            AdminDataScope::authorizeCreatedBy($ticket->destination, $request);
+            AdminDataScope::authorizeCreatedByOrUser($ticket->destination, $request);
         }
 
         $data = $request->validate([
@@ -145,7 +148,7 @@ class WisataTicketController extends Controller
     public function destroy(Request $request, WisataTicket $ticket): RedirectResponse
     {
         if ($ticket->destination) {
-            AdminDataScope::authorizeCreatedBy($ticket->destination, $request);
+            AdminDataScope::authorizeCreatedByOrUser($ticket->destination, $request);
         }
 
         $data = $request->validate([

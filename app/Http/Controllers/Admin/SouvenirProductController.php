@@ -8,6 +8,7 @@ use App\Models\SouvenirCategory;
 use App\Models\SouvenirProduct;
 use App\Models\SouvenirProductImage;
 use App\Services\MediaCompressionService;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +19,7 @@ class SouvenirProductController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = SouvenirProduct::query()->with('category', 'images');
+        $query = AdminDataScope::applyCreatedBy(SouvenirProduct::query()->with('category', 'images'), $request);
 
         if ($search = $request->string('search')->toString()) {
             $query->where('name', 'like', "%{$search}%")
@@ -60,7 +61,7 @@ class SouvenirProductController extends Controller
             ]
         );
 
-        $categories = SouvenirCategory::query()
+        $categories = AdminDataScope::applyCreatedBy(SouvenirCategory::query(), $request)
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -128,6 +129,8 @@ class SouvenirProductController extends Controller
 
     public function update(Request $request, SouvenirProduct $product, MediaCompressionService $mediaCompression): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($product, $request);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'category_id' => ['nullable', 'exists:souvenir_categories,id'],
@@ -186,6 +189,8 @@ class SouvenirProductController extends Controller
 
     public function destroyImage(Request $request, SouvenirProduct $product, SouvenirProductImage $image): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($product, $request);
+
         if ($image->product_id !== $product->id) {
             abort(404);
         }
@@ -205,6 +210,8 @@ class SouvenirProductController extends Controller
 
     public function destroy(Request $request, SouvenirProduct $product): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($product, $request);
+
         $product->update([
             'status' => 'inactive',
             'is_active' => false,
@@ -220,6 +227,8 @@ class SouvenirProductController extends Controller
 
     public function forceDelete(Request $request, SouvenirProduct $product): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($product, $request);
+
         $product->images->each(function (SouvenirProductImage $image): void {
             if ($image->image_url) {
                 Storage::disk('public')->delete($image->image_url);
@@ -240,6 +249,8 @@ class SouvenirProductController extends Controller
 
     public function duplicate(Request $request, SouvenirProduct $product): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($product, $request);
+
         $duplicate = $product->replicate(['sku', 'slug']);
         $duplicate->sku = $product->sku.'-COPY-'.now()->format('His');
         $duplicate->slug = SouvenirProduct::generateUniqueSlug($product->name.' copy');

@@ -8,6 +8,7 @@ use App\Models\CommissionRule;
 use App\Models\Hotel;
 use App\Models\Payout;
 use App\Models\PayoutItem;
+use App\Support\AdminDataScope;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +22,10 @@ class PayoutController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = Payout::query()->with(['hotel', 'vendor'])->latest();
+        $query = Payout::query()
+            ->with(['hotel', 'vendor'])
+            ->whereHas('hotel', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
+            ->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status')->toString());
@@ -80,7 +84,7 @@ class PayoutController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $hotel = Hotel::query()->findOrFail($data['hotel_id']);
+        $hotel = AdminDataScope::applyCreatedBy(Hotel::query(), $request)->findOrFail($data['hotel_id']);
         $periodStart = Carbon::parse($data['period_start'])->startOfDay();
         $periodEnd = Carbon::parse($data['period_end'])->endOfDay();
 
@@ -125,6 +129,10 @@ class PayoutController extends Controller
 
     public function approve(Payout $payout): RedirectResponse
     {
+        if ($payout->hotel) {
+            AdminDataScope::authorizeCreatedBy($payout->hotel, request());
+        }
+
         $payout->update([
             'status' => 'approved',
         ]);
@@ -134,6 +142,10 @@ class PayoutController extends Controller
 
     public function transfer(Payout $payout): RedirectResponse
     {
+        if ($payout->hotel) {
+            AdminDataScope::authorizeCreatedBy($payout->hotel, request());
+        }
+
         $payout->update([
             'status' => 'transferred',
             'transfer_status' => 'transferred',
@@ -145,6 +157,7 @@ class PayoutController extends Controller
     private function hotelOptions(): array
     {
         return Hotel::query()
+            ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => AdminDataScope::applyCreatedBy($query, request()))
             ->select('id', 'name')
             ->orderBy('name')
             ->get()

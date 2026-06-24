@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\Regency;
 use App\Models\WisataBooking;
+use App\Support\AdminDataScope;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -15,7 +16,8 @@ class WisataBookingController extends Controller
     public function index(Request $request): Response
     {
         $query = WisataBooking::query()
-            ->with(['destination', 'ticket', 'user:id,name,email']);
+            ->with(['destination', 'ticket', 'user:id,name,email'])
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request));
 
         if ($date = $request->string('visit_date')->toString()) {
             $query->whereDate('visit_date', $date);
@@ -57,7 +59,7 @@ class WisataBookingController extends Controller
                 ];
             });
 
-        $destinations = MitraWisataOnboarding::query()
+        $destinations = AdminDataScope::applyCreatedByOrUser(MitraWisataOnboarding::query(), $request)
             ->orderBy('destination_name')
             ->get(['id', 'destination_name'])
             ->map(fn ($item) => ['id' => $item->id, 'label' => $item->destination_name ?? 'Destinasi #' . $item->id])
@@ -84,6 +86,9 @@ class WisataBookingController extends Controller
     public function show(WisataBooking $booking): Response
     {
         $booking->load(['destination', 'ticket', 'user:id,name,email', 'scans']);
+        if ($booking->destination) {
+            AdminDataScope::authorizeCreatedByOrUser($booking->destination, request());
+        }
 
         $cityName = Regency::query()
             ->where('code', $booking->destination?->city_code)

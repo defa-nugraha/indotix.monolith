@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\WisataTicketScan;
+use App\Support\AdminDataScope;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,7 +14,8 @@ class WisataScanController extends Controller
     public function index(Request $request): Response
     {
         $query = WisataTicketScan::query()
-            ->with(['booking.destination', 'booking.ticket']);
+            ->with(['booking.destination', 'booking.ticket'])
+            ->whereHas('booking.destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request));
 
         if ($destination = $request->string('destination')->toString()) {
             $query->whereHas('booking', function ($builder) use ($destination) {
@@ -58,7 +60,7 @@ class WisataScanController extends Controller
                 ];
             });
 
-        $destinations = \App\Models\MitraWisataOnboarding::query()
+        $destinations = AdminDataScope::applyCreatedByOrUser(\App\Models\MitraWisataOnboarding::query(), $request)
             ->orderBy('destination_name')
             ->get(['id', 'destination_name'])
             ->map(fn ($item) => ['id' => $item->id, 'label' => $item->destination_name ?? 'Destinasi #' . $item->id])

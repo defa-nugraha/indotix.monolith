@@ -37,9 +37,10 @@ class HotelController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = AdminDataScope::applyCreatedBy(
+        $query = AdminDataScope::applyCreatedByOrColumn(
             Hotel::query()->with('facilities')->latest(),
             $request,
+            'vendor_id',
         );
 
         if ($request->filled('search')) {
@@ -121,7 +122,7 @@ class HotelController extends Controller
 
     public function edit(Hotel $hotel): Response
     {
-        AdminDataScope::authorizeCreatedBy($hotel, request());
+        AdminDataScope::authorizeCreatedByOrColumn($hotel, request(), 'vendor_id');
 
         $hotel->load('facilities', 'images', 'taxes');
 
@@ -136,7 +137,7 @@ class HotelController extends Controller
 
     public function update(Request $request, Hotel $hotel, MediaCompressionService $mediaCompression): RedirectResponse
     {
-        AdminDataScope::authorizeCreatedBy($hotel, $request);
+        AdminDataScope::authorizeCreatedByOrColumn($hotel, $request, 'vendor_id');
 
         $validated = $this->validateHotel($request);
         $facilityCodes = $validated['facility_codes'] ?? [];
@@ -162,7 +163,7 @@ class HotelController extends Controller
 
     public function destroyImage(Hotel $hotel, HotelImage $hotelImage): RedirectResponse
     {
-        AdminDataScope::authorizeCreatedBy($hotel, request());
+        AdminDataScope::authorizeCreatedByOrColumn($hotel, request(), 'vendor_id');
 
         if ((int) $hotelImage->hotel_id !== (int) $hotel->id) {
             return redirect()->route('hotels.edit', $hotel);
@@ -179,7 +180,7 @@ class HotelController extends Controller
 
     public function destroy(Hotel $hotel): RedirectResponse
     {
-        AdminDataScope::authorizeCreatedBy($hotel, request());
+        AdminDataScope::authorizeCreatedByOrColumn($hotel, request(), 'vendor_id');
 
         $hotel->delete();
 
@@ -188,9 +189,14 @@ class HotelController extends Controller
 
     private function validateHotel(Request $request): array
     {
-        $vendorRule = Rule::exists('users', 'id')->where('role', 'mitra');
+        $vendorRule = Rule::exists('users', 'id');
         if (! AdminDataScope::canViewAll($request->user())) {
-            $vendorRule = $vendorRule->where('created_by', $request->user()?->id ?? 0);
+            $userId = $request->user()?->id ?? 0;
+            $vendorRule = Rule::exists('users', 'id')->where(fn ($query) => $query
+                ->where(fn ($mitraQuery) => $mitraQuery
+                    ->where('role', 'mitra')
+                    ->where('created_by', $userId))
+                ->orWhere('id', $userId));
         }
 
         return $request->validate([
@@ -328,8 +334,14 @@ class HotelController extends Controller
     {
         return User::query()
             ->select('id', 'name', 'email')
-            ->where('role', 'mitra')
-            ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => $query->where('created_by', request()->user()?->id ?? 0))
+            ->when(
+                ! AdminDataScope::canViewAll(request()->user()),
+                fn ($query) => $query->where(fn ($builder) => $builder
+                    ->where(fn ($mitraQuery) => $mitraQuery
+                        ->where('role', 'mitra')
+                        ->where('created_by', request()->user()?->id ?? 0))
+                    ->orWhere('id', request()->user()?->id ?? 0))
+            )
             ->orderBy('name')
             ->get()
             ->map(fn (User $user) => [

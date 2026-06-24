@@ -251,6 +251,10 @@ class SpecialProgramController extends Controller
     private function validateProgram(Request $request, bool $isCreate): array
     {
         $imageRule = $isCreate ? ['required', 'image', 'max:4096'] : ['nullable', 'image', 'max:4096'];
+        $createdByRule = Rule::exists('users', 'id');
+        if ($request->user()?->role === 'admin_special_program') {
+            $createdByRule = $createdByRule->where('id', $request->user()->id);
+        }
 
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -274,15 +278,19 @@ class SpecialProgramController extends Controller
             'created_by' => [
                 'nullable',
                 'integer',
-                Rule::exists('users', 'id')->where('role', 'admin_special_program'),
+                $createdByRule,
             ],
         ]);
     }
 
     private function adminOptions(): array
     {
-        return User::query()
-            ->where('role', 'admin_special_program')
+        $query = User::query();
+        if (request()->user()?->role !== 'admin') {
+            $query->where('id', request()->user()?->id ?? 0);
+        }
+
+        return $query
             ->orderBy('name')
             ->get(['id', 'name', 'email'])
             ->map(fn (User $user) => [

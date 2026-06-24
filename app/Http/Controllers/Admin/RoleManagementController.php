@@ -70,7 +70,10 @@ class RoleManagementController extends Controller
                 'is_active' => (bool) $role->is_active,
                 'users_count' => $role->users_count,
                 'permissions' => $role->permissions
-                    ->map(fn (AdminPermission $permission) => "{$permission->feature}.{$permission->action}")
+                    ->flatMap(fn (AdminPermission $permission) => AdminPermissionRegistry::expandPermissionKeys([
+                        "{$permission->feature}.{$permission->action}",
+                    ]))
+                    ->unique()
                     ->values()
                     ->all(),
             ]);
@@ -90,6 +93,9 @@ class RoleManagementController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->syncPermissions();
+        $request->merge([
+            'permissions' => AdminPermissionRegistry::expandPermissionKeys((array) $request->input('permissions', [])),
+        ]);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -116,6 +122,9 @@ class RoleManagementController extends Controller
     public function update(Request $request, AdminRole $role): RedirectResponse
     {
         $this->syncPermissions();
+        $request->merge([
+            'permissions' => AdminPermissionRegistry::expandPermissionKeys((array) $request->input('permissions', [])),
+        ]);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -221,12 +230,7 @@ class RoleManagementController extends Controller
 
     private function permissionKeys(): array
     {
-        return collect(AdminPermissionRegistry::features())
-            ->keys()
-            ->flatMap(fn (string $feature) => collect(array_keys(AdminPermissionRegistry::actions()))
-                ->map(fn (string $action) => "{$feature}.{$action}"))
-            ->values()
-            ->all();
+        return AdminPermissionRegistry::permissionKeys();
     }
 
     private function permissionIds(array $permissionKeys): array

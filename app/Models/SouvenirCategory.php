@@ -13,6 +13,8 @@ class SouvenirCategory extends Model
         'parent_id',
         'sort_order',
         'is_active',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SouvenirAuditLog;
 use App\Models\SouvenirOrder;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +15,9 @@ class SouvenirOrderController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = SouvenirOrder::query()->with(['user:id,name,email', 'items']);
+        $query = SouvenirOrder::query()
+            ->with(['user:id,name,email', 'items'])
+            ->whereHas('items.product', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request));
 
         if ($status = $request->string('status')->toString()) {
             $query->where('status', $status);
@@ -33,7 +36,9 @@ class SouvenirOrderController extends Controller
 
     public function fulfillment(Request $request): Response
     {
-        $query = SouvenirOrder::query()->with(['user:id,name,email', 'items']);
+        $query = SouvenirOrder::query()
+            ->with(['user:id,name,email', 'items'])
+            ->whereHas('items.product', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request));
 
         if ($status = $request->string('status')->toString()) {
             $query->where('status', $status);
@@ -53,6 +58,11 @@ class SouvenirOrderController extends Controller
     public function show(SouvenirOrder $order): Response
     {
         $order->load(['user:id,name,email', 'items.product', 'items.variant', 'refunds']);
+        abort_unless(
+            AdminDataScope::canViewAll(request()->user()) ||
+            $order->items->contains(fn ($item) => (int) $item->product?->created_by === (int) request()->user()?->id),
+            404
+        );
 
         return Inertia::render('admin/souvenir/orders/show', [
             'order' => $order,
@@ -61,6 +71,13 @@ class SouvenirOrderController extends Controller
 
     public function updateStatus(Request $request, SouvenirOrder $order): RedirectResponse
     {
+        $order->loadMissing('items.product');
+        abort_unless(
+            AdminDataScope::canViewAll($request->user()) ||
+            $order->items->contains(fn ($item) => (int) $item->product?->created_by === (int) $request->user()?->id),
+            404
+        );
+
         $data = $request->validate([
             'status' => ['required', 'in:pending_payment,paid,processing,shipped,ready_pickup,completed,cancelled'],
         ]);
@@ -80,6 +97,13 @@ class SouvenirOrderController extends Controller
 
     public function updateShipping(Request $request, SouvenirOrder $order): RedirectResponse
     {
+        $order->loadMissing('items.product');
+        abort_unless(
+            AdminDataScope::canViewAll($request->user()) ||
+            $order->items->contains(fn ($item) => (int) $item->product?->created_by === (int) $request->user()?->id),
+            404
+        );
+
         $data = $request->validate([
             'shipping_status' => ['nullable', 'string', 'max:50'],
             'tracking_number' => ['nullable', 'string', 'max:100'],

@@ -27,7 +27,7 @@ class WisataDestinationController extends Controller
 
     public function index(Request $request): Response
     {
-        $query = AdminDataScope::applyCreatedBy(
+        $query = AdminDataScope::applyCreatedByOrUser(
             MitraWisataOnboarding::query()->with(['user:id,name,email']),
             $request,
         );
@@ -121,7 +121,7 @@ class WisataDestinationController extends Controller
     public function show(string $destination): Response
     {
         $destination = $this->resolveDestination($destination);
-        AdminDataScope::authorizeCreatedBy($destination, request());
+        AdminDataScope::authorizeCreatedByOrUser($destination, request());
         $destination->load(['user:id,name,email']);
         $destination->setAttribute('encrypted_id', Crypt::encryptString((string) $destination->id));
 
@@ -173,7 +173,7 @@ class WisataDestinationController extends Controller
     public function update(Request $request, string $destination, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $destination = $this->resolveDestination($destination);
-        AdminDataScope::authorizeCreatedBy($destination, $request);
+        AdminDataScope::authorizeCreatedByOrUser($destination, $request);
         $data = $this->validateDestination($request, false);
 
         $payload = Arr::except($data, [
@@ -252,7 +252,7 @@ class WisataDestinationController extends Controller
     public function suspend(Request $request, string $destination): RedirectResponse
     {
         $destination = $this->resolveDestination($destination);
-        AdminDataScope::authorizeCreatedBy($destination, $request);
+        AdminDataScope::authorizeCreatedByOrUser($destination, $request);
         $data = $request->validate([
             'action' => ['required', 'in:suspend,unsuspend'],
             'reason' => ['nullable', 'string', 'max:500'],
@@ -278,7 +278,7 @@ class WisataDestinationController extends Controller
     public function destroy(string $destination): RedirectResponse
     {
         $destination = $this->resolveDestination($destination);
-        AdminDataScope::authorizeCreatedBy($destination, request());
+        AdminDataScope::authorizeCreatedByOrUser($destination, request());
         if ($destination->tickets()->exists() || $destination->bookings()->exists()) {
             return back()->withErrors([
                 'destination' => 'Destinasi tidak dapat dihapus karena sudah memiliki tiket atau booking.',
@@ -318,9 +318,14 @@ class WisataDestinationController extends Controller
 
     private function validateDestination(Request $request, bool $creating): array
     {
-        $mitraRule = Rule::exists('users', 'id')->where('role', 'mitra');
+        $mitraRule = Rule::exists('users', 'id');
         if (! AdminDataScope::canViewAll($request->user())) {
-            $mitraRule = $mitraRule->where('created_by', $request->user()?->id ?? 0);
+            $userId = $request->user()?->id ?? 0;
+            $mitraRule = Rule::exists('users', 'id')->where(fn ($query) => $query
+                ->where(fn ($mitraQuery) => $mitraQuery
+                    ->where('role', 'mitra')
+                    ->where('created_by', $userId))
+                ->orWhere('id', $userId));
         }
 
         return $request->validate([
@@ -379,9 +384,17 @@ class WisataDestinationController extends Controller
 
     private function mitraOptions(): array
     {
+        $user = request()->user();
+        $userId = $user?->id ?? 0;
+
         return User::query()
-            ->where('role', 'mitra')
-            ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => $query->where('created_by', request()->user()?->id ?? 0))
+            ->when(AdminDataScope::canViewAll($user),
+                fn ($query) => $query,
+                fn ($query) => $query->where(fn ($builder) => $builder
+                    ->where(fn ($mitraQuery) => $mitraQuery
+                        ->where('role', 'mitra')
+                        ->where('created_by', $userId))
+                    ->orWhere('id', $userId)))
             ->orderBy('name')
             ->get(['id', 'name', 'email'])
             ->map(fn (User $user) => [

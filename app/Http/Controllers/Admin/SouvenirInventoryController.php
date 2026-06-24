@@ -7,6 +7,7 @@ use App\Models\SouvenirAuditLog;
 use App\Models\SouvenirProduct;
 use App\Models\SouvenirStockMovement;
 use App\Models\SouvenirVariant;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,13 +17,14 @@ class SouvenirInventoryController extends Controller
 {
     public function index(Request $request): Response
     {
-        $products = SouvenirProduct::query()
+        $products = AdminDataScope::applyCreatedBy(SouvenirProduct::query(), $request)
             ->with('variants')
             ->orderBy('name')
             ->get();
 
         $logs = SouvenirStockMovement::query()
             ->with(['product:id,name', 'variant:id,name', 'product.category'])
+            ->whereHas('product', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
             ->latest()
             ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
@@ -50,7 +52,7 @@ class SouvenirInventoryController extends Controller
                 ->firstOrFail();
         }
 
-        $product = SouvenirProduct::query()->findOrFail($data['product_id']);
+        $product = AdminDataScope::applyCreatedBy(SouvenirProduct::query(), $request)->findOrFail($data['product_id']);
         $current = $variant ? $variant->stock : $product->stock;
 
         $movementQuantity = (int) $data['quantity'];

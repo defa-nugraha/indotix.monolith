@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SouvenirAuditLog;
 use App\Models\SouvenirOrder;
 use App\Models\SouvenirRefund;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -17,11 +18,15 @@ class SouvenirRefundController extends Controller
     {
         $refunds = SouvenirRefund::query()
             ->with(['order'])
+            ->whereHas('order.items.product', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
             ->latest()
             ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString();
 
-        $orders = SouvenirOrder::query()->latest()->get(['id']);
+        $orders = SouvenirOrder::query()
+            ->whereHas('items.product', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
+            ->latest()
+            ->get(['id']);
 
         return Inertia::render('admin/souvenir/refunds/index', [
             'refunds' => $refunds,
@@ -37,9 +42,12 @@ class SouvenirRefundController extends Controller
             'amount' => ['required', 'integer', 'min:0'],
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
+        $order = SouvenirOrder::query()
+            ->whereHas('items.product', fn ($builder) => AdminDataScope::applyCreatedBy($builder, $request))
+            ->findOrFail($data['souvenir_order_id']);
 
         $refund = SouvenirRefund::create([
-            'souvenir_order_id' => $data['souvenir_order_id'],
+            'souvenir_order_id' => $order->id,
             'type' => $data['type'],
             'amount' => $data['amount'],
             'reason' => $data['reason'] ?? null,
@@ -57,6 +65,13 @@ class SouvenirRefundController extends Controller
 
     public function update(Request $request, SouvenirRefund $refund): RedirectResponse
     {
+        $refund->loadMissing('order.items.product');
+        abort_unless(
+            AdminDataScope::canViewAll($request->user()) ||
+            $refund->order?->items->contains(fn ($item) => (int) $item->product?->created_by === (int) $request->user()?->id),
+            404
+        );
+
         $data = $request->validate([
             'status' => ['required', 'in:pending,approved,rejected'],
         ]);

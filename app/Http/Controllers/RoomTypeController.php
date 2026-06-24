@@ -20,7 +20,7 @@ class RoomTypeController extends Controller
 
     public function index(Request $request): Response
     {
-        $roomTypesQuery = AdminDataScope::applyCreatedBy(RoomType::query(), $request)
+        $roomTypesQuery = $this->applyRoomTypeScope(RoomType::query(), $request)
             ->with(['hotel', 'images'])
             ->latest();
 
@@ -83,7 +83,7 @@ class RoomTypeController extends Controller
 
     public function edit(RoomType $roomType): Response
     {
-        AdminDataScope::authorizeCreatedBy($roomType, request());
+        $this->authorizeRoomType($roomType, request());
         $roomType->load(['hotel', 'images']);
 
         return Inertia::render('room-types/edit', [
@@ -95,7 +95,7 @@ class RoomTypeController extends Controller
 
     public function show(RoomType $roomType): Response
     {
-        AdminDataScope::authorizeCreatedBy($roomType, request());
+        $this->authorizeRoomType($roomType, request());
         $roomType->load(['hotel', 'images']);
 
         return Inertia::render('room-types/show', [
@@ -105,7 +105,7 @@ class RoomTypeController extends Controller
 
     public function update(Request $request, RoomType $roomType, MediaCompressionService $mediaCompression): RedirectResponse
     {
-        AdminDataScope::authorizeCreatedBy($roomType, $request);
+        $this->authorizeRoomType($roomType, $request);
         $validated = $this->validateRoomType($request);
         $images = $validated['images'] ?? [];
         unset($validated['images']);
@@ -118,7 +118,7 @@ class RoomTypeController extends Controller
 
     public function destroy(RoomType $roomType): RedirectResponse
     {
-        AdminDataScope::authorizeCreatedBy($roomType, request());
+        $this->authorizeRoomType($roomType, request());
         $roomType->delete();
 
         return redirect()->route('room-types.index');
@@ -126,7 +126,7 @@ class RoomTypeController extends Controller
 
     public function destroyImage(RoomType $roomType, RoomImage $roomImage): RedirectResponse
     {
-        AdminDataScope::authorizeCreatedBy($roomType, request());
+        $this->authorizeRoomType($roomType, request());
 
         if ($roomImage->room_type_id !== $roomType->id) {
             abort(404);
@@ -145,7 +145,10 @@ class RoomTypeController extends Controller
     {
         $hotelRule = Rule::exists('hotels', 'id');
         if (! AdminDataScope::canViewAll($request->user())) {
-            $hotelRule = $hotelRule->where('created_by', $request->user()?->id ?? 0);
+            $userId = $request->user()?->id ?? 0;
+            $hotelRule = $hotelRule->where(fn ($query) => $query
+                ->where('created_by', $userId)
+                ->orWhere('vendor_id', $userId));
         }
 
         return $request->validate([
@@ -195,7 +198,7 @@ class RoomTypeController extends Controller
 
     private function hotelOptions(): array
     {
-        return AdminDataScope::applyCreatedBy(Hotel::query(), request())
+        return AdminDataScope::applyCreatedByOrColumn(Hotel::query(), request(), 'vendor_id')
             ->select('id', 'name')
             ->orderBy('name')
             ->get()
@@ -204,6 +207,37 @@ class RoomTypeController extends Controller
                 'label' => $hotel->name,
             ])
             ->all();
+    }
+
+    private function applyRoomTypeScope($query, Request $request)
+    {
+        if (AdminDataScope::canViewAll($request->user())) {
+            return $query;
+        }
+
+        $userId = $request->user()?->id ?? 0;
+
+        return $query->where(function ($builder) use ($userId) {
+            $builder
+                ->where('created_by', $userId)
+                ->orWhereHas('hotel', fn ($hotel) => $hotel->where('vendor_id', $userId));
+        });
+    }
+
+    private function authorizeRoomType(RoomType $roomType, Request $request): void
+    {
+        if (AdminDataScope::canViewAll($request->user())) {
+            return;
+        }
+
+        $roomType->loadMissing('hotel');
+        $userId = $request->user()?->id ?? 0;
+
+        abort_unless(
+            (int) $roomType->created_by === (int) $userId
+            || (int) $roomType->hotel?->vendor_id === (int) $userId,
+            404,
+        );
     }
 
     private function toPayload(RoomType $roomType): array

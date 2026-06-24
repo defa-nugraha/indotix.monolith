@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventScan;
+use App\Support\AdminDataScope;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -16,7 +17,10 @@ class EventScanController extends Controller
         $eventId = $request->integer('event_id');
         $query = EventScan::query()
             ->with(['booking.event', 'ticket'])
-            ->whereHas('booking.event', fn ($q) => $q->where('event_type', 'event'))
+            ->whereHas('booking.event', fn ($q) => $q
+                ->where('event_type', 'event')
+                ->when(! AdminDataScope::canViewAll($request->user()), fn ($eventQuery) => $eventQuery
+                    ->whereHas('organizer', fn ($organizer) => $organizer->where('user_id', $request->user()?->id ?? 0))))
             ->latest('scanned_at');
         if ($eventId) {
             $query->whereHas('booking.event', fn ($q) => $q->where('event_type', 'event')->where('id', $eventId));
@@ -26,6 +30,8 @@ class EventScanController extends Controller
             'scans' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'events' => Event::query()
                 ->where('event_type', 'event')
+                ->when(! AdminDataScope::canViewAll($request->user()), fn ($query) => $query
+                    ->whereHas('organizer', fn ($organizer) => $organizer->where('user_id', $request->user()?->id ?? 0)))
                 ->select('id', 'title')
                 ->orderBy('title')
                 ->get(),

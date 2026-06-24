@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SouvenirAuditLog;
 use App\Models\SouvenirCategory;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +15,7 @@ class SouvenirCategoryController extends Controller
 {
     public function index(): Response
     {
-        $categories = SouvenirCategory::query()
+        $categories = AdminDataScope::applyCreatedBy(SouvenirCategory::query(), request())
             ->with('parent:id,name')
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -39,6 +40,8 @@ class SouvenirCategoryController extends Controller
             'parent_id' => $data['parent_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
             'is_active' => (bool) ($data['is_active'] ?? true),
+            'created_by' => $request->user()->id,
+            'updated_by' => $request->user()->id,
         ]);
 
         $this->logAudit($request, 'category_created', 'Kategori souvenir dibuat.', [
@@ -51,6 +54,8 @@ class SouvenirCategoryController extends Controller
 
     public function update(Request $request, SouvenirCategory $category): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($category, $request);
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'parent_id' => ['nullable', 'exists:souvenir_categories,id'],
@@ -63,6 +68,7 @@ class SouvenirCategoryController extends Controller
             'parent_id' => $data['parent_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
             'is_active' => (bool) ($data['is_active'] ?? true),
+            'updated_by' => $request->user()->id,
         ]);
 
         $this->logAudit($request, 'category_updated', 'Kategori souvenir diperbarui.', [
@@ -74,6 +80,8 @@ class SouvenirCategoryController extends Controller
 
     public function destroy(Request $request, SouvenirCategory $category): RedirectResponse
     {
+        AdminDataScope::authorizeCreatedBy($category, $request);
+
         $category->delete();
 
         $this->logAudit($request, 'category_deleted', 'Kategori souvenir dihapus.', [

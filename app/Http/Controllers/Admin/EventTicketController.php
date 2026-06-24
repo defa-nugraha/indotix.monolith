@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Event;
 use App\Models\EventAuditLog;
 use App\Models\EventTicket;
+use App\Support\AdminDataScope;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -18,7 +19,10 @@ class EventTicketController extends Controller
         $eventId = $request->integer('event_id');
         $query = EventTicket::query()
             ->with('event')
-            ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
+            ->whereHas('event', fn ($q) => $q
+                ->where('event_type', 'event')
+                ->when(! AdminDataScope::canViewAll($request->user()), fn ($eventQuery) => $eventQuery
+                    ->whereHas('organizer', fn ($organizer) => $organizer->where('user_id', $request->user()?->id ?? 0))))
             ->latest();
         if ($eventId) {
             $query->where('event_id', $eventId);
@@ -28,6 +32,8 @@ class EventTicketController extends Controller
             'tickets' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'events' => Event::query()
                 ->where('event_type', 'event')
+                ->when(! AdminDataScope::canViewAll($request->user()), fn ($query) => $query
+                    ->whereHas('organizer', fn ($organizer) => $organizer->where('user_id', $request->user()?->id ?? 0)))
                 ->select('id', 'title')
                 ->orderBy('title')
                 ->get(),
@@ -39,6 +45,13 @@ class EventTicketController extends Controller
 
     public function update(Request $request, EventTicket $ticket): RedirectResponse
     {
+        $ticket->loadMissing('event.organizer');
+        abort_unless(
+            AdminDataScope::canViewAll($request->user()) ||
+            (int) $ticket->event?->organizer?->user_id === (int) ($request->user()?->id ?? 0),
+            404
+        );
+
         $data = $request->validate([
             'is_active' => ['required', 'boolean'],
             'max_per_user' => ['required', 'integer', 'min:1'],

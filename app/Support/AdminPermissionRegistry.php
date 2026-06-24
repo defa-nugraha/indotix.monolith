@@ -8,6 +8,42 @@ use Illuminate\Support\Str;
 
 class AdminPermissionRegistry
 {
+    private const LEGACY_FEATURE_GROUPS = [
+        'academy' => [
+            'academy_classes',
+            'academy_tickets',
+            'academy_bookings',
+            'academy_scans',
+            'academy_finance',
+            'academy_system',
+        ],
+        'retail_shop' => [
+            'retail_products',
+            'retail_categories',
+            'retail_variants',
+            'retail_inventory',
+            'retail_orders',
+            'retail_refunds',
+            'retail_promotions',
+            'retail_reports',
+            'retail_system',
+        ],
+        'blog' => ['blog_posts', 'blog_categories', 'blog_tags'],
+        'public_content' => [
+            'public_banners',
+            'public_promo_videos',
+            'public_promo_items',
+            'public_contacts',
+            'public_pages',
+        ],
+        'system' => [
+            'system_audit',
+            'system_settings',
+            'system_notifications',
+            'system_roles',
+            'system_special_admins',
+        ],
+    ];
     public static function features(): array
     {
         return config('admin_permissions.features', []);
@@ -18,6 +54,34 @@ class AdminPermissionRegistry
         return config('admin_permissions.actions', []);
     }
 
+    public static function permissionKeys(): array
+    {
+        return collect(self::features())
+            ->keys()
+            ->flatMap(fn (string $feature) => collect(array_keys(self::actions()))
+                ->map(fn (string $action) => "{$feature}.{$action}"))
+            ->values()
+            ->all();
+    }
+
+    public static function expandPermissionKeys(array $permissionKeys): array
+    {
+        $validKeys = array_flip(self::permissionKeys());
+
+        return collect($permissionKeys)
+            ->filter(fn ($permissionKey) => is_string($permissionKey) && str_contains($permissionKey, '.'))
+            ->flatMap(function (string $permissionKey) {
+                [$feature, $action] = explode('.', $permissionKey, 2);
+                $features = self::LEGACY_FEATURE_GROUPS[$feature] ?? [$feature];
+
+                return collect($features)->map(fn (string $feature) => "{$feature}.{$action}");
+            })
+            ->filter(fn (string $permissionKey) => isset($validKeys[$permissionKey]))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     public static function permissionKeysForUser(?User $user): array
     {
         if (! $user) {
@@ -25,12 +89,7 @@ class AdminPermissionRegistry
         }
 
         if ($user->role === 'admin') {
-            return collect(self::features())
-                ->keys()
-                ->flatMap(fn (string $feature) => collect(array_keys(self::actions()))
-                    ->map(fn (string $action) => "{$feature}.{$action}"))
-                ->values()
-                ->all();
+            return self::permissionKeys();
         }
 
         $role = $user->adminRole;
@@ -39,7 +98,11 @@ class AdminPermissionRegistry
         }
 
         return $role->permissions
-            ->map(fn ($permission) => "{$permission->feature}.{$permission->action}")
+            ->flatMap(function ($permission) {
+                $features = self::LEGACY_FEATURE_GROUPS[$permission->feature] ?? [$permission->feature];
+
+                return collect($features)->map(fn (string $feature) => "{$feature}.{$permission->action}");
+            })
             ->values()
             ->all();
     }
@@ -59,11 +122,16 @@ class AdminPermissionRegistry
             return false;
         }
 
-        $fallbackFeature = Str::before($feature, '_');
-
         return $role->permissions
-            ->contains(fn ($permission) => $permission->action === $action
-                && ($permission->feature === $feature || $permission->feature === $fallbackFeature));
+            ->contains(function ($permission) use ($feature, $action) {
+                if ($permission->action !== $action) {
+                    return false;
+                }
+
+                $features = self::LEGACY_FEATURE_GROUPS[$permission->feature] ?? [$permission->feature];
+
+                return in_array($feature, $features, true);
+            });
     }
 
     public static function resolveRequest(Request $request): ?array

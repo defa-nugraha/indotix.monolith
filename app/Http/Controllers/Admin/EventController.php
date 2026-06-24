@@ -7,6 +7,8 @@ use App\Models\Event;
 use App\Models\EventAuditLog;
 use App\Models\EventOrganizer;
 use App\Services\MediaCompressionService;
+use App\Support\AdminDataScope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +26,7 @@ class EventController extends Controller
             ->where('event_type', 'event')
             ->with('organizer')
             ->latest();
+        $this->applyEventScope($query, $request);
         if ($status) {
             $query->where('status', $status);
         }
@@ -80,6 +83,7 @@ class EventController extends Controller
     public function edit(Event $event): Response
     {
         abort_unless($event->event_type === 'event', 404);
+        $this->authorizeEvent($event, request());
 
         return Inertia::render('mitra/events/create', [
             'organizer' => [
@@ -109,6 +113,7 @@ class EventController extends Controller
     public function update(Request $request, Event $event, MediaCompressionService $mediaCompression): RedirectResponse
     {
         abort_unless($event->event_type === 'event', 404);
+        $this->authorizeEvent($event, $request);
 
         $data = $this->validateEvent($request);
         $imagePath = $event->image_path;
@@ -143,6 +148,7 @@ class EventController extends Controller
     public function show(Event $event): Response
     {
         abort_unless($event->event_type === 'event', 404);
+        $this->authorizeEvent($event, request());
         $event->load('organizer', 'tickets');
 
         return Inertia::render('admin/events/show', [
@@ -152,6 +158,8 @@ class EventController extends Controller
 
     public function updateStatus(Request $request, Event $event): RedirectResponse
     {
+        $this->authorizeEvent($event, $request);
+
         $data = $request->validate([
             'status' => ['required', 'in:draft,pending_review,published,postponed,cancelled,completed'],
             'status_reason' => ['nullable', 'string'],
@@ -176,6 +184,8 @@ class EventController extends Controller
 
     public function updateCapacity(Request $request, Event $event): RedirectResponse
     {
+        $this->authorizeEvent($event, $request);
+
         $data = $request->validate([
             'capacity_total' => ['required', 'integer', 'min:0'],
             'sales_stopped' => ['required', 'boolean'],
@@ -197,6 +207,7 @@ class EventController extends Controller
     public function destroy(Request $request, Event $event): RedirectResponse
     {
         abort_unless($event->event_type === 'event', 404);
+        $this->authorizeEvent($event, $request);
 
         if ($event->bookings()->exists()) {
             return back()->withErrors([
@@ -216,8 +227,13 @@ class EventController extends Controller
 
     private function validateEvent(Request $request): array
     {
+        $organizerRule = Rule::exists('event_organizers', 'id');
+        if (! AdminDataScope::canViewAll($request->user())) {
+            $organizerRule = $organizerRule->where('user_id', $request->user()?->id ?? 0);
+        }
+
         return $request->validate([
-            'event_organizer_id' => ['required', 'integer', Rule::exists('event_organizers', 'id')],
+            'event_organizer_id' => ['required', 'integer', $organizerRule],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'city_code' => ['nullable', 'string', 'max:10'],
@@ -234,6 +250,8 @@ class EventController extends Controller
     private function organizerOptions(): array
     {
         return EventOrganizer::query()
+            ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => $query
+                ->where('user_id', request()->user()?->id ?? 0))
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (EventOrganizer $organizer) => [
@@ -265,5 +283,25 @@ class EventController extends Controller
             'subject_id' => $event->id,
             'metadata' => $metadata,
         ]);
+    }
+
+    private function applyEventScope(Builder $query, Request $request): Builder
+    {
+        if (AdminDataScope::canViewAll($request->user())) {
+            return $query;
+        }
+
+        return $query->whereHas('organizer', fn ($organizer) => $organizer
+            ->where('user_id', $request->user()?->id ?? 0));
+    }
+
+    private function authorizeEvent(Event $event, Request $request): void
+    {
+        if (AdminDataScope::canViewAll($request->user())) {
+            return;
+        }
+
+        $event->loadMissing('organizer');
+        abort_unless((int) $event->organizer?->user_id === (int) ($request->user()?->id ?? 0), 404);
     }
 }
