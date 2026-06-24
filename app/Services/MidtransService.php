@@ -54,6 +54,8 @@ class MidtransService
         $serverKey = config('services.midtrans.server_key');
 
         return Http::withBasicAuth($serverKey, '')
+            ->connectTimeout((int) config('services.midtrans.connect_timeout', 5))
+            ->timeout((int) config('services.midtrans.timeout', 20))
             ->acceptJson()
             ->asJson();
     }

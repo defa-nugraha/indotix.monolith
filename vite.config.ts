@@ -24,4 +24,33 @@ export default defineConfig({
     esbuild: {
         jsx: 'automatic',
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (!id.includes('node_modules')) return;
+
+                    if (
+                        id.includes('/react/') ||
+                        id.includes('/react-dom/') ||
+                        id.includes('/scheduler/') ||
+                        id.includes('/@inertiajs/')
+                    ) {
+                        return 'framework-vendor';
+                    }
+
+                    if (id.includes('/sweetalert2/')) {
+                        return 'alerts-vendor';
+                    }
+
+                    if (
+                        id.includes('/date-fns/') ||
+                        id.includes('/react-date-range/')
+                    ) {
+                        return 'date-vendor';
+                    }
+                },
+            },
+        },
+    },
 });

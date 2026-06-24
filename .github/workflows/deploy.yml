@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -44,6 +48,14 @@ jobs:
 
       - name: Install Composer Dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader
+
+      - name: Security Audit
+        run: |
+          composer audit --locked --no-interaction
+          npm audit --audit-level=high
+
+      - name: Type Check
+        run: npm run types
 
       - name: Build Assets
         run: npm run build

@@ -31,7 +31,12 @@ jobs:
       - name: Install Dependencies
         run: |
           composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-          npm install
+          npm ci
+
+      - name: Audit Dependencies
+        run: |
+          composer audit --locked --no-interaction
+          npm audit --audit-level=high
 
       - name: Run Pint
         run: composer lint
@@ -41,6 +46,9 @@ jobs:
 
       - name: Lint Frontend
         run: npm run lint
+
+      - name: Type Check
+        run: npm run types
 
       # - name: Commit Changes
       #   uses: stefanzweifel/git-auto-commit-action@v7

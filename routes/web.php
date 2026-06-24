@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [\App\Http\Controllers\PublicHomeController::class, 'index'])
     ->name('home');
+Route::get('/sitemap.xml', \App\Http\Controllers\SitemapController::class)
+    ->name('sitemap');
 
 Route::get('dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'admin'])

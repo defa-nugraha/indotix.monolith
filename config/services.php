@@ -39,6 +39,8 @@ return [
         'server_key' => env('MIDTRANS_SERVER_KEY'),
         'client_key' => env('MIDTRANS_CLIENT_KEY'),
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+        'connect_timeout' => (int) env('MIDTRANS_CONNECT_TIMEOUT', 5),
+        'timeout' => (int) env('MIDTRANS_TIMEOUT', 20),
     ],
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),

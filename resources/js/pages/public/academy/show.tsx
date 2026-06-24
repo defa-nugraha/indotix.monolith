@@ -1,32 +1,28 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import {
     CalendarCheck,
     MapPinned,
     ShoppingBag,
     Star,
     Ticket,
-    Bell,
-    MessageCircle,
-    History as HistoryIcon,
-    UserCircle,
     MapPin,
     Clock,
     Users,
-    ShoppingCart,
     BookOpen,
-    BadgePercent,
 } from 'lucide-react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
-import PublicLayout from '@/layouts/public-layout';
+import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
-import { guardPurchaseByRole } from '@/lib/purchase-guard';
 import SaleCountdown from '@/components/sale-countdown';
+import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type AcademyDetail = {
     id: number;
     encrypted_id: string;
+    slug?: string | null;
     title: string;
     description?: string | null;
     category?: string | null;
@@ -84,14 +80,11 @@ export default function AcademyShow({
     userReview?: UserReview | null;
     canReview?: boolean;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
-        usePage().props as {
-            auth?: { user?: any };
-            unread_notifications?: number;
-            souvenir_cart_count?: number;
-            affiliate_menu?: boolean;
-        };
-    const role = (auth?.user as any)?.role as string | undefined;
+    const { auth } = usePage().props as {
+        auth?: { user?: { role?: string } };
+    };
+    const role = auth?.user?.role;
+    const [renderedAt] = useState(() => Date.now());
     const [selectedTicket, setSelectedTicket] = useState<string>(
         tickets[0]?.id?.toString() ?? '',
     );
@@ -100,7 +93,7 @@ export default function AcademyShow({
     const scheduleEnd = parseDateTime(
         academyClass.end_at ?? academyClass.start_at,
     );
-    const isEnded = scheduleEnd ? scheduleEnd.getTime() < Date.now() : false;
+    const isEnded = scheduleEnd ? scheduleEnd.getTime() < renderedAt : false;
     const formatRupiah = (value: number) =>
         new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -169,7 +162,25 @@ export default function AcademyShow({
 
     return (
         <PublicLayout categories={categories}>
-            <Head title={academyClass.title}>
+            <PublicSeo
+                title={`${academyClass.title} - Eljohn Academy`}
+                description={academyClass.description}
+                image={gallery[0]}
+                canonicalPath={`/academy/${academyClass.slug ?? academyClass.encrypted_id}`}
+                type="event"
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'Course',
+                    name: academyClass.title,
+                    description: academyClass.description,
+                    image: gallery,
+                    provider: {
+                        '@type': 'Organization',
+                        name: 'Indotix',
+                    },
+                }}
+            />
+            <Head>
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
                     rel="stylesheet"
@@ -183,6 +194,8 @@ export default function AcademyShow({
                                 <img
                                     src={gallery[0]}
                                     alt={academyClass.title}
+                                    loading="eager"
+                                    decoding="async"
                                     className="h-full w-full object-cover"
                                 />
                             </div>
@@ -195,6 +208,8 @@ export default function AcademyShow({
                                         <img
                                             src={img}
                                             alt="Kelas"
+                                            loading="lazy"
+                                            decoding="async"
                                             className="h-full w-full object-cover"
                                         />
                                     </div>
@@ -312,7 +327,9 @@ export default function AcademyShow({
                                                 ),
                                             )
                                         }
-                                        disabled={tickets.length === 0 || isEnded}
+                                        disabled={
+                                            tickets.length === 0 || isEnded
+                                        }
                                     >
                                         −
                                     </button>
@@ -328,7 +345,9 @@ export default function AcademyShow({
                                                 Number(event.target.value),
                                             )
                                         }
-                                        disabled={tickets.length === 0 || isEnded}
+                                        disabled={
+                                            tickets.length === 0 || isEnded
+                                        }
                                     />
                                     <button
                                         type="button"
@@ -342,7 +361,9 @@ export default function AcademyShow({
                                                 ),
                                             )
                                         }
-                                        disabled={tickets.length === 0 || isEnded}
+                                        disabled={
+                                            tickets.length === 0 || isEnded
+                                        }
                                     >
                                         +
                                     </button>

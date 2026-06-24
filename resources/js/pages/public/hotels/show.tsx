@@ -1,40 +1,37 @@
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
-import { DateRange } from 'react-date-range';
 import { format } from 'date-fns';
-import 'react-date-range/dist/styles.css';
-import 'react-date-range/dist/theme/default.css';
 import {
-    Bell,
     CalendarCheck,
+    Cigarette,
+    CigaretteOff,
+    Coffee,
+    Dumbbell,
     MapPinned,
-    MessageCircle,
+    ParkingSquare,
+    ShieldCheck,
     ShoppingBag,
     Star,
     Ticket,
-    UserCircle,
-    History,
-    Wifi,
-    ParkingSquare,
-    Waves,
-    Dumbbell,
     Utensils,
-    Coffee,
     Users,
-    ShieldCheck,
-    Cigarette,
-    CigaretteOff,
-    ShoppingCart,
-    BadgePercent,
+    Waves,
+    Wifi,
 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { DateRange } from 'react-date-range';
+import 'react-date-range/dist/styles.css';
+import 'react-date-range/dist/theme/default.css';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
-import { Skeleton } from '@/components/ui/skeleton';
-import { guardPurchaseByRole } from '@/lib/purchase-guard';
-import PublicLayout from '@/layouts/public-layout';
+import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
+import { Skeleton } from '@/components/ui/skeleton';
+import PublicLayout from '@/layouts/public-layout';
+import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type Hotel = {
     id: number;
+    encrypted_id: string;
+    slug?: string | null;
     name: string;
     description?: string | null;
     address?: string | null;
@@ -104,15 +101,10 @@ export default function HotelShow({
     userReview?: UserReview | null;
     canReview?: boolean;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
-        usePage().props as {
-            auth?: { user?: unknown };
-            unread_notifications?: number;
-            souvenir_cart_count?: number;
-            affiliate_menu?: boolean;
-        };
-    const role = (auth?.user as any)?.role as string | undefined;
-    const isUser = Boolean(role === 'user');
+    const { auth } = usePage().props as {
+        auth?: { user?: { role?: string } };
+    };
+    const role = auth?.user?.role;
     const [isReady, setIsReady] = useState(false);
     const initialChildren = Math.max(0, filters.children ?? 0);
     const form = useForm({
@@ -161,16 +153,20 @@ export default function HotelShow({
     const [rooms, setRooms] = useState(filters.rooms ?? 1);
     const guestRef = useRef<HTMLDivElement | null>(null);
     const dateRef = useRef<HTMLDivElement | null>(null);
-    const initialStart = filters.check_in
-        ? new Date(filters.check_in)
-        : new Date();
-    const initialEnd = filters.check_out
-        ? new Date(filters.check_out)
-        : new Date(Date.now() + 86400000);
+    const [initialDates] = useState(() => {
+        const start = filters.check_in
+            ? new Date(filters.check_in)
+            : new Date();
+        const end = filters.check_out
+            ? new Date(filters.check_out)
+            : new Date(start.getTime() + 86400000);
+
+        return { start, end };
+    });
     const [range, setRange] = useState([
         {
-            startDate: initialStart,
-            endDate: initialEnd,
+            startDate: initialDates.start,
+            endDate: initialDates.end,
             key: 'selection',
         },
     ]);
@@ -259,7 +255,28 @@ export default function HotelShow({
 
     return (
         <PublicLayout categories={categories} chips={chips}>
-            <Head title={hotel.name}>
+            <PublicSeo
+                title={`${hotel.name} - Hotel di Indotix`}
+                description={hotel.description ?? hotel.address}
+                image={galleryImages[0]}
+                canonicalPath={`/stay/hotels/${hotel.slug ?? hotel.encrypted_id}`}
+                type="product"
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'Hotel',
+                    name: hotel.name,
+                    description: hotel.description,
+                    image: galleryImages,
+                    address: hotel.address,
+                    starRating: hotel.star_rating
+                        ? {
+                              '@type': 'Rating',
+                              ratingValue: hotel.star_rating,
+                          }
+                        : undefined,
+                }}
+            />
+            <Head>
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
                     rel="stylesheet"

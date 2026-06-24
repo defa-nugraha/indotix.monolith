@@ -1,2 +1,3 @@
 User-agent: *
 Disallow:
+Sitemap: https://indotix.co.id/sitemap.xml

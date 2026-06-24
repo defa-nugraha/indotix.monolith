@@ -10,6 +10,7 @@ import {
 import { useMemo } from 'react';
 import Swal from 'sweetalert2';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { PublicSeo } from '@/components/public-seo';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
@@ -45,9 +46,9 @@ export default function SpecialProgramShow({
     program: ProgramDetail;
 }) {
     const { auth } = usePage().props as {
-        auth?: { user?: any };
+        auth?: { user?: { role?: string } };
     };
-    const role = (auth?.user as any)?.role as string | undefined;
+    const role = auth?.user?.role;
     const hasVariants = program.variants.length > 0;
     const isTravel = program.category === 'travel';
     const inventoryDates = program.inventories ?? [];
@@ -119,7 +120,27 @@ export default function SpecialProgramShow({
 
     return (
         <PublicLayout categories={categories}>
-            <Head title={program.name}>
+            <PublicSeo
+                title={`${program.name} - Special Program Indotix`}
+                description={program.description}
+                image={program.image_url}
+                canonicalPath={`/special-programs/${program.slug ?? program.encrypted_id}`}
+                type="product"
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'Product',
+                    name: program.name,
+                    description: program.description,
+                    image: program.image_url,
+                    offers: {
+                        '@type': 'Offer',
+                        priceCurrency: 'IDR',
+                        price: program.base_price,
+                        availability: 'https://schema.org/InStock',
+                    },
+                }}
+            />
+            <Head>
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
                     rel="stylesheet"
@@ -133,6 +154,8 @@ export default function SpecialProgramShow({
                                 <img
                                     src={program.image_url}
                                     alt={program.name}
+                                    loading="eager"
+                                    decoding="async"
                                     className="h-full w-full object-cover"
                                 />
                             ) : (

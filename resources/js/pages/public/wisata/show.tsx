@@ -1,26 +1,20 @@
-import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import { FooterDownloadSocial } from '@/components/footer-download-social';
-import PublicLayout from '@/layouts/public-layout';
-import ReviewSection from '@/components/reviews/review-section';
+import { Link, router, useForm, usePage } from '@inertiajs/react';
 import {
-    Bell,
     CalendarCheck,
-    CalendarDays,
-    History,
     MapPinned,
-    MessageCircle,
     ParkingSquare,
     ShoppingBag,
-    ShoppingCart,
     Star,
     Ticket,
-    UserCircle,
     Utensils,
     Users,
     Wifi,
-    BadgePercent,
 } from 'lucide-react';
+import { useState } from 'react';
+import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { PublicSeo } from '@/components/public-seo';
+import ReviewSection from '@/components/reviews/review-section';
+import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type TicketItem = {
@@ -92,17 +86,8 @@ export default function WisataShow({
     userReview?: UserReview | null;
     canReview?: boolean;
 }) {
-    const {
-        auth,
-        unread_notifications,
-        souvenir_cart_count,
-        affiliate_menu,
-        affiliate_referral,
-    } = usePage().props as {
+    const { auth, affiliate_referral } = usePage().props as {
         auth?: { user?: { role?: string } };
-        unread_notifications?: number;
-        souvenir_cart_count?: number;
-        affiliate_menu?: boolean;
         affiliate_referral?: {
             code: string;
             destination_name?: string | null;
@@ -181,7 +166,21 @@ export default function WisataShow({
 
     return (
         <PublicLayout categories={categories} chips={chips}>
-            <Head title={`${destination.destination_name} - INDOTIX`} />
+            <PublicSeo
+                title={`${destination.destination_name} - Wisata Indotix`}
+                description={destination.description ?? destination.highlights}
+                image={mainPhoto}
+                canonicalPath={`/wisata/${destination.slug ?? destination.encrypted_id}`}
+                type="product"
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'TouristAttraction',
+                    name: destination.destination_name,
+                    description: destination.description,
+                    image: galleryPhotos,
+                    address: destination.address_full,
+                }}
+            />
 
             <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 <section className="mb-6 rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm">

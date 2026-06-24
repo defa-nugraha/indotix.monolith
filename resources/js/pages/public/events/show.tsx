@@ -1,25 +1,19 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import {
     CalendarCheck,
     MapPinned,
     ShoppingBag,
     Star,
     Ticket,
-    Bell,
-    MessageCircle,
-    History as HistoryIcon,
-    UserCircle,
     MapPin,
-    Clock,
     Users,
-    ShoppingCart,
-    BadgePercent,
 } from 'lucide-react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
-import PublicLayout from '@/layouts/public-layout';
+import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
+import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
 type EventDetail = {
@@ -79,21 +73,18 @@ export default function EventShow({
     userReview?: UserReview | null;
     canReview?: boolean;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } =
-        usePage().props as {
-            auth?: { user?: any };
-            unread_notifications?: number;
-            souvenir_cart_count?: number;
-            affiliate_menu?: boolean;
-        };
-    const role = (auth?.user as any)?.role as string | undefined;
+    const { auth } = usePage().props as {
+        auth?: { user?: { role?: string } };
+    };
+    const role = auth?.user?.role;
+    const [renderedAt] = useState(() => Date.now());
     const [selectedTicket, setSelectedTicket] = useState<string>(
         tickets[0]?.id?.toString() ?? '',
     );
     const parseDateTime = (value?: string | null) =>
         value ? new Date(value.replace(' ', 'T')) : null;
     const scheduleEnd = parseDateTime(event.end_at ?? event.start_at);
-    const isEnded = scheduleEnd ? scheduleEnd.getTime() < Date.now() : false;
+    const isEnded = scheduleEnd ? scheduleEnd.getTime() < renderedAt : false;
     const formatRupiah = (value: number) =>
         new Intl.NumberFormat('id-ID', {
             style: 'currency',
@@ -136,7 +127,31 @@ export default function EventShow({
 
     return (
         <PublicLayout categories={categories}>
-            <Head title={event.title}>
+            <PublicSeo
+                title={`${event.title} - Event Indotix`}
+                description={event.description}
+                image={event.image_url}
+                canonicalPath={`/events/${event.slug ?? event.encrypted_id}`}
+                type="event"
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'Event',
+                    name: event.title,
+                    description: event.description,
+                    image: event.image_url ? [event.image_url] : undefined,
+                    startDate: event.start_at,
+                    endDate: event.end_at,
+                    eventAttendanceMode:
+                        'https://schema.org/OfflineEventAttendanceMode',
+                    eventStatus: 'https://schema.org/EventScheduled',
+                    location: {
+                        '@type': 'Place',
+                        name: event.location ?? event.city_name,
+                        address: event.address,
+                    },
+                }}
+            />
+            <Head>
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
                     rel="stylesheet"
@@ -147,8 +162,13 @@ export default function EventShow({
                     <section className="rounded-3xl bg-white p-6 shadow-sm">
                         <div className="h-56 overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500">
                             <img
-                                src={event.image_url ?? '/images/placeholder-card.jpg'}
+                                src={
+                                    event.image_url ??
+                                    '/images/placeholder-card.jpg'
+                                }
                                 alt={event.title}
+                                loading="eager"
+                                decoding="async"
                                 className="h-full w-full object-cover"
                             />
                         </div>
@@ -243,7 +263,9 @@ export default function EventShow({
                                                 ),
                                             )
                                         }
-                                        disabled={tickets.length === 0 || isEnded}
+                                        disabled={
+                                            tickets.length === 0 || isEnded
+                                        }
                                     >
                                         −
                                     </button>
@@ -259,7 +281,9 @@ export default function EventShow({
                                                 Number(event.target.value),
                                             )
                                         }
-                                        disabled={tickets.length === 0 || isEnded}
+                                        disabled={
+                                            tickets.length === 0 || isEnded
+                                        }
                                     />
                                     <button
                                         type="button"
@@ -273,7 +297,9 @@ export default function EventShow({
                                                 ),
                                             )
                                         }
-                                        disabled={tickets.length === 0 || isEnded}
+                                        disabled={
+                                            tickets.length === 0 || isEnded
+                                        }
                                     >
                                         +
                                     </button>

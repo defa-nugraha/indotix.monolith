@@ -2,15 +2,15 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
-use Inertia\Middleware;
-use App\Models\UserNotification;
+use App\Models\MitraWisataOnboarding;
 use App\Models\SystemSetting;
+use App\Models\UserNotification;
 use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateLink;
-use App\Models\MitraWisataOnboarding;
 use App\Services\MaintenanceMode;
 use App\Support\AdminPermissionRegistry;
+use Illuminate\Http\Request;
+use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -91,6 +91,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'app_url' => config('app.url'),
             'auth' => [
                 'user' => $user ? [
                     ...$user->toArray(),
