@@ -41,58 +41,9 @@ class ProfileController extends Controller
             ]);
         }
 
-        $provinces = DB::table('provinces')
-            ->orderBy('name')
-            ->get(['code', 'name'])
-            ->map(fn ($item) => ['value' => $item->code, 'label' => $item->name])
-            ->all();
-
-        $cities = DB::table('regencies')
-            ->join('provinces', 'regencies.province_code', '=', 'provinces.code')
-            ->orderBy('regencies.name')
-            ->get([
-                'regencies.code as code',
-                'regencies.name as name',
-                'regencies.province_code as province_code',
-            ])
-            ->map(fn ($item) => [
-                'value' => $item->code,
-                'label' => $item->name,
-                'province_code' => $item->province_code,
-            ])
-            ->all();
-
-        $districts = DB::table('districts')
-            ->join('regencies', 'districts.regency_code', '=', 'regencies.code')
-            ->join('provinces', 'regencies.province_code', '=', 'provinces.code')
-            ->orderBy('districts.name')
-            ->get([
-                'districts.code as code',
-                'districts.name as name',
-                'districts.regency_code as city_code',
-                'regencies.province_code as province_code',
-            ])
-            ->map(fn ($item) => [
-                'value' => $item->code,
-                'label' => $item->name,
-                'city_code' => $item->city_code,
-                'province_code' => $item->province_code,
-            ])
-            ->all();
-
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
-            'provinces' => $provinces,
-            'cities' => $cities,
-            'districts' => $districts,
-            'addresses' => $request->user()
-                ? $request->user()
-                    ->addresses()
-                    ->orderByDesc('is_default')
-                    ->orderByDesc('updated_at')
-                    ->get()
-                : [],
         ]);
     }
 

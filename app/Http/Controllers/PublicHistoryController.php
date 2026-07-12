@@ -266,12 +266,13 @@ class PublicHistoryController extends Controller
                 ];
             });
 
-        $bookings = $hotelBookings
-            ->merge($wisataBookings)
-            ->merge($eventBookings)
-            ->merge($specialProgramBookings)
-            ->merge($souvenirOrders)
-            ->merge($academyBookings)
+        $bookings = collect()
+            ->concat($hotelBookings)
+            ->concat($wisataBookings)
+            ->concat($eventBookings)
+            ->concat($specialProgramBookings)
+            ->concat($souvenirOrders)
+            ->concat($academyBookings)
             ->sortByDesc('created_at')
             ->values();
 

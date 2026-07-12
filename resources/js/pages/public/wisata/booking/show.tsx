@@ -3,21 +3,15 @@ import { useState } from 'react';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 import {
-    Bell,
     CalendarCheck,
     CheckCircle,
     Clock,
     CreditCard,
-    History as HistoryIcon,
     Loader2,
     Mail,
     MapPin,
     MapPinned,
-    MessageCircle,
     Phone,
-    ShoppingBag,
-    ShoppingCart,
-    Star,
     Ticket,
     UserCircle,
     Users,
@@ -49,10 +43,6 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop' },
-        { label: 'Spesial Program', icon: Star, href: '/special-programs' },
-        { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
     const chips = ['Alam', 'Budaya', 'Edukasi', 'Kuliner', 'Desa Wisata', 'Religi', 'Pantai', 'Gunung', 'Taman Nasional', 'Air Terjun', 'Danau'];
@@ -88,17 +78,53 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
     };
 
     return (
-        <PublicLayout categories={categories} chips={chips}>
+        <PublicLayout
+            categories={categories}
+            chips={chips}
+            showCategories={false}
+            showChips={false}
+        >
             <Head title="Detail Booking Wisata">
                 <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
             </Head>
-                        <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
-                <div className="grid gap-6 lg:grid-cols-[1.25fr_0.9fr]">
+            <main className="mx-auto w-full max-w-7xl px-4 py-10 md:px-8">
+                <div className="mx-auto mb-8 w-full max-w-3xl">
+                    <div className="relative z-0 flex items-center justify-between">
+                        <div className="absolute right-0 left-0 top-1/2 z-0 h-1 -translate-y-1/2 bg-slate-200" />
+                        <div className="absolute left-0 top-1/2 z-0 h-1 w-full -translate-y-1/2 bg-sky-600" />
+                        {[
+                            ['✓', 'Detail'],
+                            ['✓', 'Pembayaran'],
+                            ['3', 'Selesai'],
+                        ].map(([number, label], index) => (
+                            <div
+                                key={label}
+                                className={`relative z-10 flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-bold shadow-sm ${
+                                    index === 2
+                                        ? 'border-emerald-200 text-emerald-700 ring-2 ring-emerald-100'
+                                        : 'border-slate-200 text-slate-500'
+                                }`}
+                            >
+                                <span
+                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+                                        index < 2
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'bg-sky-600 text-white'
+                                    }`}
+                                >
+                                    {number}
+                                </span>
+                                {label}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                <div className="grid gap-8 lg:grid-cols-[1.25fr_0.9fr]">
                     <div className="space-y-6">
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_24px_70px_-36px_rgba(15,23,42,0.34)]">
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
-                                    <h1 className="text-2xl font-semibold text-slate-900">Detail Booking Wisata</h1>
+                                    <h1 className="font-['Space_Grotesk'] text-2xl font-black text-slate-950">Detail Booking Wisata</h1>
                                     <p className="mt-2 text-sm text-slate-500">Cek informasi tiket dan status pembayaran kamu.</p>
                                 </div>
                                 <span className={`rounded-full px-4 py-2 text-xs font-semibold ${statusBadge(booking.status)}`}>
@@ -126,7 +152,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                             <div className="mt-4 text-lg font-semibold text-sky-600">Rp {booking.total.toLocaleString('id-ID')}</div>
                         </div>
 
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-slate-900">Detail Tiket</h2>
                             <div className="mt-4 grid gap-3">
                                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm">
@@ -142,7 +168,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                             </div>
                         </div>
 
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-slate-900">Data Tamu</h2>
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
@@ -162,7 +188,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                     </div>
 
                     <aside className="space-y-6">
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_24px_70px_-36px_rgba(15,23,42,0.34)]">
                             <div className="flex items-center gap-2 rounded-xl bg-sky-50 px-3 py-2 text-sm font-semibold text-sky-700">
                                 <CheckCircle className="h-4 w-4" />
                                 Booking kamu tercatat aman di INDOTIX

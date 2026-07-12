@@ -1,5 +1,5 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { ShoppingCart } from 'lucide-react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { AlertCircle, Clock, CreditCard, RefreshCw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
@@ -94,63 +94,138 @@ export default function WisataBookingPayment({
                     rel="stylesheet"
                 />
             </Head>
-                        <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8">
-                <section className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-                    <div className="rounded-3xl bg-white p-6 shadow-sm">
-                        <h1 className="text-xl font-semibold text-slate-900">Booking kamu sudah siap, lanjutkan pembayaran</h1>
-                        <p className="mt-2 text-sm text-slate-500">Selesaikan pembayaran sebelum batas waktu.</p>
-                        {remaining && (
-                            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-700">
-                                Batas bayar: {remaining}
-                            </div>
-                        )}
-
-                        <div className="mt-6">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (guardPurchaseByRole(role)) {
-                                        return;
-                                    }
-                                    if (snapToken && window.snap) {
-                                        window.snap.pay(snapToken);
-                                        return;
-                                    }
-                                    form.post(`/wisata/booking/${booking.encrypted_id}/payment`, {
-                                        onError: (errors) =>
-                                            Swal.fire({ icon: 'error', title: 'Gagal', text: errors.payment ?? 'Tidak dapat memproses pembayaran.' }),
-                                    });
-                                }}
-                                className="mt-6 w-full rounded-full bg-sky-600 px-6 py-2 text-sm font-semibold text-white"
-                                disabled={form.processing}
+            <main className="mx-auto w-full max-w-7xl px-4 py-8 font-sans text-slate-800 sm:px-6 lg:px-8">
+                <div className="mx-auto w-full max-w-3xl">
+                    <div className="relative z-0 flex items-center justify-between">
+                        <div className="absolute right-0 left-0 top-1/2 z-0 h-1 -translate-y-1/2 bg-slate-200" />
+                        <div className="absolute left-0 top-1/2 z-0 h-1 w-3/4 -translate-y-1/2 bg-sky-600" />
+                        {[
+                            ['✓', 'Detail'],
+                            ['2', 'Pembayaran'],
+                            ['3', 'Selesai'],
+                        ].map(([number, label], index) => (
+                            <div
+                                key={label}
+                                className={`relative z-10 flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-bold shadow-sm ${
+                                    index === 1
+                                        ? 'border-sky-200 text-sky-600 ring-2 ring-sky-100'
+                                        : index === 0
+                                          ? 'border-slate-200 text-slate-500'
+                                          : 'border-slate-200 text-slate-400'
+                                }`}
                             >
-                                {form.processing ? 'Memproses...' : snapToken ? 'Buka Pembayaran' : 'Lanjutkan Pembayaran'}
-                            </button>
+                                <span
+                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+                                        index === 0
+                                            ? 'bg-emerald-600 text-white'
+                                            : index === 1
+                                              ? 'bg-sky-600 text-white'
+                                              : 'bg-slate-200 text-slate-500'
+                                    }`}
+                                >
+                                    {number}
+                                </span>
+                                {label}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <section className="mx-auto mt-10 max-w-xl space-y-6 rounded-3xl border border-slate-150 bg-white p-6 text-center shadow-lg sm:p-10">
+                    <div className="flex flex-col items-center">
+                        <div className="mb-3 flex h-14 w-14 animate-pulse items-center justify-center rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-500">
+                            <Clock className="h-7 w-7" />
+                        </div>
+                        <span className="block text-sm font-bold tracking-widest text-slate-500 uppercase">
+                            Menunggu Pembayaran
+                        </span>
+                        <span
+                            className="mt-1.5 font-mono text-4xl font-black tracking-tight text-slate-800 sm:text-5xl"
+                            id="countdown-clock"
+                        >
+                            {remaining ?? '00:00'}
+                        </span>
+                    </div>
+
+                    <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left sm:p-6">
+                        <div className="border-b border-slate-200/60 pb-3">
+                            <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                Kode Booking
+                            </span>
+                            <span className="mt-0.5 block font-mono text-base font-black tracking-tight text-slate-800 sm:text-lg">
+                                {booking.booking_code}
+                            </span>
+                        </div>
+
+                        <div className="border-b border-slate-200/60 pb-3">
+                            <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                                Total yang harus dibayar
+                            </span>
+                            <span className="mt-0.5 block text-lg font-black tracking-tight text-blue-600 sm:text-xl">
+                                Rp {booking.total.toLocaleString('id-ID')}
+                            </span>
+                        </div>
+
+                        <div className="space-y-2 text-xs text-slate-600">
+                            <h5 className="flex items-center gap-1.5 text-[10px] font-extrabold tracking-wider text-slate-800 uppercase">
+                                <CreditCard className="h-3.5 w-3.5 text-blue-500" />
+                                Cara membayar:
+                            </h5>
+                            <ol className="list-decimal space-y-1 pl-4 leading-relaxed font-medium">
+                                <li>Buka popup pembayaran Midtrans.</li>
+                                <li>Pilih metode pembayaran yang tersedia.</li>
+                                <li>Ikuti instruksi sesuai metode pembayaran.</li>
+                                <li>Pastikan nominal sesuai total transaksi.</li>
+                            </ol>
                         </div>
                     </div>
 
-                    <aside className="rounded-3xl bg-white p-6 shadow-sm">
-                        <h2 className="text-lg font-semibold text-slate-900">{booking.destination.name}</h2>
-                        <p className="text-sm text-slate-500">{booking.destination.address}</p>
-                        <div className="mt-4 space-y-2 text-sm text-slate-600">
-                            <div className="flex justify-between">
-                                <span>Tiket</span>
-                                <span className="font-semibold">{booking.ticket.name}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Tanggal</span>
-                                <span className="font-semibold">{booking.visit_date}</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span>Jumlah</span>
-                                <span className="font-semibold">{booking.quantity} tiket</span>
-                            </div>
-                            <div className="flex justify-between text-base font-semibold text-sky-600">
-                                <span>Total</span>
-                                <span>Rp {booking.total.toLocaleString('id-ID')}</span>
-                            </div>
-                        </div>
-                    </aside>
+                    <div className="space-y-3 pt-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                if (guardPurchaseByRole(role)) {
+                                    return;
+                                }
+                                if (snapToken && window.snap) {
+                                    window.snap.pay(snapToken);
+                                    return;
+                                }
+                                form.post(`/wisata/booking/${booking.encrypted_id}/payment`, {
+                                    onError: (errors) =>
+                                        Swal.fire({ icon: 'error', title: 'Gagal', text: errors.payment ?? 'Tidak dapat memproses pembayaran.' }),
+                                });
+                            }}
+                            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 text-xs font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50"
+                            disabled={form.processing}
+                        >
+                            {form.processing ? (
+                                <>
+                                    <RefreshCw className="h-4 w-4 animate-spin" />
+                                    Memproses...
+                                </>
+                            ) : snapToken ? (
+                                <>
+                                    <CreditCard className="h-4 w-4" />
+                                    Buka Pembayaran
+                                </>
+                            ) : (
+                                <>
+                                    <CreditCard className="h-4 w-4" />
+                                    Lanjutkan Pembayaran
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    <div className="flex items-start gap-2.5 rounded-xl border border-amber-100 bg-amber-50 p-3 text-left text-[10px] font-medium text-amber-800">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                        <p>
+                            Selesaikan pembayaran sebelum batas waktu agar
+                            booking tidak dibatalkan otomatis. Konfirmasi tiket
+                            akan dikirim setelah pembayaran berhasil.
+                        </p>
+                    </div>
                 </section>
             </main>
         </PublicLayout>
