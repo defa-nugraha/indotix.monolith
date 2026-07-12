@@ -76,7 +76,7 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                                 Tambah, ubah, dan atur urutan banner.
                             </p>
                             <p className="text-xs text-slate-500">
-                                Ukuran rekomendasi banner: 1200 × 450 px (rasio 8:3).
+                                Ukuran banner: 1200 × 450 px.
                             </p>
                         </div>
                         <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">

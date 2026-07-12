@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
+use App\Models\PublicContact;
+use App\Support\HomePageContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -21,7 +23,8 @@ class PublicBlogController extends Controller
             })
             ->orderByDesc('published_at')
             ->orderByDesc('id')
-            ->paginate(\App\Support\PaginationOptions::perPage())
+            ->paginate(10)
+            ->withQueryString()
             ->through(function (BlogPost $post) {
                 return [
                     'id' => $post->id,
@@ -34,11 +37,16 @@ class PublicBlogController extends Controller
                     'published_at' => $post->published_at?->toDateString(),
                     'author' => $post->author?->name,
                     'tags' => $post->tags->pluck('name'),
+                    'meta_title' => $post->meta_title,
+                    'meta_description' => $post->meta_description,
+                    'meta_keywords' => $post->meta_keywords,
                 ];
             });
 
         return Inertia::render('public/blog/index', [
             'posts' => $posts,
+            'homeContent' => HomePageContent::publicPayload(),
+            'contact' => PublicContact::query()->first(),
         ]);
     }
 
@@ -131,6 +139,9 @@ class PublicBlogController extends Controller
                 'published_at' => $post->published_at?->toDateString(),
                 'author' => $post->author?->name,
                 'tags' => $post->tags->pluck('name'),
+                'meta_title' => $post->meta_title,
+                'meta_description' => $post->meta_description,
+                'meta_keywords' => $post->meta_keywords,
             ],
             'prevPost' => $prevPost ? [
                 'id' => $prevPost->id,

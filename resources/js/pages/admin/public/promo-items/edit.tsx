@@ -20,17 +20,54 @@ const maxImageSizeLabel = '5 MB';
 type PromoItem = {
     id: number;
     title: string | null;
+    slug: string | null;
+    category: string | null;
+    excerpt: string | null;
+    description: string | null;
+    terms: string | null;
     link_url: string | null;
     sort_order: number;
+    starts_at: string | null;
+    ends_at: string | null;
     is_active: boolean;
     image_path: string;
 };
 
-export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
+type HomepageSlot = {
+    value: number;
+    label: string;
+    used: boolean;
+    used_by?: string | null;
+};
+
+export default function PromoItemEdit({
+    promoItem,
+    homepageSlots = [],
+    categoryOptions = {},
+}: {
+    promoItem: PromoItem;
+    homepageSlots?: HomepageSlot[];
+    categoryOptions?: Record<string, string>;
+}) {
+    const slots = homepageSlots.length > 0
+        ? homepageSlots
+        : [1, 2, 3].map((value) => ({
+              value,
+              label: `Slot ${value}`,
+              used: false,
+              used_by: null,
+          }));
     const form = useForm({
         title: promoItem.title ?? '',
+        slug: promoItem.slug ?? '',
+        category: promoItem.category ?? Object.keys(categoryOptions)[0] ?? 'wisata',
+        excerpt: promoItem.excerpt ?? '',
+        description: promoItem.description ?? '',
+        terms: promoItem.terms ?? '',
         link_url: promoItem.link_url ?? '',
         sort_order: promoItem.sort_order ?? 0,
+        starts_at: promoItem.starts_at ?? '',
+        ends_at: promoItem.ends_at ?? '',
         is_active: promoItem.is_active ?? true,
         image: null as File | null,
         _method: 'put',
@@ -84,19 +121,123 @@ export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
                         }}
                     >
                         <div className="grid gap-2">
-                            <Label>Judul</Label>
+                            <Label>Judul promo</Label>
                             <Input value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
                             <InputError message={form.errors.title} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Link</Label>
-                            <Input value={form.data.link_url} onChange={(event) => form.setData('link_url', event.target.value)} />
-                            <InputError message={form.errors.link_url} />
+                            <Label>Slug URL</Label>
+                            <Input value={form.data.slug} onChange={(event) => form.setData('slug', event.target.value)} />
+                            <InputError message={form.errors.slug} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Urutan</Label>
-                            <Input type="number" value={form.data.sort_order} onChange={(event) => form.setData('sort_order', Number(event.target.value))} />
-                            <InputError message={form.errors.sort_order} />
+                            <Label>Kategori promo</Label>
+                            <select
+                                value={form.data.category}
+                                onChange={(event) => form.setData('category', event.target.value)}
+                                className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-sky-400 focus:outline-none"
+                            >
+                                {Object.entries(categoryOptions).map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                        {label}
+                                    </option>
+                                ))}
+                            </select>
+                            <InputError message={form.errors.category} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Ringkasan promo</Label>
+                            <Input value={form.data.excerpt} onChange={(event) => form.setData('excerpt', event.target.value)} />
+                            <InputError message={form.errors.excerpt} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Deskripsi promo</Label>
+                            <textarea
+                                value={form.data.description}
+                                onChange={(event) => form.setData('description', event.target.value)}
+                                rows={5}
+                                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-sky-400 focus:outline-none"
+                            />
+                            <InputError message={form.errors.description} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Syarat dan ketentuan</Label>
+                            <textarea
+                                value={form.data.terms}
+                                onChange={(event) => form.setData('terms', event.target.value)}
+                                rows={4}
+                                placeholder="Pisahkan setiap poin dengan baris baru"
+                                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-sky-400 focus:outline-none"
+                            />
+                            <InputError message={form.errors.terms} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Link CTA detail promo</Label>
+                            <Input value={form.data.link_url} onChange={(event) => form.setData('link_url', event.target.value)} />
+                            <p className="text-xs text-slate-500">Opsional. Jika kosong, tombol detail promo akan mengarah ke halaman wisata.</p>
+                            <InputError message={form.errors.link_url} />
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-3">
+                            <div className="grid gap-2">
+                                <Label>Slot homepage</Label>
+                                <div className="grid gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                                    {slots.map((slot) => (
+                                        <label
+                                            key={slot.value}
+                                            className={`flex items-start gap-2 rounded-lg border bg-white p-3 text-sm ${
+                                                slot.used ? 'border-slate-200 text-slate-400' : 'border-sky-100 text-slate-700'
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                                checked={form.data.sort_order === slot.value}
+                                                disabled={slot.used}
+                                                onChange={(event) =>
+                                                    form.setData('sort_order', event.target.checked ? slot.value : 0)
+                                                }
+                                            />
+                                            <span className="grid gap-0.5">
+                                                <span className="font-semibold">{slot.label}</span>
+                                                {slot.used && (
+                                                    <span className="text-xs text-amber-600">
+                                                        Terisi oleh {slot.used_by ?? 'promo lain'}
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </label>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        className="w-fit text-xs font-semibold text-sky-700 hover:text-sky-800"
+                                        onClick={() => form.setData('sort_order', 0)}
+                                    >
+                                        Tidak tampilkan di homepage
+                                    </button>
+                                </div>
+                                <p className="text-xs text-slate-500">
+                                    Pilih satu slot homepage. Jika semua slot terisi, matikan salah satu promo yang aktif terlebih dahulu.
+                                </p>
+                                <InputError message={form.errors.sort_order} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Tanggal mulai</Label>
+                                <Input
+                                    type="date"
+                                    value={form.data.starts_at}
+                                    onChange={(event) => form.setData('starts_at', event.target.value)}
+                                />
+                                <InputError message={form.errors.starts_at} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Tanggal berakhir</Label>
+                                <Input
+                                    type="date"
+                                    value={form.data.ends_at}
+                                    onChange={(event) => form.setData('ends_at', event.target.value)}
+                                />
+                                <InputError message={form.errors.ends_at} />
+                            </div>
                         </div>
                         <div className="grid gap-2">
                             <Label>Gambar saat ini</Label>
@@ -114,7 +255,7 @@ export default function PromoItemEdit({ promoItem }: { promoItem: PromoItem }) {
                                 onChange={(event) => handleImageChange(event.target.files?.[0] ?? null, event.currentTarget)}
                             />
                             <p className="text-xs text-slate-500">
-                                Ukuran rekomendasi: Urutan 1-2 → 600 × 800 px (rasio 3:4), Urutan 3 → 1200 × 400 px (rasio 3:1). Maksimal{' '}
+                                Ukuran rekomendasi: slot homepage 1-2 → 600 × 800 px (rasio 3:4), slot 0 atau 3 → 1200 × 400 px (rasio 3:1). Maksimal{' '}
                                 {maxImageSizeLabel}.
                             </p>
                             <InputError message={form.errors.image} />

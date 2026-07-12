@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\AboutPage;
+use App\Models\PublicContact;
+use App\Support\HomePageContent;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,6 +19,8 @@ class PublicAboutController extends Controller
 
         return Inertia::render('public/about', [
             'about' => $about,
+            'homeContent' => HomePageContent::publicPayload(),
+            'contact' => PublicContact::query()->first(),
         ]);
     }
 }

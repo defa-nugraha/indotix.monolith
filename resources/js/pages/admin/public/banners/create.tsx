@@ -34,7 +34,9 @@ export default function BannerCreate() {
 
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h1 className="text-2xl font-semibold text-slate-900">Tambah Banner</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900">
+                        Tambah Banner
+                    </h1>
                     <form
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
@@ -60,7 +62,9 @@ export default function BannerCreate() {
                             <Label>Judul</Label>
                             <Input
                                 value={form.data.title}
-                                onChange={(event) => form.setData('title', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('title', event.target.value)
+                                }
                             />
                             <InputError message={form.errors.title} />
                         </div>
@@ -68,7 +72,9 @@ export default function BannerCreate() {
                             <Label>Link</Label>
                             <Input
                                 value={form.data.link_url}
-                                onChange={(event) => form.setData('link_url', event.target.value)}
+                                onChange={(event) =>
+                                    form.setData('link_url', event.target.value)
+                                }
                             />
                             <InputError message={form.errors.link_url} />
                         </div>
@@ -78,7 +84,10 @@ export default function BannerCreate() {
                                 type="number"
                                 value={form.data.sort_order}
                                 onChange={(event) =>
-                                    form.setData('sort_order', Number(event.target.value))
+                                    form.setData(
+                                        'sort_order',
+                                        Number(event.target.value),
+                                    )
                                 }
                             />
                             <InputError message={form.errors.sort_order} />
@@ -87,12 +96,19 @@ export default function BannerCreate() {
                             <Label>Banner (gambar)</Label>
                             <Input
                                 type="file"
-                                accept="image/*"
+                                accept="image/jpeg,image/png,image/webp"
+                                disabled={form.processing}
                                 onChange={(event) =>
-                                    form.setData('image', event.target.files?.[0] ?? null)
+                                    form.setData(
+                                        'image',
+                                        event.target.files?.[0] ?? null,
+                                    )
                                 }
                             />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 1200 × 450 px (rasio 8:3).</p>
+                            <p className="text-xs text-slate-500">
+                                Gunakan JPG, PNG, atau WebP berukuran tepat 1200
+                                × 450 px, maksimal 5 MB.
+                            </p>
                             <InputError message={form.errors.image} />
                         </div>
                         <div className="flex gap-2">
@@ -101,13 +117,23 @@ export default function BannerCreate() {
                                     type="checkbox"
                                     checked={form.data.is_active}
                                     onChange={(event) =>
-                                        form.setData('is_active', event.target.checked)
+                                        form.setData(
+                                            'is_active',
+                                            event.target.checked,
+                                        )
                                     }
                                 />
                                 Aktif
                             </label>
                         </div>
-                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                        <p className="text-xs text-slate-500">
+                            Hanya satu banner yang bisa aktif. Jika banner ini diaktifkan, banner aktif lain akan otomatis dinonaktifkan.
+                        </p>
+                        <Button
+                            type="submit"
+                            disabled={form.processing}
+                            className="bg-sky-600 text-white hover:bg-sky-700"
+                        >
                             Simpan
                         </Button>
                     </form>

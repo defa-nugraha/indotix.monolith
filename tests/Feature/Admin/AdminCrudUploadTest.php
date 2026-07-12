@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\PublicBanner;
+use App\Models\PromoItem;
 use App\Models\SouvenirCategory;
 use App\Models\SouvenirProduct;
 use App\Models\User;
@@ -38,7 +39,8 @@ test('public banner crud stores replaces and deletes image file', function () {
     Storage::disk('public')->assertExists($firstPath);
 
     $this->actingAs($admin)
-        ->put("/admin/public/banners/{$banner->id}", [
+        ->post("/admin/public/banners/{$banner->id}", [
+            '_method' => 'put',
             'title' => 'Banner Updated',
             'sort_order' => 2,
             'is_active' => false,
@@ -62,6 +64,133 @@ test('public banner crud stores replaces and deletes image file', function () {
 
     expect(PublicBanner::query()->whereKey($banner->id)->exists())->toBeFalse();
     Storage::disk('public')->assertMissing($lastPath);
+});
+
+test('invalid banner replacement keeps the current image', function () {
+    Storage::fake('public');
+    $admin = superAdminForUploadTest();
+    $oldPath = UploadedFile::fake()->image('existing.jpg', 1200, 450)
+        ->store('public-banners', 'public');
+    $banner = PublicBanner::query()->create([
+        'title' => 'Banner Existing',
+        'sort_order' => 1,
+        'is_active' => true,
+        'image_path' => $oldPath,
+    ]);
+
+    $this->actingAs($admin)
+        ->post("/admin/public/banners/{$banner->id}", [
+            '_method' => 'put',
+            'title' => 'Tidak boleh tersimpan',
+            'sort_order' => 2,
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('invalid-size.jpg', 800, 600),
+        ])
+        ->assertSessionHasErrors('image');
+
+    expect($banner->fresh()->title)->toBe('Banner Existing')
+        ->and($banner->fresh()->image_path)->toBe($oldPath);
+    Storage::disk('public')->assertExists($oldPath);
+});
+
+test('only one public banner can be active at a time', function () {
+    Storage::fake('public');
+    $admin = superAdminForUploadTest();
+
+    $this->actingAs($admin)
+        ->post('/admin/public/banners', [
+            'title' => 'Banner Pertama',
+            'sort_order' => 1,
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('banner-1.jpg', 1200, 450),
+        ])
+        ->assertRedirect('/admin/public/banners')
+        ->assertSessionHasNoErrors();
+
+    $firstBanner = PublicBanner::query()->firstOrFail();
+
+    $this->actingAs($admin)
+        ->post('/admin/public/banners', [
+            'title' => 'Banner Kedua',
+            'sort_order' => 2,
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('banner-2.jpg', 1200, 450),
+        ])
+        ->assertRedirect('/admin/public/banners')
+        ->assertSessionHasNoErrors();
+
+    $secondBanner = PublicBanner::query()->where('title', 'Banner Kedua')->firstOrFail();
+
+    expect(PublicBanner::query()->where('is_active', true)->count())->toBe(1)
+        ->and($firstBanner->fresh()->is_active)->toBeFalse()
+        ->and($secondBanner->fresh()->is_active)->toBeTrue();
+
+    $this->actingAs($admin)
+        ->post("/admin/public/banners/{$firstBanner->id}", [
+            '_method' => 'put',
+            'title' => 'Banner Pertama Aktif',
+            'sort_order' => 1,
+            'is_active' => true,
+        ])
+        ->assertRedirect('/admin/public/banners')
+        ->assertSessionHasNoErrors();
+
+    expect(PublicBanner::query()->where('is_active', true)->count())->toBe(1)
+        ->and($firstBanner->fresh()->is_active)->toBeTrue()
+        ->and($secondBanner->fresh()->is_active)->toBeFalse();
+});
+
+test('promo homepage slots cannot be reused', function () {
+    Storage::fake('public');
+    $admin = superAdminForUploadTest();
+
+    PromoItem::query()->create([
+        'title' => 'Promo Slot Satu',
+        'slug' => 'promo-slot-satu',
+        'category' => 'wisata',
+        'excerpt' => 'Promo aktif',
+        'description' => 'Promo untuk homepage.',
+        'terms' => 'Syarat berlaku.',
+        'image_path' => 'promo-items/existing.jpg',
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($admin)
+        ->post('/admin/public/promo-items', [
+            'title' => 'Promo Bentrok',
+            'slug' => 'promo-bentrok',
+            'category' => 'wisata',
+            'sort_order' => 1,
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('promo-conflict.jpg', 600, 800),
+        ])
+        ->assertSessionHasErrors('sort_order');
+
+    $this->actingAs($admin)
+        ->post('/admin/public/promo-items', [
+            'title' => 'Promo Slot Dua',
+            'slug' => 'promo-slot-dua',
+            'category' => 'wisata',
+            'sort_order' => 2,
+            'is_active' => true,
+            'image' => UploadedFile::fake()->image('promo-slot-dua.jpg', 600, 800),
+        ])
+        ->assertRedirect('/admin/public/promo-items')
+        ->assertSessionHasNoErrors();
+
+    $secondPromo = PromoItem::query()->where('slug', 'promo-slot-dua')->firstOrFail();
+
+    $this->actingAs($admin)
+        ->post("/admin/public/promo-items/{$secondPromo->id}", [
+            '_method' => 'put',
+            'title' => 'Promo Slot Dua',
+            'slug' => 'promo-slot-dua',
+            'category' => 'wisata',
+            'sort_order' => 1,
+            'is_active' => true,
+        ])
+        ->assertSessionHasErrors('sort_order');
 });
 
 test('retail product crud stores and removes image files', function () {

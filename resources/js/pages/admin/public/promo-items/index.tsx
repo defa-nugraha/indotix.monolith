@@ -14,14 +14,22 @@ const breadcrumbs: BreadcrumbItem[] = [
 type PromoItem = {
     id: number;
     title: string | null;
+    slug: string | null;
+    category: string | null;
+    category_label: string | null;
+    excerpt: string | null;
     image_path: string;
     link_url: string | null;
     sort_order: number;
+    starts_at: string | null;
+    ends_at: string | null;
     is_active: boolean;
 };
 
 export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
-    const reachedMax = items.filter((item) => item.is_active).length >= 3;
+    const homepageSlotsFull =
+        items.filter((item) => item.sort_order >= 1 && item.sort_order <= 3)
+            .length >= 3;
     const handleDelete = async (id: number) => {
         const result = await Swal.fire({
             title: 'Hapus promo?',
@@ -63,21 +71,20 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                                 Kelola promo terkini
                             </h1>
                             <p className="text-sm text-slate-600">
-                                Tambahkan promo yang tampil di halaman publik. Maksimal 3 promo.
+                                Tambahkan promo yang tampil di halaman promo publik. Slot homepage 1-3 digunakan untuk section promo di beranda.
                             </p>
                             <p className="text-xs text-slate-500">
-                                Ukuran rekomendasi: Urutan 1-2 → 600 × 800 px (rasio 3:4), Urutan 3 → 1200 × 400 px (rasio 3:1).
+                                Ukuran rekomendasi: slot homepage 1-2 → 600 × 800 px, slot 0 atau 3 → 1200 × 400 px.
                             </p>
+                            {homepageSlotsFull && (
+                                <p className="text-xs font-semibold text-amber-600">
+                                    Semua slot homepage sudah terpakai. Promo baru tetap bisa aktif dengan slot 0.
+                                </p>
+                            )}
                         </div>
-                        {reachedMax ? (
-                            <Button disabled className="bg-slate-200 text-slate-500">
-                                Maksimal 3 Promo
-                            </Button>
-                        ) : (
-                            <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">
-                                <Link href="/admin/public/promo-items/create">Tambah Promo</Link>
-                            </Button>
-                        )}
+                        <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">
+                            <Link href="/admin/public/promo-items/create">Tambah Promo</Link>
+                        </Button>
                     </div>
                 </section>
 
@@ -88,7 +95,9 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                                 <tr>
                                     <th className="px-4 py-3 text-left">Preview</th>
                                     <th className="px-4 py-3 text-left">Judul</th>
-                                    <th className="px-4 py-3 text-left">Urutan</th>
+                                    <th className="px-4 py-3 text-left">Kategori</th>
+                                    <th className="px-4 py-3 text-left">Slot</th>
+                                    <th className="px-4 py-3 text-left">Periode</th>
                                     <th className="px-4 py-3 text-left">Status</th>
                                     <th className="px-4 py-3 text-left">Aksi</th>
                                 </tr>
@@ -107,11 +116,25 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                                             <div className="font-semibold text-slate-900">
                                                 {item.title ?? 'Tanpa judul'}
                                             </div>
-                                            {item.link_url && (
-                                                <div className="text-xs text-slate-500">{item.link_url}</div>
+                                            {item.excerpt && (
+                                                <div className="line-clamp-1 text-xs text-slate-500">{item.excerpt}</div>
+                                            )}
+                                            {item.slug && (
+                                                <Link
+                                                    href={`/promo/${item.slug}`}
+                                                    className="text-xs font-semibold text-sky-600 hover:text-sky-700"
+                                                >
+                                                    Lihat detail publik
+                                                </Link>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3">{item.sort_order}</td>
+                                        <td className="px-4 py-3">{item.category_label ?? 'Promo'}</td>
+                                        <td className="px-4 py-3">
+                                            {item.sort_order > 0 ? `Homepage ${item.sort_order}` : 'Halaman promo'}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs text-slate-500">
+                                            {item.starts_at ?? '-'} → {item.ends_at ?? '-'}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <Badge className={item.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}>
                                                 {item.is_active ? 'active' : 'inactive'}
@@ -135,7 +158,7 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                                 ))}
                                 {items.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
                                             Belum ada promo terkini.
                                         </td>
                                     </tr>
