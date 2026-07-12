@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import {
     CalendarCheck,
     MapPinned,
@@ -22,6 +22,7 @@ import {
     DiscoverySortSelect,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
+import { PublicSeo } from '@/components/public-seo';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
 
@@ -223,11 +224,32 @@ export default function SouvenirSearch({
         [products.data, sort],
     );
     const discoverySections = discovery?.sections ?? [];
+    const fallbackImage = filtered.find(
+        (product) => product.image_url,
+    )?.image_url;
 
     return (
         <PublicLayout categories={navItems}>
-            <Head title="Retail Shop - INDOTIX" />
-
+            <PublicSeo
+                title="Retail Shop Indotix"
+                description="Belanja produk retail, souvenir, dan merchandise pilihan dengan stok terbaru dan harga transparan di Indotix."
+                canonicalPath="/retail-shop"
+                image={fallbackImage}
+                type="product"
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'ItemList',
+                    name: 'Daftar produk retail Indotix',
+                    itemListElement: filtered
+                        .slice(0, 12)
+                        .map((product, index) => ({
+                            '@type': 'ListItem',
+                            position: index + 1,
+                            name: product.name,
+                            url: `/retail-shop/${product.slug ?? product.encrypted_id}`,
+                        })),
+                }}
+            />
             <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 {!isReady && (
                     <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
@@ -244,7 +266,7 @@ export default function SouvenirSearch({
                     <>
                         <section className="space-y-6">
                             <section className="rounded-[32px] border border-slate-200 bg-white p-5 shadow-[0_24px_60px_-26px_rgba(15,23,42,0.28)] sm:p-6">
-                                    <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div className="flex flex-wrap items-center justify-between gap-4">
                                     <div>
                                         <h1 className="text-2xl font-semibold text-slate-900">
                                             Produk pilihan untuk dibawa pulang
@@ -278,11 +300,14 @@ export default function SouvenirSearch({
                                             onChange={(event) =>
                                                 setForm((prev) => ({
                                                     ...prev,
-                                                    category_id: event.target.value,
+                                                    category_id:
+                                                        event.target.value,
                                                 }))
                                             }
                                         >
-                                            <option value="">Semua kategori</option>
+                                            <option value="">
+                                                Semua kategori
+                                            </option>
                                             {categories.map((category) => (
                                                 <option
                                                     key={category.id}
@@ -328,7 +353,7 @@ export default function SouvenirSearch({
                                         },
                                     ]}
                                 />
-                        </section>
+                            </section>
 
                             <DiscoveryIntentRow
                                 chips={discovery?.intent_chips ?? []}
@@ -340,20 +365,16 @@ export default function SouvenirSearch({
                                 theme={discoveryTheme}
                             />
 
-                            {discoverySections
-                                .slice(0, 2)
-                                .map((section) => (
-                                    <DiscoveryCollectionRail
-                                        key={section.key}
-                                        section={section}
-                                        theme={discoveryTheme}
-                                    />
-                                ))}
+                            {discoverySections.slice(0, 2).map((section) => (
+                                <DiscoveryCollectionRail
+                                    key={section.key}
+                                    section={section}
+                                    theme={discoveryTheme}
+                                />
+                            ))}
                         </section>
 
-
-
-                        <section className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+                        <section className="mt-6 grid grid-cols-2 gap-4 max-md:-mx-4 max-md:flex max-md:snap-x max-md:overflow-x-auto max-md:px-4 max-md:pb-3 max-md:[scrollbar-width:none] sm:gap-6 lg:grid-cols-3 max-md:[&::-webkit-scrollbar]:hidden">
                             {filtered.map((product) => {
                                 const detailSlug =
                                     product.slug ?? product.encrypted_id ?? '';
@@ -365,13 +386,15 @@ export default function SouvenirSearch({
                                                 ? `/retail-shop/${detailSlug}`
                                                 : '/retail-shop'
                                         }
-                                        className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                                        className="group overflow-hidden rounded-2xl bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg max-md:w-[46vw] max-md:min-w-[10.5rem] max-md:snap-start"
                                     >
-                                        <div className="h-48 w-full bg-slate-100">
+                                        <div className="h-48 w-full bg-slate-100 max-md:h-28">
                                             {product.image_url ? (
                                                 <img
                                                     src={product.image_url}
                                                     alt={product.name}
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     className="h-full w-full object-cover"
                                                 />
                                             ) : (
@@ -385,7 +408,7 @@ export default function SouvenirSearch({
                                                 {product.category ??
                                                     'Retail Shop'}
                                             </div>
-                                            <h3 className="mt-1 text-base font-semibold text-slate-900">
+                                            <h3 className="mt-1 line-clamp-2 text-base leading-snug font-semibold text-slate-900">
                                                 {product.name}
                                             </h3>
                                             <div className="mt-2 flex items-center justify-between text-sm">

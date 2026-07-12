@@ -1,29 +1,47 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import PublicLayout from '@/layouts/public-layout';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { PublicSeo } from '@/components/public-seo';
 
 export default function DeleteAccountPage({ status }: { status?: string }) {
     const isSuccess = status === 'success';
 
     return (
         <PublicLayout showCategories={false} showChips={false}>
-            <Head title="Hapus Akun - Indotix">
-                <meta
-                    name="description"
-                    content="Panduan resmi penghapusan akun INDOTIX dan informasi data yang dihapus maupun disimpan."
-                />
-                <meta property="og:title" content="Hapus Akun - Indotix" />
-                <meta
-                    property="og:description"
-                    content="Panduan resmi penghapusan akun INDOTIX dan informasi data yang dihapus maupun disimpan."
-                />
-                <meta property="og:type" content="website" />
-            </Head>
+            <PublicSeo
+                title="Panduan Hapus Akun - Indotix"
+                description="Panduan resmi penghapusan akun INDOTIX dan informasi data yang dihapus maupun disimpan."
+                canonicalPath="/delete-account"
+                keywords={['hapus akun Indotix', 'penghapusan data Indotix']}
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'HowTo',
+                    name: 'Cara Menghapus Akun INDOTIX',
+                    step: [
+                        {
+                            '@type': 'HowToStep',
+                            text: 'Buka aplikasi INDOTIX.',
+                        },
+                        { '@type': 'HowToStep', text: 'Masuk ke menu Profil.' },
+                        {
+                            '@type': 'HowToStep',
+                            text: 'Pilih Hapus Akun Permanen.',
+                        },
+                        {
+                            '@type': 'HowToStep',
+                            text: 'Masukkan password dan konfirmasi penghapusan.',
+                        },
+                    ],
+                }}
+            />
 
             <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-8">
                 <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
                     <nav className="text-xs text-slate-500">
-                        <Link href="/" className="transition hover:text-sky-600">
+                        <Link
+                            href="/"
+                            className="transition hover:text-sky-600"
+                        >
                             Beranda
                         </Link>
                         <span className="mx-2">/</span>
@@ -85,9 +103,9 @@ export default function DeleteAccountPage({ status }: { status?: string }) {
                             </h2>
                             <p className="mt-3 text-sm text-slate-600">
                                 Riwayat transaksi dan bukti pembayaran dapat
-                                disimpan untuk memenuhi kewajiban hukum,
-                                audit, dan keamanan. Retensi mengikuti
-                                ketentuan peraturan yang berlaku.
+                                disimpan untuk memenuhi kewajiban hukum, audit,
+                                dan keamanan. Retensi mengikuti ketentuan
+                                peraturan yang berlaku.
                             </p>
                         </section>
 

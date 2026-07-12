@@ -124,14 +124,20 @@ class ProductReviewService
         return $ownerId !== null && (int) $ownerId === (int) $user->id;
     }
 
-    public static function publicReviews(string $type, int $productId): array
+    public static function publicReviews(string $type, int $productId, ?int $limit = null): array
     {
-        return ProductReview::query()
+        $query = ProductReview::query()
             ->where('product_type', $type)
             ->where('product_id', $productId)
             ->where('status', 'active')
             ->with(['user:id,name', 'replier:id,name', 'media'])
-            ->latest('id')
+            ->latest('id');
+
+        if ($limit !== null) {
+            $query->limit($limit);
+        }
+
+        return $query
             ->get()
             ->map(fn (ProductReview $review) => [
                 'id' => Crypt::encryptString((string) $review->id),
@@ -157,6 +163,40 @@ class ProductReviewService
             ])
             ->values()
             ->all();
+    }
+
+    public static function publicReviewSummary(string $type, int $productId): array
+    {
+        $baseQuery = ProductReview::query()
+            ->where('product_type', $type)
+            ->where('product_id', $productId)
+            ->where('status', 'active');
+
+        $total = (clone $baseQuery)->count();
+        $average = $total > 0 ? (float) (clone $baseQuery)->avg('rating') : 0.0;
+        $ratingCounts = (clone $baseQuery)
+            ->selectRaw('rating, count(*) as aggregate')
+            ->groupBy('rating')
+            ->pluck('aggregate', 'rating');
+
+        $distribution = collect([5, 4, 3, 2, 1])
+            ->map(function (int $stars) use ($ratingCounts, $total) {
+                $count = (int) ($ratingCounts[$stars] ?? 0);
+
+                return [
+                    'stars' => $stars,
+                    'count' => $count,
+                    'percentage' => $total > 0 ? (int) round(($count / $total) * 100) : 0,
+                ];
+            })
+            ->values()
+            ->all();
+
+        return [
+            'total' => $total,
+            'average' => round($average, 1),
+            'distribution' => $distribution,
+        ];
     }
 
     public static function userReview(?int $userId, string $type, int $productId): ?array

@@ -29,3 +29,16 @@ export const formatCurrencyInput = (
     if (!digits) return '';
     return Number(digits).toLocaleString('id-ID');
 };
+
+export const formatRupiah = (
+    value: string | number | null | undefined,
+): string => {
+    const amount = Number(value ?? 0);
+
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+    }).format(Number.isFinite(amount) ? amount : 0);
+};

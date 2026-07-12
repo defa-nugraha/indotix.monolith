@@ -1,10 +1,14 @@
-import { usePage } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import PublicHeader, { type PublicHeaderProps } from '@/components/public-header';
+import PublicHeader, {
+    type PublicHeaderProps,
+} from '@/components/public-header';
+import { PublicSeo } from '@/components/public-seo';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import CoachMarks from '@/components/coach-marks';
+import PublicMobileNavigation from '@/components/public-mobile-navigation';
 import Swal from 'sweetalert2';
 
 type PublicLayoutProps = PublicHeaderProps & {
@@ -13,6 +17,7 @@ type PublicLayoutProps = PublicHeaderProps & {
     className?: string;
     contentClassName?: string;
     coachContext?: 'public' | 'none';
+    hideMobileHeader?: boolean;
 };
 
 export default function PublicLayout({
@@ -21,16 +26,25 @@ export default function PublicLayout({
     className,
     contentClassName,
     coachContext = 'public',
+    hideMobileHeader = false,
     ...headerProps
 }: PublicLayoutProps) {
     const { url } = usePage();
-    const { errors } = usePage().props as {
+    const { errors, auth } = usePage().props as {
         errors?: Record<string, string>;
+        auth?: { user?: { role?: string } };
     };
     const { public_whatsapp_number } = usePage().props as {
         public_whatsapp_number?: string | null;
     };
     const [ready, setReady] = useState(false);
+    const publicPath = url.split(/[?#]/)[0] || '/';
+    const isUser = auth?.user?.role === 'user';
+    const showMobileNavigation = !auth?.user || isUser;
+    const isPrivatePage =
+        /\/(booking|bookings|payment|checkout|history|notifications|cart|affiliate)(\/|$)/.test(
+            publicPath,
+        );
     const whatsappDigits = (public_whatsapp_number ?? '').replace(/\D/g, '');
     const whatsappUrl = whatsappDigits
         ? `https://wa.me/${whatsappDigits}`
@@ -73,14 +87,56 @@ export default function PublicLayout({
                 </div>
             </div>
         ),
-        []
+        [],
     );
 
     return (
-        <div className={cn('min-h-screen bg-[#f4f6f8] text-slate-900', className)}>
-            <PublicHeader {...headerProps} />
-            <div className={cn('relative', contentClassName)} aria-busy={!ready}>
-                <div className={cn('transition-opacity duration-200', ready ? 'opacity-100' : 'pointer-events-none opacity-0')}>
+        <div
+            className={cn(
+                'public-shell min-h-screen bg-[#f4f6f8] text-slate-900',
+                isUser && 'public-user-shell',
+                showMobileNavigation && 'public-mobile-nav-shell',
+                className,
+            )}
+        >
+            {isUser && (
+                <Head>
+                    <link
+                        href="https://fonts.bunny.net/css?family=sora:400,500,600,700"
+                        rel="stylesheet"
+                    />
+                </Head>
+            )}
+            <PublicSeo
+                title="Indotix - Tiket Wisata dan Destinasi Rekreasi"
+                description="Temukan dan pesan tiket wisata, taman hiburan, serta destinasi rekreasi pilihan melalui Indotix."
+                canonicalPath={publicPath}
+                robots={
+                    isPrivatePage
+                        ? 'noindex,nofollow,noarchive'
+                        : 'index,follow,max-image-preview:large'
+                }
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'WebSite',
+                    name: 'Indotix',
+                    url: '/',
+                    inLanguage: 'id-ID',
+                }}
+            />
+            <div className={cn(hideMobileHeader && 'hidden md:block')}>
+                <PublicHeader {...headerProps} />
+            </div>
+            <div
+                className={cn('relative', contentClassName)}
+                aria-busy={!ready}
+            >
+                <div
+                    className={cn(
+                        'transition-opacity duration-200',
+                        ready ? 'opacity-100' : 'pointer-events-none opacity-0',
+                    )}
+                >
                     {children}
                 </div>
                 {!ready && (
@@ -95,7 +151,7 @@ export default function PublicLayout({
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Hubungi Indotix via WhatsApp"
-                    className="fixed right-4 bottom-24 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-emerald-900/20 transition hover:-translate-y-0.5 hover:bg-[#1ebe5d] focus:ring-4 focus:ring-emerald-200 focus:outline-none md:right-6 md:bottom-8"
+                    className="public-whatsapp-float fixed right-4 bottom-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-emerald-900/20 transition hover:-translate-y-0.5 hover:bg-[#1ebe5d] focus:ring-4 focus:ring-emerald-200 focus:outline-none md:right-6 md:bottom-8 md:h-14 md:w-14"
                 >
                     <svg
                         viewBox="0 0 32 32"
@@ -107,6 +163,7 @@ export default function PublicLayout({
                     </svg>
                 </a>
             )}
+            {showMobileNavigation && <PublicMobileNavigation />}
             {coachContext !== 'none' && <CoachMarks context="public" />}
         </div>
     );

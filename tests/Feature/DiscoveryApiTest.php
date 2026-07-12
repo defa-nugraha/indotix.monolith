@@ -1,18 +1,45 @@
 <?php
 
-use App\Models\Event;
-use App\Models\EventTicket;
-use App\Models\SouvenirCategory;
-use App\Models\SouvenirProduct;
+use App\Models\MitraWisataOnboarding;
+use App\Models\User;
+use App\Models\WisataTicket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
-test('discovery metadata exposes supported product types', function () {
+function discoveryWisataDestination(bool $isLive, string $name): MitraWisataOnboarding
+{
+    $destination = MitraWisataOnboarding::query()->create([
+        'user_id' => User::factory()->create(['role' => 'mitra'])->id,
+        'current_step' => 3,
+        'destination_name' => $name,
+        'destination_type' => 'alam',
+        'city_name' => 'Bandung',
+        'verification_status' => 'verified',
+        'payout_status' => 'verified',
+        'is_live' => $isLive,
+        'is_suspended' => false,
+        'is_temporarily_closed' => false,
+    ]);
+
+    WisataTicket::query()->create([
+        'mitra_wisata_onboarding_id' => $destination->id,
+        'name' => 'Tiket '.$name,
+        'price' => 50000,
+        'quota' => 100,
+        'daily_quota' => 100,
+        'is_active' => true,
+        'is_closed' => false,
+    ]);
+
+    return $destination;
+}
+
+test('discovery metadata exposes only wisata product type', function () {
     $this->getJson('/api/discovery/metadata')
         ->assertOk()
-        ->assertJsonPath('data.0.type', 'events')
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.type', 'wisata')
         ->assertJsonStructure([
             'data' => [
                 ['type', 'label', 'listing_url', 'suggestions_url', 'filters_url', 'sorts', 'popular_keywords'],
@@ -20,98 +47,26 @@ test('discovery metadata exposes supported product types', function () {
         ]);
 });
 
-test('event discovery listing respects published status and grouped search filters', function () {
-    $organizerId = DB::table('event_organizers')->insertGetId([
-        'name' => 'Organizer Test',
-        'status' => 'verified',
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
+test('wisata discovery listing respects live status and search filters', function () {
+    $live = discoveryWisataDestination(true, 'Wisata Alam Bandung');
+    $draft = discoveryWisataDestination(false, 'Wisata Draft Bandung');
 
-    $published = Event::query()->create([
-        'event_organizer_id' => $organizerId,
-        'event_type' => 'event',
-        'title' => 'Konser Musik Test',
-        'description' => 'Event publik untuk discovery',
-        'location' => 'Jakarta',
-        'status' => 'published',
-        'published_at' => now(),
-        'start_at' => now()->addDays(3),
-        'capacity_total' => 100,
-        'capacity_sold' => 10,
-    ]);
-
-    EventTicket::query()->create([
-        'event_id' => $published->id,
-        'name' => 'Gratis',
-        'price' => 0,
-        'is_active' => true,
-        'quota' => 50,
-        'sold_count' => 5,
-    ]);
-
-    $draft = Event::query()->create([
-        'event_organizer_id' => $organizerId,
-        'event_type' => 'event',
-        'title' => 'Konser Draft Test',
-        'status' => 'draft',
-        'start_at' => now()->addDays(2),
-    ]);
-
-    EventTicket::query()->create([
-        'event_id' => $draft->id,
-        'name' => 'Gratis',
-        'price' => 0,
-        'is_active' => true,
-        'quota' => 50,
-    ]);
-
-    $this->getJson('/api/discovery/events?q=Konser&price_type=free&sort=upcoming&per_page=5')
+    $this->getJson('/api/discovery/wisata?q=Bandung&per_page=5')
         ->assertOk()
         ->assertJsonPath('meta.total', 1)
-        ->assertJsonPath('data.0.title', 'Konser Musik Test')
-        ->assertJsonMissing(['title' => 'Konser Draft Test'])
-        ->assertJsonPath('meta.applied_filters.q', 'Konser')
-        ->assertJsonPath('meta.applied_filters.price_type', 'free');
+        ->assertJsonPath('data.0.title', $live->destination_name)
+        ->assertJsonMissing(['title' => $draft->destination_name])
+        ->assertJsonPath('meta.applied_filters.q', 'Bandung');
 });
 
-test('souvenir discovery keeps active filters grouped when searching name or sku', function () {
-    $category = SouvenirCategory::query()->create([
-        'name' => 'Merchandise',
-        'is_active' => true,
-    ]);
-
-    SouvenirProduct::query()->create([
-        'category_id' => $category->id,
-        'name' => 'Kaos Aktif',
-        'price' => 150000,
-        'sku' => 'SKU-AKTIF-001',
-        'status' => 'active',
-        'is_active' => true,
-        'stock' => 10,
-        'min_stock' => 1,
-    ]);
-
-    SouvenirProduct::query()->create([
-        'category_id' => $category->id,
-        'name' => 'Kaos Nonaktif',
-        'price' => 150000,
-        'sku' => 'SKU-AKTIF-002',
-        'status' => 'draft',
-        'is_active' => false,
-        'stock' => 10,
-        'min_stock' => 1,
-    ]);
-
-    $this->getJson('/api/discovery/souvenirs?q=SKU-AKTIF&stock_status=in_stock')
-        ->assertOk()
-        ->assertJsonPath('meta.total', 1)
-        ->assertJsonPath('data.0.title', 'Kaos Aktif')
-        ->assertJsonMissing(['title' => 'Kaos Nonaktif']);
+test('non wisata discovery type is not available', function () {
+    $this->getJson('/api/discovery/events')->assertNotFound();
+    $this->getJson('/api/discovery/souvenirs')->assertNotFound();
+    $this->getJson('/api/discovery/academy/suggestions')->assertNotFound();
 });
 
-test('discovery suggestions fallback to contextual keywords', function () {
-    $this->getJson('/api/discovery/academy/suggestions')
+test('wisata discovery suggestions fallback to contextual keywords', function () {
+    $this->getJson('/api/discovery/wisata/suggestions')
         ->assertOk()
         ->assertJsonPath('data.0.type', 'keyword')
         ->assertJsonStructure([
@@ -122,11 +77,11 @@ test('discovery suggestions fallback to contextual keywords', function () {
         ]);
 });
 
-test('discovery invalid sort falls back and oversized per page is rejected', function () {
-    $this->getJson('/api/discovery/souvenirs?sort=unknown')
+test('wisata discovery invalid sort falls back and oversized per page is rejected', function () {
+    $this->getJson('/api/discovery/wisata?sort=unknown')
         ->assertOk()
         ->assertJsonPath('meta.applied_filters.sort', null);
 
-    $this->getJson('/api/discovery/souvenirs?per_page=100')
+    $this->getJson('/api/discovery/wisata?per_page=100')
         ->assertStatus(422);
 });

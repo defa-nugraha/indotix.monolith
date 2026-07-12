@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\MitraWisataOnboarding;
+use App\Models\PublicContact;
 use App\Models\WisataAffiliateClick;
 use App\Models\WisataAffiliateLink;
 use App\Models\WisataBooking;
 use App\Models\WisataTicket;
 use App\Services\ProductReviewService;
 use App\Services\Discovery\DiscoveryService;
+use App\Support\HomePageContent;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -55,6 +57,8 @@ class PublicWisataController extends Controller
             'destinations' => $destinations,
             'discovery' => $listing['discovery'] ?? null,
             'meta' => $listing['meta'] ?? null,
+            'homeContent' => HomePageContent::publicPayload(),
+            'contact' => PublicContact::query()->first(),
         ]);
     }
 
@@ -183,7 +187,8 @@ class PublicWisataController extends Controller
                 'longitude' => $this->extractLongitude($destination->maps_pin_url),
             ],
             'tickets' => $tickets,
-            'reviews' => ProductReviewService::publicReviews('wisata', $destination->id),
+            'reviews' => ProductReviewService::publicReviews('wisata', $destination->id, 5),
+            'reviewSummary' => ProductReviewService::publicReviewSummary('wisata', $destination->id),
             'userReview' => $userReview,
             'canReview' => $canReview,
         ]);

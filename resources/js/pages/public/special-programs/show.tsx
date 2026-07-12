@@ -10,6 +10,7 @@ import {
 import { useMemo } from 'react';
 import Swal from 'sweetalert2';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { ProductDescription } from '@/components/product-description';
 import { PublicSeo } from '@/components/public-seo';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
@@ -149,14 +150,14 @@ export default function SpecialProgramShow({
             <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
                     <section className="rounded-3xl bg-white p-6 shadow-sm">
-                        <div className="h-56 overflow-hidden rounded-2xl bg-slate-100">
+                        <div className="flex aspect-video max-h-[420px] min-h-56 items-center justify-center overflow-hidden rounded-2xl bg-slate-100">
                             {program.image_url ? (
                                 <img
                                     src={program.image_url}
                                     alt={program.name}
                                     loading="eager"
                                     decoding="async"
-                                    className="h-full w-full object-cover"
+                                    className="h-full w-full object-contain"
                                 />
                             ) : (
                                 <div className="h-full w-full bg-gradient-to-br from-sky-500 to-indigo-600" />
@@ -171,10 +172,12 @@ export default function SpecialProgramShow({
                             <h1 className="mt-3 text-2xl font-semibold text-slate-900">
                                 {program.name}
                             </h1>
-                            <p className="mt-2 text-sm text-slate-500">
-                                {program.description ??
-                                    'Special program pilihan Indotix.'}
-                            </p>
+                            <ProductDescription
+                                text={program.description}
+                                fallback="Special program pilihan Indotix."
+                                lines={4}
+                                className="mt-2 text-sm text-slate-500"
+                            />
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <Users className="h-4 w-4 text-sky-500" />

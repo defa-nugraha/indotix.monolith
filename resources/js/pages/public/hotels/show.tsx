@@ -22,9 +22,16 @@ import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { ProductDescription } from '@/components/product-description';
 import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
@@ -146,6 +153,7 @@ export default function HotelShow({
         reviewCount > 0 ? `${reviewCount} ulasan` : 'Belum ada ulasan';
     const [guestOpen, setGuestOpen] = useState(false);
     const [dateOpen, setDateOpen] = useState(false);
+    const [galleryOpen, setGalleryOpen] = useState(false);
     const [adults, setAdults] = useState(
         Math.max(1, Math.max((filters.guests ?? 1) - initialChildren, 1)),
     );
@@ -252,6 +260,7 @@ export default function HotelShow({
         .filter(Boolean) as string[];
     const galleryImages =
         hotelImages.length > 0 ? hotelImages : fallbackRoomImages;
+    const previewGalleryImages = galleryImages.slice(1, 4);
 
     return (
         <PublicLayout categories={categories} chips={chips}>
@@ -611,7 +620,7 @@ export default function HotelShow({
                             </div>
                         </section>
 
-                        <div className="rounded-2xl bg-white p-4 shadow-sm">
+                        <div className="overflow-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-4">
                             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 text-xs text-slate-500">
                                 <div className="flex flex-wrap gap-2">
                                     <span className="text-sky-600">Hotel</span>/
@@ -623,48 +632,77 @@ export default function HotelShow({
                                 </div>
                             </div>
 
-                            <div className="mt-4 grid gap-4 md:grid-cols-[1.6fr_1fr]">
+                            <div className="mt-4 grid gap-4 md:grid-cols-[1.45fr_1fr]">
                                 <div className="grid gap-3">
                                     {galleryImages.length > 0 ? (
-                                        <img
-                                            src={galleryImages[0]}
-                                            alt={hotel.name}
-                                            className="h-64 w-full rounded-xl object-cover md:h-full"
-                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setGalleryOpen(true)
+                                            }
+                                            className="block aspect-[16/9] max-h-[420px] min-h-48 w-full overflow-hidden rounded-xl bg-slate-100 text-left sm:min-h-56"
+                                        >
+                                            <img
+                                                src={galleryImages[0]}
+                                                alt={hotel.name}
+                                                className="h-full w-full object-cover"
+                                            />
+                                        </button>
                                     ) : (
-                                        <div className="h-64 rounded-xl bg-slate-100" />
+                                        <div className="aspect-[16/9] min-h-48 rounded-xl bg-slate-100 sm:min-h-56" />
                                     )}
                                 </div>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {galleryImages
-                                        .slice(1, 5)
-                                        .map((image, idx) => (
-                                            <div
+                                <div className="grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-3">
+                                    {previewGalleryImages.map((image, idx) => {
+                                        const isLastPreview =
+                                            idx ===
+                                            previewGalleryImages.length - 1;
+                                        const shouldShowGalleryOverlay =
+                                            isLastPreview &&
+                                            galleryImages.length > 1;
+
+                                        return (
+                                            <button
+                                                type="button"
                                                 key={`${image}-${idx}`}
-                                                className="relative"
+                                                onClick={() =>
+                                                    setGalleryOpen(true)
+                                                }
+                                                className="relative h-24 overflow-hidden rounded-xl bg-slate-100 text-left sm:h-32"
                                             >
                                                 <img
                                                     src={image}
                                                     alt={`Foto ${idx + 2}`}
-                                                    className="h-32 w-full rounded-xl object-cover"
+                                                    className={`h-full w-full object-cover ${
+                                                        shouldShowGalleryOverlay
+                                                            ? 'opacity-45'
+                                                            : ''
+                                                    }`}
                                                 />
-                                                {idx === 3 &&
-                                                    galleryImages.length >
-                                                        5 && (
-                                                        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40 text-sm font-semibold text-white">
-                                                            Lihat semua foto
-                                                        </div>
-                                                    )}
-                                            </div>
-                                        ))}
-                                    {galleryImages.length === 0 && (
-                                        <div className="h-32 rounded-xl bg-slate-100" />
+                                                {shouldShowGalleryOverlay && (
+                                                    <span className="absolute inset-0 flex items-center justify-center bg-slate-950/35 px-2 text-center text-xs font-semibold text-white sm:text-sm">
+                                                        Lihat semua gambar
+                                                    </span>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                    {previewGalleryImages.length === 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                setGalleryOpen(true)
+                                            }
+                                            className="col-span-3 h-24 rounded-xl bg-slate-100 text-xs font-semibold text-slate-500 sm:col-span-2 sm:h-32"
+                                        >
+                                            Lihat semua gambar
+                                        </button>
                                     )}
                                 </div>
                             </div>
 
-                            <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-4">
-                                <div>
+                            <div className="mt-6 flex flex-col gap-4 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                                <div className="min-w-0">
                                     <h1 className="text-2xl font-semibold text-slate-900">
                                         {hotel.name}
                                     </h1>
@@ -674,10 +712,10 @@ export default function HotelShow({
                                     <div className="mt-2 text-lg text-yellow-500">
                                         {hotel.star_rating
                                             ? '★'.repeat(hotel.star_rating)
-                                            : 'Hotel'}
+                                        : 'Hotel'}
                                     </div>
                                 </div>
-                                <div className="rounded-xl bg-slate-50 px-4 py-3 text-right">
+                                <div className="w-full rounded-xl bg-slate-50 px-4 py-3 text-left sm:w-auto sm:text-right">
                                     <div className="text-xs text-slate-500">
                                         Harga mulai dari
                                     </div>
@@ -687,9 +725,12 @@ export default function HotelShow({
                                             'id-ID',
                                         ) ?? '-'}
                                     </div>
-                                    <button className="mt-2 rounded-lg bg-orange-500 px-4 py-2 text-xs font-semibold text-white">
+                                    <a
+                                        href="#rooms"
+                                        className="mt-2 inline-flex rounded-lg bg-orange-500 px-4 py-2 text-xs font-semibold text-white hover:bg-orange-600"
+                                    >
                                         Pilih Kamar
-                                    </button>
+                                    </a>
                                     <Link
                                         href={`/chat/start/hotel/${hotel.id}`}
                                         className="mt-2 block rounded-lg border border-slate-200 px-4 py-2 text-center text-xs font-semibold text-slate-600 hover:bg-white"
@@ -700,7 +741,7 @@ export default function HotelShow({
                             </div>
                         </div>
 
-                        <div className="sticky top-[120px] z-20 mt-6 flex items-center gap-6 border-b border-slate-200 bg-white/95 px-4 py-3 text-sm font-semibold text-slate-600 shadow-sm backdrop-blur">
+                        <div className="mt-6 flex gap-2 overflow-x-auto rounded-2xl border border-slate-100 bg-white p-2 text-sm font-semibold text-slate-600 shadow-sm">
                             {[
                                 'Overview',
                                 'Rooms',
@@ -712,7 +753,7 @@ export default function HotelShow({
                                 <a
                                     key={tab}
                                     href={`#${tab.toLowerCase()}`}
-                                    className="hover:text-slate-900"
+                                    className="shrink-0 rounded-full px-4 py-2 hover:bg-slate-50 hover:text-slate-900"
                                 >
                                     {tab}
                                 </a>
@@ -721,7 +762,7 @@ export default function HotelShow({
 
                         <section
                             id="overview"
-                            className="mt-8 rounded-2xl bg-white p-6 shadow-sm"
+                            className="mt-8 rounded-2xl bg-white p-4 shadow-sm md:p-6"
                         >
                             <div className="grid gap-6 md:grid-cols-3">
                                 <div className="rounded-2xl border border-slate-100 p-4">
@@ -764,10 +805,12 @@ export default function HotelShow({
                                             Lihat peta
                                         </a>
                                     </div>
-                                    <p className="mt-3 text-sm text-slate-600">
-                                        {hotel.description ??
-                                            'Deskripsi hotel akan tampil di sini.'}
-                                    </p>
+                                    <ProductDescription
+                                        text={hotel.description}
+                                        fallback="Deskripsi hotel akan tampil di sini."
+                                        lines={4}
+                                        className="mt-3 text-sm text-slate-600"
+                                    />
                                     <div className="mt-4 grid gap-2 text-sm text-slate-600">
                                         <div>Alamat: {hotel.address}</div>
                                         <div>
@@ -782,7 +825,7 @@ export default function HotelShow({
                         </section>
 
                         <section id="rooms" className="mt-8">
-                            <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <div className="rounded-2xl bg-white p-4 shadow-sm md:p-6">
                                 <h2 className="text-xl font-semibold text-slate-900">
                                     Tipe Kamar Tersedia
                                 </h2>
@@ -797,24 +840,24 @@ export default function HotelShow({
                             {roomTypes.map((room) => (
                                 <div
                                     key={room.id}
-                                    className="rounded-2xl bg-white p-6 shadow-sm"
+                                    className="rounded-2xl bg-white p-4 shadow-sm md:p-6"
                                 >
                                     {room.images && room.images.length > 0 && (
-                                        <div className="mb-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                                        <div className="mb-4 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3">
                                             {room.images
-                                                .slice(0, 6)
+                                                .slice(0, 3)
                                                 .map((image) => (
                                                     <img
                                                         key={image.id}
                                                         src={image.url}
                                                         alt={room.name}
-                                                        className="h-32 w-full rounded-xl object-cover"
+                                                        className="aspect-video w-full rounded-xl object-cover"
                                                     />
                                                 ))}
                                         </div>
                                     )}
                                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                                        <div>
+                                        <div className="min-w-0">
                                             <h2 className="text-lg font-semibold text-slate-900">
                                                 {room.name}
                                             </h2>
@@ -852,11 +895,13 @@ export default function HotelShow({
                                                         : 'No smoking'}
                                                 </span>
                                             </div>
-                                            <p className="mt-2 text-sm text-slate-600">
-                                                {room.description}
-                                            </p>
+                                            <ProductDescription
+                                                text={room.description}
+                                                lines={2}
+                                                className="mt-2 text-sm text-slate-600"
+                                            />
                                         </div>
-                                        <div className="text-right">
+                                        <div className="shrink-0 text-left md:text-right">
                                             {room.strike_price && (
                                                 <div className="text-xs text-slate-400 line-through">
                                                     Rp{' '}
@@ -880,7 +925,7 @@ export default function HotelShow({
                                     <div className="mt-4">
                                         <button
                                             type="button"
-                                            className="relative z-10 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white"
+                                            className="relative z-10 w-full rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white sm:w-auto"
                                             onClick={() => {
                                                 if (guardPurchaseByRole(role)) {
                                                     return;
@@ -923,7 +968,7 @@ export default function HotelShow({
 
                         <section
                             id="location"
-                            className="mt-8 rounded-2xl bg-white p-6 shadow-sm"
+                            className="mt-8 rounded-2xl bg-white p-4 shadow-sm md:p-6"
                         >
                             <h2 className="text-xl font-semibold text-slate-900">
                                 Lokasi
@@ -964,7 +1009,7 @@ export default function HotelShow({
 
                         <section
                             id="facilities"
-                            className="mt-8 rounded-2xl bg-white p-6 shadow-sm"
+                            className="mt-8 rounded-2xl bg-white p-4 shadow-sm md:p-6"
                         >
                             <h2 className="text-xl font-semibold text-slate-900">
                                 Fasilitas
@@ -1005,7 +1050,7 @@ export default function HotelShow({
 
                         <section
                             id="policy"
-                            className="mt-8 rounded-2xl bg-white p-6 shadow-sm"
+                            className="mt-8 rounded-2xl bg-white p-4 shadow-sm md:p-6"
                         >
                             <h2 className="text-xl font-semibold text-slate-900">
                                 Kebijakan Hotel
@@ -1036,6 +1081,24 @@ export default function HotelShow({
                     </>
                 )}
             </div>
+            <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
+                <DialogContent className="max-h-[90vh] max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-3xl p-4 sm:max-w-4xl sm:p-6">
+                    <DialogHeader>
+                        <DialogTitle>Galeri {hotel.name}</DialogTitle>
+                    </DialogHeader>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        {galleryImages.map((image, index) => (
+                            <img
+                                key={`${image}-${index}`}
+                                src={image}
+                                alt={`${hotel.name} ${index + 1}`}
+                                className="aspect-video w-full rounded-2xl bg-slate-100 object-cover"
+                                loading="lazy"
+                            />
+                        ))}
+                    </div>
+                </DialogContent>
+            </Dialog>
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>

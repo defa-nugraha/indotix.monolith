@@ -13,6 +13,7 @@ import {
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { ProductDescription } from '@/components/product-description';
 import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
 import SaleCountdown from '@/components/sale-countdown';
@@ -220,10 +221,12 @@ export default function AcademyShow({
                             <h1 className="text-2xl font-semibold text-slate-900">
                                 {academyClass.title}
                             </h1>
-                            <p className="mt-2 text-sm text-slate-500">
-                                {academyClass.description ??
-                                    'Kelas pilihan Indotix Academy.'}
-                            </p>
+                            <ProductDescription
+                                text={academyClass.description}
+                                fallback="Kelas pilihan Indotix Academy."
+                                lines={4}
+                                className="mt-2 text-sm text-slate-500"
+                            />
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <BookOpen className="h-4 w-4 text-sky-500" />

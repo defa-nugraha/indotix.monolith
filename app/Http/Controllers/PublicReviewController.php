@@ -8,12 +8,35 @@ use App\Services\ProductReviewService;
 use App\Services\ChatService;
 use App\Services\PushNotificationService;
 use App\Services\ReviewMediaService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class PublicReviewController extends Controller
 {
+    public function index(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'product_type' => ['required', 'string', 'in:' . implode(',', ProductReviewService::TYPES)],
+            'product_id' => ['required', 'integer'],
+        ]);
+
+        $productId = (int) $data['product_id'];
+        $product = ProductReviewService::findProduct($data['product_type'], $productId);
+
+        if (! $product) {
+            return response()->json([
+                'message' => 'Produk tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'reviews' => ProductReviewService::publicReviews($data['product_type'], $productId),
+            'summary' => ProductReviewService::publicReviewSummary($data['product_type'], $productId),
+        ]);
+    }
+
     public function store(Request $request, ReviewMediaService $reviewMedia): RedirectResponse
     {
         $data = $request->validate([

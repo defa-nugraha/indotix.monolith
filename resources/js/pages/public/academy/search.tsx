@@ -27,6 +27,7 @@ import {
     DiscoverySortSelect,
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
+import { PublicSeo } from '@/components/public-seo';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
 
@@ -266,7 +267,26 @@ export default function AcademySearch({
 
     return (
         <PublicLayout categories={categories} chips={academyChips}>
-            <Head title="Eljohn Academy">
+            <PublicSeo
+                title="Eljohn Academy di Indotix"
+                description="Cari kelas Eljohn Academy berdasarkan jadwal, topik, tiket tersedia, dan harga kelas di Indotix."
+                canonicalPath="/academy"
+                image={fallbackImage}
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'ItemList',
+                    name: 'Daftar kelas Eljohn Academy',
+                    itemListElement: filtered
+                        .slice(0, 12)
+                        .map((item, index) => ({
+                            '@type': 'ListItem',
+                            position: index + 1,
+                            name: item.title,
+                            url: `/academy/${item.slug ?? item.encrypted_id}`,
+                        })),
+                }}
+            />
+            <Head>
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
                     rel="stylesheet"
@@ -418,18 +438,18 @@ export default function AcademySearch({
                             ))}
                         </section>
 
-                        <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                        <div className="mt-8 grid grid-cols-2 gap-4 max-md:-mx-4 max-md:flex max-md:snap-x max-md:overflow-x-auto max-md:px-4 max-md:pb-3 max-md:[scrollbar-width:none] sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 max-md:[&::-webkit-scrollbar]:hidden">
                             {filtered.map((item) => {
                                 const detailSlug =
                                     item.slug ?? item.encrypted_id;
                                 return (
                                     <div
                                         key={item.id}
-                                        className="group overflow-hidden rounded-xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                        className="group overflow-hidden rounded-xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg max-md:w-[46vw] max-md:min-w-[10.5rem] max-md:snap-start"
                                     >
                                         <Link
                                             href={`/academy/${detailSlug}`}
-                                            className="relative block h-28 overflow-hidden"
+                                            className="relative block h-28 overflow-hidden max-md:h-24"
                                         >
                                             <img
                                                 src={
@@ -438,6 +458,8 @@ export default function AcademySearch({
                                                     '/images/placeholder-card.jpg'
                                                 }
                                                 alt={item.title}
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -448,7 +470,7 @@ export default function AcademySearch({
                                         <div className="p-3">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
-                                                    <h2 className="text-sm font-semibold text-slate-900">
+                                                    <h2 className="line-clamp-2 text-sm leading-snug font-semibold text-slate-900">
                                                         {item.title}
                                                     </h2>
                                                     <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">

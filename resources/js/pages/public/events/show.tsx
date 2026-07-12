@@ -11,6 +11,7 @@ import {
 import { useState } from 'react';
 import Swal from 'sweetalert2';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { ProductDescription } from '@/components/product-description';
 import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
 import PublicLayout from '@/layouts/public-layout';
@@ -160,7 +161,7 @@ export default function EventShow({
             <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
                     <section className="rounded-3xl bg-white p-6 shadow-sm">
-                        <div className="h-56 overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-sky-500">
+                        <div className="flex aspect-video max-h-[420px] min-h-56 items-center justify-center overflow-hidden rounded-2xl bg-slate-100">
                             <img
                                 src={
                                     event.image_url ??
@@ -169,16 +170,19 @@ export default function EventShow({
                                 alt={event.title}
                                 loading="eager"
                                 decoding="async"
-                                className="h-full w-full object-cover"
+                                className="h-full w-full object-contain"
                             />
                         </div>
                         <div className="mt-6">
                             <h1 className="text-2xl font-semibold text-slate-900">
                                 {event.title}
                             </h1>
-                            <p className="mt-2 text-sm text-slate-500">
-                                {event.description ?? 'Event pilihan Indotix.'}
-                            </p>
+                            <ProductDescription
+                                text={event.description}
+                                fallback="Event pilihan Indotix."
+                                lines={4}
+                                className="mt-2 text-sm text-slate-500"
+                            />
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <MapPin className="h-4 w-4 text-sky-500" />

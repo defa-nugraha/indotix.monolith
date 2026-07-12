@@ -120,11 +120,11 @@ export function DiscoveryStoryHero({
             <div className="pointer-events-none absolute -bottom-16 left-4 h-36 w-36 rounded-full bg-black/10 blur-3xl" />
             <div className="relative grid gap-6 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
                 <div>
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase text-white/90">
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold text-white/90 uppercase">
                         <Sparkles className="h-3.5 w-3.5" />
                         <span>{editorial?.eyebrow ?? theme.badge}</span>
                     </div>
-                    <h1 className="mt-4 max-w-3xl font-['Space_Grotesk'] text-2xl font-semibold leading-tight sm:text-3xl lg:text-4xl">
+                    <h1 className="mt-4 max-w-3xl font-['Space_Grotesk'] text-2xl leading-tight font-semibold sm:text-3xl lg:text-4xl">
                         {editorial?.title ?? theme.title}
                     </h1>
                     <p className="mt-3 max-w-2xl text-sm leading-6 text-white/86 sm:text-base">
@@ -149,9 +149,12 @@ export function DiscoveryStoryHero({
                             </div>
                             <Star className="h-5 w-5 text-white/75" />
                         </div>
-                        <p className="mt-4 text-sm font-bold">Pilihan yang sedang menarik</p>
+                        <p className="mt-4 text-sm font-bold">
+                            Pilihan yang sedang menarik
+                        </p>
                         <p className="mt-1 text-xs leading-5 text-white/80">
-                            Temukan rekomendasi, tema, dan kategori yang memudahkan kamu memilih.
+                            Temukan rekomendasi, tema, dan kategori yang
+                            memudahkan kamu memilih.
                         </p>
                     </div>
                     <div className="rounded-3xl border border-white/18 bg-black/10 p-4 backdrop-blur-sm">
@@ -161,9 +164,12 @@ export function DiscoveryStoryHero({
                                 Mudah dijelajahi
                             </span>
                         </div>
-                        <p className="mt-3 text-sm font-bold">Mulai dari yang kamu butuhkan</p>
+                        <p className="mt-3 text-sm font-bold">
+                            Mulai dari yang kamu butuhkan
+                        </p>
                         <p className="mt-1 text-xs leading-5 text-white/80">
-                            Mulai dari yang gratis, populer, kota tujuan, atau jadwal terdekat.
+                            Mulai dari yang gratis, populer, kota tujuan, atau
+                            jadwal terdekat.
                         </p>
                     </div>
                     <div className="rounded-3xl border border-white/18 bg-white/8 p-4 backdrop-blur-sm">
@@ -177,7 +183,8 @@ export function DiscoveryStoryHero({
                             {totalLabel ?? 'Banyak pilihan menarik'}
                         </p>
                         <p className="mt-1 text-xs leading-5 text-white/80">
-                            Rekomendasi dan koleksi pilihan membantu kamu menjelajah lebih cepat.
+                            Rekomendasi dan koleksi pilihan membantu kamu
+                            menjelajah lebih cepat.
                         </p>
                     </div>
                 </div>
@@ -201,9 +208,12 @@ export function DiscoveryIntentRow({
         <section className={cn('space-y-3', className)}>
             <div className="flex items-center justify-between gap-3">
                 <div>
-                    <p className="text-sm font-bold text-slate-900">Cari sesuai kebutuhanmu</p>
+                    <p className="text-sm font-bold text-slate-900">
+                        Cari sesuai kebutuhanmu
+                    </p>
                     <p className="text-xs text-slate-500">
-                        Pilih cara jelajah yang paling cocok, lalu lihat rekomendasi yang relevan.
+                        Pilih cara jelajah yang paling cocok, lalu lihat
+                        rekomendasi yang relevan.
                     </p>
                 </div>
             </div>
@@ -256,24 +266,27 @@ export function DiscoveryFeaturedShowcase({
     ].slice(0, 3);
 
     return (
-        <section className="grid gap-5 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:items-stretch">
-            <div className="flex h-full flex-col rounded-[30px] border border-slate-200 bg-white p-4 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:p-5">
-                <div className="flex flex-1 flex-col gap-5">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] xl:items-stretch">
+            <div className="flex h-full flex-col rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.28)] sm:rounded-[30px] sm:p-5">
+                <div className="flex flex-1 flex-col gap-4 sm:gap-5">
                     <div>
                         <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
                             <Sparkles className="h-4 w-4" />
-                        <span>{section?.title ?? 'Rekomendasi pilihan'}</span>
+                            <span>
+                                {section?.title ?? 'Rekomendasi pilihan'}
+                            </span>
+                        </div>
+                        <h2 className="mt-2 line-clamp-2 font-['Space_Grotesk'] text-xl font-semibold text-slate-900 sm:mt-3 sm:text-[2rem]">
+                            {itemTitle(featured)}
+                        </h2>
+                        <p className="mt-2 line-clamp-2 max-w-xl text-sm leading-6 text-slate-500 sm:line-clamp-none">
+                            {section?.description ??
+                                'Mulai dari pilihan yang paling menarik untuk membuka pencarianmu.'}
+                        </p>
                     </div>
-                    <h2 className="mt-3 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-[2rem]">
-                        {itemTitle(featured)}
-                    </h2>
-                    <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">
-                        {section?.description ?? 'Mulai dari pilihan yang paling menarik untuk membuka pencarianmu.'}
-                    </p>
-                </div>
 
                     {spotlightCards.length > 0 && (
-                        <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="hidden gap-3 sm:grid sm:grid-cols-3">
                             {spotlightCards.map((card) => (
                                 <div
                                     key={`${card.label}-${card.value}`}
@@ -297,13 +310,14 @@ export function DiscoveryFeaturedShowcase({
                         </div>
                     )}
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="hidden flex-wrap gap-2 sm:flex">
                         {(featured.tags ?? []).slice(0, 4).map((tag) => (
                             <span
                                 key={tag}
                                 className={cn(
                                     'rounded-full px-3 py-1 text-xs font-semibold',
-                                    theme.surfaceClassName ?? 'bg-sky-50 text-sky-700',
+                                    theme.surfaceClassName ??
+                                        'bg-sky-50 text-sky-700',
                                 )}
                             >
                                 {tag}
@@ -312,12 +326,12 @@ export function DiscoveryFeaturedShowcase({
                     </div>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-4">
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-4 sm:mt-5 sm:gap-4">
                     <div>
                         <p className="text-[11px] font-bold text-slate-400 uppercase">
                             Mulai dari
                         </p>
-                        <span className="mt-2 block text-lg font-semibold text-slate-900 sm:text-[1.75rem]">
+                        <span className="mt-1 block text-base font-semibold text-slate-900 sm:mt-2 sm:text-[1.75rem]">
                             {featured.price_label ?? 'Lihat detail'}
                         </span>
                     </div>
@@ -335,24 +349,24 @@ export function DiscoveryFeaturedShowcase({
                     )}
                 </div>
             </div>
-            <div className="relative min-h-[300px] overflow-hidden rounded-[30px] border border-slate-200 bg-slate-900 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.4)] sm:min-h-[360px] xl:min-h-[460px]">
+            <div className="relative min-h-[190px] overflow-hidden rounded-[24px] border border-slate-200 bg-slate-900 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.4)] sm:min-h-[360px] sm:rounded-[30px] xl:min-h-[460px]">
                 <img
                     src={itemImage(featured)}
                     alt={itemTitle(featured)}
                     className="absolute inset-0 h-full w-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/26 to-transparent" />
-                <div className="absolute inset-x-4 bottom-4 rounded-[24px] border border-white/14 bg-black/32 p-4 text-white backdrop-blur-md sm:inset-x-5 sm:bottom-5 sm:p-4.5">
+                <div className="absolute inset-x-3 bottom-3 rounded-[20px] border border-white/14 bg-black/32 p-3 text-white backdrop-blur-md sm:inset-x-5 sm:bottom-5 sm:rounded-[24px] sm:p-4.5">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
                             <p className="text-xs font-bold text-white/70 uppercase">
                                 Pilihan utama
                             </p>
-                            <p className="mt-2 line-clamp-2 text-lg font-semibold leading-tight sm:text-xl">
+                            <p className="mt-1 line-clamp-2 text-base leading-tight font-semibold sm:mt-2 sm:text-xl">
                                 {itemTitle(featured)}
                             </p>
                             {meta.length > 0 && (
-                                <div className="mt-3 flex flex-wrap gap-2">
+                                <div className="mt-2 hidden flex-wrap gap-2 sm:flex">
                                     {meta.slice(0, 2).map((entry) => (
                                         <span
                                             key={entry}
@@ -389,7 +403,9 @@ export function DiscoveryCollectionRail({
         <section className="space-y-4">
             <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <p className="text-lg font-bold text-slate-900">{section.title}</p>
+                    <p className="text-lg font-bold text-slate-900">
+                        {section.title}
+                    </p>
                     {section.description && (
                         <p className="mt-1 text-sm text-slate-500">
                             {section.description}
@@ -397,7 +413,7 @@ export function DiscoveryCollectionRail({
                     )}
                 </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-2 md:gap-4 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-3 [&::-webkit-scrollbar]:hidden">
                 {section.items.slice(0, 6).map((item) => (
                     <DiscoveryMiniCard
                         key={`${section.key}-${item.id}`}
@@ -422,9 +438,9 @@ export function DiscoveryMiniCard({
     return (
         <a
             href={item.cta?.url ?? '#'}
-            className="group overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+            className="group w-[46vw] min-w-[10.5rem] snap-start overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg md:w-auto md:min-w-0 md:rounded-[26px]"
         >
-            <div className="relative h-44 overflow-hidden bg-slate-100">
+            <div className="relative h-28 overflow-hidden bg-slate-100 md:h-44">
                 <img
                     src={itemImage(item)}
                     alt={itemTitle(item)}
@@ -455,7 +471,7 @@ export function DiscoveryMiniCard({
                 </div>
                 <div className="flex items-center justify-between gap-3">
                     <div>
-                        <p className="text-xs font-semibold uppercase text-slate-400">
+                        <p className="text-xs font-semibold text-slate-400 uppercase">
                             Mulai dari
                         </p>
                         <p className="text-sm font-semibold text-slate-900">

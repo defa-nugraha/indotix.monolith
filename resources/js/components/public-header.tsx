@@ -1,8 +1,25 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { BadgePercent, Bell, History, LayoutGrid, LogOut, Menu, MessageCircle, ShoppingCart, UserCircle } from 'lucide-react';
+import {
+    BadgePercent,
+    Bell,
+    History,
+    LayoutGrid,
+    LogOut,
+    Menu,
+    MessageCircle,
+    Search,
+    UserCircle,
+} from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+    Sheet,
+    SheetClose,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { logout } from '@/routes';
 
@@ -42,6 +59,7 @@ export type PublicHeaderProps = {
     showSearch?: boolean;
     showCategories?: boolean;
     showChips?: boolean;
+    transparent?: boolean;
 };
 
 export default function PublicHeader({
@@ -51,11 +69,11 @@ export default function PublicHeader({
     showSearch = true,
     showCategories = true,
     showChips = true,
+    transparent = false,
 }: PublicHeaderProps) {
-    const { auth, unread_notifications, souvenir_cart_count, affiliate_menu } = usePage().props as {
+    const { auth, unread_notifications, affiliate_menu } = usePage().props as {
         auth?: { user?: { role?: string } };
         unread_notifications?: number;
-        souvenir_cart_count?: number;
         affiliate_menu?: boolean;
     };
     const url = usePage().url || '';
@@ -64,19 +82,24 @@ export default function PublicHeader({
     const isUser = role === 'user';
     const isLoggedIn = Boolean(auth?.user);
     const isNonUser = isLoggedIn && !isUser;
-    const showCart = !isNonUser;
-
-    const isActivePath = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+    const isActivePath = (path: string) =>
+        pathname === path || pathname.startsWith(`${path}/`);
 
     const resolvedCategories = categories ?? [];
     const hasCategories = resolvedCategories.length > 0;
     const hasChips = chips.length > 0;
     const dashboardHref = role === 'mitra' ? '/mitra/dashboard' : '/dashboard';
     const dashboardLabel = role === 'mitra' ? 'Dashboard Mitra' : 'Dashboard';
-    const [topbarSearchValue, setTopbarSearchValue] = useState(search?.value ?? '');
+    const [topbarSearchValue, setTopbarSearchValue] = useState(
+        search?.value ?? '',
+    );
     const [topbarOpen, setTopbarOpen] = useState(false);
-    const [topbarProducts, setTopbarProducts] = useState<HeaderDiscoveryProduct[]>([]);
-    const [topbarKeywords, setTopbarKeywords] = useState<HeaderDiscoveryKeyword[]>([]);
+    const [topbarProducts, setTopbarProducts] = useState<
+        HeaderDiscoveryProduct[]
+    >([]);
+    const [topbarKeywords, setTopbarKeywords] = useState<
+        HeaderDiscoveryKeyword[]
+    >([]);
     const searchWrapperRef = useRef<HTMLDivElement | null>(null);
     const activeSearchValue = search?.value ?? topbarSearchValue;
 
@@ -85,11 +108,28 @@ export default function PublicHeader({
     };
 
     const userMenu = [
-        { label: 'Profile', href: '/settings/profile', icon: UserCircle, show: true },
-        { label: 'Afiliasi', href: '/affiliate', icon: BadgePercent, show: Boolean(affiliate_menu) },
+        {
+            label: 'Profile',
+            href: '/settings/profile',
+            icon: UserCircle,
+            show: true,
+        },
+        {
+            label: 'Afiliasi',
+            href: '/affiliate',
+            icon: BadgePercent,
+            show: Boolean(affiliate_menu),
+        },
         { label: 'Riwayat', href: '/history', icon: History, show: true },
         { label: 'Chat', href: '/chat', icon: MessageCircle, show: true },
         { label: 'Notifikasi', href: '/notifications', icon: Bell, show: true },
+    ];
+    const mainNav = [
+        { label: 'Beranda', href: '/' },
+        { label: 'Destinasi', href: '/wisata' },
+        { label: 'Promo', href: '/promo' },
+        { label: 'Jelajah', href: '/jelajah' },
+        { label: 'Tentang', href: '/about' },
     ];
 
     useEffect(() => {
@@ -120,7 +160,10 @@ export default function PublicHeader({
         const controller = new AbortController();
         const timer = window.setTimeout(async () => {
             try {
-                const target = new URL('/api/discovery/global/suggestions', window.location.origin);
+                const target = new URL(
+                    '/api/discovery/global/suggestions',
+                    window.location.origin,
+                );
                 const keyword = activeSearchValue.trim();
 
                 target.searchParams.set('product_limit', '6');
@@ -184,38 +227,81 @@ export default function PublicHeader({
         }
     };
 
+    const handleTopbarSubmit = (event: FormEvent) => {
+        if (search?.onSubmit) {
+            search.onSubmit(event);
+            return;
+        }
+
+        event.preventDefault();
+        const keyword = activeSearchValue.trim();
+        router.visit(
+            keyword ? `/wisata?q=${encodeURIComponent(keyword)}` : '/wisata',
+        );
+    };
+
     const renderSearch = (className?: string) => {
-        const showDiscovery = topbarOpen && (topbarProducts.length > 0 || topbarKeywords.length > 0);
+        const showDiscovery =
+            topbarOpen &&
+            (topbarProducts.length > 0 || topbarKeywords.length > 0);
 
         return (
             <div
-                className={cn('relative flex w-full min-w-0 items-center', className)}
+                className={cn(
+                    'relative flex w-full min-w-0 items-center',
+                    className,
+                )}
                 ref={searchWrapperRef}
                 data-coach="public-search"
             >
-                {search?.onSubmit ? (
-                    <form className="w-full min-w-0" onSubmit={search.onSubmit}>
+                <form
+                    className="flex w-full min-w-0 items-center gap-2"
+                    onSubmit={handleTopbarSubmit}
+                >
+                    <div
+                        className={cn(
+                            'flex h-10 min-w-0 flex-1 items-center rounded-full border px-3 transition-all focus-within:ring-2 focus-within:ring-blue-500/50',
+                            transparent
+                                ? 'border-white/20 bg-white/10 text-white'
+                                : 'border-slate-200 bg-slate-50 text-slate-800',
+                        )}
+                    >
+                        <Search
+                            className={cn(
+                                'mr-1.5 h-4 w-4 shrink-0',
+                                transparent
+                                    ? 'text-white/70'
+                                    : 'text-slate-400',
+                            )}
+                        />
                         <input
-                            type="text"
-                            placeholder={search.placeholder ?? 'Cari kota/hotel/wisata/event...'}
-                            className="h-12 w-full min-w-0 rounded-full border border-slate-200 px-5 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
+                            type="search"
+                            placeholder={
+                                search?.placeholder ?? 'Cari kota, destinasi...'
+                            }
+                            className={cn(
+                                'min-w-0 flex-1 border-none bg-transparent py-2 text-xs font-medium focus:outline-none',
+                                transparent
+                                    ? 'placeholder:text-white/70'
+                                    : 'placeholder:text-slate-400',
+                            )}
                             value={activeSearchValue}
-                            onChange={(event) => handleTopbarChange(event.target.value)}
+                            onChange={(event) =>
+                                handleTopbarChange(event.target.value)
+                            }
                             onFocus={() => setTopbarOpen(true)}
                         />
-                    </form>
-                ) : (
-                    <input
-                        type="text"
-                        placeholder={search?.placeholder ?? 'Cari kota/hotel/wisata/event...'}
-                        className="h-12 w-full min-w-0 rounded-full border border-slate-200 px-5 text-sm shadow-sm focus:border-sky-400 focus:outline-none"
-                        value={activeSearchValue}
-                        onChange={(event) => handleTopbarChange(event.target.value)}
-                        onFocus={() => setTopbarOpen(true)}
-                    />
-                )}
+                    </div>
+                    <button
+                        type="submit"
+                        aria-label="Cari"
+                        className="inline-flex h-12 w-14 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm transition hover:bg-sky-700 md:hidden"
+                    >
+                        <Search className="h-4 w-4" />
+                    </button>
+                </form>
                 {showDiscovery && (
-                    <div className="absolute top-full left-0 right-0 z-50 mt-3 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_80px_-34px_rgba(15,23,42,0.35)]">
+                    <div className="absolute top-full right-0 left-0 z-50 mt-3 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_28px_80px_-34px_rgba(15,23,42,0.35)]">
                         {topbarProducts.length > 0 && (
                             <div className="border-b border-slate-100 p-4">
                                 <div className="px-1 text-[11px] font-bold text-slate-400 uppercase">
@@ -227,7 +313,9 @@ export default function PublicHeader({
                                             key={`${item.label}-${item.url ?? item.product_type_label}`}
                                             type="button"
                                             className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3 text-left transition hover:border-sky-200 hover:bg-sky-50"
-                                            onMouseDown={(event) => event.preventDefault()}
+                                            onMouseDown={(event) =>
+                                                event.preventDefault()
+                                            }
                                             onClick={() =>
                                                 handleTopbarNavigate(
                                                     item.url,
@@ -237,7 +325,10 @@ export default function PublicHeader({
                                         >
                                             <div className="h-14 w-14 shrink-0 overflow-hidden rounded-2xl bg-slate-100">
                                                 <img
-                                                    src={item.image ?? '/images/placeholder-card.jpg'}
+                                                    src={
+                                                        item.image ??
+                                                        '/images/placeholder-card.jpg'
+                                                    }
                                                     alt={item.label}
                                                     className="h-full w-full object-cover"
                                                 />
@@ -247,7 +338,8 @@ export default function PublicHeader({
                                                     {item.label}
                                                 </div>
                                                 <div className="mt-1 text-xs text-slate-500">
-                                                    {item.product_type_label ?? 'Produk pilihan'}
+                                                    {item.product_type_label ??
+                                                        'Produk pilihan'}
                                                 </div>
                                             </div>
                                         </button>
@@ -267,7 +359,9 @@ export default function PublicHeader({
                                             key={`${item.label}-${item.product_type_label}`}
                                             type="button"
                                             className="rounded-full border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
-                                            onMouseDown={(event) => event.preventDefault()}
+                                            onMouseDown={(event) =>
+                                                event.preventDefault()
+                                            }
                                             onClick={() =>
                                                 handleTopbarNavigate(
                                                     item.url,
@@ -288,45 +382,98 @@ export default function PublicHeader({
     };
 
     return (
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
-            <div className="mx-auto w-full max-w-6xl px-4 py-4 md:px-8">
-                <div className="flex items-center gap-4">
-                    <Link href="/" className="flex items-center gap-2" data-skip-action-loading="true">
-                        <img src="/logo.png" alt="Indotix" className="h-10 w-32 object-contain md:h-11 md:w-36" />
+        <header
+            className={cn(
+                transparent
+                    ? 'absolute top-0 right-0 left-0 z-30 border-b border-white/10 bg-gradient-to-b from-black/50 to-transparent text-white shadow-none transition-all duration-300'
+                    : 'sticky top-0 z-30 border-b border-slate-100 bg-white text-slate-800 shadow-sm transition-all duration-300',
+                isUser && 'public-user-header',
+            )}
+        >
+            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex h-20 items-center justify-between gap-4">
+                    <Link
+                        href="/"
+                        className="group flex items-center gap-2"
+                        data-skip-action-loading="true"
+                    >
+                        <img
+                            src="/logo.png"
+                            alt="Indotix"
+                            className={cn(
+                                'h-10 object-contain transition-transform group-hover:scale-105 md:h-11 md:w-36',
+                                isUser ? 'w-24' : 'w-32',
+                            )}
+                        />
                     </Link>
 
-                    {showSearch && renderSearch('flex-1')}
+                    <nav
+                        className="hidden items-center gap-6 text-sm font-medium md:flex"
+                        id="desktop-nav"
+                    >
+                        {mainNav.map((item) => {
+                            const active =
+                                item.href === '/'
+                                    ? pathname === '/'
+                                    : isActivePath(item.href.split('#')[0]);
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href}
+                                    className={cn(
+                                        'relative px-1 py-2 transition-colors hover:text-blue-500',
+                                        active
+                                            ? transparent
+                                                ? 'text-white after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:bg-white after:content-[""]'
+                                                : 'text-blue-600 after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:bg-blue-600 after:content-[""]'
+                                            : transparent
+                                              ? 'text-white/90'
+                                              : 'text-slate-600',
+                                    )}
+                                >
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                    </nav>
+
+                    {showSearch &&
+                        renderSearch(
+                            'hidden max-w-xs flex-1 md:flex lg:max-w-sm',
+                        )}
 
                     <div className="hidden items-center gap-4 md:flex">
-                        {showCart && (
-                            <Link href="/retail-shop/cart" data-coach="public-cart" className="relative flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-sky-600">
-                                <ShoppingCart className="h-4 w-4" />
-                                Keranjang
-                                {Boolean(souvenir_cart_count) && (
-                                    <span className="absolute -right-3 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                        {souvenir_cart_count}
-                                    </span>
-                                )}
-                            </Link>
-                        )}
                         {!auth?.user && (
                             <div className="flex items-center gap-2">
                                 <Link
-                                    href="/register"
-                                    className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700"
+                                    href="/login"
+                                    className={cn(
+                                        'rounded-full px-4 py-2 text-sm font-semibold transition',
+                                        transparent
+                                            ? 'text-white hover:bg-white/10'
+                                            : 'text-slate-700 hover:bg-slate-100',
+                                    )}
                                 >
-                                    Register
+                                    Masuk
                                 </Link>
                                 <Link
-                                    href="/login"
-                                    className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+                                    href="/register"
+                                    className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
                                 >
-                                    Login
+                                    Daftar
                                 </Link>
                             </div>
                         )}
                         {isUser && (
-                            <div data-coach="public-user-menu" className="flex items-center gap-4 text-sm font-semibold text-slate-600">
+                            <div
+                                data-coach="public-user-menu"
+                                className={cn(
+                                    'flex items-center gap-4 text-sm font-semibold',
+                                    transparent
+                                        ? 'text-white/90'
+                                        : 'text-slate-600',
+                                )}
+                            >
                                 {userMenu
                                     .filter((item) => item.show)
                                     .map((item) => (
@@ -334,28 +481,50 @@ export default function PublicHeader({
                                             key={item.href}
                                             href={item.href}
                                             className={cn(
-                                                'flex items-center gap-2 hover:text-sky-600',
-                                                isActivePath(item.href) && 'text-sky-600'
+                                                'flex items-center gap-2',
+                                                transparent
+                                                    ? 'hover:text-white'
+                                                    : 'hover:text-sky-600',
+                                                isActivePath(item.href) &&
+                                                    (transparent
+                                                        ? 'text-white'
+                                                        : 'text-sky-600'),
                                             )}
                                         >
                                             <item.icon className="h-4 w-4" />
                                             {item.label}
-                                            {item.href === '/notifications' && Boolean(unread_notifications) && (
-                                                <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                                    {unread_notifications}
-                                                </span>
-                                            )}
+                                            {item.href === '/notifications' &&
+                                                Boolean(
+                                                    unread_notifications,
+                                                ) && (
+                                                    <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                                                        {unread_notifications}
+                                                    </span>
+                                                )}
                                         </Link>
                                     ))}
                             </div>
                         )}
                         {isNonUser && (
-                            <div className="flex items-center gap-3 text-sm font-semibold text-slate-600">
+                            <div
+                                className={cn(
+                                    'flex items-center gap-3 text-sm font-semibold',
+                                    transparent
+                                        ? 'text-white/90'
+                                        : 'text-slate-600',
+                                )}
+                            >
                                 <Link
                                     href={dashboardHref}
                                     className={cn(
-                                        'flex items-center gap-2 hover:text-sky-600',
-                                        isActivePath(dashboardHref) && 'text-sky-600'
+                                        'flex items-center gap-2',
+                                        transparent
+                                            ? 'hover:text-white'
+                                            : 'hover:text-sky-600',
+                                        isActivePath(dashboardHref) &&
+                                            (transparent
+                                                ? 'text-white'
+                                                : 'text-sky-600'),
                                     )}
                                 >
                                     <LayoutGrid className="h-4 w-4" />
@@ -365,7 +534,12 @@ export default function PublicHeader({
                                     href={logout()}
                                     as="button"
                                     onClick={handleLogout}
-                                    className="flex items-center gap-2 text-rose-600 hover:text-rose-700"
+                                    className={cn(
+                                        'flex items-center gap-2',
+                                        transparent
+                                            ? 'text-white/90 hover:text-white'
+                                            : 'text-rose-600 hover:text-rose-700',
+                                    )}
                                 >
                                     <LogOut className="h-4 w-4" />
                                     Logout
@@ -374,128 +548,203 @@ export default function PublicHeader({
                         )}
                     </div>
 
-                    <div className="flex items-center gap-2 md:hidden">
-                        {showCart && (
-                            <Link href="/retail-shop/cart" data-coach="public-cart" className="relative inline-flex shrink-0 items-center gap-1 rounded-full border border-slate-200 px-2 py-2 text-xs font-semibold text-slate-600">
-                                <ShoppingCart className="h-4 w-4" />
-                                <span className="hidden sm:inline">Keranjang</span>
-                                <span className="sr-only">Keranjang</span>
-                                {Boolean(souvenir_cart_count) && (
-                                    <span className="absolute -right-2 -top-2 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1 text-[10px] font-bold text-white">
-                                        {souvenir_cart_count}
-                                    </span>
-                                )}
-                            </Link>
+                    <div className="ml-auto flex items-center gap-2 md:hidden">
+                        {isUser && (
+                            <>
+                                <Link
+                                    href="/notifications"
+                                    aria-label="Notifikasi"
+                                    className="public-user-header__icon relative"
+                                >
+                                    <Bell className="h-5 w-5" />
+                                    {Boolean(unread_notifications) && (
+                                        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[9px] font-bold text-white">
+                                            {unread_notifications}
+                                        </span>
+                                    )}
+                                </Link>
+                                <Link
+                                    href="/chat"
+                                    aria-label="Percakapan"
+                                    className="public-user-header__icon"
+                                >
+                                    <MessageCircle className="h-5 w-5" />
+                                </Link>
+                            </>
                         )}
-                        <Sheet>
-                            <SheetTrigger className="inline-flex shrink-0 items-center justify-center rounded-full border border-slate-200 p-2 text-slate-600">
-                                <Menu className="h-5 w-5" />
-                            </SheetTrigger>
-                            <SheetContent side="left" className="w-72">
-                                <SheetHeader>
-                                    <SheetTitle>Menu</SheetTitle>
-                                </SheetHeader>
-                                <div className="flex flex-col gap-4 px-4 pb-6">
-                                    {!auth?.user && (
-                                        <div className="grid gap-2">
-                                            <SheetClose asChild>
-                                                <Link href="/register" className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white text-center">
-                                                    Register
-                                                </Link>
-                                            </SheetClose>
-                                            <SheetClose asChild>
-                                                <Link href="/login" className="rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-600 text-center">
-                                                    Login
-                                                </Link>
-                                            </SheetClose>
-                                        </div>
+                        {!auth?.user ? (
+                            <Link
+                                href="/login"
+                                className={cn(
+                                    'inline-flex min-h-10 items-center justify-center rounded-full px-4 text-sm font-bold shadow-sm transition',
+                                    transparent
+                                        ? 'bg-white text-sky-700 hover:bg-sky-50'
+                                        : 'bg-sky-600 text-white hover:bg-sky-700',
+                                )}
+                            >
+                                Masuk
+                            </Link>
+                        ) : (
+                            <Sheet>
+                                <SheetTrigger
+                                    aria-label="Buka menu lainnya"
+                                    className={cn(
+                                        'inline-flex shrink-0 items-center justify-center rounded-full border p-2 shadow-sm',
+                                        transparent
+                                            ? 'border-white/20 bg-white/10 text-white'
+                                            : 'border-slate-200 bg-white text-slate-600',
+                                        isUser && 'public-user-header__icon',
                                     )}
-                                    {isUser && (
-                                        <div className="grid gap-2">
-                                            {userMenu
-                                                .filter((item) => item.show)
-                                                .map((item) => (
-                                                    <SheetClose asChild key={item.href}>
-                                                        <Link
-                                                            href={item.href}
-                                                            className={cn(
-                                                                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
-                                                                isActivePath(item.href) ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50'
-                                                            )}
+                                >
+                                    <Menu className="h-5 w-5" />
+                                </SheetTrigger>
+                                <SheetContent side="left" className="w-72">
+                                    <SheetHeader>
+                                        <SheetTitle>Menu</SheetTitle>
+                                    </SheetHeader>
+                                    <div className="flex flex-col gap-4 px-4 pb-6">
+                                        {!auth?.user && (
+                                            <div className="grid gap-2">
+                                                <SheetClose asChild>
+                                                    <Link
+                                                        href="/register"
+                                                        className="rounded-lg bg-sky-600 px-4 py-2 text-center text-sm font-semibold text-white"
+                                                    >
+                                                        Register
+                                                    </Link>
+                                                </SheetClose>
+                                                <SheetClose asChild>
+                                                    <Link
+                                                        href="/login"
+                                                        className="rounded-lg border border-blue-600 px-4 py-2 text-center text-sm font-semibold text-blue-600"
+                                                    >
+                                                        Login
+                                                    </Link>
+                                                </SheetClose>
+                                            </div>
+                                        )}
+                                        {isUser && (
+                                            <div className="grid gap-2">
+                                                {userMenu
+                                                    .filter((item) => item.show)
+                                                    .map((item) => (
+                                                        <SheetClose
+                                                            asChild
+                                                            key={item.href}
                                                         >
-                                                            <item.icon className="h-4 w-4" />
-                                                            {item.label}
-                                                        </Link>
-                                                    </SheetClose>
-                                                ))}
-                                        </div>
-                                    )}
-                                    {isNonUser && (
-                                        <div className="grid gap-2">
-                                            <SheetClose asChild>
-                                                <Link
-                                                    href={dashboardHref}
-                                                    className={cn(
-                                                        'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
-                                                        isActivePath(dashboardHref) ? 'bg-sky-50 text-sky-700' : 'text-slate-600 hover:bg-slate-50'
-                                                    )}
-                                                >
-                                                    <LayoutGrid className="h-4 w-4" />
-                                                    {dashboardLabel}
-                                                </Link>
-                                            </SheetClose>
-                                            <SheetClose asChild>
-                                                <Link
-                                                    href={logout()}
-                                                    as="button"
-                                                    onClick={handleLogout}
-                                                    className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
-                                                >
-                                                    <LogOut className="h-4 w-4" />
-                                                    Logout
-                                                </Link>
-                                            </SheetClose>
-                                        </div>
-                                    )}
-                                    {showCategories && hasCategories && (
-                                        <div className="grid gap-2">
-                                            <div className="text-xs font-semibold uppercase text-slate-400">Kategori</div>
-                                            {resolvedCategories.map((item) => {
-                                                const active = item.active ?? isActivePath(item.href);
-                                                return (
-                                                    <SheetClose asChild key={item.href}>
-                                                        <Link
-                                                            href={item.href}
-                                                            className={cn(
-                                                                'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
-                                                                active ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
-                                                            )}
-                                                        >
-                                                            <item.icon className="h-4 w-4" />
-                                                            {item.label}
-                                                        </Link>
-                                                    </SheetClose>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-                                </div>
-                            </SheetContent>
-                        </Sheet>
+                                                            <Link
+                                                                href={item.href}
+                                                                className={cn(
+                                                                    'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
+                                                                    isActivePath(
+                                                                        item.href,
+                                                                    )
+                                                                        ? 'bg-sky-50 text-sky-700'
+                                                                        : 'text-slate-600 hover:bg-slate-50',
+                                                                )}
+                                                            >
+                                                                <item.icon className="h-4 w-4" />
+                                                                {item.label}
+                                                            </Link>
+                                                        </SheetClose>
+                                                    ))}
+                                            </div>
+                                        )}
+                                        {isNonUser && (
+                                            <div className="grid gap-2">
+                                                <SheetClose asChild>
+                                                    <Link
+                                                        href={dashboardHref}
+                                                        className={cn(
+                                                            'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
+                                                            isActivePath(
+                                                                dashboardHref,
+                                                            )
+                                                                ? 'bg-sky-50 text-sky-700'
+                                                                : 'text-slate-600 hover:bg-slate-50',
+                                                        )}
+                                                    >
+                                                        <LayoutGrid className="h-4 w-4" />
+                                                        {dashboardLabel}
+                                                    </Link>
+                                                </SheetClose>
+                                                <SheetClose asChild>
+                                                    <Link
+                                                        href={logout()}
+                                                        as="button"
+                                                        onClick={handleLogout}
+                                                        className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                                                    >
+                                                        <LogOut className="h-4 w-4" />
+                                                        Logout
+                                                    </Link>
+                                                </SheetClose>
+                                            </div>
+                                        )}
+                                        {showCategories && hasCategories && (
+                                            <div className="grid gap-2">
+                                                <div className="text-xs font-semibold text-slate-400 uppercase">
+                                                    Kategori
+                                                </div>
+                                                {resolvedCategories.map(
+                                                    (item) => {
+                                                        const active =
+                                                            item.active ??
+                                                            isActivePath(
+                                                                item.href,
+                                                            );
+                                                        return (
+                                                            <SheetClose
+                                                                asChild
+                                                                key={item.href}
+                                                            >
+                                                                <Link
+                                                                    href={
+                                                                        item.href
+                                                                    }
+                                                                    className={cn(
+                                                                        'flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold',
+                                                                        active
+                                                                            ? 'bg-slate-100 text-slate-900'
+                                                                            : 'text-slate-600 hover:bg-slate-50',
+                                                                    )}
+                                                                >
+                                                                    <item.icon className="h-4 w-4" />
+                                                                    {item.label}
+                                                                </Link>
+                                                            </SheetClose>
+                                                        );
+                                                    },
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </SheetContent>
+                            </Sheet>
+                        )}
                     </div>
                 </div>
             </div>
 
             {showCategories && hasCategories && (
-                <div className="border-t border-slate-100" data-coach="public-categories">
-                    <div className="mx-auto flex w-full max-w-6xl items-center gap-6 overflow-x-auto px-4 py-3 text-sm font-semibold md:px-8">
+                <div
+                    className="hidden border-t border-slate-100 bg-white/90 md:block"
+                    data-coach="public-categories"
+                >
+                    <div className="mx-auto flex w-full max-w-7xl items-center gap-3 overflow-x-auto px-4 py-3 text-sm font-semibold md:px-6 lg:px-8">
                         {resolvedCategories.map((item) => {
-                            const active = item.active ?? isActivePath(item.href);
+                            const active =
+                                item.active ?? isActivePath(item.href);
                             return (
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    className={cn('flex items-center gap-2 whitespace-nowrap', active ? 'text-slate-900' : 'text-slate-500 hover:text-slate-900')}
+                                    className={cn(
+                                        'flex items-center gap-2 rounded-full px-4 py-2 whitespace-nowrap transition',
+                                        active
+                                            ? 'bg-sky-600 text-white shadow-sm'
+                                            : 'bg-slate-50 text-slate-600 hover:bg-sky-50 hover:text-sky-700',
+                                    )}
                                 >
                                     <item.icon className="h-4 w-4" />
                                     {item.label}
@@ -507,10 +756,18 @@ export default function PublicHeader({
             )}
 
             {showChips && hasChips && (
-                <div className="border-t border-slate-100">
-                    <div className="mx-auto flex w-full max-w-6xl gap-2 overflow-x-auto px-4 py-3 md:flex-wrap md:overflow-visible md:px-8">
+                <div
+                    className={cn(
+                        'border-t border-slate-100',
+                        isUser && 'hidden md:block',
+                    )}
+                >
+                    <div className="mx-auto flex w-full max-w-7xl gap-2 overflow-x-auto px-4 py-3 md:flex-wrap md:overflow-visible md:px-6 lg:px-8">
                         {chips.map((chip) => (
-                            <span key={chip} className="whitespace-nowrap rounded-full bg-slate-100 px-4 py-1 text-xs font-medium text-slate-600">
+                            <span
+                                key={chip}
+                                className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold whitespace-nowrap text-slate-600 shadow-sm"
+                            >
                                 {chip}
                             </span>
                         ))}

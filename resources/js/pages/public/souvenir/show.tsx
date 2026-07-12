@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { ProductDescription } from '@/components/product-description';
 import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
 import PublicLayout from '@/layouts/public-layout';
@@ -202,10 +203,12 @@ export default function SouvenirShow({
                                 <h1 className="mt-2 text-2xl font-semibold text-slate-900">
                                     {product.name}
                                 </h1>
-                                <p className="mt-3 text-sm text-slate-600">
-                                    {product.description ??
-                                        'Produk retail pilihan dari INDOTIX.'}
-                                </p>
+                                <ProductDescription
+                                    text={product.description}
+                                    fallback="Produk retail pilihan dari INDOTIX."
+                                    lines={4}
+                                    className="mt-3 text-sm text-slate-600"
+                                />
                             </div>
                         </div>
                     </div>

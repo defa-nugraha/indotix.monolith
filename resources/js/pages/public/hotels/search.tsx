@@ -30,6 +30,7 @@ import {
     type DiscoverySuggestionGroup,
 } from '@/components/discovery/product-discovery';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { PublicSeo } from '@/components/public-seo';
 import { Skeleton } from '@/components/ui/skeleton';
 import PublicLayout from '@/layouts/public-layout';
 
@@ -327,7 +328,26 @@ export default function HotelSearch({
 
     return (
         <PublicLayout categories={categories} chips={chips}>
-            <Head title="Cari Hotel">
+            <PublicSeo
+                title="Cari Hotel di Indotix"
+                description="Temukan hotel pilihan berdasarkan kota, tanggal menginap, jumlah tamu, kamar tersedia, dan harga terbaik di Indotix."
+                canonicalPath="/stay"
+                image={filtered.find((hotel) => hotel.image_url)?.image_url}
+                structuredData={{
+                    '@context': 'https://schema.org',
+                    '@type': 'ItemList',
+                    name: 'Daftar hotel Indotix',
+                    itemListElement: filtered
+                        .slice(0, 12)
+                        .map((hotel, index) => ({
+                            '@type': 'ListItem',
+                            position: index + 1,
+                            name: hotel.name,
+                            url: `/stay/hotels/${hotel.slug ?? hotel.encrypted_id}`,
+                        })),
+                }}
+            />
+            <Head>
                 <link
                     href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
                     rel="stylesheet"
@@ -624,14 +644,14 @@ export default function HotelSearch({
                             ))}
                         </section>
 
-                        <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                        <div className="mt-8 grid grid-cols-2 gap-4 max-md:-mx-4 max-md:flex max-md:snap-x max-md:overflow-x-auto max-md:px-4 max-md:pb-3 max-md:[scrollbar-width:none] sm:gap-6 lg:grid-cols-3 xl:grid-cols-4 max-md:[&::-webkit-scrollbar]:hidden">
                             {filtered.map((hotel) => {
                                 const detailSlug =
                                     hotel.slug ?? hotel.encrypted_id;
                                 return (
                                     <div
                                         key={hotel.id}
-                                        className="group overflow-hidden rounded-xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                                        className="group overflow-hidden rounded-xl bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg max-md:w-[46vw] max-md:min-w-[10.5rem] max-md:snap-start"
                                     >
                                         <Link
                                             href={
@@ -639,7 +659,7 @@ export default function HotelSearch({
                                                     ? `/stay/hotels/${detailSlug}?check_in=${form.check_in}&check_out=${form.check_out}&rooms=${form.rooms}&guests=${form.guests}&children=${children}`
                                                     : '/stay'
                                             }
-                                            className="relative block h-28 overflow-hidden"
+                                            className="relative block h-28 overflow-hidden max-md:h-24"
                                         >
                                             <img
                                                 src={
@@ -647,6 +667,8 @@ export default function HotelSearch({
                                                     '/images/placeholder-card.jpg'
                                                 }
                                                 alt={hotel.name}
+                                                loading="lazy"
+                                                decoding="async"
                                                 className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -659,7 +681,7 @@ export default function HotelSearch({
                                         <div className="p-3">
                                             <div className="flex items-start justify-between gap-4">
                                                 <div>
-                                                    <h2 className="text-sm font-semibold text-slate-900">
+                                                    <h2 className="line-clamp-2 text-sm leading-snug font-semibold text-slate-900">
                                                         {hotel.name}
                                                     </h2>
                                                     <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
@@ -795,10 +817,12 @@ export default function HotelSearch({
                                                         '/images/placeholder-card.jpg'
                                                     }
                                                     alt={item.name}
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     className="h-44 w-full object-cover"
                                                 />
                                                 <div className="p-4">
-                                                    <h3 className="text-sm font-semibold text-slate-900">
+                                                    <h3 className="line-clamp-2 text-sm leading-snug font-semibold text-slate-900">
                                                         {item.name}
                                                     </h3>
                                                     <p className="text-xs text-slate-500">
@@ -837,6 +861,8 @@ export default function HotelSearch({
                             <img
                                 src="/logo.png"
                                 alt="Indotix"
+                                loading="lazy"
+                                decoding="async"
                                 className="h-11 w-36 object-contain"
                             />
                         </Link>
@@ -854,7 +880,7 @@ export default function HotelSearch({
                         </p>
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
+                        <h4 className="line-clamp-2 text-sm leading-snug font-semibold text-slate-900">
                             Layanan
                         </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
@@ -866,7 +892,7 @@ export default function HotelSearch({
                         </ul>
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
+                        <h4 className="line-clamp-2 text-sm leading-snug font-semibold text-slate-900">
                             Perusahaan
                         </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">

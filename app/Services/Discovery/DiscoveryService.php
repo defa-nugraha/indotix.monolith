@@ -9,13 +9,13 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\SouvenirCategory;
 use App\Models\SouvenirProduct;
 use App\Models\SpecialProgram;
+use App\Services\PublicContentCache;
 use App\Services\SearchAnalyticsService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -26,26 +26,17 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 class DiscoveryService
 {
     private const TYPES = [
-        'events' => 'event',
-        'hotels' => 'hotel',
         'wisata' => 'wisata',
-        'academy' => 'academy',
-        'special-programs' => 'special_program',
-        'souvenirs' => 'souvenir',
     ];
 
     private const POPULAR_KEYWORDS = [
-        'events' => ['konser', 'seminar', 'festival', 'event minggu ini', 'event gratis'],
-        'hotels' => ['hotel murah', 'hotel dekat pantai', 'hotel bintang 4', 'family room', 'staycation'],
-        'wisata' => ['wisata keluarga', 'pantai', 'museum', 'tiket promo', 'adventure'],
-        'academy' => ['robotik', 'coding', 'AI', 'kelas pemula', 'kelas online'],
-        'special-programs' => ['program unggulan', 'komunitas', 'sertifikat', 'program pelajar', 'program intensif'],
-        'souvenirs' => ['oleh-oleh', 'merchandise', 'souvenir murah', 'produk lokal', 'ready stock'],
+        'wisata' => ['wisata keluarga', 'taman hiburan', 'pantai', 'museum', 'tiket promo', 'adventure'],
     ];
 
-    public function __construct(private readonly SearchAnalyticsService $analyticsService)
-    {
-    }
+    public function __construct(
+        private readonly SearchAnalyticsService $analyticsService,
+        private readonly PublicContentCache $publicCache,
+    ) {}
 
     public function listing(string $type, Request $request): array
     {
@@ -104,7 +95,7 @@ class DiscoveryService
         $cacheKey = 'discovery:filters:'.$type;
 
         return [
-            'data' => Cache::remember($cacheKey, now()->addMinutes(10), fn () => $this->buildFacets($type)),
+            'data' => $this->publicCache->remember($cacheKey, now()->addMinutes(10), fn () => $this->buildFacets($type)),
             'meta' => [
                 'type' => $type,
                 'cache_ttl_seconds' => 600,
@@ -334,7 +325,7 @@ class DiscoveryService
     {
         $cacheKey = 'discovery:global:products:'.$type.':'.md5($query !== '' ? $query : 'default');
 
-        return collect(Cache::remember($cacheKey, now()->addMinutes($query !== '' ? 3 : 10), function () use ($type, $query) {
+        return collect($this->publicCache->remember($cacheKey, now()->addMinutes($query !== '' ? 3 : 10), function () use ($type, $query) {
             $filters = [
                 'q' => $query !== '' ? $query : null,
                 'sort' => $query !== '' ? 'relevant' : 'popular',
@@ -395,7 +386,7 @@ class DiscoveryService
 
     private function quickCategories(string $type): array
     {
-        $facets = Cache::remember(
+        $facets = $this->publicCache->remember(
             'discovery:filters:'.$type,
             now()->addMinutes(10),
             fn () => $this->buildFacets($type)
