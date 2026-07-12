@@ -27,12 +27,12 @@ test('admin can update maintenance mode settings', function () {
 
     $this->actingAs($admin)
         ->post('/admin/system/settings', [
-            'booking_timeout_minutes' => 15,
-            'tax_rate' => 0,
-            'service_fee' => 0,
+            'hotel_booking_timeout_minutes' => 15,
             'wisata_booking_timeout_minutes' => 15,
-            'wisata_max_quota_per_ticket' => 1000,
-            'wisata_refund_policy' => 'Manual review',
+            'event_booking_timeout_minutes' => 15,
+            'academy_booking_timeout_minutes' => 15,
+            'special_program_booking_timeout_minutes' => 15,
+            'retail_shop_booking_timeout_minutes' => 15,
             MaintenanceMode::ENABLED_KEY => true,
             MaintenanceMode::MESSAGE_KEY => 'Sistem sedang maintenance untuk peningkatan layanan.',
         ])
@@ -51,16 +51,14 @@ test('web transaction routes are blocked during maintenance', function () {
     ]);
 
     $this->actingAs($user)
-        ->from('/stay')
-        ->post('/booking/prepare', [
-            'hotel_id' => 1,
-            'room_type_id' => 1,
-            'check_in' => now()->addDay()->toDateString(),
-            'check_out' => now()->addDays(2)->toDateString(),
-            'rooms' => 1,
-            'guests' => 2,
+        ->from('/wisata')
+        ->post('/wisata/booking/prepare', [
+            'destination_id' => 1,
+            'ticket_id' => 1,
+            'visit_date' => now()->addDay()->toDateString(),
+            'quantity' => 1,
         ])
-        ->assertRedirect('/stay')
+        ->assertRedirect('/wisata')
         ->assertSessionHasErrors([
             'maintenance' => 'Transaksi web sedang ditutup sementara.',
         ]);
@@ -75,13 +73,11 @@ test('mobile transaction routes return maintenance response', function () {
     ]);
 
     $this->actingAs($user, 'sanctum')
-        ->postJson('/api/hotel/bookings/quote', [
-            'hotel_id' => '1',
-            'room_type_id' => '1',
-            'check_in' => now()->addDay()->toDateString(),
-            'check_out' => now()->addDays(2)->toDateString(),
-            'rooms' => 1,
-            'guests' => 2,
+        ->postJson('/api/wisata/bookings/quote', [
+            'destination_id' => '1',
+            'ticket_id' => '1',
+            'visit_date' => now()->addDay()->toDateString(),
+            'quantity' => 1,
         ])
         ->assertStatus(503)
         ->assertJsonPath('maintenance', true)

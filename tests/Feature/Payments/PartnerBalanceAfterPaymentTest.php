@@ -167,8 +167,13 @@ test('hotel purchase is included in hotel partner sales balance after successful
     expect($booking->status)->toBe('paid')
         ->and($booking->total)->toBe(240000);
 
+    $summaryUrl = '/mitra/finance/summary?date_from='
+        .$booking->check_out->copy()->startOfMonth()->toDateString()
+        .'&date_to='
+        .$booking->check_out->copy()->endOfMonth()->toDateString();
+
     $this->actingAs($mitra)
-        ->get('/mitra/finance/summary?period=monthly')
+        ->get($summaryUrl)
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('mitra/finance/summary')
