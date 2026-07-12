@@ -1,12 +1,15 @@
 <?php
 
 use App\Http\Middleware\AddSecurityHeaders;
+use App\Http\Middleware\BlockRetiredProductFeatures;
+use App\Http\Middleware\CachePublicApiResponse;
 use App\Http\Middleware\CaptureAffiliateReferral;
 use App\Http\Middleware\EnsureAdmin;
 use App\Http\Middleware\EnsureAffiliateUser;
 use App\Http\Middleware\EnsureApiAdmin;
 use App\Http\Middleware\EnsureMitra;
 use App\Http\Middleware\EnsureMitraEvent;
+use App\Http\Middleware\EnsureMitraHotel;
 use App\Http\Middleware\EnsureMitraVerified;
 use App\Http\Middleware\EnsureMitraWisata;
 use App\Http\Middleware\EnsureTransactionsAvailable;
@@ -33,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'mitra' => EnsureMitra::class,
             'mitra.verified' => EnsureMitraVerified::class,
+            'mitra.hotel' => EnsureMitraHotel::class,
             'mitra.wisata' => EnsureMitraWisata::class,
             'mitra.event' => EnsureMitraEvent::class,
             'admin' => EnsureAdmin::class,
@@ -42,8 +46,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.admin' => EnsureApiAdmin::class,
             'user.activity' => LogUserActivity::class,
             'maintenance.transactions' => EnsureTransactionsAvailable::class,
+            'api.public-cache' => CachePublicApiResponse::class,
         ]);
 
+        $middleware->append(BlockRetiredProductFeatures::class);
         $middleware->append(AddSecurityHeaders::class);
 
         $middleware->web(append: [

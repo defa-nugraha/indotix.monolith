@@ -20,6 +20,7 @@
         "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.9",
+        "predis/predis": "^3.5",
         "pusher/pusher-php-server": "*",
         "spatie/laravel-pdf": "^1.9"
     },

@@ -36,6 +36,6 @@ test('public sitemap is valid xml and cacheable', function () {
         ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
         ->assertHeader('Cache-Control', 'max-age=3600, public')
         ->assertSee('<?xml version="1.0" encoding="UTF-8"?>', false)
-        ->assertSee(url('/stay'), false)
-        ->assertSee(url('/events'), false);
+        ->assertSee(url('/wisata'), false)
+        ->assertDontSee(url('/events'), false);
 });
