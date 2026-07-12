@@ -364,34 +364,43 @@ export default function SouvenirProductsIndex({
                             submitFilters(event.currentTarget);
                         }}
                     >
-                        <input
-                            name="search"
-                            defaultValue={filters.search ?? ''}
-                            placeholder="Cari nama / SKU"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="draft">Draft</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                        <select
-                            name="category_id"
-                            defaultValue={filters.category_id ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Pencarian produk</span>
+                            <input
+                                name="search"
+                                defaultValue={filters.search ?? ''}
+                                placeholder="Cari nama / SKU"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="draft">Draft</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Kategori</span>
+                            <select
+                                name="category_id"
+                                defaultValue={filters.category_id ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
                             <option value="">Semua kategori</option>
                             {categories.map((category) => (
                                 <option key={category.id} value={category.id}>
                                     {category.name}
                                 </option>
                             ))}
-                        </select>
+                            </select>
+                        </label>
                         <Button
                             className="bg-sky-600 text-white hover:bg-sky-700"
                             type="submit"

@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { FormField } from '@/components/form-field';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -82,25 +83,43 @@ export default function WisataAffiliatePayouts({ payouts, affiliates }: Props) {
                                     <DialogTitle>Buat Payout</DialogTitle>
                                 </DialogHeader>
                                 <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
-                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
-                                        <option value="">Pilih Afiliasi</option>
-                                        {affiliates.map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} />
-                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} />
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Total komisi" value={form.total_commission} onChange={(e) => setForm({ ...form, total_commission: e.target.value })} />
-                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                                        <option value="pending">pending</option>
-                                        <option value="approved">approved</option>
-                                        <option value="rejected">rejected</option>
-                                        <option value="paid">paid</option>
-                                    </select>
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Bank" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nomor rekening" value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama pemilik" value={form.bank_account_name} onChange={(e) => setForm({ ...form, bank_account_name: e.target.value })} />
-                                    <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3" placeholder="Catatan" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                                    <FormField label="Afiliasi">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
+                                            <option value="">Pilih Afiliasi</option>
+                                            {affiliates.map((item) => (
+                                                <option key={item.id} value={item.id}>{item.name}</option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Periode mulai">
+                                        <input type="date" className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Periode selesai">
+                                        <input type="date" className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Total komisi">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.total_commission} onChange={(e) => setForm({ ...form, total_commission: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Status payout">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                                            <option value="pending">pending</option>
+                                            <option value="approved">approved</option>
+                                            <option value="rejected">rejected</option>
+                                            <option value="paid">paid</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Bank">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Nomor rekening">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Nama pemilik rekening">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.bank_account_name} onChange={(e) => setForm({ ...form, bank_account_name: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Catatan" className="md:col-span-3">
+                                        <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                                    </FormField>
                                     <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">Simpan Payout</button>
                                 </form>
                             </DialogContent>
@@ -129,16 +148,19 @@ export default function WisataAffiliatePayouts({ payouts, affiliates }: Props) {
                                         <td>Rp {item.total_commission.toLocaleString('id-ID')}</td>
                                         <td>{item.status}</td>
                                         <td>
-                                            <select
-                                                className="h-8 rounded-md border border-slate-200 px-2 text-xs"
-                                                value={item.status}
-                                                onChange={(e) => updateStatus(item.id, e.target.value)}
-                                            >
-                                                <option value="pending">pending</option>
-                                                <option value="approved">approved</option>
-                                                <option value="rejected">rejected</option>
-                                                <option value="paid">paid</option>
-                                            </select>
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Status</span>
+                                                <select
+                                                    className="h-8 rounded-md border border-slate-200 px-2 text-xs"
+                                                    value={item.status}
+                                                    onChange={(e) => updateStatus(item.id, e.target.value)}
+                                                >
+                                                    <option value="pending">pending</option>
+                                                    <option value="approved">approved</option>
+                                                    <option value="rejected">rejected</option>
+                                                    <option value="paid">paid</option>
+                                                </select>
+                                            </label>
                                         </td>
                                     </tr>
                                 ))}

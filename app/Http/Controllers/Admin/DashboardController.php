@@ -17,6 +17,7 @@ use App\Models\SouvenirOrderItem;
 use App\Models\SouvenirProduct;
 use App\Models\SouvenirRefund;
 use App\Models\WisataBooking;
+use App\Support\AdminPermissionRegistry;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -29,8 +30,31 @@ class DashboardController extends Controller
             'admin_academy' => 'academy',
             'admin_retail' => 'retail',
             'admin_special_program' => 'special',
+            'admin_custom' => 'custom',
             default => 'admin',
         };
+        $permissionKeys = AdminPermissionRegistry::permissionKeysForUser($user);
+        $hasPermissionPrefix = function (array $prefixes) use ($role, $permissionKeys): bool {
+            if ($role === 'admin') {
+                return true;
+            }
+
+            foreach ($permissionKeys as $permissionKey) {
+                foreach ($prefixes as $prefix) {
+                    if (str_starts_with($permissionKey, $prefix)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        };
+        $canSeeHotel = $hasPermissionPrefix(['hotel_', 'mitra.']);
+        $canSeeWisata = $hasPermissionPrefix(['wisata_', 'mitra_wisata.']);
+        $canSeeEvent = $hasPermissionPrefix(['events_', 'mitra_events.']);
+        $canSeeAcademy = $scope === 'academy' || $hasPermissionPrefix(['academy_']);
+        $canSeeRetail = $scope === 'retail' || $hasPermissionPrefix(['retail_']);
+        $canSeeSpecial = $scope === 'special' || $hasPermissionPrefix(['special_program_']);
 
         $today = now()->toDateString();
         $monthStart = now()->startOfMonth()->toDateString();
@@ -178,7 +202,7 @@ class DashboardController extends Controller
                 ]);
             }
         } else {
-            $latestHotel = Booking::query()->with('hotel')->latest('created_at')->first();
+            $latestHotel = $canSeeHotel ? Booking::query()->with('hotel')->latest('created_at')->first() : null;
             if ($latestHotel) {
                 $activities->push([
                     'title' => 'Booking hotel '.($latestHotel->hotel?->name ?? 'baru'),
@@ -187,7 +211,7 @@ class DashboardController extends Controller
                 ]);
             }
 
-            $latestWisata = WisataBooking::query()->with('destination')->latest('created_at')->first();
+            $latestWisata = $canSeeWisata ? WisataBooking::query()->with('destination')->latest('created_at')->first() : null;
             if ($latestWisata) {
                 $activities->push([
                     'title' => 'Tiket wisata '.($latestWisata->destination?->destination_name ?? 'baru'),
@@ -196,11 +220,11 @@ class DashboardController extends Controller
                 ]);
             }
 
-            $latestEvent = EventBooking::query()
+            $latestEvent = $canSeeEvent ? EventBooking::query()
                 ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
                 ->with('event')
                 ->latest('created_at')
-                ->first();
+                ->first() : null;
             if ($latestEvent) {
                 $activities->push([
                     'title' => 'Booking event '.($latestEvent->event?->title ?? 'baru'),
@@ -209,7 +233,7 @@ class DashboardController extends Controller
                 ]);
             }
 
-            $latestAcademy = AcademyBooking::query()->with('academyClass')->latest('created_at')->first();
+            $latestAcademy = $canSeeAcademy ? AcademyBooking::query()->with('academyClass')->latest('created_at')->first() : null;
             if ($latestAcademy) {
                 $activities->push([
                     'title' => 'Kelas Academy '.($latestAcademy->academyClass?->title ?? 'baru'),
@@ -218,12 +242,25 @@ class DashboardController extends Controller
                 ]);
             }
 
-            $latestSouvenir = SouvenirOrder::query()->latest('created_at')->first();
+            $latestSouvenir = $canSeeRetail ? SouvenirOrder::query()->latest('created_at')->first() : null;
             if ($latestSouvenir) {
                 $activities->push([
                     'title' => 'Order souvenir baru',
                     'meta' => 'Order #'.$latestSouvenir->id.' • '.$latestSouvenir->created_at->diffForHumans(),
                     'created_at' => $latestSouvenir->created_at?->timestamp ?? 0,
+                ]);
+            }
+
+            $latestSpecial = $canSeeSpecial ? EventBooking::query()
+                ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+                ->with('event')
+                ->latest('created_at')
+                ->first() : null;
+            if ($latestSpecial) {
+                $activities->push([
+                    'title' => 'Booking special program '.($latestSpecial->event?->title ?? 'baru'),
+                    'meta' => $latestSpecial->quantity.' tiket • '.$latestSpecial->created_at->diffForHumans(),
+                    'created_at' => $latestSpecial->created_at?->timestamp ?? 0,
                 ]);
             }
         }
@@ -282,6 +319,90 @@ class DashboardController extends Controller
                         ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
                         ->where('status', 'pending_payment')
                         ->count(),
+                ],
+                'activities' => $activities,
+            ]);
+        }
+
+        if ($scope === 'custom') {
+            $customTransactionsToday = 0;
+            $customTicketsSoldToday = 0;
+            $customActiveItems = 0;
+            $customPendingReviews = 0;
+            $customPendingPayouts = 0;
+            $customPendingPayments = 0;
+
+            if ($canSeeHotel) {
+                $customTransactionsToday += $hotelBookingsToday;
+                $customTicketsSoldToday += $hotelRoomsSoldToday;
+                $customActiveItems += MitraOnboarding::query()->where('verification_status', 'verified')->count();
+                $customPendingReviews += MitraOnboarding::query()->where('verification_status', 'pending')->count();
+                $customPendingPayouts += MitraOnboarding::query()->where('payout_status', 'pending')->count();
+                $customPendingPayments += Booking::query()->where('status', 'pending_payment')->count();
+            }
+
+            if ($canSeeWisata) {
+                $customTransactionsToday += $wisataBookingsToday;
+                $customTicketsSoldToday += $wisataTicketsSoldToday;
+                $customActiveItems += MitraWisataOnboarding::query()
+                    ->where('verification_status', 'verified')
+                    ->where('is_suspended', false)
+                    ->count();
+                $customPendingReviews += MitraWisataOnboarding::query()->where('verification_status', 'pending')->count();
+                $customPendingPayouts += MitraWisataOnboarding::query()->where('payout_status', 'pending')->count();
+                $customPendingPayments += WisataBooking::query()->where('status', 'pending_payment')->count();
+            }
+
+            if ($canSeeEvent) {
+                $customTransactionsToday += $eventBookingsToday;
+                $customTicketsSoldToday += $eventTicketsSoldToday;
+                $customActiveItems += MitraEventOnboarding::query()->where('verification_status', 'verified')->count();
+                $customPendingReviews += MitraEventOnboarding::query()->where('verification_status', 'pending')->count();
+                $customPendingPayments += EventBooking::query()
+                    ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
+                    ->where('status', 'pending_payment')
+                    ->count();
+            }
+
+            if ($canSeeAcademy) {
+                $customTransactionsToday += $academyBookingsToday;
+                $customTicketsSoldToday += $academyTicketsSoldToday;
+                $customActiveItems += AcademyClass::query()->where('is_active', true)->count();
+                $customPendingPayments += AcademyBooking::query()->where('status', 'pending_payment')->count();
+            }
+
+            if ($canSeeRetail) {
+                $customTransactionsToday += $souvenirOrdersToday;
+                $customTicketsSoldToday += $souvenirItemsSoldToday;
+                $customActiveItems += SouvenirProduct::query()->where('is_active', true)->count();
+                $customPendingReviews += SouvenirRefund::query()->where('status', 'pending')->count();
+                $customPendingPayments += SouvenirOrder::query()->where('status', 'pending_payment')->count();
+            }
+
+            if ($canSeeSpecial) {
+                $customTransactionsToday += $specialProgramBookingsToday;
+                $customTicketsSoldToday += $specialProgramTicketsSoldToday;
+                $customActiveItems += Event::query()
+                    ->where('event_type', 'special_program')
+                    ->where('status', 'published')
+                    ->count();
+                $customPendingPayments += EventBooking::query()
+                    ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
+                    ->where('status', 'pending_payment')
+                    ->count();
+            }
+
+            return Inertia::render('dashboard', [
+                'scope' => $scope,
+                'summary' => [
+                    'transactions_today' => $customTransactionsToday,
+                    'tickets_sold' => $customTicketsSoldToday,
+                    'active_partners' => $customActiveItems,
+                ],
+                'system' => [
+                    'pending_reviews' => $customPendingReviews,
+                    'pending_payouts' => $customPendingPayouts,
+                    'pending_payments' => $customPendingPayments,
                 ],
                 'activities' => $activities,
             ]);

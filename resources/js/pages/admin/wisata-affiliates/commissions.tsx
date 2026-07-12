@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { FormField } from '@/components/form-field';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import {
@@ -107,133 +108,148 @@ export default function WisataAffiliateCommissions({
                                     onSubmit={submit}
                                     className="mt-4 grid gap-4 md:grid-cols-3"
                                 >
-                                    <select
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        value={form.scope_type}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                scope_type: e.target.value,
-                                            })
-                                        }
-                                    >
-                                        <option value="global">Global</option>
-                                        <option value="wisata">
-                                            Per Wisata
-                                        </option>
-                                        <option value="campaign">
-                                            Per Campaign
-                                        </option>
-                                    </select>
-                                    <select
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        value={form.wisata_id}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                wisata_id: e.target.value,
-                                            })
-                                        }
-                                    >
-                                        <option value="">
-                                            Pilih Wisata (opsional)
-                                        </option>
-                                        {destinations.map((item) => (
-                                            <option
-                                                key={item.id}
-                                                value={item.id}
-                                            >
-                                                {item.destination_name}
+                                    <FormField label="Scope komisi">
+                                        <select
+                                            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={form.scope_type}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    scope_type: e.target.value,
+                                                })
+                                            }
+                                        >
+                                            <option value="global">Global</option>
+                                            <option value="wisata">
+                                                Per Wisata
                                             </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        value={form.campaign_id}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                campaign_id: e.target.value,
-                                            })
-                                        }
-                                    >
-                                        <option value="">
-                                            Pilih Campaign (opsional)
-                                        </option>
-                                        {campaigns.map((item) => (
-                                            <option
-                                                key={item.id}
-                                                value={item.id}
-                                            >
-                                                {item.name}
+                                            <option value="campaign">
+                                                Per Campaign
                                             </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        value={form.type}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                type: e.target.value,
-                                            })
-                                        }
-                                    >
-                                        <option value="percentage">
-                                            Persentase
-                                        </option>
-                                        <option value="nominal">Nominal</option>
-                                    </select>
-                                    <input
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        placeholder="Nilai"
-                                        value={form.value}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                value: e.target.value,
-                                            })
-                                        }
-                                    />
-                                    <select
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        value={form.source}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                source: e.target.value,
-                                            })
-                                        }
-                                    >
-                                        <option value="platform">
-                                            Platform
-                                        </option>
-                                        <option value="subsidi_promo">
-                                            Subsidi Promo
-                                        </option>
-                                    </select>
-                                    <input
-                                        type="date"
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        value={form.start_date}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                start_date: e.target.value,
-                                            })
-                                        }
-                                    />
-                                    <input
-                                        type="date"
-                                        className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                        value={form.end_date}
-                                        onChange={(e) =>
-                                            setForm({
-                                                ...form,
-                                                end_date: e.target.value,
-                                            })
-                                        }
-                                    />
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Wisata">
+                                        <select
+                                            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={form.wisata_id}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    wisata_id: e.target.value,
+                                                })
+                                            }
+                                        >
+                                            <option value="">
+                                                Pilih Wisata (opsional)
+                                            </option>
+                                            {destinations.map((item) => (
+                                                <option
+                                                    key={item.id}
+                                                    value={item.id}
+                                                >
+                                                    {item.destination_name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Campaign">
+                                        <select
+                                            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={form.campaign_id}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    campaign_id: e.target.value,
+                                                })
+                                            }
+                                        >
+                                            <option value="">
+                                                Pilih Campaign (opsional)
+                                            </option>
+                                            {campaigns.map((item) => (
+                                                <option
+                                                    key={item.id}
+                                                    value={item.id}
+                                                >
+                                                    {item.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Tipe komisi">
+                                        <select
+                                            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={form.type}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    type: e.target.value,
+                                                })
+                                            }
+                                        >
+                                            <option value="percentage">
+                                                Persentase
+                                            </option>
+                                            <option value="nominal">Nominal</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Nilai komisi">
+                                        <input
+                                            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={form.value}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    value: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </FormField>
+                                    <FormField label="Sumber komisi">
+                                        <select
+                                            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={form.source}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    source: e.target.value,
+                                                })
+                                            }
+                                        >
+                                            <option value="platform">
+                                                Platform
+                                            </option>
+                                            <option value="subsidi_promo">
+                                                Subsidi Promo
+                                            </option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Tanggal mulai">
+                                        <input
+                                            type="date"
+                                            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={form.start_date}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    start_date: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </FormField>
+                                    <FormField label="Tanggal berakhir">
+                                        <input
+                                            type="date"
+                                            className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+                                            value={form.end_date}
+                                            onChange={(e) =>
+                                                setForm({
+                                                    ...form,
+                                                    end_date: e.target.value,
+                                                })
+                                            }
+                                        />
+                                    </FormField>
                                     <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">
                                         Simpan Komisi
                                     </button>

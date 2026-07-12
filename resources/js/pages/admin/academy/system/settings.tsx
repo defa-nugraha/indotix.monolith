@@ -42,29 +42,38 @@ export default function AcademySettings({ setting }: { setting?: Setting | null 
                             submit();
                         }}
                     >
-                        <input
-                            type="number"
-                            min={1}
-                            value={form.data.booking_timeout_minutes}
-                            onChange={(event) => form.setData('booking_timeout_minutes', Number(event.target.value))}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Booking timeout (menit)"
-                        />
-                        <input
-                            type="number"
-                            min={0}
-                            value={form.data.cutoff_minutes}
-                            onChange={(event) => form.setData('cutoff_minutes', Number(event.target.value))}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Cut-off penjualan (menit)"
-                        />
-                        <textarea
-                            value={form.data.refund_policy}
-                            onChange={(event) => form.setData('refund_policy', event.target.value)}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            rows={4}
-                            placeholder="Kebijakan refund default"
-                        />
+                        <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                            <span>Booking timeout (menit)</span>
+                            <input
+                                type="number"
+                                min={1}
+                                value={form.data.booking_timeout_minutes}
+                                onChange={(event) => form.setData('booking_timeout_minutes', Number(event.target.value))}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Booking timeout (menit)"
+                            />
+                        </label>
+                        <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                            <span>Cut-off penjualan (menit)</span>
+                            <input
+                                type="number"
+                                min={0}
+                                value={form.data.cutoff_minutes}
+                                onChange={(event) => form.setData('cutoff_minutes', Number(event.target.value))}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Cut-off penjualan (menit)"
+                            />
+                        </label>
+                        <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                            <span>Kebijakan refund default</span>
+                            <textarea
+                                value={form.data.refund_policy}
+                                onChange={(event) => form.setData('refund_policy', event.target.value)}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                rows={4}
+                                placeholder="Kebijakan refund default"
+                            />
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Simpan
                         </Button>

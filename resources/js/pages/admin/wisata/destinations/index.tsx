@@ -88,35 +88,44 @@ export default function AdminWisataDestinationsIndex({
                             submitFilters(event.currentTarget);
                         }}
                     >
-                        <input
-                            name="search"
-                            defaultValue={filters.search ?? ''}
-                            placeholder="Cari destinasi / mitra"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="draft">Draft</option>
-                            <option value="pending">Pending</option>
-                            <option value="verified">Verified</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
-                        <select
-                            name="city"
-                            defaultValue={filters.city ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Pencarian</span>
+                            <input
+                                name="search"
+                                defaultValue={filters.search ?? ''}
+                                placeholder="Cari destinasi / mitra"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="draft">Draft</option>
+                                <option value="pending">Pending</option>
+                                <option value="verified">Verified</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Kota</span>
+                            <select
+                                name="city"
+                                defaultValue={filters.city ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
                             <option value="">Semua kota</option>
                             {cities.map((city) => (
                                 <option key={city.id} value={city.id}>
                                     {city.label}
                                 </option>
                             ))}
-                        </select>
+                            </select>
+                        </label>
                         <Button
                             type="submit"
                             className="bg-sky-600 text-white hover:bg-sky-700"

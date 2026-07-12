@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { FormField } from '@/components/form-field';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
@@ -43,13 +44,21 @@ export default function WisataAffiliateSettings({ setting }: Props) {
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 className="text-lg font-semibold text-slate-900">Konfigurasi Sistem Afiliasi</h2>
                     <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-2">
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.cookie_days} onChange={(e) => setForm({ ...form, cookie_days: Number(e.target.value) })} />
-                        <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.attribution_model} onChange={(e) => setForm({ ...form, attribution_model: e.target.value })}>
-                            <option value="last_click">Last Click</option>
-                            <option value="first_click">First Click</option>
-                        </select>
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.min_payout} onChange={(e) => setForm({ ...form, min_payout: Number(e.target.value) })} />
-                        <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.payout_cutoff_days} onChange={(e) => setForm({ ...form, payout_cutoff_days: Number(e.target.value) })} />
+                        <FormField label="Durasi cookie" hint="Jumlah hari link afiliasi tetap dihitung setelah user klik link.">
+                            <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.cookie_days} onChange={(e) => setForm({ ...form, cookie_days: Number(e.target.value) })} />
+                        </FormField>
+                        <FormField label="Model atribusi" hint="Tentukan klik mana yang mendapatkan komisi.">
+                            <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.attribution_model} onChange={(e) => setForm({ ...form, attribution_model: e.target.value })}>
+                                <option value="last_click">Last Click</option>
+                                <option value="first_click">First Click</option>
+                            </select>
+                        </FormField>
+                        <FormField label="Minimal payout" hint="Minimal saldo komisi yang dapat diajukan untuk pencairan.">
+                            <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.min_payout} onChange={(e) => setForm({ ...form, min_payout: Number(e.target.value) })} />
+                        </FormField>
+                        <FormField label="Batas proses payout" hint="Jumlah hari maksimal payout diproses setelah diajukan.">
+                            <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" type="number" value={form.payout_cutoff_days} onChange={(e) => setForm({ ...form, payout_cutoff_days: Number(e.target.value) })} />
+                        </FormField>
                         <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-2">Simpan</button>
                     </form>
                 </div>

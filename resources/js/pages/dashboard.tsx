@@ -1,5 +1,14 @@
 import { Head } from '@inertiajs/react';
-import { Activity, CreditCard, ShieldCheck, Ticket, Users, ShoppingBag, BookOpen, Sparkles } from 'lucide-react';
+import {
+    Activity,
+    CreditCard,
+    ShieldCheck,
+    Ticket,
+    Users,
+    ShoppingBag,
+    BookOpen,
+    Sparkles,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { dashboard } from '@/routes';
@@ -18,7 +27,7 @@ type ActivityItem = {
 };
 
 type Props = {
-    scope?: 'admin' | 'academy' | 'retail' | 'special';
+    scope?: 'admin' | 'academy' | 'retail' | 'special' | 'custom';
     summary: {
         transactions_today: number;
         tickets_sold: number;
@@ -32,62 +41,74 @@ type Props = {
     activities: ActivityItem[];
 };
 
-export default function Dashboard({ summary, system, activities, scope = 'admin' }: Props) {
+export default function Dashboard({
+    summary,
+    system,
+    activities,
+    scope = 'admin',
+}: Props) {
     const isAdmin = scope === 'admin';
     const isAcademy = scope === 'academy';
     const isRetail = scope === 'retail';
     const isSpecial = scope === 'special';
+    const isCustom = scope === 'custom';
 
     const headerBadge = isAcademy
         ? 'Admin Academy'
         : isRetail
-            ? 'Admin Retail Shop'
-            : isSpecial
-                ? 'Admin Special Program'
-                : 'Admin Indotix';
+          ? 'Admin Retail Shop'
+          : isSpecial
+            ? 'Admin Special Program'
+            : isCustom
+              ? 'Admin RBAC'
+              : 'Admin Indotix';
 
     const headline = isAcademy
         ? 'Ringkasan Academy hari ini'
         : isRetail
-            ? 'Ringkasan Retail Shop hari ini'
-            : isSpecial
-                ? 'Ringkasan Special Program hari ini'
-                : 'Ringkasan operasional hari ini';
+          ? 'Ringkasan Retail Shop hari ini'
+          : isSpecial
+            ? 'Ringkasan Special Program hari ini'
+            : isCustom
+              ? 'Ringkasan sesuai akses role Anda'
+              : 'Ringkasan operasional hari ini';
 
     const description = isAcademy
         ? 'Pantau booking kelas, tiket terjual, dan kelas aktif.'
         : isRetail
-            ? 'Pantau order retail, item terjual, dan produk aktif.'
-            : isSpecial
-                ? 'Pantau booking special program, tiket terjual, dan program aktif.'
-                : 'Pantau performa tiket, aktivitas pengguna, dan transaksi terbaru dalam satu tempat.';
+          ? 'Pantau order retail, item terjual, dan produk aktif.'
+          : isSpecial
+            ? 'Pantau booking special program, tiket terjual, dan program aktif.'
+            : isCustom
+              ? 'Pantau transaksi, produk, dan tindak lanjut dari fitur yang dapat Anda akses.'
+              : 'Pantau performa tiket, aktivitas pengguna, dan transaksi terbaru dalam satu tempat.';
 
     const summaryCards = isAcademy
         ? [
-            {
-                title: 'Booking Hari Ini',
-                value: summary.transactions_today.toLocaleString('id-ID'),
-                detail: 'Total booking kelas berhasil hari ini',
-                icon: CreditCard,
-                accent: 'bg-sky-50 text-sky-600',
-            },
-            {
-                title: 'Tiket Terjual',
-                value: summary.tickets_sold.toLocaleString('id-ID'),
-                detail: 'Total tiket kelas terjual hari ini',
-                icon: Ticket,
-                accent: 'bg-amber-50 text-amber-600',
-            },
-            {
-                title: 'Kelas Aktif',
-                value: summary.active_partners.toLocaleString('id-ID'),
-                detail: 'Jumlah kelas aktif saat ini',
-                icon: BookOpen,
-                accent: 'bg-emerald-50 text-emerald-600',
-            },
-        ]
+              {
+                  title: 'Booking Hari Ini',
+                  value: summary.transactions_today.toLocaleString('id-ID'),
+                  detail: 'Total booking kelas berhasil hari ini',
+                  icon: CreditCard,
+                  accent: 'bg-sky-50 text-sky-600',
+              },
+              {
+                  title: 'Tiket Terjual',
+                  value: summary.tickets_sold.toLocaleString('id-ID'),
+                  detail: 'Total tiket kelas terjual hari ini',
+                  icon: Ticket,
+                  accent: 'bg-amber-50 text-amber-600',
+              },
+              {
+                  title: 'Kelas Aktif',
+                  value: summary.active_partners.toLocaleString('id-ID'),
+                  detail: 'Jumlah kelas aktif saat ini',
+                  icon: BookOpen,
+                  accent: 'bg-emerald-50 text-emerald-600',
+              },
+          ]
         : isRetail
-            ? [
+          ? [
                 {
                     title: 'Order Hari Ini',
                     value: summary.transactions_today.toLocaleString('id-ID'),
@@ -110,89 +131,104 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                     accent: 'bg-emerald-50 text-emerald-600',
                 },
             ]
-            : isSpecial
-                ? [
-                    {
-                        title: 'Booking Hari Ini',
-                        value: summary.transactions_today.toLocaleString('id-ID'),
-                        detail: 'Total booking special program hari ini',
-                        icon: CreditCard,
-                        accent: 'bg-sky-50 text-sky-600',
-                    },
-                    {
-                        title: 'Tiket Terjual',
-                        value: summary.tickets_sold.toLocaleString('id-ID'),
-                        detail: 'Total tiket special program terjual hari ini',
-                        icon: Ticket,
-                        accent: 'bg-amber-50 text-amber-600',
-                    },
-                    {
-                        title: 'Program Aktif',
-                        value: summary.active_partners.toLocaleString('id-ID'),
-                        detail: 'Jumlah special program aktif',
-                        icon: Sparkles,
-                        accent: 'bg-emerald-50 text-emerald-600',
-                    },
-                ]
-                : [
-                    {
-                        title: 'Transaksi Hari Ini',
-                        value: summary.transactions_today.toLocaleString('id-ID'),
-                        detail: 'Total transaksi berhasil hari ini',
-                        icon: CreditCard,
-                        accent: 'bg-sky-50 text-sky-600',
-                    },
-                    {
-                        title: 'Tiket Terjual',
-                        value: summary.tickets_sold.toLocaleString('id-ID'),
-                        detail: 'Total tiket terjual hari ini',
-                        icon: Ticket,
-                        accent: 'bg-amber-50 text-amber-600',
-                    },
-                    {
-                        title: 'Mitra Aktif',
-                        value: summary.active_partners.toLocaleString('id-ID'),
-                        detail: 'Mitra terverifikasi saat ini',
-                        icon: Users,
-                        accent: 'bg-emerald-50 text-emerald-600',
-                    },
-                ];
+          : isSpecial
+            ? [
+                  {
+                      title: 'Booking Hari Ini',
+                      value: summary.transactions_today.toLocaleString('id-ID'),
+                      detail: 'Total booking special program hari ini',
+                      icon: CreditCard,
+                      accent: 'bg-sky-50 text-sky-600',
+                  },
+                  {
+                      title: 'Tiket Terjual',
+                      value: summary.tickets_sold.toLocaleString('id-ID'),
+                      detail: 'Total tiket special program terjual hari ini',
+                      icon: Ticket,
+                      accent: 'bg-amber-50 text-amber-600',
+                  },
+                  {
+                      title: 'Program Aktif',
+                      value: summary.active_partners.toLocaleString('id-ID'),
+                      detail: 'Jumlah special program aktif',
+                      icon: Sparkles,
+                      accent: 'bg-emerald-50 text-emerald-600',
+                  },
+              ]
+            : [
+                  {
+                      title: 'Transaksi Hari Ini',
+                      value: summary.transactions_today.toLocaleString('id-ID'),
+                      detail: 'Total transaksi berhasil hari ini',
+                      icon: CreditCard,
+                      accent: 'bg-sky-50 text-sky-600',
+                  },
+                  {
+                      title: 'Tiket Terjual',
+                      value: summary.tickets_sold.toLocaleString('id-ID'),
+                      detail: 'Total tiket terjual hari ini',
+                      icon: Ticket,
+                      accent: 'bg-amber-50 text-amber-600',
+                  },
+                  {
+                      title: 'Mitra Aktif',
+                      value: summary.active_partners.toLocaleString('id-ID'),
+                      detail: 'Mitra terverifikasi saat ini',
+                      icon: Users,
+                      accent: 'bg-emerald-50 text-emerald-600',
+                  },
+              ];
 
     const systemCards = isAdmin
         ? [
-            {
-                title: 'Review Mitra',
-                value: `${system.pending_reviews} pending`,
-                note: 'Perlu verifikasi admin',
-                accent: system.pending_reviews > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
-            },
-            {
-                title: 'Pembayaran Pending',
-                value: `${system.pending_payments} transaksi`,
-                note: 'Menunggu pembayaran',
-                accent: system.pending_payments > 0 ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700',
-            },
-            {
-                title: 'Payout Pending',
-                value: `${system.pending_payouts} mitra`,
-                note: 'Perlu persetujuan',
-                accent: system.pending_payouts > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
-            },
-        ]
+              {
+                  title: 'Review Mitra',
+                  value: `${system.pending_reviews} pending`,
+                  note: 'Perlu verifikasi admin',
+                  accent:
+                      system.pending_reviews > 0
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-emerald-50 text-emerald-700',
+              },
+              {
+                  title: 'Pembayaran Pending',
+                  value: `${system.pending_payments} transaksi`,
+                  note: 'Menunggu pembayaran',
+                  accent:
+                      system.pending_payments > 0
+                          ? 'bg-sky-50 text-sky-700'
+                          : 'bg-emerald-50 text-emerald-700',
+              },
+              {
+                  title: 'Payout Pending',
+                  value: `${system.pending_payouts} mitra`,
+                  note: 'Perlu persetujuan',
+                  accent:
+                      system.pending_payouts > 0
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-emerald-50 text-emerald-700',
+              },
+          ]
         : [
-            {
-                title: 'Pembayaran Pending',
-                value: `${system.pending_payments} transaksi`,
-                note: 'Menunggu pembayaran',
-                accent: system.pending_payments > 0 ? 'bg-sky-50 text-sky-700' : 'bg-emerald-50 text-emerald-700',
-            },
-            {
-                title: isRetail ? 'Refund Pending' : 'Review/Refund Pending',
-                value: `${system.pending_reviews} pending`,
-                note: 'Butuh tindak lanjut',
-                accent: system.pending_reviews > 0 ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700',
-            },
-        ];
+              {
+                  title: 'Pembayaran Pending',
+                  value: `${system.pending_payments} transaksi`,
+                  note: 'Menunggu pembayaran',
+                  accent:
+                      system.pending_payments > 0
+                          ? 'bg-sky-50 text-sky-700'
+                          : 'bg-emerald-50 text-emerald-700',
+              },
+              {
+                  title: isRetail ? 'Refund Pending' : 'Review/Refund Pending',
+                  value: `${system.pending_reviews} pending`,
+                  note: 'Butuh tindak lanjut',
+                  accent:
+                      system.pending_reviews > 0
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'bg-emerald-50 text-emerald-700',
+              },
+          ];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -204,39 +240,32 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
             </Head>
 
             <div className="relative flex flex-1 flex-col gap-6 overflow-x-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
-                <div className="pointer-events-none absolute -left-32 top-12 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-                <div className="pointer-events-none absolute right-[-10%] top-0 h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
+                <div className="pointer-events-none absolute top-12 -left-32 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
+                <div className="pointer-events-none absolute top-0 right-[-10%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
                 <div className="pointer-events-none absolute bottom-[-15%] left-[20%] h-80 w-80 rounded-full bg-amber-300/20 blur-[140px]" />
 
-                <section data-coach="dashboard-hero" className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
+                <section
+                    data-coach="dashboard-hero"
+                    className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur"
+                >
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-3">
-                            <p className="text-xs font-semibold uppercase text-sky-600">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 {headerBadge}
                             </p>
-                            <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl font-['Space_Grotesk']">
+                            <h1 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
                                 {headline}
                             </h1>
                             <p className="text-sm text-slate-600">
                                 {description}
                             </p>
                         </div>
-                        {isAdmin && (
-                            <div className="flex flex-wrap gap-3">
-                                <Button className="bg-sky-600 text-white hover:bg-sky-700">
-                                    Buat event baru
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="border-sky-200 text-slate-700 hover:bg-sky-50"
-                                >
-                                    Lihat laporan
-                                </Button>
-                            </div>
-                        )}
                     </div>
 
-                    <div data-coach="dashboard-metrics" className="mt-6 grid gap-4 lg:grid-cols-3">
+                    <div
+                        data-coach="dashboard-metrics"
+                        className="mt-6 grid gap-4 lg:grid-cols-3"
+                    >
                         {summaryCards.map((item) => (
                             <div
                                 key={item.title}
@@ -248,7 +277,7 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                                     <item.icon className="h-5 w-5" />
                                 </div>
                                 <div className="space-y-1">
-                                    <p className="text-xs font-semibold uppercase text-slate-400">
+                                    <p className="text-xs font-semibold text-slate-400 uppercase">
                                         {item.title}
                                     </p>
                                     <p className="text-2xl font-semibold text-slate-900">
@@ -264,10 +293,13 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                 </section>
 
                 <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-                    <section data-coach="dashboard-activity" className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                    <section
+                        data-coach="dashboard-activity"
+                        className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
+                    >
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <p className="text-xs font-semibold uppercase text-sky-600">
+                                <p className="text-xs font-semibold text-sky-600 uppercase">
                                     Aktivitas Terkini
                                 </p>
                                 <h2 className="mt-2 text-lg font-semibold text-slate-900">
@@ -283,13 +315,16 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                         </div>
 
                         <div className="mt-6 space-y-4">
-                            {(activities?.length ? activities : [
-                                {
-                                    title: 'Belum ada aktivitas terbaru',
-                                    meta: 'Aktivitas terbaru akan muncul di sini.',
-                                    icon: ShieldCheck,
-                                },
-                            ]).map((item) => (
+                            {(activities?.length
+                                ? activities
+                                : [
+                                      {
+                                          title: 'Belum ada aktivitas terbaru',
+                                          meta: 'Aktivitas terbaru akan muncul di sini.',
+                                          icon: ShieldCheck,
+                                      },
+                                  ]
+                            ).map((item) => (
                                 <div
                                     key={item.title}
                                     className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-xs"
@@ -310,9 +345,12 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                         </div>
                     </section>
 
-                    <section data-coach="dashboard-status" className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                    <section
+                        data-coach="dashboard-status"
+                        className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
+                    >
                         <div>
-                            <p className="text-xs font-semibold uppercase text-sky-600">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Status Sistem
                             </p>
                             <h2 className="mt-2 text-lg font-semibold text-slate-900">
@@ -352,7 +390,8 @@ export default function Dashboard({ summary, system, activities, scope = 'admin'
                                             Pantau real-time
                                         </p>
                                         <p className="text-xs text-slate-500">
-                                            Data disinkronkan dari transaksi terbaru.
+                                            Data disinkronkan dari transaksi
+                                            terbaru.
                                         </p>
                                     </div>
                                 </div>

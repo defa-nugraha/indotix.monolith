@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/form-field';
 
 type Settlement = {
     id: number;
@@ -37,12 +38,24 @@ export default function EventSettlements({ settlements }: Props) {
                             router.post('/admin/events/finance/settlements', Object.fromEntries(data.entries()), { preserveScroll: true });
                         }}
                     >
-                        <input name="event_organizer_id" placeholder="ID EO" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        <input type="date" name="period_start" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        <input type="date" name="period_end" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        <input name="total_sales" placeholder="Total Sales" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        <input name="commission_amount" placeholder="Komisi" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        <input name="net_payout" placeholder="Net Payout" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        <FormField label="ID EO">
+                            <input name="event_organizer_id" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
+                        <FormField label="Periode mulai">
+                            <input type="date" name="period_start" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
+                        <FormField label="Periode selesai">
+                            <input type="date" name="period_end" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
+                        <FormField label="Total penjualan">
+                            <input name="total_sales" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
+                        <FormField label="Komisi">
+                            <input name="commission_amount" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
+                        <FormField label="Net payout">
+                            <input name="net_payout" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700 md:col-span-4">
                             Generate Settlement
                         </Button>

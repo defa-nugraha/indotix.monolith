@@ -30,6 +30,7 @@ type Props = {
         links: Array<{ url: string | null; label: string; active: boolean }>;
     };
     filters: { status?: string };
+    canManageMitraEvent?: boolean;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -37,8 +38,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Mitra Event (EO)', href: '/admin/events/organizers' },
 ];
 
-export default function EventOrganizersIndex({ organizers, filters }: Props) {
+export default function EventOrganizersIndex({ organizers, filters, canManageMitraEvent = false }: Props) {
     const [createOpen, setCreateOpen] = useState(false);
+    const formTitle = canManageMitraEvent ? 'Tambah Mitra Event' : 'Atur Organizer Event Saya';
     const createForm = useForm({
         name: '',
         email: '',
@@ -55,22 +57,24 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <h1 className="text-2xl font-semibold text-slate-900">
-                                Mitra Event (EO)
+                                {canManageMitraEvent ? 'Mitra Event (EO)' : 'Organizer Event Saya'}
                             </h1>
                             <p className="text-sm text-slate-500">
-                                Review dan approval mitra event.
+                                {canManageMitraEvent
+                                    ? 'Review dan approval mitra event.'
+                                    : 'Kelola profil organizer yang akan dipakai saat membuat event.'}
                             </p>
                         </div>
                         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                             <DialogTrigger asChild>
                                 <Button className="bg-sky-600 text-white hover:bg-sky-700">
-                                    Tambah Mitra Event
+                                    {formTitle}
                                 </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-xl">
                                 <DialogHeader>
                                     <DialogTitle>
-                                        Tambah Mitra Event
+                                        {formTitle}
                                     </DialogTitle>
                                 </DialogHeader>
                                 <form
@@ -84,6 +88,20 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                                                 onSuccess: () => {
                                                     createForm.reset();
                                                     setCreateOpen(false);
+                                                    Swal.fire({
+                                                        icon: 'success',
+                                                        title: 'Tersimpan',
+                                                        text: canManageMitraEvent
+                                                            ? 'Mitra event berhasil dibuat.'
+                                                            : 'Organizer event berhasil disimpan.',
+                                                    });
+                                                },
+                                                onError: () => {
+                                                    Swal.fire({
+                                                        icon: 'error',
+                                                        title: 'Gagal',
+                                                        text: 'Periksa kembali data organizer.',
+                                                    });
                                                 },
                                             },
                                         );
@@ -91,7 +109,7 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                                 >
                                     <div className="grid gap-2">
                                         <label className="text-sm font-semibold text-slate-700">
-                                            Nama Penanggung Jawab
+                                            {canManageMitraEvent ? 'Nama Penanggung Jawab' : 'Nama Penanggung Jawab'}
                                         </label>
                                         <input
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
@@ -109,7 +127,7 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                                     </div>
                                     <div className="grid gap-2">
                                         <label className="text-sm font-semibold text-slate-700">
-                                            Email
+                                            Email {canManageMitraEvent ? '' : '(opsional)'}
                                         </label>
                                         <input
                                             type="email"
@@ -147,32 +165,34 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                                                 }
                                             />
                                         </div>
-                                        <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">
-                                                Password
-                                            </label>
-                                            <input
-                                                type="password"
-                                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                                value={createForm.data.password}
-                                                onChange={(event) =>
-                                                    createForm.setData(
-                                                        'password',
-                                                        event.target.value,
-                                                    )
-                                                }
-                                                placeholder="Kosongkan untuk auto"
-                                            />
-                                            <InputError
-                                                message={
-                                                    createForm.errors.password
-                                                }
-                                            />
-                                        </div>
+                                        {canManageMitraEvent && (
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Password
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                    value={createForm.data.password}
+                                                    onChange={(event) =>
+                                                        createForm.setData(
+                                                            'password',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Kosongkan untuk auto"
+                                                />
+                                                <InputError
+                                                    message={
+                                                        createForm.errors.password
+                                                    }
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                     <div className="grid gap-2">
                                         <label className="text-sm font-semibold text-slate-700">
-                                            Nama EO (opsional)
+                                            Nama EO / Organizer (opsional)
                                         </label>
                                         <input
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
@@ -220,16 +240,19 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                             );
                         }}
                     >
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="pending">Pending</option>
-                            <option value="verified">Verified</option>
-                            <option value="suspended">Suspended</option>
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="pending">Pending</option>
+                                <option value="verified">Verified</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </label>
                         <Button
                             type="submit"
                             className="bg-sky-600 text-white hover:bg-sky-700"
@@ -305,66 +328,67 @@ export default function EventOrganizersIndex({ organizers, filters }: Props) {
                                                     <Link
                                                         href={`/admin/events/organizers/${item.id}`}
                                                     >
-                                                        {item.status ===
-                                                        'verified'
-                                                            ? 'Detail'
-                                                            : 'Validasi Dokumen'}
+                                                        {canManageMitraEvent && item.status !== 'verified'
+                                                            ? 'Validasi Dokumen'
+                                                            : 'Detail'}
                                                     </Link>
                                                 </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="destructive"
-                                                    onClick={() => {
-                                                        Swal.fire({
-                                                            icon: 'warning',
-                                                            title: 'Hapus mitra event dan semua datanya?',
-                                                            html: `Mitra <b>${item.name}</b> akan dihapus permanen. Semua event, tiket, booking, pembayaran, attendee, scan, refund, dispute, komisi, settlement, staff, dokumen, dan file upload terkait ikut dihapus.`,
-                                                            showCancelButton: true,
-                                                            confirmButtonText:
-                                                                'Hapus permanen',
-                                                            cancelButtonText:
-                                                                'Batal',
-                                                            confirmButtonColor:
-                                                                '#dc2626',
-                                                        }).then((result) => {
-                                                            if (
-                                                                result.isConfirmed
-                                                            ) {
-                                                                router.delete(
-                                                                    `/admin/events/organizers/${item.id}`,
-                                                                    {
-                                                                        onSuccess:
-                                                                            () => {
-                                                                                Swal.fire(
-                                                                                    {
-                                                                                        icon: 'success',
-                                                                                        title: 'Terhapus',
-                                                                                        text: 'Mitra event dihapus.',
-                                                                                    },
-                                                                                );
-                                                                            },
-                                                                        onError:
-                                                                            (
-                                                                                errors,
-                                                                            ) => {
-                                                                                Swal.fire(
-                                                                                    {
-                                                                                        icon: 'error',
-                                                                                        title: 'Gagal',
-                                                                                        text:
-                                                                                            errors.organizer ??
-                                                                                            'Mitra event gagal dihapus.',
-                                                                                    },
-                                                                                );
-                                                                            },
-                                                                    },
-                                                                );
-                                                            }
-                                                        });
-                                                    }}
-                                                >
-                                                    Hapus
-                                                </Button>
+                                                {canManageMitraEvent && (
+                                                    <Button
+                                                        size="sm"
+                                                        variant="destructive"
+                                                        onClick={() => {
+                                                            Swal.fire({
+                                                                icon: 'warning',
+                                                                title: 'Hapus mitra event dan semua datanya?',
+                                                                html: `Mitra <b>${item.name}</b> akan dihapus permanen. Semua event, tiket, booking, pembayaran, attendee, scan, refund, dispute, komisi, settlement, staff, dokumen, dan file upload terkait ikut dihapus.`,
+                                                                showCancelButton: true,
+                                                                confirmButtonText:
+                                                                    'Hapus permanen',
+                                                                cancelButtonText:
+                                                                    'Batal',
+                                                                confirmButtonColor:
+                                                                    '#dc2626',
+                                                            }).then((result) => {
+                                                                if (
+                                                                    result.isConfirmed
+                                                                ) {
+                                                                    router.delete(
+                                                                        `/admin/events/organizers/${item.id}`,
+                                                                        {
+                                                                            onSuccess:
+                                                                                () => {
+                                                                                    Swal.fire(
+                                                                                        {
+                                                                                            icon: 'success',
+                                                                                            title: 'Terhapus',
+                                                                                            text: 'Mitra event dihapus.',
+                                                                                        },
+                                                                                    );
+                                                                                },
+                                                                            onError:
+                                                                                (
+                                                                                    errors,
+                                                                                ) => {
+                                                                                    Swal.fire(
+                                                                                        {
+                                                                                            icon: 'error',
+                                                                                            title: 'Gagal',
+                                                                                            text:
+                                                                                                errors.organizer ??
+                                                                                                'Mitra event gagal dihapus.',
+                                                                                        },
+                                                                                    );
+                                                                                },
+                                                                        },
+                                                                    );
+                                                                }
+                                                            });
+                                                        }}
+                                                    >
+                                                        Hapus
+                                                    </Button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

@@ -207,24 +207,30 @@ export default function SouvenirVariantsIndex({
                             submitFilters(event.currentTarget);
                         }}
                     >
-                        <select
-                            name="product_id"
-                            defaultValue={filters.product_id ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua produk</option>
-                            {products.map((product) => (
-                                <option key={product.id} value={product.id}>
-                                    {product.name}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            name="search"
-                            defaultValue={filters.search ?? ''}
-                            placeholder="Cari variasi"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Produk</span>
+                            <select
+                                name="product_id"
+                                defaultValue={filters.product_id ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua produk</option>
+                                {products.map((product) => (
+                                    <option key={product.id} value={product.id}>
+                                        {product.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Pencarian variasi</span>
+                            <input
+                                name="search"
+                                defaultValue={filters.search ?? ''}
+                                placeholder="Cari variasi"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
                         <Button
                             className="bg-sky-600 text-white hover:bg-sky-700"
                             type="submit"
@@ -281,18 +287,21 @@ export default function SouvenirVariantsIndex({
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <input
-                                                type="number"
-                                                defaultValue={variant.stock}
-                                                className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-xs"
-                                                onBlur={(event) =>
-                                                    updateVariant(variant.id, {
-                                                        stock: Number(
-                                                            event.target.value,
-                                                        ),
-                                                    })
-                                                }
-                                            />
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Stok</span>
+                                                <input
+                                                    type="number"
+                                                    defaultValue={variant.stock}
+                                                    className="w-24 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                                                    onBlur={(event) =>
+                                                        updateVariant(variant.id, {
+                                                            stock: Number(
+                                                                event.target.value,
+                                                            ),
+                                                        })
+                                                    }
+                                                />
+                                            </label>
                                         </td>
                                         <td className="px-4 py-3">
                                             <Badge

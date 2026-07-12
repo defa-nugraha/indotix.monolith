@@ -412,22 +412,25 @@ export default function SpecialAdminIndex({ admins, filters, roleOptions }: Prop
                                                 </Badge>
                                             </td>
                                             <td className="py-4 pr-4">
-                                                <select
-                                                    value={nextRole}
-                                                    onChange={(event) =>
-                                                        setRoleChanges((prev) => ({
-                                                            ...prev,
-                                                            [admin.id]: event.target.value,
-                                                        }))
-                                                    }
-                                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                                                >
-                                                    {roleOptions.map((option) => (
-                                                        <option key={option.value} value={option.value}>
-                                                            {option.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Role</span>
+                                                    <select
+                                                        value={nextRole}
+                                                        onChange={(event) =>
+                                                            setRoleChanges((prev) => ({
+                                                                ...prev,
+                                                                [admin.id]: event.target.value,
+                                                            }))
+                                                        }
+                                                        className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                                    >
+                                                        {roleOptions.map((option) => (
+                                                            <option key={option.value} value={option.value}>
+                                                                {option.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </label>
                                             </td>
                                             <td className="py-4 pr-4 text-xs text-slate-500">
                                                 {admin.created_at ?? '-'}

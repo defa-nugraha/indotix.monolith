@@ -112,30 +112,39 @@ export default function BlogCategoriesIndex({
                     </p>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-4">
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Nama kategori"
-                            value={form.data.name}
-                            onChange={(event) =>
-                                form.setData('name', event.target.value)
-                            }
-                        />
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Slug (opsional)"
-                            value={form.data.slug}
-                            onChange={(event) =>
-                                form.setData('slug', event.target.value)
-                            }
-                        />
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Deskripsi singkat"
-                            value={form.data.description}
-                            onChange={(event) =>
-                                form.setData('description', event.target.value)
-                            }
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Nama kategori</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Nama kategori"
+                                value={form.data.name}
+                                onChange={(event) =>
+                                    form.setData('name', event.target.value)
+                                }
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Slug</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Slug (opsional)"
+                                value={form.data.slug}
+                                onChange={(event) =>
+                                    form.setData('slug', event.target.value)
+                                }
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Deskripsi singkat</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Deskripsi singkat"
+                                value={form.data.description}
+                                onChange={(event) =>
+                                    form.setData('description', event.target.value)
+                                }
+                            />
+                        </label>
                         <Button
                             className="bg-sky-600 text-white hover:bg-sky-700"
                             type="button"
@@ -181,29 +190,32 @@ export default function BlogCategoriesIndex({
                                             {item.slug}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <select
-                                                defaultValue={
-                                                    item.is_active
-                                                        ? 'active'
-                                                        : 'inactive'
-                                                }
-                                                className="rounded-lg border border-slate-200 px-2 py-1 text-xs"
-                                                onChange={(event) =>
-                                                    updateCategory(item.id, {
-                                                        is_active:
-                                                            event.target
-                                                                .value ===
-                                                            'active',
-                                                    })
-                                                }
-                                            >
-                                                <option value="active">
-                                                    Aktif
-                                                </option>
-                                                <option value="inactive">
-                                                    Nonaktif
-                                                </option>
-                                            </select>
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Status</span>
+                                                <select
+                                                    defaultValue={
+                                                        item.is_active
+                                                            ? 'active'
+                                                            : 'inactive'
+                                                    }
+                                                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                                                    onChange={(event) =>
+                                                        updateCategory(item.id, {
+                                                            is_active:
+                                                                event.target
+                                                                    .value ===
+                                                                'active',
+                                                        })
+                                                    }
+                                                >
+                                                    <option value="active">
+                                                        Aktif
+                                                    </option>
+                                                    <option value="inactive">
+                                                        Nonaktif
+                                                    </option>
+                                                </select>
+                                            </label>
                                         </td>
                                         <td className="px-4 py-3 text-slate-500">
                                             {item.posts_count ?? 0}

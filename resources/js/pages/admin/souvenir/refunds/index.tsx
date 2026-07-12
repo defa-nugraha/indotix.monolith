@@ -53,42 +53,54 @@ export default function SouvenirRefundsIndex({ refunds, orders }: { refunds: { d
                     <h1 className="text-2xl font-semibold text-slate-900">Refund & Retur</h1>
                     <p className="text-sm text-slate-500">Catat cancel/refund dengan alasan yang jelas.</p>
                     <div className="mt-6 grid gap-3 md:grid-cols-4">
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.souvenir_order_id}
-                            onChange={(event) => form.setData('souvenir_order_id', event.target.value)}
-                        >
-                            <option value="">Pilih order</option>
-                            {orders.map((order) => (
-                                <option key={order.id} value={order.id}>
-                                    Order #{order.id}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.type}
-                            onChange={(event) => form.setData('type', event.target.value)}
-                        >
-                            <option value="partial">Partial</option>
-                            <option value="full">Full</option>
-                        </select>
-                        <input
-                            type="number"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Nominal refund"
-                            value={form.data.amount}
-                            onChange={(event) => form.setData('amount', Number(event.target.value))}
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Order</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.souvenir_order_id}
+                                onChange={(event) => form.setData('souvenir_order_id', event.target.value)}
+                            >
+                                <option value="">Pilih order</option>
+                                {orders.map((order) => (
+                                    <option key={order.id} value={order.id}>
+                                        Order #{order.id}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tipe refund</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.type}
+                                onChange={(event) => form.setData('type', event.target.value)}
+                            >
+                                <option value="partial">Partial</option>
+                                <option value="full">Full</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Nominal refund</span>
+                            <input
+                                type="number"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Nominal refund"
+                                value={form.data.amount}
+                                onChange={(event) => form.setData('amount', Number(event.target.value))}
+                            />
+                        </label>
                         <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={submit}>
                             Simpan Refund
                         </Button>
-                        <textarea
-                            className="md:col-span-4 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Alasan refund"
-                            value={form.data.reason}
-                            onChange={(event) => form.setData('reason', event.target.value)}
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600 md:col-span-4">
+                            <span>Alasan refund</span>
+                            <textarea
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Alasan refund"
+                                value={form.data.reason}
+                                onChange={(event) => form.setData('reason', event.target.value)}
+                            />
+                        </label>
                     </div>
                 </section>
 

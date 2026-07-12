@@ -35,19 +35,28 @@ export default function EventCommissions({ commissions, events }: Props) {
                             router.post('/admin/special-programs/finance/commissions', Object.fromEntries(data.entries()), { preserveScroll: true });
                         }}
                     >
-                        <select name="event_id" className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                            <option value="">Global</option>
-                            {events.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.title}
-                                </option>
-                            ))}
-                        </select>
-                        <select name="type" className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                            <option value="percentage">Persentase</option>
-                            <option value="fixed">Fixed</option>
-                        </select>
-                        <input name="value" placeholder="Nilai" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Program</span>
+                            <select name="event_id" className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                                <option value="">Global</option>
+                                {events.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.title}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tipe komisi</span>
+                            <select name="type" className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                                <option value="percentage">Persentase</option>
+                                <option value="fixed">Fixed</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Nilai</span>
+                            <input name="value" placeholder="Nilai" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Simpan
                         </Button>

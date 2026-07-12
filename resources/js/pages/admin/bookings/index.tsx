@@ -44,6 +44,8 @@ type Props = {
     hotelOptions: Array<{ id: number; label: string }>;
     isMitra?: boolean;
     basePath?: string;
+    pageTitle?: string;
+    pageHeading?: string;
 };
 
 const statusBadge = (status: string) => {
@@ -72,10 +74,12 @@ export default function AdminBookingIndex({
     hotelOptions,
     isMitra = false,
     basePath = '/admin/bookings',
+    pageTitle = 'Monitoring Booking',
+    pageHeading = 'Manajemen booking & transaksi',
 }: Props) {
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Dashboard', href: isMitra ? '/mitra/dashboard' : '/dashboard' },
-        { title: 'Booking & Transaksi', href: basePath },
+        { title: pageTitle, href: basePath },
     ];
     const applyFilters = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -91,16 +95,16 @@ export default function AdminBookingIndex({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Monitoring Booking" />
+            <Head title={pageTitle} />
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <p className="text-xs font-semibold uppercase text-sky-600">
-                                Monitoring Booking
+                                {pageTitle}
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold text-slate-900">
-                                Manajemen booking & transaksi
+                                {pageHeading}
                             </h1>
                             <p className="text-sm text-slate-500">
                                 Pantau status booking, pembayaran, dan support.

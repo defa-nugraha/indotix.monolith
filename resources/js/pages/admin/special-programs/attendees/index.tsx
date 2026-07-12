@@ -53,27 +53,33 @@ export default function SpecialProgramAttendeesIndex({
                             });
                         }}
                     >
-                        <select
-                            name="program_id"
-                            defaultValue={filters.program_id ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua program</option>
-                            {programs.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="present">Sudah hadir</option>
-                            <option value="absent">Belum hadir</option>
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Program</span>
+                            <select
+                                name="program_id"
+                                defaultValue={filters.program_id ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua program</option>
+                                {programs.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status kehadiran</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="present">Sudah hadir</option>
+                                <option value="absent">Belum hadir</option>
+                            </select>
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Filter
                         </Button>

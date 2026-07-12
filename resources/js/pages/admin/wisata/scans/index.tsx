@@ -56,27 +56,33 @@ export default function AdminWisataScansIndex({ scans, destinations, filters }: 
                             submitFilters(event.currentTarget);
                         }}
                     >
-                        <select
-                            name="destination"
-                            defaultValue={filters.destination ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua destinasi</option>
-                            {destinations.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            name="anomaly"
-                            defaultValue={filters.anomaly ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="yes">Anomali</option>
-                            <option value="no">Normal</option>
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Destinasi</span>
+                            <select
+                                name="destination"
+                                defaultValue={filters.destination ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua destinasi</option>
+                                {destinations.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status scan</span>
+                            <select
+                                name="anomaly"
+                                defaultValue={filters.anomaly ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="yes">Anomali</option>
+                                <option value="no">Normal</option>
+                            </select>
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Filter
                         </Button>

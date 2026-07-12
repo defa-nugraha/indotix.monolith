@@ -9,6 +9,7 @@ use App\Services\MitraDeletionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -105,6 +106,7 @@ class MitraController extends Controller
             'password' => $password,
             'role' => 'mitra',
             'mitra_onboarding_type' => 'hotel',
+            'email_verified_at' => now(),
         ]);
 
         MitraOnboarding::query()->updateOrCreate(
@@ -139,6 +141,7 @@ class MitraController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
                 'is_suspended' => (bool) $user->is_suspended,
                 'suspended_reason' => $user->suspended_reason,
                 'suspended_at' => optional($user->suspended_at)->toDateTimeString(),
@@ -146,6 +149,47 @@ class MitraController extends Controller
             'onboarding' => $onboarding,
             'cityName' => $cityName,
         ]);
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($user->role === 'mitra', 404);
+        abort_unless($user->mitra_onboarding_type === null || $user->mitra_onboarding_type === 'hotel', 404);
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'password' => ['nullable', 'string', 'min:8', 'max:255'],
+            'hotel_name' => ['nullable', 'string', 'max:255'],
+            'responsible_name' => ['nullable', 'string', 'max:255'],
+            'reception_phone' => ['nullable', 'string', 'max:30'],
+        ]);
+
+        $payload = [
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'mitra_onboarding_type' => 'hotel',
+            'email_verified_at' => $user->email_verified_at ?? now(),
+        ];
+
+        if (! empty($data['password'])) {
+            $payload['password'] = $data['password'];
+        }
+
+        $user->update($payload);
+
+        MitraOnboarding::query()->updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'hotel_name' => $data['hotel_name'] ?? null,
+                'responsible_name' => ($data['responsible_name'] ?? null) ?: $data['name'],
+                'reception_phone' => $data['reception_phone'] ?? $data['phone'] ?? null,
+            ]
+        );
+
+        return back()->with('status', 'mitra-updated');
     }
 
     public function verify(Request $request, User $user): RedirectResponse

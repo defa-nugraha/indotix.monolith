@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { FormField } from '@/components/form-field';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -108,36 +109,60 @@ export default function WisataAffiliateIndex({ affiliates, users, destinations, 
                                     <DialogTitle>Tambah Afiliasi Wisata</DialogTitle>
                                 </DialogHeader>
                                 <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-2">
-                                    <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })} required>
-                                        <option value="">Pilih user</option>
-                                        {users.map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name} ({item.email})</option>
-                                        ))}
-                                    </select>
-                                    <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.wisata_id} onChange={(e) => setForm({ ...form, wisata_id: e.target.value })} required>
-                                        <option value="">Pilih wisata</option>
-                                        {destinations.map((item) => (
-                                            <option key={item.id} value={item.id}>{item.destination_name}</option>
-                                        ))}
-                                    </select>
-                                    <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama lengkap" value={selectedUser?.name ?? ''} readOnly />
-                                    <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Email" value={selectedUser?.email ?? ''} readOnly />
-                                    <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nomor HP" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                                    <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                                        <option value="individu">Individu</option>
-                                        <option value="komunitas">Komunitas</option>
-                                        <option value="media">Media</option>
-                                    </select>
-                                    <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Platform promosi" value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })} />
-                                    <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                                        {statusOptions.map((option) => (
-                                            <option key={option} value={option}>{option}</option>
-                                        ))}
-                                    </select>
-                                    <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama bank" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
-                                    <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nomor rekening" value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
-                                    <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama pemilik rekening" value={form.bank_account_name} onChange={(e) => setForm({ ...form, bank_account_name: e.target.value })} />
-                                    <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-2" placeholder="Catatan internal" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                                    <FormField label="User">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.user_id} onChange={(e) => setForm({ ...form, user_id: e.target.value })} required>
+                                            <option value="">Pilih user</option>
+                                            {users.map((item) => (
+                                                <option key={item.id} value={item.id}>{item.name} ({item.email})</option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Wisata">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.wisata_id} onChange={(e) => setForm({ ...form, wisata_id: e.target.value })} required>
+                                            <option value="">Pilih wisata</option>
+                                            {destinations.map((item) => (
+                                                <option key={item.id} value={item.id}>{item.destination_name}</option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Nama lengkap">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={selectedUser?.name ?? ''} readOnly />
+                                    </FormField>
+                                    <FormField label="Email">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={selectedUser?.email ?? ''} readOnly />
+                                    </FormField>
+                                    <FormField label="Nomor HP">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Tipe afiliasi">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                                            <option value="individu">Individu</option>
+                                            <option value="komunitas">Komunitas</option>
+                                            <option value="media">Media</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Platform promosi">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Status">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                                            {statusOptions.map((option) => (
+                                                <option key={option} value={option}>{option}</option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Nama bank">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.bank_name} onChange={(e) => setForm({ ...form, bank_name: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Nomor rekening">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.bank_account_number} onChange={(e) => setForm({ ...form, bank_account_number: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Nama pemilik rekening">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.bank_account_name} onChange={(e) => setForm({ ...form, bank_account_name: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Catatan internal" className="md:col-span-2">
+                                        <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+                                    </FormField>
                                     <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-2">Simpan</button>
                                 </form>
                             </DialogContent>
@@ -152,26 +177,32 @@ export default function WisataAffiliateIndex({ affiliates, users, destinations, 
                             <p className="text-sm text-slate-500">Review, aktifkan, atau suspend afiliasi.</p>
                         </div>
                         <div className="flex gap-2">
-                            <input
-                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                placeholder="Cari..."
-                                defaultValue={filters.q}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        router.get('/admin/wisata/affiliates', { q: (e.target as HTMLInputElement).value, status: filters.status }, { preserveState: true });
-                                    }
-                                }}
-                            />
-                            <select
-                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                                defaultValue={filters.status ?? ''}
-                                onChange={(e) => router.get('/admin/wisata/affiliates', { status: e.target.value, q: filters.q }, { preserveState: true })}
-                            >
-                                <option value="">Semua Status</option>
-                                {statusOptions.map((option) => (
-                                    <option key={option} value={option}>{option}</option>
-                                ))}
-                            </select>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Pencarian afiliasi</span>
+                                <input
+                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                    placeholder="Cari..."
+                                    defaultValue={filters.q}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            router.get('/admin/wisata/affiliates', { q: (e.target as HTMLInputElement).value, status: filters.status }, { preserveState: true });
+                                        }
+                                    }}
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Status</span>
+                                <select
+                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                    defaultValue={filters.status ?? ''}
+                                    onChange={(e) => router.get('/admin/wisata/affiliates', { status: e.target.value, q: filters.q }, { preserveState: true })}
+                                >
+                                    <option value="">Semua Status</option>
+                                    {statusOptions.map((option) => (
+                                        <option key={option} value={option}>{option}</option>
+                                    ))}
+                                </select>
+                            </label>
                         </div>
                     </div>
                     <div className="mt-4 overflow-x-auto">
@@ -203,15 +234,18 @@ export default function WisataAffiliateIndex({ affiliates, users, destinations, 
                                         <td>{item.platform ?? '-'}</td>
                                         <td>{destinations.find((d) => d.id === (item as any).wisata_id)?.destination_name ?? '-'}</td>
                                         <td>
-                                            <select
-                                                className="h-9 rounded-lg border border-slate-200 px-2 text-xs"
-                                                value={item.status}
-                                                onChange={(e) => updateStatus(item.id, e.target.value)}
-                                            >
-                                                {statusOptions.map((option) => (
-                                                    <option key={option} value={option}>{option}</option>
-                                                ))}
-                                            </select>
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Status</span>
+                                                <select
+                                                    className="h-9 rounded-lg border border-slate-200 px-2 text-xs"
+                                                    value={item.status}
+                                                    onChange={(e) => updateStatus(item.id, e.target.value)}
+                                                >
+                                                    {statusOptions.map((option) => (
+                                                        <option key={option} value={option}>{option}</option>
+                                                    ))}
+                                                </select>
+                                            </label>
                                         </td>
                                     </tr>
                                 ))}

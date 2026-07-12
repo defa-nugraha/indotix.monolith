@@ -76,15 +76,18 @@ export default function BlogPostsIndex() {
                     </div>
 
                     <div className="mt-4">
-                        <select
-                            value={filters?.status ?? ''}
-                            onChange={(event) => updateFilter(event.target.value)}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua Status</option>
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                        </select>
+                        <label className="grid max-w-xs gap-1 text-xs font-medium text-slate-600">
+                            <span>Status artikel</span>
+                            <select
+                                value={filters?.status ?? ''}
+                                onChange={(event) => updateFilter(event.target.value)}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua Status</option>
+                                <option value="draft">Draft</option>
+                                <option value="published">Published</option>
+                            </select>
+                        </label>
                     </div>
                 </section>
 

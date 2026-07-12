@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { FormField } from '@/components/form-field';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -57,19 +58,25 @@ export default function WisataAffiliateExceptions({ affiliates }: Props) {
                                     <DialogTitle>Tambah Penalti</DialogTitle>
                                 </DialogHeader>
                                 <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
-                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
-                                        <option value="">Pilih Afiliasi</option>
-                                        {affiliates.map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.action} onChange={(e) => setForm({ ...form, action: e.target.value })}>
-                                        <option value="suspend">Suspend</option>
-                                        <option value="terminate">Blacklist</option>
-                                        <option value="hold_payout">Hold Payout</option>
-                                        <option value="release_payout">Release Payout</option>
-                                    </select>
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Alasan" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} required />
+                                    <FormField label="Afiliasi">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
+                                            <option value="">Pilih Afiliasi</option>
+                                            {affiliates.map((item) => (
+                                                <option key={item.id} value={item.id}>{item.name}</option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Tindakan">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.action} onChange={(e) => setForm({ ...form, action: e.target.value })}>
+                                            <option value="suspend">Suspend</option>
+                                            <option value="terminate">Blacklist</option>
+                                            <option value="hold_payout">Hold Payout</option>
+                                            <option value="release_payout">Release Payout</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Alasan">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} required />
+                                    </FormField>
                                     <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-3">Simpan Aksi</button>
                                 </form>
                             </DialogContent>

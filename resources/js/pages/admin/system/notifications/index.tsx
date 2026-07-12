@@ -518,29 +518,32 @@ export default function NotificationControl({
                                         {eventKey}
                                     </div>
                                     <div className="mt-3 grid gap-2">
-                                        <select
-                                            value={trigger?.template_id ?? ''}
-                                            onChange={(event) =>
-                                                updateTrigger(trigger!.id, {
-                                                    template_id:
-                                                        event.target.value ||
-                                                        null,
-                                                })
-                                            }
-                                            className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                                        >
-                                            <option value="">
-                                                Tidak ada template
-                                            </option>
-                                            {templates.map((template) => (
-                                                <option
-                                                    key={template.id}
-                                                    value={template.id}
-                                                >
-                                                    {template.key}
+                                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                            <span>Template notifikasi</span>
+                                            <select
+                                                value={trigger?.template_id ?? ''}
+                                                onChange={(event) =>
+                                                    updateTrigger(trigger!.id, {
+                                                        template_id:
+                                                            event.target.value ||
+                                                            null,
+                                                    })
+                                                }
+                                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                            >
+                                                <option value="">
+                                                    Tidak ada template
                                                 </option>
-                                            ))}
-                                        </select>
+                                                {templates.map((template) => (
+                                                    <option
+                                                        key={template.id}
+                                                        value={template.id}
+                                                    >
+                                                        {template.key}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </label>
                                         <label className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500">
                                             <input
                                                 type="checkbox"

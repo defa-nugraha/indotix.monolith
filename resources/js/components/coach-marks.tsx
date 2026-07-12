@@ -884,8 +884,13 @@ export default function CoachMarks({ context }: Props) {
     })();
     const launcherPositionClass =
         context === 'public'
-            ? 'left-5 bottom-5'
+            ? 'left-4 bottom-4 md:left-5 md:bottom-5'
             : 'right-5 bottom-5';
+    const launcherSizeClass =
+        context === 'public'
+            ? 'h-10 w-10 justify-center p-0 md:h-auto md:w-auto md:px-4 md:py-3'
+            : 'px-4 py-3';
+    const launcherZIndexClass = context === 'public' ? 'z-[40]' : 'z-[110]';
 
     return (
         <>
@@ -970,7 +975,7 @@ export default function CoachMarks({ context }: Props) {
 
             <button
                 type="button"
-                className={`fixed ${launcherPositionClass} z-[110] inline-flex items-center gap-2 rounded-full bg-sky-600 px-4 py-3 text-sm font-bold text-white shadow-[0_18px_50px_-18px_rgba(2,132,199,0.9)] transition hover:bg-sky-700`}
+                className={`public-guide-launcher fixed ${launcherPositionClass} ${launcherSizeClass} ${launcherZIndexClass} inline-flex items-center gap-2 rounded-full bg-sky-600 text-sm font-bold text-white shadow-[0_18px_50px_-18px_rgba(2,132,199,0.9)] transition hover:bg-sky-700`}
                 onClick={() => startGuide(true)}
                 aria-label="Tampilkan panduan halaman"
             >

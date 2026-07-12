@@ -12,12 +12,12 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type Props = {
     settings: {
-        booking_timeout_minutes: number;
-        tax_rate: number;
-        service_fee: number;
+        hotel_booking_timeout_minutes: number;
         wisata_booking_timeout_minutes: number;
-        wisata_max_quota_per_ticket: number;
-        wisata_refund_policy: string;
+        event_booking_timeout_minutes: number;
+        academy_booking_timeout_minutes: number;
+        special_program_booking_timeout_minutes: number;
+        retail_shop_booking_timeout_minutes: number;
         public_whatsapp_number: string;
         maintenance_enabled: boolean;
         maintenance_message: string;
@@ -42,12 +42,12 @@ export default function SystemSettings({
     canResetSystem,
 }: Props) {
     const { data, setData, post, processing } = useForm({
-        booking_timeout_minutes: settings.booking_timeout_minutes,
-        tax_rate: settings.tax_rate,
-        service_fee: settings.service_fee,
+        hotel_booking_timeout_minutes: settings.hotel_booking_timeout_minutes,
         wisata_booking_timeout_minutes: settings.wisata_booking_timeout_minutes,
-        wisata_max_quota_per_ticket: settings.wisata_max_quota_per_ticket,
-        wisata_refund_policy: settings.wisata_refund_policy,
+        event_booking_timeout_minutes: settings.event_booking_timeout_minutes,
+        academy_booking_timeout_minutes: settings.academy_booking_timeout_minutes,
+        special_program_booking_timeout_minutes: settings.special_program_booking_timeout_minutes,
+        retail_shop_booking_timeout_minutes: settings.retail_shop_booking_timeout_minutes,
         public_whatsapp_number: settings.public_whatsapp_number,
         maintenance_enabled: settings.maintenance_enabled,
         maintenance_message: settings.maintenance_message,
@@ -138,10 +138,10 @@ export default function SystemSettings({
                             Konfigurasi Sistem
                         </p>
                         <h1 className="text-2xl font-semibold text-slate-900">
-                            Atur parameter utama
+                            Atur parameter booking produk
                         </h1>
                         <p className="text-sm text-slate-500">
-                            Fleksibel tanpa deploy ulang.
+                            Tentukan batas waktu pembayaran dan kanal kontak publik tanpa deploy ulang.
                         </p>
                     </div>
                 </section>
@@ -159,44 +159,19 @@ export default function SystemSettings({
                     <div className="grid gap-6 md:grid-cols-3">
                         <div className="grid gap-2">
                             <label className="text-xs font-semibold uppercase text-slate-400">
-                                Booking timeout (menit)
+                                Timeout booking hotel (menit)
                             </label>
                             <input
                                 type="number"
                                 min="1"
-                                value={data.booking_timeout_minutes}
-                                onChange={(event) => setData('booking_timeout_minutes', Number(event.target.value))}
+                                value={data.hotel_booking_timeout_minutes}
+                                onChange={(event) => setData('hotel_booking_timeout_minutes', Number(event.target.value))}
                                 className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
                             />
                         </div>
                         <div className="grid gap-2">
                             <label className="text-xs font-semibold uppercase text-slate-400">
-                                Pajak (%)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={data.tax_rate}
-                                onChange={(event) => setData('tax_rate', Number(event.target.value))}
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase text-slate-400">
-                                Biaya layanan (Rp)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                value={data.service_fee}
-                                onChange={(event) => setData('service_fee', Number(event.target.value))}
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <label className="text-xs font-semibold uppercase text-slate-400">
-                                Booking timeout wisata (menit)
+                                Timeout booking wisata (menit)
                             </label>
                             <input
                                 type="number"
@@ -208,24 +183,49 @@ export default function SystemSettings({
                         </div>
                         <div className="grid gap-2">
                             <label className="text-xs font-semibold uppercase text-slate-400">
-                                Maks kuota per tiket wisata
+                                Timeout booking event (menit)
                             </label>
                             <input
                                 type="number"
                                 min="1"
-                                value={data.wisata_max_quota_per_ticket}
-                                onChange={(event) => setData('wisata_max_quota_per_ticket', Number(event.target.value))}
+                                value={data.event_booking_timeout_minutes}
+                                onChange={(event) => setData('event_booking_timeout_minutes', Number(event.target.value))}
                                 className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
                             />
                         </div>
                         <div className="grid gap-2">
                             <label className="text-xs font-semibold uppercase text-slate-400">
-                                Kebijakan refund wisata
+                                Timeout booking Eljohn Academy (menit)
                             </label>
                             <input
-                                type="text"
-                                value={data.wisata_refund_policy}
-                                onChange={(event) => setData('wisata_refund_policy', event.target.value)}
+                                type="number"
+                                min="1"
+                                value={data.academy_booking_timeout_minutes}
+                                onChange={(event) => setData('academy_booking_timeout_minutes', Number(event.target.value))}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
+                                Timeout booking special program (menit)
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={data.special_program_booking_timeout_minutes}
+                                onChange={(event) => setData('special_program_booking_timeout_minutes', Number(event.target.value))}
+                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <label className="text-xs font-semibold uppercase text-slate-400">
+                                Timeout booking retail shop (menit)
+                            </label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={data.retail_shop_booking_timeout_minutes}
+                                onChange={(event) => setData('retail_shop_booking_timeout_minutes', Number(event.target.value))}
                                 className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
                             />
                         </div>
@@ -265,7 +265,7 @@ export default function SystemSettings({
                                     Aktifkan
                                 </label>
                             </div>
-                            <textarea
+                            <textarea aria-label="Tulis pesan maintenance yang mudah dipahami user dan mitra."
                                 value={data.maintenance_message}
                                 onChange={(event) => setData('maintenance_message', event.target.value)}
                                 rows={3}

@@ -1,14 +1,24 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import InputError from '@/components/input-error';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import type { BreadcrumbItem } from '@/types';
 
 type Mitra = {
     id: number;
     name: string;
     email: string;
+    phone?: string | null;
     is_suspended?: boolean;
     suspended_reason?: string | null;
     suspended_at?: string | null;
@@ -117,6 +127,40 @@ export default function AdminMitraShow({
     onboarding: Onboarding;
     cityName?: string | null;
 }) {
+    const [editOpen, setEditOpen] = useState(false);
+    const editForm = useForm({
+        name: mitra.name ?? '',
+        email: mitra.email ?? '',
+        phone: mitra.phone ?? '',
+        password: '',
+        hotel_name: onboarding.hotel_name ?? '',
+        responsible_name: onboarding.responsible_name ?? '',
+        reception_phone: onboarding.reception_phone ?? '',
+    });
+
+    const handleUpdate = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        editForm.put(`/admin/mitra/${mitra.id}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                editForm.setData('password', '');
+                setEditOpen(false);
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Data mitra diperbarui.',
+                    icon: 'success',
+                });
+            },
+            onError: () =>
+                Swal.fire({
+                    title: 'Gagal',
+                    text: 'Periksa kembali data mitra.',
+                    icon: 'error',
+                }),
+        });
+    };
+
     const handleSuspend = async () => {
         const result = await Swal.fire({
             title: mitra.is_suspended ? 'Aktifkan mitra?' : 'Suspend mitra?',
@@ -320,6 +364,205 @@ export default function AdminMitraShow({
                             >
                                 {mitra.is_suspended ? 'suspended' : 'active'}
                             </Badge>
+                            <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="border-sky-200 text-sky-700 hover:bg-sky-50"
+                                    onClick={() => setEditOpen(true)}
+                                >
+                                    Edit Mitra
+                                </Button>
+                                <DialogContent className="sm:max-w-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle>
+                                            Edit Mitra Hotel
+                                        </DialogTitle>
+                                    </DialogHeader>
+                                    <form
+                                        className="grid gap-4"
+                                        onSubmit={handleUpdate}
+                                    >
+                                        <div className="grid gap-4 md:grid-cols-2">
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Nama
+                                                </label>
+                                                <input
+                                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                    value={editForm.data.name}
+                                                    onChange={(event) =>
+                                                        editForm.setData(
+                                                            'name',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        editForm.errors.name
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Email
+                                                </label>
+                                                <input
+                                                    type="email"
+                                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                    value={editForm.data.email}
+                                                    onChange={(event) =>
+                                                        editForm.setData(
+                                                            'email',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        editForm.errors.email
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Nomor HP
+                                                </label>
+                                                <input
+                                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                    value={editForm.data.phone}
+                                                    onChange={(event) =>
+                                                        editForm.setData(
+                                                            'phone',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        editForm.errors.phone
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Password Baru
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                    value={
+                                                        editForm.data.password
+                                                    }
+                                                    onChange={(event) =>
+                                                        editForm.setData(
+                                                            'password',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Kosongkan jika tidak diubah"
+                                                />
+                                                <InputError
+                                                    message={
+                                                        editForm.errors.password
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Nama Hotel
+                                                </label>
+                                                <input
+                                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                    value={
+                                                        editForm.data
+                                                            .hotel_name
+                                                    }
+                                                    onChange={(event) =>
+                                                        editForm.setData(
+                                                            'hotel_name',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        editForm.errors
+                                                            .hotel_name
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Penanggung Jawab
+                                                </label>
+                                                <input
+                                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                    value={
+                                                        editForm.data
+                                                            .responsible_name
+                                                    }
+                                                    onChange={(event) =>
+                                                        editForm.setData(
+                                                            'responsible_name',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        editForm.errors
+                                                            .responsible_name
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-2 md:col-span-2">
+                                                <label className="text-sm font-semibold text-slate-700">
+                                                    Nomor Resepsionis
+                                                </label>
+                                                <input
+                                                    className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                    value={
+                                                        editForm.data
+                                                            .reception_phone
+                                                    }
+                                                    onChange={(event) =>
+                                                        editForm.setData(
+                                                            'reception_phone',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        editForm.errors
+                                                            .reception_phone
+                                                    }
+                                                />
+                                            </div>
+                                        </div>
+                                        <DialogFooter className="gap-2 sm:justify-end">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() =>
+                                                    setEditOpen(false)
+                                                }
+                                            >
+                                                Batal
+                                            </Button>
+                                            <Button
+                                                type="submit"
+                                                className="bg-sky-600 text-white hover:bg-sky-700"
+                                                disabled={editForm.processing}
+                                            >
+                                                Simpan Perubahan
+                                            </Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
                             <Button
                                 variant="outline"
                                 className={

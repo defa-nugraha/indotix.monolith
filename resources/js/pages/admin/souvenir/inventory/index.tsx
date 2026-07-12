@@ -65,59 +65,74 @@ export default function SouvenirInventoryIndex({ products, logs }: Props) {
                     <p className="text-sm text-slate-500">Atur stok masuk, stok keluar, dan penyesuaian manual.</p>
 
                     <div className="mt-6 grid gap-3 md:grid-cols-5">
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.product_id}
-                            onChange={(event) => {
-                                form.setData('product_id', event.target.value);
-                                form.setData('variant_id', '');
-                            }}
-                        >
-                            <option value="">Pilih produk</option>
-                            {products.map((product) => (
-                                <option key={product.id} value={product.id}>
-                                    {product.name}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.variant_id}
-                            onChange={(event) => form.setData('variant_id', event.target.value)}
-                            disabled={!selectedProduct || selectedProduct.variants.length === 0}
-                        >
-                            <option value="">Tanpa variasi</option>
-                            {selectedProduct?.variants.map((variant) => (
-                                <option key={variant.id} value={variant.id}>
-                                    {variant.name}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.type}
-                            onChange={(event) => form.setData('type', event.target.value)}
-                        >
-                            <option value="in">Stok Masuk</option>
-                            <option value="out">Stok Keluar</option>
-                            <option value="adjust">Penyesuaian</option>
-                        </select>
-                        <input
-                            type="number"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Jumlah"
-                            value={form.data.quantity}
-                            onChange={(event) => form.setData('quantity', Number(event.target.value))}
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Produk</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.product_id}
+                                onChange={(event) => {
+                                    form.setData('product_id', event.target.value);
+                                    form.setData('variant_id', '');
+                                }}
+                            >
+                                <option value="">Pilih produk</option>
+                                {products.map((product) => (
+                                    <option key={product.id} value={product.id}>
+                                        {product.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Variasi</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.variant_id}
+                                onChange={(event) => form.setData('variant_id', event.target.value)}
+                                disabled={!selectedProduct || selectedProduct.variants.length === 0}
+                            >
+                                <option value="">Tanpa variasi</option>
+                                {selectedProduct?.variants.map((variant) => (
+                                    <option key={variant.id} value={variant.id}>
+                                        {variant.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tipe stok</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.type}
+                                onChange={(event) => form.setData('type', event.target.value)}
+                            >
+                                <option value="in">Stok Masuk</option>
+                                <option value="out">Stok Keluar</option>
+                                <option value="adjust">Penyesuaian</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Jumlah</span>
+                            <input
+                                type="number"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Jumlah"
+                                value={form.data.quantity}
+                                onChange={(event) => form.setData('quantity', Number(event.target.value))}
+                            />
+                        </label>
                         <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={submit}>
                             Simpan
                         </Button>
-                        <textarea
-                            className="md:col-span-5 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Catatan"
-                            value={form.data.note}
-                            onChange={(event) => form.setData('note', event.target.value)}
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600 md:col-span-5">
+                            <span>Catatan</span>
+                            <textarea
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Catatan"
+                                value={form.data.note}
+                                onChange={(event) => form.setData('note', event.target.value)}
+                            />
+                        </label>
                     </div>
                 </section>
 

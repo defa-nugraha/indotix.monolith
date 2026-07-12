@@ -41,14 +41,17 @@ export default function EventScansIndex({ scans, events, filters }: Props) {
                             router.get('/admin/events/scans', Object.fromEntries(data.entries()), { preserveState: true });
                         }}
                     >
-                        <select name="event_id" defaultValue={filters.event_id ?? ''} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                            <option value="">Semua event</option>
-                            {events.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.title}
-                                </option>
-                            ))}
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Event</span>
+                            <select name="event_id" defaultValue={filters.event_id ?? ''} className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                                <option value="">Semua event</option>
+                                {events.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.title}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Filter
                         </Button>

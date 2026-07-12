@@ -44,36 +44,45 @@ export default function AcademyBookingsIndex({ bookings, classes, filters }: Pro
                                 router.get('/admin/academy/bookings', Object.fromEntries(data.entries()));
                             }}
                         >
-                            <input
-                                type="date"
-                                name="date"
-                                defaultValue={filters.date ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <select
-                                name="class_id"
-                                defaultValue={filters.class_id ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Semua Kelas</option>
-                                {classes.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.title}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                name="status"
-                                defaultValue={filters.status ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Semua Status</option>
-                                <option value="pending_payment">pending_payment</option>
-                                <option value="paid">paid</option>
-                                <option value="cancelled">cancelled</option>
-                                <option value="expired">expired</option>
-                                <option value="completed">completed</option>
-                            </select>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Tanggal</span>
+                                <input
+                                    type="date"
+                                    name="date"
+                                    defaultValue={filters.date ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Kelas</span>
+                                <select
+                                    name="class_id"
+                                    defaultValue={filters.class_id ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Semua Kelas</option>
+                                    {classes.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Status</span>
+                                <select
+                                    name="status"
+                                    defaultValue={filters.status ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Semua Status</option>
+                                    <option value="pending_payment">pending_payment</option>
+                                    <option value="paid">paid</option>
+                                    <option value="cancelled">cancelled</option>
+                                    <option value="expired">expired</option>
+                                    <option value="completed">completed</option>
+                                </select>
+                            </label>
                             <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm text-white">Filter</button>
                         </form>
                     </div>

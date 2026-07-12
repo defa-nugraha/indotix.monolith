@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { FormField } from '@/components/form-field';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -85,18 +86,26 @@ export default function WisataAffiliateLinks({ links, affiliates }: Props) {
                                     <DialogTitle>Buat Referral Link</DialogTitle>
                                 </DialogHeader>
                                 <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-4">
-                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
-                                        <option value="">Pilih Afiliasi</option>
-                                        {affiliates.map((item) => (
-                                            <option key={item.id} value={item.id}>{item.name}</option>
-                                        ))}
-                                    </select>
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Landing URL" value={form.landing_url} onChange={(e) => setForm({ ...form, landing_url: e.target.value })} />
-                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.attribution_model} onChange={(e) => setForm({ ...form, attribution_model: e.target.value })}>
-                                        <option value="last_click">Last Click</option>
-                                        <option value="first_click">First Click</option>
-                                    </select>
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Cookie (hari)" value={form.cookie_days} onChange={(e) => setForm({ ...form, cookie_days: e.target.value })} />
+                                    <FormField label="Afiliasi">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.affiliate_id} onChange={(e) => setForm({ ...form, affiliate_id: e.target.value })} required>
+                                            <option value="">Pilih Afiliasi</option>
+                                            {affiliates.map((item) => (
+                                                <option key={item.id} value={item.id}>{item.name}</option>
+                                            ))}
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Landing URL">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.landing_url} onChange={(e) => setForm({ ...form, landing_url: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Model atribusi">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.attribution_model} onChange={(e) => setForm({ ...form, attribution_model: e.target.value })}>
+                                            <option value="last_click">Last Click</option>
+                                            <option value="first_click">First Click</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Durasi cookie">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.cookie_days} onChange={(e) => setForm({ ...form, cookie_days: e.target.value })} />
+                                    </FormField>
                                     <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white md:col-span-4">Buat Link</button>
                                 </form>
                             </DialogContent>
@@ -126,14 +135,17 @@ export default function WisataAffiliateLinks({ links, affiliates }: Props) {
                                         <td>{link.status}</td>
                                         <td className="space-x-2">
                                             <button onClick={() => regenerate(link.id)} className="rounded-md border border-slate-200 px-3 py-1 text-xs">Regenerate</button>
-                                            <select
-                                                className="h-8 rounded-md border border-slate-200 px-2 text-xs"
-                                                value={link.status}
-                                                onChange={(e) => updateStatus(link.id, e.target.value)}
-                                            >
-                                                <option value="active">active</option>
-                                                <option value="disabled">disabled</option>
-                                            </select>
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Status</span>
+                                                <select
+                                                    className="h-8 rounded-md border border-slate-200 px-2 text-xs"
+                                                    value={link.status}
+                                                    onChange={(e) => updateStatus(link.id, e.target.value)}
+                                                >
+                                                    <option value="active">active</option>
+                                                    <option value="disabled">disabled</option>
+                                                </select>
+                                            </label>
                                         </td>
                                     </tr>
                                 ))}

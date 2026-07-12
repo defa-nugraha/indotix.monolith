@@ -70,38 +70,47 @@ export default function EventBookingsIndex({
                             );
                         }}
                     >
-                        <select
-                            name="program_id"
-                            defaultValue={filters.program_id ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua program</option>
-                            {programs.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name}
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Program</span>
+                            <select
+                                name="program_id"
+                                defaultValue={filters.program_id ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua program</option>
+                                {programs.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="pending_payment">
+                                    Pending Payment
                                 </option>
-                            ))}
-                        </select>
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="pending_payment">
-                                Pending Payment
-                            </option>
-                            <option value="paid">Paid</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="expired">Expired</option>
-                        </select>
-                        <input
-                            type="date"
-                            name="date"
-                            defaultValue={filters.date ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
+                                <option value="paid">Paid</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="expired">Expired</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tanggal</span>
+                            <input
+                                type="date"
+                                name="date"
+                                defaultValue={filters.date ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
                         <Button
                             type="submit"
                             className="bg-sky-600 text-white hover:bg-sky-700 md:col-span-3"

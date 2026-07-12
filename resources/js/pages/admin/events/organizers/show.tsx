@@ -54,8 +54,10 @@ const statusTone = (status?: string | null) => {
 
 export default function EventOrganizerShow({
     organizer,
+    canManageMitraEvent = false,
 }: {
     organizer: Organizer;
+    canManageMitraEvent?: boolean;
 }) {
     const previewUrl = (path?: string | null) =>
         path ? `/storage/${path}` : null;
@@ -344,26 +346,28 @@ export default function EventOrganizerShow({
                     </div>
 
                     <div className="space-y-6">
-                        <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-900">
-                                Aksi Verifikasi
-                            </h3>
-                            <div className="mt-4 flex flex-col gap-3">
-                                <Button
-                                    className="bg-sky-600 text-white hover:bg-sky-700"
-                                    onClick={() => handleVerify('approve')}
-                                >
-                                    Setujui
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                                    onClick={() => handleVerify('reject')}
-                                >
-                                    Tolak
-                                </Button>
+                        {canManageMitraEvent && (
+                            <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    Aksi Verifikasi
+                                </h3>
+                                <div className="mt-4 flex flex-col gap-3">
+                                    <Button
+                                        className="bg-sky-600 text-white hover:bg-sky-700"
+                                        onClick={() => handleVerify('approve')}
+                                    >
+                                        Setujui
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                        onClick={() => handleVerify('reject')}
+                                    >
+                                        Tolak
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                             <h3 className="text-sm font-semibold text-slate-900">
@@ -400,30 +404,32 @@ export default function EventOrganizerShow({
                                     Catatan: {organizer.notes}
                                 </div>
                             )}
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="mt-4 w-full border-amber-200 text-amber-700 hover:bg-amber-50"
-                                onClick={() => {
-                                    Swal.fire({
-                                        title: 'Kembalikan ke pending?',
-                                        text: 'Status EO akan dikembalikan ke pending untuk review ulang.',
-                                        icon: 'question',
-                                        showCancelButton: true,
-                                        confirmButtonText: 'Ya, pending',
-                                        cancelButtonText: 'Batal',
-                                    }).then((result) => {
-                                        if (!result.isConfirmed) return;
-                                        router.post(
-                                            `/admin/events/organizers/${organizer.id}/status`,
-                                            { status: 'pending', notes: null },
-                                            { preserveScroll: true },
-                                        );
-                                    });
-                                }}
-                            >
-                                Set Pending
-                            </Button>
+                            {canManageMitraEvent && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="mt-4 w-full border-amber-200 text-amber-700 hover:bg-amber-50"
+                                    onClick={() => {
+                                        Swal.fire({
+                                            title: 'Kembalikan ke pending?',
+                                            text: 'Status EO akan dikembalikan ke pending untuk review ulang.',
+                                            icon: 'question',
+                                            showCancelButton: true,
+                                            confirmButtonText: 'Ya, pending',
+                                            cancelButtonText: 'Batal',
+                                        }).then((result) => {
+                                            if (!result.isConfirmed) return;
+                                            router.post(
+                                                `/admin/events/organizers/${organizer.id}/status`,
+                                                { status: 'pending', notes: null },
+                                                { preserveScroll: true },
+                                            );
+                                        });
+                                    }}
+                                >
+                                    Set Pending
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </section>

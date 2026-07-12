@@ -187,14 +187,14 @@ export default function AdminWisataTicketCreate({ destinations }: Props) {
                             />
                             <span className="text-sm text-slate-700">Aktifkan tiket saat dibuat</span>
                         </div>
-                        <div className="flex items-center gap-2 md:col-span-2">
+                        <label className="flex items-center gap-2 md:col-span-2">
                             <input
                                 type="checkbox"
                                 checked={form.data.is_closed}
                                 onChange={(event) => form.setData('is_closed', event.target.checked)}
                             />
                             <span className="text-sm text-slate-700">Tutup penjualan sementara</span>
-                        </div>
+                        </label>
                         <div className="md:col-span-2 flex gap-2">
                             <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                                 Simpan Tiket

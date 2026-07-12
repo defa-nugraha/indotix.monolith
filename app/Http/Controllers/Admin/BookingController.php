@@ -25,6 +25,16 @@ class BookingController extends Controller
 
     public function index(Request $request): Response
     {
+        return $this->renderIndex($request, '/admin/bookings', 'Monitoring Booking', 'Manajemen booking & transaksi');
+    }
+
+    public function exceptions(Request $request): Response
+    {
+        return $this->renderIndex($request, '/admin/hotel/exceptions', 'Refund & Exception Hotel', 'Kelola cancel, dispute, dan refund booking hotel');
+    }
+
+    private function renderIndex(Request $request, string $basePath, string $title, string $heading): Response
+    {
         $query = Booking::query()
             ->with(['hotel', 'user'])
             ->latest();
@@ -60,6 +70,9 @@ class BookingController extends Controller
             ],
             'statusOptions' => self::STATUSES,
             'hotelOptions' => $this->hotelOptions(),
+            'basePath' => $basePath,
+            'pageTitle' => $title,
+            'pageHeading' => $heading,
         ]);
     }
 

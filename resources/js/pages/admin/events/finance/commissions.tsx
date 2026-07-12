@@ -73,31 +73,40 @@ export default function EventCommissions({ commissions, events }: Props) {
                             );
                         }}
                     >
-                        <select
-                            name="event_id"
-                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm lg:col-span-4"
-                        >
-                            <option value="">Global</option>
-                            {events.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.title}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            name="type"
-                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm lg:col-span-3"
-                        >
-                            <option value="percentage">Persentase</option>
-                            <option value="fixed">Fixed</option>
-                        </select>
-                        <input
-                            name="value"
-                            placeholder="Nilai"
-                            type="number"
-                            min="0"
-                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm lg:col-span-3"
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600 lg:col-span-4">
+                            <span>Event</span>
+                            <select
+                                name="event_id"
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                            >
+                                <option value="">Global</option>
+                                {events.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.title}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600 lg:col-span-3">
+                            <span>Tipe komisi</span>
+                            <select
+                                name="type"
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                            >
+                                <option value="percentage">Persentase</option>
+                                <option value="fixed">Fixed</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600 lg:col-span-3">
+                            <span>Nilai</span>
+                            <input
+                                name="value"
+                                placeholder="Nilai"
+                                type="number"
+                                min="0"
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                            />
+                        </label>
                         <label className="flex min-h-10 items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 lg:col-span-2">
                             <input
                                 type="checkbox"
@@ -111,20 +120,26 @@ export default function EventCommissions({ commissions, events }: Props) {
                             />
                             Berlaku selamanya
                         </label>
-                        <input
-                            name="starts_at"
-                            type="date"
-                            disabled={isForever}
-                            required={!isForever}
-                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm disabled:bg-slate-100 lg:col-span-3"
-                        />
-                        <input
-                            name="ends_at"
-                            type="date"
-                            disabled={isForever}
-                            required={!isForever}
-                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm disabled:bg-slate-100 lg:col-span-3"
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600 lg:col-span-3">
+                            <span>Tanggal mulai</span>
+                            <input
+                                name="starts_at"
+                                type="date"
+                                disabled={isForever}
+                                required={!isForever}
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm disabled:bg-slate-100"
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600 lg:col-span-3">
+                            <span>Tanggal berakhir</span>
+                            <input
+                                name="ends_at"
+                                type="date"
+                                disabled={isForever}
+                                required={!isForever}
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm disabled:bg-slate-100"
+                            />
+                        </label>
                         <Button
                             type="submit"
                             className="bg-sky-600 text-white hover:bg-sky-700 lg:col-span-2"

@@ -78,27 +78,36 @@ export default function AcademyFinance({ summary, refunds }: Props) {
                                 submit();
                             }}
                         >
-                            <input
-                                value={form.data.booking_id}
-                                onChange={(event) => form.setData('booking_id', event.target.value)}
-                                placeholder="ID Booking"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <input
-                                type="number"
-                                min={0}
-                                value={form.data.amount}
-                                onChange={(event) => form.setData('amount', Number(event.target.value))}
-                                placeholder="Nominal refund"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <textarea
-                                value={form.data.reason}
-                                onChange={(event) => form.setData('reason', event.target.value)}
-                                placeholder="Alasan"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                rows={3}
-                            />
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>ID Booking</span>
+                                <input
+                                    value={form.data.booking_id}
+                                    onChange={(event) => form.setData('booking_id', event.target.value)}
+                                    placeholder="ID Booking"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Nominal refund</span>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={form.data.amount}
+                                    onChange={(event) => form.setData('amount', Number(event.target.value))}
+                                    placeholder="Nominal refund"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Alasan</span>
+                                <textarea
+                                    value={form.data.reason}
+                                    onChange={(event) => form.setData('reason', event.target.value)}
+                                    placeholder="Alasan"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    rows={3}
+                                />
+                            </label>
                             <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                                 Proses Refund
                             </Button>

@@ -199,19 +199,22 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                                     router.get('/admin/academy/classes', Object.fromEntries(data.entries()));
                                 }}
                             >
-                                <select
-                                    name="status"
-                                    defaultValue={filters.status ?? ''}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                >
-                                    <option value="">Semua Status</option>
-                                    <option value="draft">draft</option>
-                                    <option value="scheduled">scheduled</option>
-                                    <option value="open_for_sale">open_for_sale</option>
-                                    <option value="closed">closed</option>
-                                    <option value="completed">completed</option>
-                                    <option value="cancelled">cancelled</option>
-                                </select>
+                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                    <span>Status</span>
+                                    <select
+                                        name="status"
+                                        defaultValue={filters.status ?? ''}
+                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    >
+                                        <option value="">Semua Status</option>
+                                        <option value="draft">draft</option>
+                                        <option value="scheduled">scheduled</option>
+                                        <option value="open_for_sale">open_for_sale</option>
+                                        <option value="closed">closed</option>
+                                        <option value="completed">completed</option>
+                                        <option value="cancelled">cancelled</option>
+                                    </select>
+                                </label>
                             </form>
                             <Button className="bg-sky-600 text-white hover:bg-sky-700" onClick={openCreate}>
                                 Buat Kelas
@@ -438,17 +441,20 @@ export default function AcademyClassesIndex({ classes, filters }: Props) {
                             <div className="rounded-lg border border-dashed border-slate-200 p-4 md:col-span-2">
                                 <div className="text-xs font-semibold uppercase text-slate-500">Gambar Kelas</div>
                                 <p className="mt-1 text-xs text-slate-500">Maksimal 5 gambar (JPG/PNG/WEBP).</p>
-                                <input
-                                    type="file"
-                                    multiple
-                                    accept="image/*"
-                                    className="mt-3 block w-full text-sm"
-                                    onChange={(event) => {
-                                        const files = Array.from(event.target.files ?? []);
-                                        form.setData('images', files);
-                                        setPreviewImages(files.map((file) => URL.createObjectURL(file)));
-                                    }}
-                                />
+                                <label className="mt-3 grid gap-1.5 text-sm font-medium text-slate-700">
+                                    <span>Upload gambar kelas</span>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        className="block w-full text-sm"
+                                        onChange={(event) => {
+                                            const files = Array.from(event.target.files ?? []);
+                                            form.setData('images', files);
+                                            setPreviewImages(files.map((file) => URL.createObjectURL(file)));
+                                        }}
+                                    />
+                                </label>
                                 <InputError message={form.errors.images} />
                                 {existingImages.length > 0 && (
                                     <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">

@@ -60,25 +60,31 @@ export default function SpecialProgramsIndex({ programs, filters }: Props) {
                             );
                         }}
                     >
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="published">Published</option>
-                            <option value="draft">Unpublished</option>
-                        </select>
-                        <select
-                            name="category"
-                            defaultValue={filters.category ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua kategori</option>
-                            <option value="meeting">Meeting</option>
-                            <option value="wedding">Wedding</option>
-                            <option value="travel">Travel</option>
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="published">Published</option>
+                                <option value="draft">Unpublished</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Kategori</span>
+                            <select
+                                name="category"
+                                defaultValue={filters.category ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua kategori</option>
+                                <option value="meeting">Meeting</option>
+                                <option value="wedding">Wedding</option>
+                                <option value="travel">Travel</option>
+                            </select>
+                        </label>
                         <Button
                             type="submit"
                             className="bg-sky-600 text-white hover:bg-sky-700"

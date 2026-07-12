@@ -119,72 +119,90 @@ export default function SouvenirPromotionsIndex({
                         Diskon, bundling, dan integrasi Special Program.
                     </p>
                     <div className="mt-6 grid gap-3 md:grid-cols-4">
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Nama promo"
-                            value={form.data.name}
-                            onChange={(event) =>
-                                form.setData('name', event.target.value)
-                            }
-                        />
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.type}
-                            onChange={(event) =>
-                                form.setData('type', event.target.value)
-                            }
-                        >
-                            <option value="discount">Diskon</option>
-                            <option value="bundling">Bundling</option>
-                            <option value="special_program">
-                                Special Program
-                            </option>
-                        </select>
-                        <input
-                            type="number"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Nilai"
-                            value={form.data.value}
-                            onChange={(event) =>
-                                form.setData(
-                                    'value',
-                                    Number(event.target.value),
-                                )
-                            }
-                        />
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.special_program_id}
-                            onChange={(event) =>
-                                form.setData(
-                                    'special_program_id',
-                                    event.target.value,
-                                )
-                            }
-                        >
-                            <option value="">Pilih Special Program</option>
-                            {programs.map((program) => (
-                                <option key={program.id} value={program.id}>
-                                    {program.name}
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Nama promo</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Nama promo"
+                                value={form.data.name}
+                                onChange={(event) =>
+                                    form.setData('name', event.target.value)
+                                }
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tipe promo</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.type}
+                                onChange={(event) =>
+                                    form.setData('type', event.target.value)
+                                }
+                            >
+                                <option value="discount">Diskon</option>
+                                <option value="bundling">Bundling</option>
+                                <option value="special_program">
+                                    Special Program
                                 </option>
-                            ))}
-                        </select>
-                        <input
-                            type="date"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.starts_at}
-                            onChange={(event) =>
-                                form.setData('starts_at', event.target.value)
-                            }
-                        />
-                        <input
-                            type="date"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.ends_at}
-                            onChange={(event) =>
-                                form.setData('ends_at', event.target.value)
-                            }
-                        />
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Nilai</span>
+                            <input
+                                type="number"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Nilai"
+                                value={form.data.value}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'value',
+                                        Number(event.target.value),
+                                    )
+                                }
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Special Program</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.special_program_id}
+                                onChange={(event) =>
+                                    form.setData(
+                                        'special_program_id',
+                                        event.target.value,
+                                    )
+                                }
+                            >
+                                <option value="">Pilih Special Program</option>
+                                {programs.map((program) => (
+                                    <option key={program.id} value={program.id}>
+                                        {program.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tanggal mulai</span>
+                            <input
+                                type="date"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.starts_at}
+                                onChange={(event) =>
+                                    form.setData('starts_at', event.target.value)
+                                }
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tanggal selesai</span>
+                            <input
+                                type="date"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.ends_at}
+                                onChange={(event) =>
+                                    form.setData('ends_at', event.target.value)
+                                }
+                            />
+                        </label>
                         <Button
                             className="bg-sky-600 text-white hover:bg-sky-700"
                             type="button"

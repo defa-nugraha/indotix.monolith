@@ -2,6 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/form-field';
 import { Badge } from '@/components/ui/badge';
 
 type EventDetail = {
@@ -82,11 +83,13 @@ export default function EventShow({ event }: { event: EventDetail }) {
                                 router.post(`/admin/events/${event.id}/capacity`, Object.fromEntries(data.entries()));
                             }}
                         >
-                            <input
-                                name="capacity_total"
-                                defaultValue={event.capacity_total}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
+                            <FormField label="Total kapasitas">
+                                <input
+                                    name="capacity_total"
+                                    defaultValue={event.capacity_total}
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </FormField>
                             <label className="flex items-center gap-2 text-sm text-slate-600">
                                 <input type="checkbox" name="sales_stopped" defaultChecked={event.sales_stopped} />
                                 Emergency stop selling

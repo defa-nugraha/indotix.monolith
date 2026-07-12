@@ -2,6 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/form-field';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Special Program', href: '/admin/special-programs' },
@@ -25,12 +26,18 @@ export default function EventExceptionsIndex() {
                             router.post(`/admin/special-programs/${eventId}/exception`, Object.fromEntries(data.entries()), { preserveScroll: true });
                         }}
                     >
-                        <input name="event_id" placeholder="ID Program" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        <select name="status" className="rounded-lg border border-slate-200 px-3 py-2 text-sm">
-                            <option value="postponed">Postponed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                        <input name="reason" placeholder="Alasan" className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-2" />
+                        <FormField label="ID Program">
+                            <input name="event_id" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
+                        <FormField label="Status">
+                            <select name="status" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
+                                <option value="postponed">Postponed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </FormField>
+                        <FormField label="Alasan" className="md:col-span-2">
+                            <input name="reason" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
                         <Button type="submit" className="bg-rose-600 text-white hover:bg-rose-700">
                             Simpan
                         </Button>
@@ -49,9 +56,15 @@ export default function EventExceptionsIndex() {
                             router.post(`/admin/special-programs/bookings/${bookingId}/refund`, Object.fromEntries(data.entries()), { preserveScroll: true });
                         }}
                     >
-                        <input name="booking_id" placeholder="ID Booking" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        <input name="amount" placeholder="Jumlah refund" className="rounded-lg border border-slate-200 px-3 py-2 text-sm" />
-                        <input name="reason" placeholder="Alasan refund" className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-2" />
+                        <FormField label="ID Booking">
+                            <input name="booking_id" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
+                        <FormField label="Jumlah refund">
+                            <input name="amount" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
+                        <FormField label="Alasan refund" className="md:col-span-2">
+                            <input name="reason" className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" />
+                        </FormField>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Proses Refund
                         </Button>

@@ -443,7 +443,7 @@ export default function AdminWisataDestinationShow({
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
                                 )}
-                                <input
+                                <input aria-label="Photo Gate File"
                                     type="file"
                                     name="photo_gate_file"
                                     accept="image/*"
@@ -468,7 +468,7 @@ export default function AdminWisataDestinationShow({
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
                                 )}
-                                <input
+                                <input aria-label="Photo Area File"
                                     type="file"
                                     name="photo_area_file"
                                     accept="image/*"
@@ -493,12 +493,15 @@ export default function AdminWisataDestinationShow({
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
                                 )}
-                                <input
-                                    type="file"
-                                    name="photo_ticket_file"
-                                    accept="image/*"
-                                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                />
+                                <label className="mt-2 grid gap-1.5 text-sm font-medium text-slate-700">
+                                    <span>Upload foto loket</span>
+                                    <input
+                                        type="file"
+                                        name="photo_ticket_file"
+                                        accept="image/*"
+                                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    />
+                                </label>
                                 <p className="mt-1 text-xs text-slate-500">
                                     Maksimal {maxImageSizeLabel}.
                                 </p>
@@ -533,13 +536,16 @@ export default function AdminWisataDestinationShow({
                                     ))}
                                 </div>
                             )}
-                            <input
-                                type="file"
-                                name="photo_other_files[]"
-                                accept="image/*"
-                                multiple
-                                className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
+                            <label className="mt-2 grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Upload foto lainnya</span>
+                                <input
+                                    type="file"
+                                    name="photo_other_files[]"
+                                    accept="image/*"
+                                    multiple
+                                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
                             <p className="text-xs text-slate-500">
                                 Maksimal {maxOtherPhotoCount} foto, {maxImageSizeLabel} per file.
                             </p>

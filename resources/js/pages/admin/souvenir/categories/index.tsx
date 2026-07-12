@@ -105,31 +105,40 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
                     <SouvenirAdminMenu className="mt-4" />
 
                     <div className="mt-6 grid gap-4 md:grid-cols-4">
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Nama kategori"
-                            value={form.data.name}
-                            onChange={(event) => form.setData('name', event.target.value)}
-                        />
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.parent_id}
-                            onChange={(event) => form.setData('parent_id', event.target.value)}
-                        >
-                            <option value="">Tanpa parent</option>
-                            {categories.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="number"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Urutan"
-                            value={form.data.sort_order}
-                            onChange={(event) => form.setData('sort_order', Number(event.target.value))}
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Nama kategori</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Nama kategori"
+                                value={form.data.name}
+                                onChange={(event) => form.setData('name', event.target.value)}
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Parent kategori</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.parent_id}
+                                onChange={(event) => form.setData('parent_id', event.target.value)}
+                            >
+                                <option value="">Tanpa parent</option>
+                                {categories.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Urutan</span>
+                            <input
+                                type="number"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Urutan"
+                                value={form.data.sort_order}
+                                onChange={(event) => form.setData('sort_order', Number(event.target.value))}
+                            />
+                        </label>
                         <Button className="bg-sky-600 text-white hover:bg-sky-700" type="button" onClick={submit}>
                             Simpan Kategori
                         </Button>
@@ -154,22 +163,28 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
                                         <td className="px-4 py-3 font-semibold text-slate-900">{item.name}</td>
                                         <td className="px-4 py-3 text-slate-500">{item.parent?.name ?? '-'}</td>
                                         <td className="px-4 py-3">
-                                            <input
-                                                type="number"
-                                                defaultValue={item.sort_order}
-                                                className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs"
-                                                onBlur={(event) => updateCategory(item.id, { sort_order: Number(event.target.value) })}
-                                            />
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Urutan</span>
+                                                <input
+                                                    type="number"
+                                                    defaultValue={item.sort_order}
+                                                    className="w-20 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                                                    onBlur={(event) => updateCategory(item.id, { sort_order: Number(event.target.value) })}
+                                                />
+                                            </label>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <select
-                                                defaultValue={item.is_active ? 'active' : 'inactive'}
-                                                className="rounded-lg border border-slate-200 px-2 py-1 text-xs"
-                                                onChange={(event) => updateCategory(item.id, { is_active: event.target.value === 'active' })}
-                                            >
-                                                <option value="active">Aktif</option>
-                                                <option value="inactive">Nonaktif</option>
-                                            </select>
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Status</span>
+                                                <select
+                                                    defaultValue={item.is_active ? 'active' : 'inactive'}
+                                                    className="rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                                                    onChange={(event) => updateCategory(item.id, { is_active: event.target.value === 'active' })}
+                                                >
+                                                    <option value="active">Aktif</option>
+                                                    <option value="inactive">Nonaktif</option>
+                                                </select>
+                                            </label>
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
@@ -206,41 +221,53 @@ export default function SouvenirCategoriesIndex({ categories = [] }: { categorie
                             <DialogDescription>Perbarui detail kategori retail shop.</DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 md:grid-cols-2">
-                            <input
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Nama kategori"
-                                value={editData.name ?? ''}
-                                onChange={(event) => setEditData({ ...editData, name: event.target.value })}
-                            />
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.parent_id ?? ''}
-                                onChange={(event) => setEditData({ ...editData, parent_id: event.target.value })}
-                            >
-                                <option value="">Tanpa parent</option>
-                                {categories
-                                    .filter((category) => category.id !== editingId)
-                                    .map((category) => (
-                                        <option key={category.id} value={category.id}>
-                                            {category.name}
-                                        </option>
-                                    ))}
-                            </select>
-                            <input
-                                type="number"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                placeholder="Urutan"
-                                value={editData.sort_order ?? 0}
-                                onChange={(event) => setEditData({ ...editData, sort_order: Number(event.target.value) })}
-                            />
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={editData.is_active ? 'active' : 'inactive'}
-                                onChange={(event) => setEditData({ ...editData, is_active: event.target.value === 'active' })}
-                            >
-                                <option value="active">Aktif</option>
-                                <option value="inactive">Nonaktif</option>
-                            </select>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Nama kategori</span>
+                                <input
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Nama kategori"
+                                    value={editData.name ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, name: event.target.value })}
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Parent kategori</span>
+                                <select
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.parent_id ?? ''}
+                                    onChange={(event) => setEditData({ ...editData, parent_id: event.target.value })}
+                                >
+                                    <option value="">Tanpa parent</option>
+                                    {categories
+                                        .filter((category) => category.id !== editingId)
+                                        .map((category) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                </select>
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Urutan</span>
+                                <input
+                                    type="number"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    placeholder="Urutan"
+                                    value={editData.sort_order ?? 0}
+                                    onChange={(event) => setEditData({ ...editData, sort_order: Number(event.target.value) })}
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Status</span>
+                                <select
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={editData.is_active ? 'active' : 'inactive'}
+                                    onChange={(event) => setEditData({ ...editData, is_active: event.target.value === 'active' })}
+                                >
+                                    <option value="active">Aktif</option>
+                                    <option value="inactive">Nonaktif</option>
+                                </select>
+                            </label>
                         </div>
                         <DialogFooter className="gap-2">
                             <Button variant="outline" type="button" onClick={() => setIsEditOpen(false)}>

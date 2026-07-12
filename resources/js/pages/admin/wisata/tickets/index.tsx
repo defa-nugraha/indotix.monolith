@@ -124,21 +124,27 @@ export default function AdminWisataTicketsIndex({ tickets, filters }: Props) {
                             submitFilters(event.currentTarget);
                         }}
                     >
-                        <input
-                            name="search"
-                            defaultValue={filters.search ?? ''}
-                            placeholder="Cari tiket / destinasi / mitra"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="active">Aktif</option>
-                            <option value="inactive">Nonaktif</option>
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Pencarian tiket</span>
+                            <input
+                                name="search"
+                                defaultValue={filters.search ?? ''}
+                                placeholder="Cari tiket / destinasi / mitra"
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="active">Aktif</option>
+                                <option value="inactive">Nonaktif</option>
+                            </select>
+                        </label>
                         <div className="flex gap-2">
                             <Button
                                 type="submit"
@@ -249,27 +255,30 @@ export default function AdminWisataTicketsIndex({ tickets, filters }: Props) {
                                                         ? 'Nonaktifkan'
                                                         : 'Aktifkan'}
                                                 </Button>
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    defaultValue={
-                                                        ticket.max_quota_override ??
-                                                        ''
-                                                    }
-                                                    placeholder="Override kuota"
-                                                    className="w-32 rounded-lg border border-slate-200 px-2 py-1 text-xs"
-                                                    onBlur={(event) =>
-                                                        handleUpdate(
-                                                            ticket.id,
-                                                            {
-                                                                max_quota_override:
-                                                                    event.target
-                                                                        .value ||
-                                                                    null,
-                                                            },
-                                                        )
-                                                    }
-                                                />
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Override kuota</span>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        defaultValue={
+                                                            ticket.max_quota_override ??
+                                                            ''
+                                                        }
+                                                        placeholder="Override kuota"
+                                                        className="w-32 rounded-lg border border-slate-200 px-2 py-1 text-xs"
+                                                        onBlur={(event) =>
+                                                            handleUpdate(
+                                                                ticket.id,
+                                                                {
+                                                                    max_quota_override:
+                                                                        event.target
+                                                                            .value ||
+                                                                        null,
+                                                                },
+                                                            )
+                                                        }
+                                                    />
+                                                </label>
                                                 <Button
                                                     size="sm"
                                                     variant="outline"

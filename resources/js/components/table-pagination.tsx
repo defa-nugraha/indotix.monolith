@@ -139,10 +139,11 @@ export default function TablePagination() {
                 return (
                     <div
                         key={key}
-                        className="flex flex-wrap items-center gap-2 text-sm text-slate-900"
+                        className="flex flex-wrap items-center gap-2 text-sm font-medium text-slate-700"
                     >
-                        <span>Show</span>
+                        <span>Tampilkan</span>
                         <select
+                            aria-label={`Jumlah data per halaman ${pageLabel(key)}`}
                             value={perPage}
                             onChange={(event) =>
                                 navigate({
@@ -150,7 +151,7 @@ export default function TablePagination() {
                                     page: undefined,
                                 })
                             }
-                            className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 shadow-xs"
+                            className="h-10 min-w-20 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-900 shadow-xs outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
                         >
                             {perPageOptions.map((option) => (
                                 <option key={option} value={option}>
@@ -158,7 +159,7 @@ export default function TablePagination() {
                                 </option>
                             ))}
                         </select>
-                        <span>entries</span>
+                        <span>data</span>
                         {paginators.length > 1 && (
                             <span className="ml-2 text-xs font-semibold uppercase text-slate-400">
                                 {pageLabel(key)}
@@ -172,11 +173,11 @@ export default function TablePagination() {
 
     const bottomControls = (
         <div
-            className={`flex flex-col gap-3 border-t border-slate-100 pt-4 sm:flex-row sm:items-center sm:justify-between ${
+            className={`flex flex-col gap-3 border-t border-slate-100 pt-4 lg:flex-row lg:items-center lg:justify-between ${
                 mounts?.padded ? 'px-5 pb-5 md:px-6 md:pb-6' : ''
             }`}
         >
-            <div className="space-y-1 text-sm text-slate-500">
+            <div className="space-y-1 text-sm font-medium text-slate-500">
                 {paginators.map(([key, paginator]) => (
                     <div key={key}>
                         {paginators.length > 1 && (
@@ -184,12 +185,12 @@ export default function TablePagination() {
                                 {pageLabel(key)}:{' '}
                             </span>
                         )}
-                        Showing {paginator.from ?? 0} to {paginator.to ?? 0} of{' '}
-                        {paginator.total ?? 0} entries
+                        Menampilkan {paginator.from ?? 0} sampai{' '}
+                        {paginator.to ?? 0} dari {paginator.total ?? 0} data
                     </div>
                 ))}
             </div>
-            <div className="flex flex-wrap items-center gap-1 pr-14 sm:justify-end sm:pr-0">
+            <div className="flex max-w-full items-center gap-1 overflow-x-auto pb-1 pr-14 sm:pr-0 lg:justify-end">
                 {paginators.map(([key, paginator]) => {
                     const currentPage = paginator.current_page ?? 1;
                     const lastPage = paginator.last_page ?? 1;
@@ -202,23 +203,27 @@ export default function TablePagination() {
                                 type="button"
                                 variant="outline"
                                 size="sm"
+                                aria-label="Ke halaman pertama"
                                 disabled={!canPrevious}
                                 onClick={() => navigate({ page: 1 })}
+                                className="shrink-0"
                             >
                                 <ChevronFirst className="mr-1 size-4" />
-                                First
+                                Awal
                             </Button>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
+                                aria-label="Ke halaman sebelumnya"
                                 disabled={!canPrevious}
                                 onClick={() =>
                                     navigate({ page: currentPage - 1 })
                                 }
+                                className="shrink-0"
                             >
                                 <ChevronLeft className="mr-1 size-4" />
-                                Previous
+                                Sebelumnya
                             </Button>
                             {lastPage > 1 &&
                                 pageNumbers(currentPage, lastPage).map(
@@ -232,9 +237,16 @@ export default function TablePagination() {
                                                     : 'outline'
                                             }
                                             size="sm"
+                                            aria-label={`Ke halaman ${item}`}
+                                            aria-current={
+                                                item === currentPage
+                                                    ? 'page'
+                                                    : undefined
+                                            }
                                             onClick={() =>
                                                 navigate({ page: item })
                                             }
+                                            className="shrink-0"
                                         >
                                             {item}
                                         </Button>
@@ -244,22 +256,26 @@ export default function TablePagination() {
                                 type="button"
                                 variant="outline"
                                 size="sm"
+                                aria-label="Ke halaman berikutnya"
                                 disabled={!canNext}
                                 onClick={() =>
                                     navigate({ page: currentPage + 1 })
                                 }
+                                className="shrink-0"
                             >
-                                Next
+                                Berikutnya
                                 <ChevronRight className="ml-1 size-4" />
                             </Button>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
+                                aria-label="Ke halaman terakhir"
                                 disabled={!canNext}
                                 onClick={() => navigate({ page: lastPage })}
+                                className="shrink-0"
                             >
-                                Last
+                                Akhir
                                 <ChevronLast className="ml-1 size-4" />
                             </Button>
                         </Fragment>

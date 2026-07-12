@@ -67,36 +67,45 @@ export default function AdminWisataBookingsIndex({ bookings, destinations, filte
                             submitFilters(event.currentTarget);
                         }}
                     >
-                        <input
-                            name="visit_date"
-                            type="date"
-                            defaultValue={filters.visit_date ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <select
-                            name="destination"
-                            defaultValue={filters.destination ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua destinasi</option>
-                            {destinations.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="pending_payment">Pending Payment</option>
-                            <option value="paid">Paid</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="expired">Expired</option>
-                            <option value="completed">Completed</option>
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tanggal kunjungan</span>
+                            <input
+                                name="visit_date"
+                                type="date"
+                                defaultValue={filters.visit_date ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Destinasi</span>
+                            <select
+                                name="destination"
+                                defaultValue={filters.destination ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua destinasi</option>
+                                {destinations.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="pending_payment">Pending Payment</option>
+                                <option value="paid">Paid</option>
+                                <option value="cancelled">Cancelled</option>
+                                <option value="expired">Expired</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Filter
                         </Button>

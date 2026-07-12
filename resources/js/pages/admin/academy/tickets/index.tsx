@@ -183,18 +183,21 @@ export default function AcademyTicketsIndex({
                                     );
                                 }}
                             >
-                                <select
-                                    name="class_id"
-                                    defaultValue={filters.class_id ?? ''}
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                >
-                                    <option value="">Semua Kelas</option>
-                                    {classes.map((item) => (
-                                        <option key={item.id} value={item.id}>
-                                            {item.title}
-                                        </option>
-                                    ))}
-                                </select>
+                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                    <span>Kelas</span>
+                                    <select
+                                        name="class_id"
+                                        defaultValue={filters.class_id ?? ''}
+                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    >
+                                        <option value="">Semua Kelas</option>
+                                        {classes.map((item) => (
+                                            <option key={item.id} value={item.id}>
+                                                {item.title}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
                             </form>
                             <Button
                                 className="bg-sky-600 text-white hover:bg-sky-700"
@@ -368,121 +371,148 @@ export default function AcademyTicketsIndex({
                                 submit();
                             }}
                         >
-                            <select
-                                value={form.data.academy_class_id}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'academy_class_id',
-                                        event.target.value,
-                                    )
-                                }
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Pilih kelas</option>
-                                {classes.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.title}
-                                    </option>
-                                ))}
-                            </select>
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Kelas</span>
+                                <select
+                                    value={form.data.academy_class_id}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'academy_class_id',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Pilih kelas</option>
+                                    {classes.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <InputError
                                 message={form.errors.academy_class_id}
                             />
-                            <input
-                                value={form.data.name}
-                                onChange={(event) =>
-                                    form.setData('name', event.target.value)
-                                }
-                                placeholder="Nama tiket"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Nama tiket</span>
+                                <input
+                                    value={form.data.name}
+                                    onChange={(event) =>
+                                        form.setData('name', event.target.value)
+                                    }
+                                    placeholder="Nama tiket"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
                             <InputError message={form.errors.name} />
-                            <input
-                                type="text"
-                                inputMode="numeric"
-                                value={priceDisplay}
-                                onChange={(event) =>
-                                    handlePriceChange(event.target.value)
-                                }
-                                placeholder="Harga"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <input
-                                type="number"
-                                min={0}
-                                value={form.data.quota}
-                                onChange={(event) =>
-                                    form.setData('quota', event.target.value)
-                                }
-                                placeholder="Kuota"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <select
-                                value={form.data.ticket_type}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'ticket_type',
-                                        event.target.value,
-                                    )
-                                }
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="regular">Regular</option>
-                                <option value="early_bird">Early Bird</option>
-                                <option value="vip">VIP</option>
-                            </select>
-                            <select
-                                value={form.data.refundable ? '1' : '0'}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'refundable',
-                                        event.target.value === '1',
-                                    )
-                                }
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="1">Refundable</option>
-                                <option value="0">Non-refundable</option>
-                            </select>
-                            <input
-                                type="datetime-local"
-                                value={form.data.sales_start_at}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'sales_start_at',
-                                        event.target.value,
-                                    )
-                                }
-                                placeholder="Mulai penjualan"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Harga</span>
+                                <input
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={priceDisplay}
+                                    onChange={(event) =>
+                                        handlePriceChange(event.target.value)
+                                    }
+                                    placeholder="Harga"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Kuota</span>
+                                <input
+                                    type="number"
+                                    min={0}
+                                    value={form.data.quota}
+                                    onChange={(event) =>
+                                        form.setData('quota', event.target.value)
+                                    }
+                                    placeholder="Kuota"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Tipe tiket</span>
+                                <select
+                                    value={form.data.ticket_type}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'ticket_type',
+                                            event.target.value,
+                                        )
+                                    }
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="regular">Regular</option>
+                                    <option value="early_bird">Early Bird</option>
+                                    <option value="vip">VIP</option>
+                                </select>
+                            </label>
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Refund</span>
+                                <select
+                                    value={form.data.refundable ? '1' : '0'}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'refundable',
+                                            event.target.value === '1',
+                                        )
+                                    }
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="1">Refundable</option>
+                                    <option value="0">Non-refundable</option>
+                                </select>
+                            </label>
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Mulai penjualan</span>
+                                <input
+                                    type="datetime-local"
+                                    value={form.data.sales_start_at}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'sales_start_at',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Mulai penjualan"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
                             <InputError message={form.errors.sales_start_at} />
-                            <input
-                                type="datetime-local"
-                                value={form.data.sales_end_at}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'sales_end_at',
-                                        event.target.value,
-                                    )
-                                }
-                                placeholder="Selesai penjualan"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Selesai penjualan</span>
+                                <input
+                                    type="datetime-local"
+                                    value={form.data.sales_end_at}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'sales_end_at',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Selesai penjualan"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
                             <InputError message={form.errors.sales_end_at} />
-                            <select
-                                value={form.data.is_active ? '1' : '0'}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'is_active',
-                                        event.target.value === '1',
-                                    )
-                                }
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="1">Aktif</option>
-                                <option value="0">Nonaktif</option>
-                            </select>
+                            <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                                <span>Status aktif</span>
+                                <select
+                                    value={form.data.is_active ? '1' : '0'}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'is_active',
+                                            event.target.value === '1',
+                                        )
+                                    }
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="1">Aktif</option>
+                                    <option value="0">Nonaktif</option>
+                                </select>
+                            </label>
                             <DialogFooter className="gap-2">
                                 <Button
                                     type="submit"

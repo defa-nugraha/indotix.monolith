@@ -268,28 +268,31 @@ export default function AdminChatIndex({
                                 }}
                                 className="mt-4 flex items-center gap-2"
                             >
-                                <input
-                                    value={form.data.message}
-                                    onChange={(event) => {
-                                        form.setData(
-                                            'message',
-                                            event.target.value,
-                                        );
-                                        const now = Date.now();
-                                        if (
-                                            channelRef.current &&
-                                            now - typingSentRef.current > 800
-                                        ) {
-                                            typingSentRef.current = now;
-                                            channelRef.current.whisper(
-                                                'typing',
-                                                { user_id: auth?.user?.id },
+                                <label className="grid flex-1 gap-1 text-xs font-medium text-slate-600">
+                                    <span>Pesan</span>
+                                    <input
+                                        value={form.data.message}
+                                        onChange={(event) => {
+                                            form.setData(
+                                                'message',
+                                                event.target.value,
                                             );
-                                        }
-                                    }}
-                                    className="h-11 flex-1 rounded-xl border border-slate-200 px-4 text-sm focus:border-sky-400 focus:outline-none"
-                                    placeholder="Tulis balasan..."
-                                />
+                                            const now = Date.now();
+                                            if (
+                                                channelRef.current &&
+                                                now - typingSentRef.current > 800
+                                            ) {
+                                                typingSentRef.current = now;
+                                                channelRef.current.whisper(
+                                                    'typing',
+                                                    { user_id: auth?.user?.id },
+                                                );
+                                            }
+                                        }}
+                                        className="h-11 rounded-xl border border-slate-200 px-4 text-sm focus:border-sky-400 focus:outline-none"
+                                        placeholder="Tulis balasan..."
+                                    />
+                                </label>
                                 <button
                                     type="submit"
                                     disabled={form.processing}

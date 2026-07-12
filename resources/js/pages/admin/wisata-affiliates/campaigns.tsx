@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { FormField } from '@/components/form-field';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -79,21 +80,35 @@ export default function WisataAffiliateCampaigns({ campaigns }: Props) {
                                     <DialogTitle>Buat Campaign</DialogTitle>
                                 </DialogHeader>
                                 <form onSubmit={submit} className="mt-4 grid gap-4 md:grid-cols-3">
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Nama campaign" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
-                                    <input type="date" className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
-                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                                        <option value="draft">draft</option>
-                                        <option value="active">active</option>
-                                        <option value="paused">paused</option>
-                                        <option value="ended">ended</option>
-                                    </select>
-                                    <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm" value={form.bonus_type} onChange={(e) => setForm({ ...form, bonus_type: e.target.value })}>
-                                        <option value="percentage">Persentase</option>
-                                        <option value="nominal">Nominal</option>
-                                    </select>
-                                    <input className="h-10 rounded-lg border border-slate-200 px-3 text-sm" placeholder="Bonus" value={form.bonus_value} onChange={(e) => setForm({ ...form, bonus_value: e.target.value })} />
-                                    <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-3" placeholder="Deskripsi" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                                    <FormField label="Nama campaign">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+                                    </FormField>
+                                    <FormField label="Tanggal mulai">
+                                        <input type="date" className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Tanggal berakhir">
+                                        <input type="date" className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Status">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                                            <option value="draft">draft</option>
+                                            <option value="active">active</option>
+                                            <option value="paused">paused</option>
+                                            <option value="ended">ended</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Tipe bonus">
+                                        <select className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.bonus_type} onChange={(e) => setForm({ ...form, bonus_type: e.target.value })}>
+                                            <option value="percentage">Persentase</option>
+                                            <option value="nominal">Nominal</option>
+                                        </select>
+                                    </FormField>
+                                    <FormField label="Nilai bonus">
+                                        <input className="h-10 w-full rounded-lg border border-slate-200 px-3 text-sm" value={form.bonus_value} onChange={(e) => setForm({ ...form, bonus_value: e.target.value })} />
+                                    </FormField>
+                                    <FormField label="Deskripsi" className="md:col-span-3">
+                                        <textarea className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+                                    </FormField>
                                     <label className="flex items-center gap-2 text-sm text-slate-600 md:col-span-3">
                                         <input type="checkbox" checked={form.leaderboard_enabled} onChange={(e) => setForm({ ...form, leaderboard_enabled: e.target.checked })} />
                                         Aktifkan leaderboard
@@ -126,12 +141,15 @@ export default function WisataAffiliateCampaigns({ campaigns }: Props) {
                                         <td>{item.status}</td>
                                         <td>{item.bonus_type ?? '-'} {item.bonus_value ?? ''}</td>
                                         <td>
-                                            <select className="h-8 rounded-md border border-slate-200 px-2 text-xs" value={item.status} onChange={(e) => updateStatus(item.id, e.target.value)}>
-                                                <option value="draft">draft</option>
-                                                <option value="active">active</option>
-                                                <option value="paused">paused</option>
-                                                <option value="ended">ended</option>
-                                            </select>
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Status</span>
+                                                <select className="h-8 rounded-md border border-slate-200 px-2 text-xs" value={item.status} onChange={(e) => updateStatus(item.id, e.target.value)}>
+                                                    <option value="draft">draft</option>
+                                                    <option value="active">active</option>
+                                                    <option value="paused">paused</option>
+                                                    <option value="ended">ended</option>
+                                                </select>
+                                            </label>
                                         </td>
                                     </tr>
                                 ))}

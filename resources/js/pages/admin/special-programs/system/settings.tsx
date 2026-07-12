@@ -30,31 +30,43 @@ export default function EventSettings({ setting }: { setting?: Setting | null })
                             router.post('/admin/special-programs/system/settings', Object.fromEntries(data.entries()), { preserveScroll: true });
                         }}
                     >
-                        <input
-                            name="booking_timeout_minutes"
-                            defaultValue={setting?.booking_timeout_minutes ?? 15}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Booking timeout (menit)"
-                        />
-                        <input
-                            name="max_ticket_per_user"
-                            defaultValue={setting?.max_ticket_per_user ?? 4}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Limit pembelian tiket"
-                        />
-                        <input
-                            name="sales_cutoff_minutes"
-                            defaultValue={setting?.sales_cutoff_minutes ?? 30}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Cut-off penjualan (menit)"
-                        />
-                        <textarea
-                            name="refund_policy"
-                            defaultValue={setting?.refund_policy ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-2"
-                            placeholder="Kebijakan refund"
-                            rows={4}
-                        />
+                        <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                            <span>Booking timeout (menit)</span>
+                            <input
+                                name="booking_timeout_minutes"
+                                defaultValue={setting?.booking_timeout_minutes ?? 15}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Booking timeout (menit)"
+                            />
+                        </label>
+                        <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                            <span>Limit pembelian tiket</span>
+                            <input
+                                name="max_ticket_per_user"
+                                defaultValue={setting?.max_ticket_per_user ?? 4}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Limit pembelian tiket"
+                            />
+                        </label>
+                        <label className="grid gap-1.5 text-sm font-medium text-slate-700">
+                            <span>Cut-off penjualan (menit)</span>
+                            <input
+                                name="sales_cutoff_minutes"
+                                defaultValue={setting?.sales_cutoff_minutes ?? 30}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Cut-off penjualan (menit)"
+                            />
+                        </label>
+                        <label className="grid gap-1.5 text-sm font-medium text-slate-700 md:col-span-2">
+                            <span>Kebijakan refund</span>
+                            <textarea
+                                name="refund_policy"
+                                defaultValue={setting?.refund_policy ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Kebijakan refund"
+                                rows={4}
+                            />
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700 md:col-span-2">
                             Simpan
                         </Button>

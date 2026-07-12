@@ -27,23 +27,65 @@ class EventController extends Controller
             ->with('organizer')
             ->latest();
         $this->applyEventScope($query, $request);
+
+        if ($request->filled('q')) {
+            $term = '%'.$request->string('q')->toString().'%';
+            $query->where(function (Builder $builder) use ($term) {
+                $builder->where('title', 'like', $term)
+                    ->orWhere('location', 'like', $term)
+                    ->orWhere('address', 'like', $term);
+            });
+        }
+
+        if ($request->filled('organizer_id')) {
+            $query->where('event_organizer_id', (int) $request->input('organizer_id'));
+        }
+
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('start_at', '>=', $request->input('date_from'));
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('start_at', '<=', $request->input('date_to'));
+        }
+
+        if ($request->filled('capacity_state')) {
+            match ($request->string('capacity_state')->toString()) {
+                'available' => $query->whereColumn('capacity_sold', '<', 'capacity_total'),
+                'sold_out' => $query->whereColumn('capacity_sold', '>=', 'capacity_total'),
+                'sales_stopped' => $query->where('sales_stopped', true),
+                default => null,
+            };
         }
 
         return Inertia::render('admin/events/index', [
             'events' => $query->paginate(\App\Support\PaginationOptions::perPage())->withQueryString(),
             'filters' => [
+                'q' => $request->input('q'),
+                'organizer_id' => $request->input('organizer_id'),
                 'status' => $status,
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+                'capacity_state' => $request->input('capacity_state'),
             ],
+            'organizerOptions' => $this->organizerOptions(),
         ]);
     }
 
     public function create(): Response
     {
+        $organizerOptions = $this->organizerOptions();
+
         return Inertia::render('mitra/events/create', [
-            'organizer' => ['id' => null, 'name' => 'Admin'],
-            'organizerOptions' => $this->organizerOptions(),
+            'organizer' => [
+                'id' => $organizerOptions[0]['id'] ?? null,
+                'name' => AdminDataScope::canViewAll(request()->user()) ? 'Admin' : ($organizerOptions[0]['name'] ?? request()->user()?->name),
+            ],
+            'organizerOptions' => $organizerOptions,
             'cityOptions' => $this->cityOptions(),
             'basePath' => '/admin/events',
             'event' => null,
@@ -227,6 +269,12 @@ class EventController extends Controller
 
     private function validateEvent(Request $request): array
     {
+        if (! AdminDataScope::canViewAll($request->user()) && ! $request->filled('event_organizer_id')) {
+            $request->merge([
+                'event_organizer_id' => $this->ownedOrganizerFor($request)->id,
+            ]);
+        }
+
         $organizerRule = Rule::exists('event_organizers', 'id');
         if (! AdminDataScope::canViewAll($request->user())) {
             $organizerRule = $organizerRule->where('user_id', $request->user()?->id ?? 0);
@@ -249,6 +297,10 @@ class EventController extends Controller
 
     private function organizerOptions(): array
     {
+        if (! AdminDataScope::canViewAll(request()->user())) {
+            $this->ownedOrganizerFor(request());
+        }
+
         return EventOrganizer::query()
             ->when(! AdminDataScope::canViewAll(request()->user()), fn ($query) => $query
                 ->where('user_id', request()->user()?->id ?? 0))
@@ -259,6 +311,22 @@ class EventController extends Controller
                 'name' => $organizer->name,
             ])
             ->all();
+    }
+
+    private function ownedOrganizerFor(Request $request): EventOrganizer
+    {
+        $user = $request->user();
+
+        return EventOrganizer::query()->firstOrCreate(
+            ['user_id' => $user?->id],
+            [
+                'name' => $user?->name ?: 'Operator Event',
+                'email' => $user?->email,
+                'phone' => $user?->phone,
+                'status' => 'verified',
+                'notes' => 'Organizer otomatis untuk akun RBAC event.',
+            ]
+        );
     }
 
     private function cityOptions(): array

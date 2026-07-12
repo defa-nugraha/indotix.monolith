@@ -51,42 +51,57 @@ export default function BlogPostCreate({ categories = [], tags = [] }: { categor
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Judul artikel"
-                            value={form.data.title}
-                            onChange={(event) => form.setData('title', event.target.value)}
-                        />
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Slug (opsional)"
-                            value={form.data.slug}
-                            onChange={(event) => form.setData('slug', event.target.value)}
-                        />
-                        <select
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            value={form.data.category_id}
-                            onChange={(event) => form.setData('category_id', event.target.value)}
-                        >
-                            <option value="">Pilih kategori</option>
-                            {categories.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Label (contoh: Highlight, Trending)"
-                            value={form.data.label}
-                            onChange={(event) => form.setData('label', event.target.value)}
-                        />
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm md:col-span-2"
-                            placeholder="Tags (pisahkan dengan koma)"
-                            value={form.data.tags}
-                            onChange={(event) => form.setData('tags', event.target.value)}
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Judul artikel</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Judul artikel"
+                                value={form.data.title}
+                                onChange={(event) => form.setData('title', event.target.value)}
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Slug</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Slug (opsional)"
+                                value={form.data.slug}
+                                onChange={(event) => form.setData('slug', event.target.value)}
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Kategori</span>
+                            <select
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                value={form.data.category_id}
+                                onChange={(event) => form.setData('category_id', event.target.value)}
+                            >
+                                <option value="">Pilih kategori</option>
+                                {categories.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Label artikel</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Label (contoh: Highlight, Trending)"
+                                value={form.data.label}
+                                onChange={(event) => form.setData('label', event.target.value)}
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600 md:col-span-2">
+                            <span>Tags</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Tags (pisahkan dengan koma)"
+                                value={form.data.tags}
+                                onChange={(event) => form.setData('tags', event.target.value)}
+                            />
+                        </label>
                     </div>
 
                     <div className="mt-6">
@@ -122,42 +137,57 @@ export default function BlogPostCreate({ categories = [], tags = [] }: { categor
                             />
                         </div>
                         <div className="grid gap-3 md:grid-cols-2">
-                            <select
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={form.data.status}
-                                onChange={(event) => form.setData('status', event.target.value)}
-                            >
-                                <option value="draft">Draft</option>
-                                <option value="published">Published</option>
-                            </select>
-                            <input
-                                type="datetime-local"
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                value={form.data.published_at}
-                                onChange={(event) => form.setData('published_at', event.target.value)}
-                            />
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Status</span>
+                                <select
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={form.data.status}
+                                    onChange={(event) => form.setData('status', event.target.value)}
+                                >
+                                    <option value="draft">Draft</option>
+                                    <option value="published">Published</option>
+                                </select>
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Waktu publikasi</span>
+                                <input
+                                    type="datetime-local"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    value={form.data.published_at}
+                                    onChange={(event) => form.setData('published_at', event.target.value)}
+                                />
+                            </label>
                         </div>
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-3">
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Meta title (SEO)"
-                            value={form.data.meta_title}
-                            onChange={(event) => form.setData('meta_title', event.target.value)}
-                        />
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Meta description"
-                            value={form.data.meta_description}
-                            onChange={(event) => form.setData('meta_description', event.target.value)}
-                        />
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Meta keywords (pisahkan koma)"
-                            value={form.data.meta_keywords}
-                            onChange={(event) => form.setData('meta_keywords', event.target.value)}
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Meta title (SEO)</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Meta title (SEO)"
+                                value={form.data.meta_title}
+                                onChange={(event) => form.setData('meta_title', event.target.value)}
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Meta description</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Meta description"
+                                value={form.data.meta_description}
+                                onChange={(event) => form.setData('meta_description', event.target.value)}
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Meta keywords</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Meta keywords (pisahkan koma)"
+                                value={form.data.meta_keywords}
+                                onChange={(event) => form.setData('meta_keywords', event.target.value)}
+                            />
+                        </label>
                     </div>
 
                     <div className="mt-6">

@@ -303,13 +303,16 @@ export default function AdminBookingShow({ booking, isMitra = false, basePath = 
                                 <p className="mt-1 text-xs text-slate-500">
                                     Hanya terlihat oleh tim hotel Anda.
                                 </p>
-                                <textarea
-                                    name="internal_notes"
-                                    defaultValue={booking.internal_notes ?? ''}
-                                    rows={4}
-                                    className="mt-3 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-sky-300 focus:outline-none"
-                                    placeholder="Tambahkan catatan untuk tim operasional..."
-                                />
+                                <label className="mt-3 grid gap-1.5 text-sm font-medium text-slate-700">
+                                    <span>Catatan untuk tim operasional</span>
+                                    <textarea
+                                        name="internal_notes"
+                                        defaultValue={booking.internal_notes ?? ''}
+                                        rows={4}
+                                        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700 focus:border-sky-300 focus:outline-none"
+                                        placeholder="Tambahkan catatan untuk tim operasional..."
+                                    />
+                                </label>
                                 <div className="mt-3 flex justify-end">
                                     <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                                         Simpan catatan

@@ -58,30 +58,39 @@ export default function AdminWisataPayouts({ payouts, destinations }: Props) {
                             form.post('/admin/wisata/finance/payouts');
                         }}
                     >
-                        <select
-                            value={form.data.mitra_wisata_onboarding_id}
-                            onChange={(event) => form.setData('mitra_wisata_onboarding_id', event.target.value)}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Pilih destinasi</option>
-                            {destinations.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.label}
-                                </option>
-                            ))}
-                        </select>
-                        <input
-                            type="date"
-                            value={form.data.period_start}
-                            onChange={(event) => form.setData('period_start', event.target.value)}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <input
-                            type="date"
-                            value={form.data.period_end}
-                            onChange={(event) => form.setData('period_end', event.target.value)}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Destinasi</span>
+                            <select
+                                value={form.data.mitra_wisata_onboarding_id}
+                                onChange={(event) => form.setData('mitra_wisata_onboarding_id', event.target.value)}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Pilih destinasi</option>
+                                {destinations.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Periode mulai</span>
+                            <input
+                                type="date"
+                                value={form.data.period_start}
+                                onChange={(event) => form.setData('period_start', event.target.value)}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Periode selesai</span>
+                            <input
+                                type="date"
+                                value={form.data.period_end}
+                                onChange={(event) => form.setData('period_end', event.target.value)}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Generate
                         </Button>

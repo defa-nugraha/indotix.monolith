@@ -184,24 +184,30 @@ export default function AcademyScansIndex({ scans, classes, filters }: Props) {
                                 );
                             }}
                         >
-                            <input
-                                type="date"
-                                name="date"
-                                defaultValue={filters.date ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <select
-                                name="class_id"
-                                defaultValue={filters.class_id ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Semua Kelas</option>
-                                {classes.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.title}
-                                    </option>
-                                ))}
-                            </select>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Tanggal</span>
+                                <input
+                                    type="date"
+                                    name="date"
+                                    defaultValue={filters.date ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Kelas</span>
+                                <select
+                                    name="class_id"
+                                    defaultValue={filters.class_id ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Semua Kelas</option>
+                                    {classes.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                             <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm text-white">
                                 Filter
                             </button>

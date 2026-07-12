@@ -146,60 +146,75 @@ export default function AuditLogIndex({
                         className="border-b border-slate-100 p-5"
                     >
                         <div className="grid gap-3 lg:grid-cols-[minmax(360px,2fr)_minmax(220px,0.9fr)_minmax(150px,0.55fr)_minmax(150px,0.55fr)_minmax(150px,0.55fr)]">
-                            <div className="relative min-w-0">
-                                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
-                                <input
-                                    name="search"
-                                    defaultValue={filters.search ?? ''}
-                                    placeholder="Cari aktor, email, aksi, path, atau IP"
-                                    className="h-10 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-9 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                                />
-                            </div>
-                            <select
-                                name="admin_id"
-                                defaultValue={filters.admin_id ?? ''}
-                                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            >
-                                <option value="">Semua aktor</option>
-                                {actorOptions.map((actor) => (
-                                    <option key={actor.id} value={actor.id}>
-                                        {actor.label}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                name="source"
-                                defaultValue={filters.source ?? ''}
-                                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            >
-                                <option value="">Semua sumber</option>
-                                <option value="admin">Admin</option>
-                                <option value="user">User/Mitra</option>
-                            </select>
-                            <select
-                                name="role"
-                                defaultValue={filters.role ?? ''}
-                                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            >
-                                <option value="">Semua role</option>
-                                {roleOptions.map((role) => (
-                                    <option key={role} value={role}>
-                                        {role}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                name="method"
-                                defaultValue={filters.method ?? ''}
-                                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            >
-                                <option value="">Semua method</option>
-                                {methodOptions.map((method) => (
-                                    <option key={method} value={method}>
-                                        {method}
-                                    </option>
-                                ))}
-                            </select>
+                            <label className="grid min-w-0 gap-1 text-xs font-medium text-slate-600">
+                                <span>Pencarian log</span>
+                                <div className="relative">
+                                    <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+                                    <input
+                                        name="search"
+                                        defaultValue={filters.search ?? ''}
+                                        placeholder="Cari aktor, email, aksi, path, atau IP"
+                                        className="h-10 w-full rounded-lg border border-slate-200 bg-white pr-3 pl-9 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                    />
+                                </div>
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Aktor</span>
+                                <select
+                                    name="admin_id"
+                                    defaultValue={filters.admin_id ?? ''}
+                                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                >
+                                    <option value="">Semua aktor</option>
+                                    {actorOptions.map((actor) => (
+                                        <option key={actor.id} value={actor.id}>
+                                            {actor.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Sumber</span>
+                                <select
+                                    name="source"
+                                    defaultValue={filters.source ?? ''}
+                                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                >
+                                    <option value="">Semua sumber</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="user">User/Mitra</option>
+                                </select>
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Role</span>
+                                <select
+                                    name="role"
+                                    defaultValue={filters.role ?? ''}
+                                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                >
+                                    <option value="">Semua role</option>
+                                    {roleOptions.map((role) => (
+                                        <option key={role} value={role}>
+                                            {role}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Method</span>
+                                <select
+                                    name="method"
+                                    defaultValue={filters.method ?? ''}
+                                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                >
+                                    <option value="">Semua method</option>
+                                    {methodOptions.map((method) => (
+                                        <option key={method} value={method}>
+                                            {method}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
                         </div>
                         <input
                             type="hidden"
@@ -207,30 +222,42 @@ export default function AuditLogIndex({
                             value={String(filters.per_page ?? logs.per_page ?? 25)}
                         />
                         <div className="mt-3 grid gap-3 md:grid-cols-[0.8fr_0.8fr_0.7fr_0.7fr_auto]">
-                            <input
-                                name="path"
-                                defaultValue={filters.path ?? ''}
-                                placeholder="Path route"
-                                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            />
-                            <input
-                                name="ip_address"
-                                defaultValue={filters.ip_address ?? ''}
-                                placeholder="IP address"
-                                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            />
-                            <input
-                                type="date"
-                                name="date_from"
-                                defaultValue={filters.date_from ?? ''}
-                                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            />
-                            <input
-                                type="date"
-                                name="date_to"
-                                defaultValue={filters.date_to ?? ''}
-                                className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
-                            />
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Path route</span>
+                                <input
+                                    name="path"
+                                    defaultValue={filters.path ?? ''}
+                                    placeholder="Path route"
+                                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>IP address</span>
+                                <input
+                                    name="ip_address"
+                                    defaultValue={filters.ip_address ?? ''}
+                                    placeholder="IP address"
+                                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Tanggal mulai</span>
+                                <input
+                                    type="date"
+                                    name="date_from"
+                                    defaultValue={filters.date_from ?? ''}
+                                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Tanggal akhir</span>
+                                <input
+                                    type="date"
+                                    name="date_to"
+                                    defaultValue={filters.date_to ?? ''}
+                                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-sky-300 focus:ring-2 focus:ring-sky-100"
+                                />
+                            </label>
                             <div className="flex flex-wrap gap-2">
                                 <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                                     <Filter className="mr-2 size-4" />

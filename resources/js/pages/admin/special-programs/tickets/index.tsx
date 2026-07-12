@@ -144,18 +144,21 @@ export default function SpecialProgramTicketsIndex({
                             });
                         }}
                     >
-                        <select
-                            name="program_id"
-                            defaultValue={filters.program_id ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="">Semua program</option>
-                            {programs.map((item) => (
-                                <option key={item.id} value={item.id}>
-                                    {item.name}
-                                </option>
-                            ))}
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Program</span>
+                            <select
+                                name="program_id"
+                                defaultValue={filters.program_id ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="">Semua program</option>
+                                {programs.map((item) => (
+                                    <option key={item.id} value={item.id}>
+                                        {item.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Filter
                         </Button>
@@ -190,32 +193,44 @@ export default function SpecialProgramTicketsIndex({
                                                 onSubmit={(event) => updateTicket(event, ticket.id)}
                                                 className="flex flex-wrap items-center gap-2"
                                             >
-                                                <input
-                                                    name="name"
-                                                    defaultValue={ticket.name}
-                                                    className="w-40 rounded-md border border-slate-200 px-2 py-1 text-xs"
-                                                />
-                                                <input
-                                                    name="price"
-                                                    type="number"
-                                                    min={0}
-                                                    defaultValue={ticket.price ?? 0}
-                                                    className="w-28 rounded-md border border-slate-200 px-2 py-1 text-xs"
-                                                />
-                                                <input
-                                                    name="quota"
-                                                    type="number"
-                                                    min={0}
-                                                    defaultValue={ticket.capacity ?? ''}
-                                                    className="w-24 rounded-md border border-slate-200 px-2 py-1 text-xs"
-                                                />
-                                                <input
-                                                    name="sort_order"
-                                                    type="number"
-                                                    min={0}
-                                                    defaultValue={ticket.sort_order ?? 0}
-                                                    className="w-20 rounded-md border border-slate-200 px-2 py-1 text-xs"
-                                                />
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Nama</span>
+                                                    <input
+                                                        name="name"
+                                                        defaultValue={ticket.name}
+                                                        className="w-40 rounded-md border border-slate-200 px-2 py-1 text-xs"
+                                                    />
+                                                </label>
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Harga</span>
+                                                    <input
+                                                        name="price"
+                                                        type="number"
+                                                        min={0}
+                                                        defaultValue={ticket.price ?? 0}
+                                                        className="w-28 rounded-md border border-slate-200 px-2 py-1 text-xs"
+                                                    />
+                                                </label>
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Kuota</span>
+                                                    <input
+                                                        name="quota"
+                                                        type="number"
+                                                        min={0}
+                                                        defaultValue={ticket.capacity ?? ''}
+                                                        className="w-24 rounded-md border border-slate-200 px-2 py-1 text-xs"
+                                                    />
+                                                </label>
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Urutan</span>
+                                                    <input
+                                                        name="sort_order"
+                                                        type="number"
+                                                        min={0}
+                                                        defaultValue={ticket.sort_order ?? 0}
+                                                        className="w-20 rounded-md border border-slate-200 px-2 py-1 text-xs"
+                                                    />
+                                                </label>
                                                 <Button type="submit" variant="outline" className="h-7 px-3 text-xs">
                                                     Simpan
                                                 </Button>

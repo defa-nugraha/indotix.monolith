@@ -418,7 +418,7 @@ export default function SpecialProgramCreate({
                                     className="mt-2 h-32 rounded-xl border border-slate-100 object-cover"
                                 />
                             )}
-                            <input
+                            <input aria-label="Create input"
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) =>
@@ -451,48 +451,57 @@ export default function SpecialProgramCreate({
                                         key={index}
                                         className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-4"
                                     >
-                                        <input
-                                            value={variant.name}
-                                            onChange={(e) =>
-                                                updateVariant(
-                                                    index,
-                                                    'name',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                            placeholder="Nama variant"
-                                        />
-                                        <input
-                                            value={variant.price}
-                                            onChange={(e) =>
-                                                updateVariant(
-                                                    index,
-                                                    'price',
-                                                    formatRupiah(
+                                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                            <span>Nama variant</span>
+                                            <input
+                                                value={variant.name}
+                                                onChange={(e) =>
+                                                    updateVariant(
+                                                        index,
+                                                        'name',
                                                         e.target.value,
-                                                    ),
-                                                )
-                                            }
-                                            inputMode="numeric"
-                                            autoComplete="off"
-                                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                            placeholder="Harga override"
-                                        />
-                                        <input
-                                            type="number"
-                                            min={0}
-                                            value={variant.capacity}
-                                            onChange={(e) =>
-                                                updateVariant(
-                                                    index,
-                                                    'capacity',
-                                                    e.target.value,
-                                                )
-                                            }
-                                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                            placeholder="Kapasitas"
-                                        />
+                                                    )
+                                                }
+                                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                placeholder="Nama variant"
+                                            />
+                                        </label>
+                                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                            <span>Harga override</span>
+                                            <input
+                                                value={variant.price}
+                                                onChange={(e) =>
+                                                    updateVariant(
+                                                        index,
+                                                        'price',
+                                                        formatRupiah(
+                                                            e.target.value,
+                                                        ),
+                                                    )
+                                                }
+                                                inputMode="numeric"
+                                                autoComplete="off"
+                                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                placeholder="Harga override"
+                                            />
+                                        </label>
+                                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                            <span>Kapasitas</span>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                value={variant.capacity}
+                                                onChange={(e) =>
+                                                    updateVariant(
+                                                        index,
+                                                        'capacity',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                placeholder="Kapasitas"
+                                            />
+                                        </label>
                                         <div className="flex items-center justify-end">
                                             <Button
                                                 type="button"
@@ -535,19 +544,22 @@ export default function SpecialProgramCreate({
                                                             key={facilityIndex}
                                                             className="flex items-center gap-3"
                                                         >
-                                                            <input
-                                                                value={facility}
-                                                                onChange={(e) =>
-                                                                    updateVariantFacility(
-                                                                        index,
-                                                                        facilityIndex,
-                                                                        e.target
-                                                                            .value,
-                                                                    )
-                                                                }
-                                                                className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                                                placeholder="Contoh: 1x meal, hotel, dll"
-                                                            />
+                                                            <label className="grid flex-1 gap-1 text-xs font-medium text-slate-600">
+                                                                <span>Fasilitas variant</span>
+                                                                <input
+                                                                    value={facility}
+                                                                    onChange={(e) =>
+                                                                        updateVariantFacility(
+                                                                            index,
+                                                                            facilityIndex,
+                                                                            e.target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                                    placeholder="Contoh: 1x meal, hotel, dll"
+                                                                />
+                                                            </label>
                                                             <Button
                                                                 type="button"
                                                                 variant="ghost"
@@ -604,17 +616,20 @@ export default function SpecialProgramCreate({
                                                     key={index}
                                                     className="flex items-center gap-3"
                                                 >
-                                                    <input
-                                                        value={facility}
-                                                        onChange={(e) =>
-                                                            updateFacility(
-                                                                index,
-                                                                e.target.value,
-                                                            )
-                                                        }
-                                                        className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                                        placeholder="Contoh: 1x meal, hotel, dll"
-                                                    />
+                                                    <label className="grid flex-1 gap-1 text-xs font-medium text-slate-600">
+                                                        <span>Fasilitas paket</span>
+                                                        <input
+                                                            value={facility}
+                                                            onChange={(e) =>
+                                                                updateFacility(
+                                                                    index,
+                                                                    e.target.value,
+                                                                )
+                                                            }
+                                                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                            placeholder="Contoh: 1x meal, hotel, dll"
+                                                        />
+                                                    </label>
                                                     <Button
                                                         type="button"
                                                         variant="ghost"
@@ -666,32 +681,38 @@ export default function SpecialProgramCreate({
                                                 key={index}
                                                 className="grid gap-3 rounded-xl border border-slate-200 p-3 md:grid-cols-[1fr_160px_auto]"
                                             >
-                                                <input
-                                                    type="date"
-                                                    value={inventory.date}
-                                                    onChange={(e) =>
-                                                        updateInventory(
-                                                            index,
-                                                            'date',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                                />
-                                                <input
-                                                    type="number"
-                                                    min={0}
-                                                    value={inventory.capacity}
-                                                    onChange={(e) =>
-                                                        updateInventory(
-                                                            index,
-                                                            'capacity',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                                    placeholder="Kapasitas"
-                                                />
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Tanggal</span>
+                                                    <input
+                                                        type="date"
+                                                        value={inventory.date}
+                                                        onChange={(e) =>
+                                                            updateInventory(
+                                                                index,
+                                                                'date',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                    />
+                                                </label>
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Kapasitas</span>
+                                                    <input
+                                                        type="number"
+                                                        min={0}
+                                                        value={inventory.capacity}
+                                                        onChange={(e) =>
+                                                            updateInventory(
+                                                                index,
+                                                                'capacity',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                        placeholder="Kapasitas"
+                                                    />
+                                                </label>
                                                 <div className="flex items-center justify-end">
                                                     <Button
                                                         type="button"

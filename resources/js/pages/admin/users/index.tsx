@@ -144,30 +144,39 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                             router.get('/admin/users', Object.fromEntries(data.entries()), { preserveState: true });
                         }}
                     >
-                        <input
-                            name="search"
-                            defaultValue={filters.search ?? ''}
-                            placeholder="Cari nama, email, atau nomor HP"
-                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                        />
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                        >
-                            <option value="">Semua status</option>
-                            <option value="active">Aktif</option>
-                            <option value="suspended">Suspended</option>
-                        </select>
-                        <select
-                            name="verified"
-                            defaultValue={filters.verified ?? ''}
-                            className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
-                        >
-                            <option value="">Semua verifikasi</option>
-                            <option value="verified">Terverifikasi</option>
-                            <option value="unverified">Belum verifikasi</option>
-                        </select>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Pencarian user</span>
+                            <input
+                                name="search"
+                                defaultValue={filters.search ?? ''}
+                                placeholder="Cari nama, email, atau nomor HP"
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                            >
+                                <option value="">Semua status</option>
+                                <option value="active">Aktif</option>
+                                <option value="suspended">Suspended</option>
+                            </select>
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Verifikasi</span>
+                            <select
+                                name="verified"
+                                defaultValue={filters.verified ?? ''}
+                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                            >
+                                <option value="">Semua verifikasi</option>
+                                <option value="verified">Terverifikasi</option>
+                                <option value="unverified">Belum verifikasi</option>
+                            </select>
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Terapkan filter
                         </Button>

@@ -40,27 +40,33 @@ export default function AcademyAttendeesIndex({ attendees, classes, filters }: P
                                 router.get('/admin/academy/attendees', Object.fromEntries(data.entries()));
                             }}
                         >
-                            <select
-                                name="class_id"
-                                defaultValue={filters.class_id ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Semua Kelas</option>
-                                {classes.map((item) => (
-                                    <option key={item.id} value={item.id}>
-                                        {item.title}
-                                    </option>
-                                ))}
-                            </select>
-                            <select
-                                name="checked_in"
-                                defaultValue={filters.checked_in ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Semua</option>
-                                <option value="yes">Hadir</option>
-                                <option value="no">Tidak Hadir</option>
-                            </select>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Kelas</span>
+                                <select
+                                    name="class_id"
+                                    defaultValue={filters.class_id ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Semua Kelas</option>
+                                    {classes.map((item) => (
+                                        <option key={item.id} value={item.id}>
+                                            {item.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Kehadiran</span>
+                                <select
+                                    name="checked_in"
+                                    defaultValue={filters.checked_in ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Semua</option>
+                                    <option value="yes">Hadir</option>
+                                    <option value="no">Tidak Hadir</option>
+                                </select>
+                            </label>
                             <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm text-white">Filter</button>
                         </form>
                     </div>

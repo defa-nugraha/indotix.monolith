@@ -103,22 +103,28 @@ export default function BlogTagsIndex({ tags = [] }: { tags: Tag[] }) {
                     </p>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-3">
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Nama tag"
-                            value={form.data.name}
-                            onChange={(event) =>
-                                form.setData('name', event.target.value)
-                            }
-                        />
-                        <input
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            placeholder="Slug (opsional)"
-                            value={form.data.slug}
-                            onChange={(event) =>
-                                form.setData('slug', event.target.value)
-                            }
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Nama tag</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Nama tag"
+                                value={form.data.name}
+                                onChange={(event) =>
+                                    form.setData('name', event.target.value)
+                                }
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Slug</span>
+                            <input
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                placeholder="Slug (opsional)"
+                                value={form.data.slug}
+                                onChange={(event) =>
+                                    form.setData('slug', event.target.value)
+                                }
+                            />
+                        </label>
                         <Button
                             className="bg-sky-600 text-white hover:bg-sky-700"
                             type="button"
