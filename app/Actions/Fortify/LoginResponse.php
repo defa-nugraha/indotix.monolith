@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Support\RoleRedirect;
 use Illuminate\Http\RedirectResponse;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 
@@ -26,21 +27,13 @@ class LoginResponse implements LoginResponseContract
         }
 
         if (! $user->hasVerifiedEmail()) {
-            return redirect()->route('email-otp.notice');
-        }
-
-        if ($user->role === 'mitra') {
-            return redirect()->route('mitra.dashboard');
-        }
-
-        if (str_starts_with((string) $user->role, 'admin')) {
-            return redirect()->route('dashboard');
+            return redirect()->route('verification.notice');
         }
 
         if ($request->session()->has('booking_draft')) {
             return redirect()->route('booking.review');
         }
 
-        return redirect()->route('home');
+        return RoleRedirect::toDashboard($user);
     }
 }

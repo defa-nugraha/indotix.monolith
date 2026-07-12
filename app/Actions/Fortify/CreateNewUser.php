@@ -35,11 +35,13 @@ class CreateNewUser implements CreatesNewUsers
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
             'role' => ['nullable', 'string', Rule::in(['user', 'mitra'])],
+            'phone' => ['nullable', 'string', 'max:50'],
         ])->validate();
 
         $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
+            'phone' => $input['phone'] ?? null,
             'password' => $input['password'],
             'role' => $input['role'] ?? 'user',
         ]);

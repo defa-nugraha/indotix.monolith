@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Support\RoleRedirect;
 use Illuminate\Http\RedirectResponse;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 
@@ -12,17 +13,9 @@ class RegisterResponse implements RegisterResponseContract
         $user = $request->user();
 
         if ($user?->hasVerifiedEmail()) {
-            if ($user->role === 'mitra') {
-                return redirect()->route('mitra.dashboard');
-            }
-
-            if (str_starts_with((string) $user->role, 'admin')) {
-                return redirect()->route('dashboard');
-            }
-
-            return redirect()->route('home');
+            return RoleRedirect::toDashboard($user);
         }
 
-        return redirect()->route('email-otp.notice');
+        return redirect()->route('verification.notice');
     }
 }

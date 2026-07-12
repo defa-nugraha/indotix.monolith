@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Notifications\VerifyEmailLinkNotification;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -100,6 +101,11 @@ class User extends Authenticatable implements MustVerifyEmail
             'formatted' => $address->formatted_address,
             'is_default' => $address->is_default,
         ];
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmailLinkNotification());
     }
 
     /**

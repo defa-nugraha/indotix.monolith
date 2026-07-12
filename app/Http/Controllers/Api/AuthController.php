@@ -3,16 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Mail\EmailOtpMail;
 use App\Models\EmailOtp;
 use App\Models\User;
+use App\Notifications\VerifyEmailLinkNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\Rule;
-use Throwable;
 
 class AuthController extends Controller
 {
@@ -34,19 +32,17 @@ class AuthController extends Controller
             }
 
             $this->clearPendingEmailVerificationOtp($existingUser);
-            $otp = $this->sendOtp($existingUser, 'verify_email');
-            if (! $otp) {
-                return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
-            }
+            $existingUser->notify(new VerifyEmailLinkNotification(forMobileApp: true));
 
             $token = $existingUser->createToken($data['device_name'] ?? 'mobile')->plainTextToken;
 
             return response()->json([
+                'message' => 'Email belum terverifikasi. Link verifikasi baru telah dikirim.',
                 'token' => $token,
                 'token_type' => 'Bearer',
                 'user' => $existingUser,
-                'requires_otp' => true,
-                'otp_expires_at' => $otp->expires_at?->toIso8601String(),
+                'requires_email_verification' => true,
+                'verification_method' => 'link',
             ], 201);
         }
 
@@ -58,21 +54,17 @@ class AuthController extends Controller
         ]);
 
         $this->clearPendingEmailVerificationOtp($user);
-        $otp = $this->sendOtp($user, 'verify_email');
-        if (! $otp) {
-            $user->delete();
-
-            return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
-        }
+        $user->notify(new VerifyEmailLinkNotification(forMobileApp: true));
 
         $token = $user->createToken($data['device_name'] ?? 'mobile')->plainTextToken;
 
         return response()->json([
+            'message' => 'Registrasi berhasil. Link verifikasi telah dikirim ke email Anda.',
             'token' => $token,
             'token_type' => 'Bearer',
             'user' => $user,
-            'requires_otp' => true,
-            'otp_expires_at' => $otp->expires_at?->toIso8601String(),
+            'requires_email_verification' => true,
+            'verification_method' => 'link',
         ], 201);
     }
 
@@ -91,26 +83,23 @@ class AuthController extends Controller
         }
 
         if (! $user->hasVerifiedEmail()) {
-            $limitKey = sprintf('otp-login-resend:%s|%s', $user->id, $request->ip());
+            $limitKey = sprintf('verification-link-login-resend:%s|%s', $user->id, $request->ip());
             if (RateLimiter::tooManyAttempts($limitKey, 3)) {
-                return response()->json(['message' => 'Terlalu banyak permintaan OTP. Coba lagi nanti.'], 429);
+                return response()->json(['message' => 'Terlalu banyak permintaan link verifikasi. Coba lagi nanti.'], 429);
             }
             RateLimiter::hit($limitKey, 300);
 
-            $otp = $this->sendOtp($user, 'verify_email');
-            if (! $otp) {
-                return response()->json(['message' => 'Gagal mengirim OTP. Silakan coba lagi.'], 500);
-            }
+            $user->notify(new VerifyEmailLinkNotification(forMobileApp: true));
 
             $token = $user->createToken($data['device_name'] ?? 'mobile')->plainTextToken;
 
             return response()->json([
-                'message' => 'Email belum terverifikasi. OTP baru telah dikirim.',
+                'message' => 'Email belum terverifikasi. Link verifikasi baru telah dikirim.',
                 'token' => $token,
                 'token_type' => 'Bearer',
                 'user' => $user,
-                'requires_otp' => true,
-                'otp_expires_at' => $otp->expires_at?->toIso8601String(),
+                'requires_email_verification' => true,
+                'verification_method' => 'link',
             ], 403);
         }
 
@@ -141,31 +130,6 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logout berhasil.',
         ]);
-    }
-
-    private function sendOtp(User $user, string $purpose): ?EmailOtp
-    {
-        $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        $otp = EmailOtp::create([
-            'user_id' => $user->id,
-            'email' => $user->email,
-            'purpose' => $purpose,
-            'code_hash' => Hash::make($code),
-            'expires_at' => now()->addMinutes(10),
-            'attempts' => 0,
-        ]);
-
-        try {
-            Mail::to($user->email)->send(new EmailOtpMail($user->name, $code, 10));
-        } catch (Throwable $exception) {
-            report($exception);
-            $otp->delete();
-
-            return null;
-        }
-
-        return $otp;
     }
 
     private function clearPendingEmailVerificationOtp(User $user): void

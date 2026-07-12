@@ -23,88 +23,25 @@ export default function Register() {
                 />
             </Head>
 
-            <div className="pointer-events-none absolute -left-24 top-[-10%] h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
-            <div className="pointer-events-none absolute right-[-8%] top-[15%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
+            <div className="pointer-events-none absolute top-[-10%] -left-24 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
+            <div className="pointer-events-none absolute top-[15%] right-[-8%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
             <div className="pointer-events-none absolute bottom-[-20%] left-[25%] h-80 w-80 rounded-full bg-amber-300/20 blur-[140px]" />
 
-            <div className="relative mx-auto flex min-h-svh max-w-6xl flex-col items-center justify-center gap-10 px-6 py-14 lg:flex-row lg:items-stretch">
-                <div className="flex w-full max-w-xl flex-col justify-center gap-8 lg:pr-10">
-                    <div className="flex items-center gap-4">
-                        <img
-                            src="/logo.png"
-                            alt="Indotix"
-                            className="h-12 w-auto"
-                        />
-                        <div>
-                            <p className="text-xs font-semibold uppercase text-sky-700">
-                                Indotix
-                            </p>
-                            <p className="text-sm text-slate-500">
-                                Tiket Digital Indonesia
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                        <p className="text-sm font-semibold text-sky-600">
-                            Mulai Sekarang
-                        </p>
-                        <h1 className="text-3xl font-semibold leading-tight text-slate-900 sm:text-4xl">
-                            Buat akun baru untuk akses tiket digital dan
-                            kolaborasi event.
-                        </h1>
-                        <p className="text-base text-slate-600">
-                            Pilih jenis pendaftaran untuk pengguna atau mitra,
-                            lalu lengkapi informasi dasar agar tim kami dapat
-                            memverifikasi akses Anda.
-                        </p>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {[
-                            {
-                                title: 'User',
-                                description:
-                                    'Beli tiket, simpan riwayat, dan akses event favorit.',
-                            },
-                            {
-                                title: 'Mitra',
-                                description:
-                                    'Kelola event, tiket, dan laporan penjualan dengan mudah.',
-                            },
-                            {
-                                title: 'Verifikasi Cepat',
-                                description:
-                                    'Proses validasi akun mitra dilakukan maksimal 1x24 jam.',
-                            },
-                            {
-                                title: 'Support Lokal',
-                                description:
-                                    'Tim support Indotix siap membantu Anda kapan pun.',
-                            },
-                        ].map((item) => (
-                            <div
-                                key={item.title}
-                                className="rounded-2xl border border-sky-100/80 bg-white/80 p-4 text-sm text-slate-600 shadow-sm backdrop-blur animate-in fade-in slide-in-from-bottom-4 duration-700"
-                            >
-                                <p className="text-sm font-semibold text-slate-900">
-                                    {item.title}
-                                </p>
-                                <p className="mt-1 text-xs leading-relaxed text-slate-500">
-                                    {item.description}
-                                </p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
+            <div className="relative mx-auto flex min-h-svh max-w-md flex-col items-center justify-center px-6 py-14">
                 <div className="flex w-full max-w-md items-center justify-center">
-                    <div className="w-full rounded-3xl border border-sky-100/80 bg-white/90 p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="w-full animate-in rounded-3xl border border-sky-100/80 bg-white/90 p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur duration-700 fade-in slide-in-from-bottom-4">
+                        <div className="mb-6 flex justify-center">
+                            <img
+                                src="/logo.png"
+                                alt="Indotix"
+                                className="h-12 w-auto"
+                            />
+                        </div>
                         <div className="space-y-2 text-left">
-                            <p className="text-xs font-semibold uppercase text-sky-600">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Registrasi
                             </p>
-                            <h2 className="text-2xl font-semibold text-slate-900 font-['Space_Grotesk']">
+                            <h2 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900">
                                 Buat akun Indotix
                             </h2>
                             <p className="text-sm text-slate-500">
@@ -114,7 +51,7 @@ export default function Register() {
                         </div>
 
                         <div className="mt-6 space-y-3">
-                            <Label className="text-xs font-semibold uppercase text-slate-500">
+                            <Label className="text-xs font-semibold text-slate-500 uppercase">
                                 Jenis akun
                             </Label>
                             <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-50/80 p-2">
@@ -128,7 +65,11 @@ export default function Register() {
                                             key={item.value}
                                             type="button"
                                             onClick={() =>
-                                                setMode(item.value as 'user' | 'mitra')
+                                                setMode(
+                                                    item.value as
+                                                        | 'user'
+                                                        | 'mitra',
+                                                )
                                             }
                                             aria-pressed={isActive}
                                             className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
@@ -146,7 +87,10 @@ export default function Register() {
 
                         <Form
                             {...formRoute(store())}
-                            resetOnSuccess={['password', 'password_confirmation']}
+                            resetOnSuccess={[
+                                'password',
+                                'password_confirmation',
+                            ]}
                             disableWhileProcessing
                             className="mt-6 flex flex-col gap-5"
                         >
@@ -156,7 +100,11 @@ export default function Register() {
                                         href={`/auth/google/redirect?role=${mode}`}
                                         className="flex h-11 items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm hover:border-sky-200"
                                     >
-                                        <img src="/images/google.svg" alt="Google" className="h-5 w-5" />
+                                        <img
+                                            src="/images/google.svg"
+                                            alt="Google"
+                                            className="h-5 w-5"
+                                        />
                                         Daftar dengan Google
                                     </a>
                                     <div className="flex items-center gap-3 text-xs text-slate-400">
@@ -238,6 +186,9 @@ export default function Register() {
                                                     placeholder="08xxxxxxxxxx"
                                                     className="bg-white"
                                                 />
+                                                <InputError
+                                                    message={errors.phone}
+                                                />
                                             </div>
                                         </>
                                     )}
@@ -272,7 +223,9 @@ export default function Register() {
                                             className="bg-white"
                                         />
                                         <InputError
-                                            message={errors.password_confirmation}
+                                            message={
+                                                errors.password_confirmation
+                                            }
                                         />
                                     </div>
 
@@ -290,9 +243,7 @@ export default function Register() {
 
                         <div className="mt-6 text-center text-sm text-slate-500">
                             Sudah punya akun?{' '}
-                            <TextLink href={login()}>
-                                Masuk
-                            </TextLink>
+                            <TextLink href={login()}>Masuk</TextLink>
                         </div>
                     </div>
                 </div>

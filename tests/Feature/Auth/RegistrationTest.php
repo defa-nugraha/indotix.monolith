@@ -17,5 +17,5 @@ test('new users can register', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect(route('email-otp.notice', absolute: false));
+    $response->assertRedirect(route('verification.notice', absolute: false));
 });
