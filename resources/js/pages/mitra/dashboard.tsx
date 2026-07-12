@@ -1,12 +1,15 @@
 import { Head } from '@inertiajs/react';
 import {
     CalendarCheck,
+    CheckCircle2,
     CreditCard,
+    FileText,
     MapPin,
     ShieldCheck,
     Ticket,
     Users,
 } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
@@ -34,6 +37,7 @@ export default function MitraDashboard({
     metrics,
     activities,
     statusCards,
+    termsRequirement,
 }: {
     onboarding: OnboardingStatus | null;
     wisataOnboarding: OnboardingStatus | null;
@@ -52,7 +56,15 @@ export default function MitraDashboard({
         accent: string;
     }[];
     eventOnboarding: OnboardingStatus | null;
+    termsRequirement?: {
+        required: boolean;
+        signed_at?: string | null;
+        business_type: 'hotel' | 'wisata' | 'event';
+        title: string;
+        file_url: string;
+    } | null;
 }) {
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
     const isChoosingType = !onboardingType;
     const activeOnboarding =
         onboardingType === 'wisata'
@@ -203,6 +215,75 @@ export default function MitraDashboard({
                         })}
                     </div>
                 </section>
+
+                {termsRequirement && (
+                    <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div className="flex gap-4">
+                                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-600">
+                                    {termsRequirement.required ? (
+                                        <FileText className="size-5" />
+                                    ) : (
+                                        <CheckCircle2 className="size-5" />
+                                    )}
+                                </div>
+                                <div>
+                                    <p className="text-xs font-semibold uppercase text-sky-600">
+                                        Syarat & Ketentuan Mitra
+                                    </p>
+                                    <h2 className="mt-1 text-lg font-semibold text-slate-900">
+                                        {termsRequirement.required
+                                            ? 'Tanda tangani dokumen kerja sama'
+                                            : 'Dokumen kerja sama sudah disetujui'}
+                                    </h2>
+                                    <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
+                                        {termsRequirement.required
+                                            ? `Baca dokumen ${termsRequirement.title}, lalu centang persetujuan di bawah. Setelah dikirim, salinan PDF akan dikirim ke email Anda.`
+                                            : `Persetujuan untuk ${termsRequirement.title} sudah tercatat pada ${termsRequirement.signed_at ?? '-'}.`}
+                                    </p>
+                                </div>
+                            </div>
+                            <Button asChild variant="outline" className="border-sky-200">
+                                <a href={termsRequirement.file_url} target="_blank" rel="noreferrer">
+                                    Buka PDF
+                                </a>
+                            </Button>
+                        </div>
+
+                        {termsRequirement.required && (
+                            <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                                <iframe
+                                    src={termsRequirement.file_url}
+                                    title={termsRequirement.title}
+                                    className="h-[420px] w-full rounded-xl border border-slate-200 bg-white"
+                                />
+                                <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                    <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-600">
+                                        <input
+                                            type="checkbox"
+                                            checked={acceptedTerms}
+                                            onChange={(event) => setAcceptedTerms(event.target.checked)}
+                                            className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                        />
+                                        <span>
+                                            Saya sudah membaca dan menyetujui dokumen syarat dan ketentuan mitra Indotix.
+                                        </span>
+                                    </label>
+                                    <Button
+                                        type="button"
+                                        disabled={!acceptedTerms}
+                                        className="bg-sky-600 text-white hover:bg-sky-700"
+                                        onClick={() =>
+                                            router.post('/mitra/terms/sign', { accepted: acceptedTerms }, { preserveScroll: true })
+                                        }
+                                    >
+                                        Kirim tanda tangan
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </section>
+                )}
 
                 {isChoosingType && (
                     <section

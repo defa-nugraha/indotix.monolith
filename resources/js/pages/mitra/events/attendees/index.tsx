@@ -43,15 +43,18 @@ export default function MitraEventAttendeesIndex({ attendees, filters }: Props) 
                                 });
                             }}
                         >
-                            <select
-                                name="checked_in"
-                                defaultValue={filters.checked_in ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
-                                <option value="">Semua</option>
-                                <option value="yes">Sudah Check-in</option>
-                                <option value="no">Belum Check-in</option>
-                            </select>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Kehadiran</span>
+                                <select
+                                    name="checked_in"
+                                    defaultValue={filters.checked_in ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
+                                    <option value="">Semua</option>
+                                    <option value="yes">Sudah Check-in</option>
+                                    <option value="no">Belum Check-in</option>
+                                </select>
+                            </label>
                         </form>
                     </div>
                 </section>

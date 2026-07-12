@@ -73,6 +73,10 @@ export default function EditRoomType({
         { title: 'Tipe Kamar', href: basePath },
         { title: 'Edit', href: '#' },
     ];
+    const isSuspended = isMitra && roomType.status === 'suspended';
+    const safeStatusOptions = isMitra
+        ? statusOptions.filter((status) => status !== 'suspended')
+        : statusOptions;
     const { data, setData, post, processing, errors } = useForm<FormData>({
         _method: 'put',
         hotel_id: String(roomType.hotel_id),
@@ -99,7 +103,7 @@ export default function EditRoomType({
         base_price: roomType.base_price ?? '',
         strike_price: roomType.strike_price ?? '',
         total_rooms: String(roomType.total_rooms ?? ''),
-        status: roomType.status ?? statusOptions[0] ?? 'draft',
+        status: roomType.status === 'suspended' ? 'suspended' : (roomType.status ?? safeStatusOptions[0] ?? 'draft'),
         images: [],
     });
     const [basePriceDisplay, setBasePriceDisplay] = useState(
@@ -178,6 +182,15 @@ export default function EditRoomType({
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
+                        if (isSuspended) {
+                            Swal.fire({
+                                title: 'Tipe kamar disuspend',
+                                text: 'Produk ini sedang dikunci oleh admin dan belum bisa diubah.',
+                                icon: 'warning',
+                                confirmButtonText: 'OK',
+                            });
+                            return;
+                        }
                         post(`${basePath}/${roomType.id}`, {
                             forceFormData: true,
                             onSuccess: () => {
@@ -200,6 +213,11 @@ export default function EditRoomType({
                     }}
                     className="space-y-6 rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
                 >
+                    {isSuspended && (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                            Tipe kamar ini sedang disuspend oleh admin. Perubahan produk dikunci sampai status diaktifkan kembali.
+                        </div>
+                    )}
                     <div className="grid gap-6 lg:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor="hotel_id">Hotel</Label>
@@ -418,20 +436,24 @@ export default function EditRoomType({
 
                         <div className="grid gap-2">
                             <Label htmlFor="status">Status</Label>
-                            <select
-                                id="status"
-                                value={data.status}
-                                onChange={(event) =>
-                                    setData('status', event.target.value)
-                                }
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            >
-                                {statusOptions.map((status) => (
-                                    <option key={status} value={status}>
-                                        {status}
-                                    </option>
-                                ))}
-                            </select>
+                            {isSuspended ? (
+                                <Input id="status" value="Disuspend oleh admin" disabled />
+                            ) : (
+                                <select
+                                    id="status"
+                                    value={data.status}
+                                    onChange={(event) =>
+                                        setData('status', event.target.value)
+                                    }
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                >
+                                    {safeStatusOptions.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                             <InputError message={errors.status} />
                         </div>
                     </div>
@@ -467,6 +489,7 @@ export default function EditRoomType({
                             accept="image/*"
                             multiple
                             onChange={handleImagesChange}
+                            disabled={isSuspended}
                             className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-100"
                         />
                         {roomType.images.length > 0 && (
@@ -492,6 +515,7 @@ export default function EditRoomType({
                                                     variant="outline"
                                                     size="sm"
                                                     className="border-red-200 text-red-600 hover:bg-red-50"
+                                                    disabled={isSuspended}
                                                     onClick={() => {
                                                         Swal.fire({
                                                             title: 'Hapus foto?',
@@ -582,7 +606,7 @@ export default function EditRoomType({
                         <Button
                             type="submit"
                             className="bg-sky-600 text-white hover:bg-sky-700"
-                            disabled={processing}
+                            disabled={processing || isSuspended}
                         >
                             Simpan perubahan
                         </Button>

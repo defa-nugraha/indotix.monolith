@@ -7,6 +7,7 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\WisataTicket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -84,11 +85,11 @@ class TicketController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $destination = MitraWisataOnboarding::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $destination = $this->ownedDestination($request);
+        $this->ensureSubmittedDestination($request, (int) $destination->id);
 
         $data = $request->validate([
+            'mitra_wisata_onboarding_id' => ['nullable', 'integer'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
@@ -122,15 +123,15 @@ class TicketController extends Controller
 
     public function update(Request $request, WisataTicket $ticket): RedirectResponse
     {
-        $destination = MitraWisataOnboarding::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $destination = $this->ownedDestination($request);
+        $this->ensureSubmittedDestination($request, (int) $destination->id);
 
         if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
             abort(403);
         }
 
         $data = $request->validate([
+            'mitra_wisata_onboarding_id' => ['nullable', 'integer'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
@@ -178,5 +179,35 @@ class TicketController extends Controller
         $ticket->delete();
 
         return back()->with('status', 'ticket-deleted');
+    }
+
+    private function ownedDestination(Request $request): MitraWisataOnboarding
+    {
+        $destination = MitraWisataOnboarding::query()
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        if ($destination->is_suspended) {
+            throw ValidationException::withMessages([
+                'mitra_wisata_onboarding_id' => 'Destinasi sedang disuspend oleh admin. Mitra tidak dapat mengubah produk.',
+            ]);
+        }
+
+        return $destination;
+    }
+
+    private function ensureSubmittedDestination(Request $request, int $destinationId): void
+    {
+        if (! $request->filled('mitra_wisata_onboarding_id')) {
+            return;
+        }
+
+        if ((int) $request->input('mitra_wisata_onboarding_id') === $destinationId) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'mitra_wisata_onboarding_id' => 'Tiket hanya bisa dibuat untuk destinasi milik akun mitra yang sedang login.',
+        ]);
     }
 }

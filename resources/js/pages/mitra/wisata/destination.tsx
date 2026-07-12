@@ -494,26 +494,32 @@ export default function MitraWisataDestination({
                             </div>
                         </div>
                         <div className="grid gap-2 md:col-span-2 md:grid-cols-2">
-                            <Input
-                                value={form.data.contact_phone}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'contact_phone',
-                                        event.target.value,
-                                    )
-                                }
-                                placeholder="Nomor petugas loket"
-                            />
-                            <Input
-                                value={form.data.contact_hours}
-                                onChange={(event) =>
-                                    form.setData(
-                                        'contact_hours',
-                                        event.target.value,
-                                    )
-                                }
-                                placeholder="Jam bisa dihubungi"
-                            />
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Nomor petugas loket</span>
+                                <Input
+                                    value={form.data.contact_phone}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'contact_phone',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Nomor petugas loket"
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Jam bisa dihubungi</span>
+                                <Input
+                                    value={form.data.contact_hours}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'contact_hours',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Jam bisa dihubungi"
+                                />
+                            </label>
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <Label>Status Operasional</Label>
@@ -533,16 +539,19 @@ export default function MitraWisataDestination({
                                 </span>
                             </div>
                             {form.data.is_temporarily_closed && (
-                                <Input
-                                    value={form.data.closure_note}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'closure_note',
-                                            event.target.value,
-                                        )
-                                    }
-                                    placeholder="Catatan penutupan sementara"
-                                />
+                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                    <span>Catatan penutupan sementara</span>
+                                    <Input
+                                        value={form.data.closure_note}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'closure_note',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="Catatan penutupan sementara"
+                                    />
+                                </label>
                             )}
                         </div>
                         <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
@@ -559,7 +568,7 @@ export default function MitraWisataDestination({
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
                                 )}
-                                <Input
+                                <Input aria-label="Destination Input"
                                     type="file"
                                     accept="image/*"
                                     className="mt-2"
@@ -587,7 +596,7 @@ export default function MitraWisataDestination({
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
                                 )}
-                                <Input
+                                <Input aria-label="Destination Input"
                                     type="file"
                                     accept="image/*"
                                     className="mt-2"
@@ -615,7 +624,7 @@ export default function MitraWisataDestination({
                                         className="mt-2 h-24 w-full rounded-lg object-cover"
                                     />
                                 )}
-                                <Input
+                                <Input aria-label="Destination Input"
                                     type="file"
                                     accept="image/*"
                                     className="mt-2"
@@ -658,13 +667,15 @@ export default function MitraWisataDestination({
                                     ))}
                                 </div>
                             )}
-                            <Input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                className="mt-2"
-                                onChange={handleOtherPhotosChange}
-                            />
+                            <label className="mt-2 grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Upload foto lainnya</span>
+                                <Input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleOtherPhotosChange}
+                                />
+                            </label>
                             <p className="text-xs text-slate-500">
                                 Maksimal {maxOtherPhotoCount} foto, {maxImageSizeLabel} per file.
                             </p>

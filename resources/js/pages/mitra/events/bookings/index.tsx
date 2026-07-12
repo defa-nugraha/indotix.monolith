@@ -46,24 +46,30 @@ export default function MitraEventBookingsIndex({ bookings, filters }: Props) {
                                 });
                             }}
                         >
-                            <input
-                                type="date"
-                                name="date"
-                                defaultValue={filters.date ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
-                            <select
-                                name="status"
-                                defaultValue={filters.status ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            >
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Tanggal</span>
+                                <input
+                                    type="date"
+                                    name="date"
+                                    defaultValue={filters.date ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Status</span>
+                                <select
+                                    name="status"
+                                    defaultValue={filters.status ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                >
                                 <option value="">Semua Status</option>
                                 <option value="pending_payment">pending_payment</option>
                                 <option value="paid">paid</option>
                                 <option value="cancelled">cancelled</option>
                                 <option value="expired">expired</option>
                                 <option value="completed">completed</option>
-                            </select>
+                                </select>
+                            </label>
                             <button className="rounded-lg bg-sky-600 px-4 py-2 text-sm text-white">Filter</button>
                         </form>
                     </div>

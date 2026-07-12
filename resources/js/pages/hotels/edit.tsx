@@ -82,6 +82,10 @@ export default function EditHotel({
         { title: 'Edit', href: '#' },
     ];
     const [isMapOpen, setIsMapOpen] = useState(false);
+    const isSuspended = isMitra && hotel.status === 'suspended';
+    const safeStatusOptions = isMitra
+        ? statusOptions.filter((status) => status !== 'suspended')
+        : statusOptions;
     const { data, setData, post, processing, errors, transform } = useForm<FormData>({
         _method: 'put',
         vendor_id: hotel.vendor_id ? String(hotel.vendor_id) : mitraId ? String(mitraId) : '',
@@ -94,7 +98,7 @@ export default function EditHotel({
         star_rating: hotel.star_rating ? String(hotel.star_rating) : '',
         check_in_time: hotel.check_in_time ?? '',
         check_out_time: hotel.check_out_time ?? '',
-        status: hotel.status ?? statusOptions[0] ?? 'draft',
+        status: hotel.status === 'suspended' ? 'suspended' : (hotel.status ?? safeStatusOptions[0] ?? 'draft'),
         facility_codes: hotel.facility_codes ?? [],
         images: [],
         taxes: (hotel.taxes ?? []).map((tax) => ({
@@ -221,6 +225,15 @@ export default function EditHotel({
                 <form
                     onSubmit={(event) => {
                         event.preventDefault();
+                        if (isSuspended) {
+                            Swal.fire({
+                                title: 'Hotel disuspend',
+                                text: 'Produk ini sedang dikunci oleh admin dan belum bisa diubah.',
+                                icon: 'warning',
+                                confirmButtonText: 'OK',
+                            });
+                            return;
+                        }
                         transform((payload) => ({
                             ...payload,
                             taxes: payload.taxes.filter(
@@ -249,6 +262,11 @@ export default function EditHotel({
                     }}
                     className="space-y-6 rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
                 >
+                    {isSuspended && (
+                        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                            Hotel ini sedang disuspend oleh admin. Perubahan produk dikunci sampai status diaktifkan kembali.
+                        </div>
+                    )}
                     <div className="grid gap-6 lg:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Nama hotel</Label>
@@ -336,20 +354,24 @@ export default function EditHotel({
 
                         <div className="grid gap-2">
                             <Label htmlFor="status">Status</Label>
-                            <select
-                                id="status"
-                                value={data.status}
-                                onChange={(event) =>
-                                    setData('status', event.target.value)
-                                }
-                                className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                            >
-                                {statusOptions.map((status) => (
-                                    <option key={status} value={status}>
-                                        {status}
-                                    </option>
-                                ))}
-                            </select>
+                            {isSuspended ? (
+                                <Input id="status" value="Disuspend oleh admin" disabled />
+                            ) : (
+                                <select
+                                    id="status"
+                                    value={data.status}
+                                    onChange={(event) =>
+                                        setData('status', event.target.value)
+                                    }
+                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                >
+                                    {safeStatusOptions.map((status) => (
+                                        <option key={status} value={status}>
+                                            {status}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                             <InputError message={errors.status} />
                         </div>
 
@@ -517,7 +539,10 @@ export default function EditHotel({
                         <div className="flex items-center justify-between">
                             <Label>Foto hotel</Label>
                             <Button type="button" variant="outline" asChild>
-                                <label htmlFor="images" className="cursor-pointer">
+                                <label
+                                    htmlFor="images"
+                                    className={isSuspended ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}
+                                >
                                     <Plus className="mr-2 size-4" />
                                     Upload foto
                                 </label>
@@ -530,6 +555,7 @@ export default function EditHotel({
                             accept="image/*"
                             multiple
                             onChange={handleImagesChange}
+                            disabled={isSuspended}
                             className="block w-full text-sm text-slate-500 file:mr-4 file:rounded-md file:border-0 file:bg-sky-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-sky-700 hover:file:bg-sky-100"
                         />
                         {hotel.images.length > 0 && (
@@ -555,6 +581,7 @@ export default function EditHotel({
                                                     variant="outline"
                                                     size="sm"
                                                     className="border-red-200 text-red-600 hover:bg-red-50"
+                                                    disabled={isSuspended}
                                                     onClick={() => {
                                                         Swal.fire({
                                                             title: 'Hapus foto?',
@@ -665,7 +692,7 @@ export default function EditHotel({
                         <Button
                             type="submit"
                             className="bg-sky-600 text-white hover:bg-sky-700"
-                            disabled={processing}
+                            disabled={processing || isSuspended}
                         >
                             Simpan perubahan
                         </Button>

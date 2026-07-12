@@ -11,11 +11,14 @@ use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RoomInventoryController extends Controller
 {
+    private const SUSPENDED_STATUS = 'suspended';
+
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -95,7 +98,7 @@ class RoomInventoryController extends Controller
     public function create(Request $request): Response|RedirectResponse
     {
         $user = $request->user();
-        if (! RoomType::query()->whereHas('hotel', fn ($builder) => $builder->where('vendor_id', $user->id))->exists()) {
+        if (! $this->editableRoomTypesQuery((int) $user->id)->exists()) {
             return redirect()->route('mitra.room-types.index');
         }
 
@@ -164,6 +167,7 @@ class RoomInventoryController extends Controller
             abort(404);
         }
 
+        $this->ensureInventoryEditable($roomInventory);
         $validated = $this->validateInventory($request, $user->id, $roomInventory->id);
         $roomInventory->update($validated);
 
@@ -177,6 +181,7 @@ class RoomInventoryController extends Controller
             abort(404);
         }
 
+        $this->ensureInventoryEditable($roomInventory);
         $roomInventory->delete();
 
         return redirect()->route('mitra.room-inventories.index');
@@ -192,7 +197,11 @@ class RoomInventoryController extends Controller
 
         RoomInventory::query()
             ->whereIn('id', $data['ids'])
-            ->whereHas('roomType.hotel', fn ($builder) => $builder->where('vendor_id', $user->id))
+            ->whereHas('roomType', fn ($builder) => $builder
+                ->where('status', '!=', self::SUSPENDED_STATUS)
+                ->whereHas('hotel', fn ($hotel) => $hotel
+                    ->where('vendor_id', $user->id)
+                    ->where('status', '!=', self::SUSPENDED_STATUS)))
             ->delete();
 
         return redirect()->route('mitra.room-inventories.index');
@@ -203,7 +212,15 @@ class RoomInventoryController extends Controller
         $isBulk = $request->filled('date_from') || $request->filled('date_to');
 
         $roomTypeRule = Rule::exists('room_types', 'id')->where(function ($query) use ($vendorId) {
-            $query->whereIn('hotel_id', Hotel::query()->where('vendor_id', $vendorId)->select('id'));
+            $query
+                ->where('status', '!=', self::SUSPENDED_STATUS)
+                ->whereIn(
+                    'hotel_id',
+                    Hotel::query()
+                        ->where('vendor_id', $vendorId)
+                        ->where('status', '!=', self::SUSPENDED_STATUS)
+                        ->select('id')
+                );
         });
 
         if ($isBulk && $inventoryId === null) {
@@ -242,9 +259,8 @@ class RoomInventoryController extends Controller
 
     private function roomTypeOptions(int $vendorId): array
     {
-        return RoomType::query()
+        return $this->editableRoomTypesQuery($vendorId)
             ->with('hotel')
-            ->whereHas('hotel', fn ($builder) => $builder->where('vendor_id', $vendorId))
             ->orderBy('name')
             ->get()
             ->map(fn (RoomType $roomType) => [
@@ -259,6 +275,7 @@ class RoomInventoryController extends Controller
         return Hotel::query()
             ->select('id', 'name')
             ->where('vendor_id', $vendorId)
+            ->where('status', '!=', self::SUSPENDED_STATUS)
             ->orderBy('name')
             ->get()
             ->map(fn (Hotel $hotel) => [
@@ -266,6 +283,29 @@ class RoomInventoryController extends Controller
                 'label' => $hotel->name,
             ])
             ->all();
+    }
+
+    private function editableRoomTypesQuery(int $vendorId)
+    {
+        return RoomType::query()
+            ->where('status', '!=', self::SUSPENDED_STATUS)
+            ->whereHas('hotel', fn ($builder) => $builder
+                ->where('vendor_id', $vendorId)
+                ->where('status', '!=', self::SUSPENDED_STATUS));
+    }
+
+    private function ensureInventoryEditable(RoomInventory $inventory): void
+    {
+        if (
+            $inventory->roomType?->status !== self::SUSPENDED_STATUS
+            && $inventory->roomType?->hotel?->status !== self::SUSPENDED_STATUS
+        ) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'room_type_id' => 'Inventory ini sedang terkait produk yang disuspend oleh admin. Mitra tidak dapat mengubahnya.',
+        ]);
     }
 
     private function toPayload(RoomInventory $inventory): array

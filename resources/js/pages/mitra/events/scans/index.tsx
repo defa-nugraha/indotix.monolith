@@ -299,12 +299,15 @@ export default function MitraEventScansIndex({ scans, filters }: Props) {
                                 submitFilters(event.currentTarget);
                             }}
                         >
-                            <input
-                                type="date"
-                                name="date"
-                                defaultValue={filters.date ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                            />
+                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                <span>Tanggal</span>
+                                <input
+                                    type="date"
+                                    name="date"
+                                    defaultValue={filters.date ?? ''}
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            </label>
                         </form>
                     </div>
                     <div className="mt-4 grid gap-3">

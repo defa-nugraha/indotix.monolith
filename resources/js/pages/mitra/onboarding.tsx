@@ -243,7 +243,7 @@ export default function MitraOnboarding({
 
         return (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
-                <input
+                <input aria-label="Onboarding input"
                     id={id}
                     type="file"
                     accept={accept}

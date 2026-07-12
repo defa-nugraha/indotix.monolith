@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,6 +24,7 @@ class DestinationController extends Controller
         $destination = MitraWisataOnboarding::query()
             ->where('user_id', $user->id)
             ->firstOrFail();
+        $this->ensureDestinationEditable($destination);
 
         $provinces = DB::table('provinces')
             ->orderBy('name')
@@ -162,5 +164,16 @@ class DestinationController extends Controller
         $destination->save();
 
         return back()->with('status', 'destination-updated');
+    }
+
+    private function ensureDestinationEditable(MitraWisataOnboarding $destination): void
+    {
+        if (! $destination->is_suspended) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'destination_name' => 'Destinasi sedang disuspend oleh admin. Mitra tidak dapat mengubah produk.',
+        ]);
     }
 }

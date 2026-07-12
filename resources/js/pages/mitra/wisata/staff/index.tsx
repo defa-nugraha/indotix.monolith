@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { FormField } from '@/components/form-field';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
 
@@ -92,30 +93,32 @@ export default function MitraWisataStaffIndex({ destination, staff }: Props) {
                             handleSubmit();
                         }}
                     >
-                        <div>
+                        <FormField label="Nama staff">
                             <input
                                 value={form.data.name}
                                 onChange={(event) => form.setData('name', event.target.value)}
-                                placeholder="Nama staff"
                                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
                             <InputError message={form.errors.name} />
-                        </div>
-                        <input
-                            value={form.data.email}
-                            onChange={(event) => form.setData('email', event.target.value)}
-                            placeholder="Email (opsional)"
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <select
-                            value={form.data.role}
-                            onChange={(event) => form.setData('role', event.target.value)}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
-                            <option value="owner">Owner</option>
-                            <option value="admin_mitra">Admin Mitra</option>
-                            <option value="staff_validasi">Staff Validasi</option>
-                        </select>
+                        </FormField>
+                        <FormField label="Email">
+                            <input
+                                value={form.data.email}
+                                onChange={(event) => form.setData('email', event.target.value)}
+                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </FormField>
+                        <FormField label="Role akses">
+                            <select
+                                value={form.data.role}
+                                onChange={(event) => form.setData('role', event.target.value)}
+                                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
+                                <option value="owner">Owner</option>
+                                <option value="admin_mitra">Admin Mitra</option>
+                                <option value="staff_validasi">Staff Validasi</option>
+                            </select>
+                        </FormField>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Tambah
                         </Button>
@@ -138,29 +141,38 @@ export default function MitraWisataStaffIndex({ destination, staff }: Props) {
                                 {staff.map((item) => (
                                     <tr key={item.id} className="border-t border-slate-100">
                                         <td className="px-4 py-3">
-                                            <input
-                                                defaultValue={item.name}
-                                                className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
-                                                onBlur={(event) => updateStaff(item, 'name', event.target.value)}
-                                            />
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Nama staff</span>
+                                                <input
+                                                    defaultValue={item.name}
+                                                    className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                                                    onBlur={(event) => updateStaff(item, 'name', event.target.value)}
+                                                />
+                                            </label>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <input
-                                                defaultValue={item.email ?? ''}
-                                                className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
-                                                onBlur={(event) => updateStaff(item, 'email', event.target.value)}
-                                            />
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Email staff</span>
+                                                <input
+                                                    defaultValue={item.email ?? ''}
+                                                    className="w-full rounded border border-slate-200 px-2 py-1 text-xs"
+                                                    onBlur={(event) => updateStaff(item, 'email', event.target.value)}
+                                                />
+                                            </label>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <select
-                                                defaultValue={item.role}
-                                                className="rounded border border-slate-200 px-2 py-1 text-xs"
-                                                onChange={(event) => updateStaff(item, 'role', event.target.value)}
-                                            >
-                                                <option value="owner">Owner</option>
-                                                <option value="admin_mitra">Admin Mitra</option>
-                                                <option value="staff_validasi">Staff Validasi</option>
-                                            </select>
+                                            <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                <span>Role staff</span>
+                                                <select
+                                                    defaultValue={item.role}
+                                                    className="rounded border border-slate-200 px-2 py-1 text-xs"
+                                                    onChange={(event) => updateStaff(item, 'role', event.target.value)}
+                                                >
+                                                    <option value="owner">Owner</option>
+                                                    <option value="admin_mitra">Admin Mitra</option>
+                                                    <option value="staff_validasi">Staff Validasi</option>
+                                                </select>
+                                            </label>
                                         </td>
                                         <td className="px-4 py-3">
                                             <Badge className={item.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}>

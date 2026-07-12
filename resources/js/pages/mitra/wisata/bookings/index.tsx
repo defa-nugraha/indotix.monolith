@@ -68,24 +68,30 @@ export default function MitraWisataBookingsIndex({ destination, bookings, filter
                             submitFilters(event.currentTarget);
                         }}
                     >
-                        <input
-                            type="date"
-                            name="visit_date"
-                            defaultValue={filters.visit_date ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
-                        <select
-                            name="status"
-                            defaultValue={filters.status ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        >
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tanggal kunjungan</span>
+                            <input
+                                type="date"
+                                name="visit_date"
+                                defaultValue={filters.visit_date ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Status</span>
+                            <select
+                                name="status"
+                                defaultValue={filters.status ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            >
                             <option value="">Semua status</option>
                             <option value="pending_payment">Pending</option>
                             <option value="paid">Paid</option>
                             <option value="completed">Completed</option>
                             <option value="cancelled">Cancelled</option>
                             <option value="expired">Expired</option>
-                        </select>
+                            </select>
+                        </label>
                         <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
                             Filter
                         </Button>

@@ -50,6 +50,9 @@ export default function CreateRoomType({
         { title: 'Tipe Kamar', href: basePath },
         { title: 'Tambah', href: `${basePath}/create` },
     ];
+    const safeStatusOptions = isMitra
+        ? statusOptions.filter((status) => status !== 'suspended')
+        : statusOptions;
     const { data, setData, post, processing, errors } = useForm<FormData>({
         hotel_id: '',
         name: '',
@@ -65,7 +68,7 @@ export default function CreateRoomType({
         base_price: '',
         strike_price: '',
         total_rooms: '',
-        status: statusOptions[0] ?? 'draft',
+        status: safeStatusOptions[0] ?? 'draft',
         images: [],
     });
     const [basePriceDisplay, setBasePriceDisplay] = useState('');
@@ -381,7 +384,7 @@ export default function CreateRoomType({
                                 }
                                 className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
                             >
-                                {statusOptions.map((status) => (
+                                {safeStatusOptions.map((status) => (
                                     <option key={status} value={status}>
                                         {status}
                                     </option>

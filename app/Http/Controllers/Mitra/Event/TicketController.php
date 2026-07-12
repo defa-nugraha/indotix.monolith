@@ -8,6 +8,8 @@ use App\Models\EventOrganizer;
 use App\Models\EventTicket;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -94,12 +96,14 @@ class TicketController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $organizer = EventOrganizer::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $organizer = $this->ownedOrganizer($request);
 
         $data = $request->validate([
-            'event_id' => ['required', 'exists:events,id'],
+            'event_id' => [
+                'required',
+                'integer',
+                Rule::exists('events', 'id')->where('event_organizer_id', $organizer->id),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
@@ -132,16 +136,18 @@ class TicketController extends Controller
 
     public function update(Request $request, EventTicket $ticket): RedirectResponse
     {
-        $organizer = EventOrganizer::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $organizer = $this->ownedOrganizer($request);
 
         if (! $ticket->event || $ticket->event->event_organizer_id !== $organizer->id) {
             abort(403);
         }
 
         $data = $request->validate([
-            'event_id' => ['required', 'exists:events,id'],
+            'event_id' => [
+                'required',
+                'integer',
+                Rule::exists('events', 'id')->where('event_organizer_id', $organizer->id),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
@@ -173,9 +179,7 @@ class TicketController extends Controller
 
     public function destroy(Request $request, EventTicket $ticket): RedirectResponse
     {
-        $organizer = EventOrganizer::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $organizer = $this->ownedOrganizer($request);
 
         if (! $ticket->event || $ticket->event->event_organizer_id !== $organizer->id) {
             abort(403);
@@ -188,5 +192,20 @@ class TicketController extends Controller
         $ticket->delete();
 
         return back()->with('status', 'ticket-deleted');
+    }
+
+    private function ownedOrganizer(Request $request): EventOrganizer
+    {
+        $organizer = EventOrganizer::query()
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        if ($organizer->status === 'suspended') {
+            throw ValidationException::withMessages([
+                'event_id' => 'Organizer sedang disuspend oleh admin. Mitra tidak dapat mengubah tiket event.',
+            ]);
+        }
+
+        return $organizer;
     }
 }

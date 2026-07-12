@@ -12,12 +12,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class HotelController extends Controller
 {
-    private const STATUSES = ['draft', 'active', 'suspended'];
+    private const STATUSES = ['draft', 'active'];
+    private const SUSPENDED_STATUS = 'suspended';
     private const MAX_IMAGE_COUNT = 10;
     private const MAX_IMAGE_KILOBYTES = 5120;
 
@@ -106,6 +108,7 @@ class HotelController extends Controller
     public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
+        $this->ensureSubmittedMitraId($request, (int) $user->id);
 
         if (Hotel::query()->where('vendor_id', $user->id)->exists()) {
             return redirect()->route('mitra.hotels.index');
@@ -161,6 +164,7 @@ class HotelController extends Controller
             abort(404);
         }
 
+        $this->ensureHotelEditable($hotel);
         $validated = $this->validateHotel($request);
         $validated['vendor_id'] = $user->id;
 
@@ -188,6 +192,7 @@ class HotelController extends Controller
         if ((int) $hotel->vendor_id !== (int) $user->id) {
             abort(404);
         }
+        $this->ensureHotelEditable($hotel);
 
         if ((int) $hotelImage->hotel_id !== (int) $hotel->id) {
             return redirect()->route('mitra.hotels.edit', $hotel);
@@ -208,6 +213,7 @@ class HotelController extends Controller
         if ((int) $hotel->vendor_id !== (int) $user->id) {
             abort(404);
         }
+        $this->ensureHotelEditable($hotel);
 
         $hotel->delete();
 
@@ -237,6 +243,32 @@ class HotelController extends Controller
             'images.*.image' => 'File foto hotel harus berupa gambar.',
             'images.*.mimes' => 'Foto hotel harus berformat JPG, JPEG, PNG, atau WEBP.',
             'images.*.max' => 'Ukuran setiap foto hotel maksimal 5 MB.',
+        ]);
+    }
+
+    private function ensureSubmittedMitraId(Request $request, int $userId): void
+    {
+        if (! $request->filled('vendor_id')) {
+            return;
+        }
+
+        if ((int) $request->input('vendor_id') === $userId) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'vendor_id' => 'Data hotel hanya bisa dibuat untuk akun mitra yang sedang login.',
+        ]);
+    }
+
+    private function ensureHotelEditable(Hotel $hotel): void
+    {
+        if ($hotel->status !== self::SUSPENDED_STATUS) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'status' => 'Hotel sedang disuspend oleh admin. Mitra tidak dapat mengubah produk ini.',
         ]);
     }
 

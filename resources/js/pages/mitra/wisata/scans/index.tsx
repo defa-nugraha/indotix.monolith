@@ -234,43 +234,52 @@ export default function MitraWisataScansIndex({
                                 }}
                             >
                                 <div>
-                                    <input
-                                        value={form.data.booking_code}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'booking_code',
-                                                event.target.value,
-                                            )
-                                        }
-                                        placeholder="Kode booking"
-                                        className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                    />
+                                    <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                        <span>Kode booking</span>
+                                        <input
+                                            value={form.data.booking_code}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'booking_code',
+                                                    event.target.value,
+                                                )
+                                            }
+                                            placeholder="Kode booking"
+                                            className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                        />
+                                    </label>
                                     <InputError
                                         message={form.errors.booking_code}
                                     />
                                 </div>
-                                <input
-                                    value={form.data.officer_name}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'officer_name',
-                                            event.target.value,
-                                        )
-                                    }
-                                    placeholder="Nama petugas"
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                />
-                                <input
-                                    value={form.data.location}
-                                    onChange={(event) =>
-                                        form.setData(
-                                            'location',
-                                            event.target.value,
-                                        )
-                                    }
-                                    placeholder="Lokasi (opsional)"
-                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                />
+                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                    <span>Nama petugas</span>
+                                    <input
+                                        value={form.data.officer_name}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'officer_name',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="Nama petugas"
+                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    />
+                                </label>
+                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                    <span>Lokasi</span>
+                                    <input
+                                        value={form.data.location}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'location',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="Lokasi (opsional)"
+                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                    />
+                                </label>
                                 <Button
                                     type="submit"
                                     className="bg-sky-600 text-white hover:bg-sky-700"
@@ -290,12 +299,15 @@ export default function MitraWisataScansIndex({
                             submitFilters(event.currentTarget);
                         }}
                     >
-                        <input
-                            type="date"
-                            name="date"
-                            defaultValue={filters.date ?? ''}
-                            className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                        />
+                        <label className="grid gap-1 text-xs font-medium text-slate-600">
+                            <span>Tanggal</span>
+                            <input
+                                type="date"
+                                name="date"
+                                defaultValue={filters.date ?? ''}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            />
+                        </label>
                         <Button
                             type="submit"
                             variant="outline"

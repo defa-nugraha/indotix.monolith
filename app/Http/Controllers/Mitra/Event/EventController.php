@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -86,11 +87,11 @@ class EventController extends Controller
 
     public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
-        $organizer = EventOrganizer::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $organizer = $this->ownedOrganizer($request);
+        $this->ensureSubmittedOrganizer($request, (int) $organizer->id);
 
         $data = $request->validate([
+            'event_organizer_id' => ['nullable', 'integer'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'city_code' => ['nullable', 'string', 'max:10'],
@@ -127,15 +128,15 @@ class EventController extends Controller
 
     public function update(Request $request, Event $event, MediaCompressionService $mediaCompression): RedirectResponse
     {
-        $organizer = EventOrganizer::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $organizer = $this->ownedOrganizer($request);
+        $this->ensureSubmittedOrganizer($request, (int) $organizer->id);
 
         if ($event->event_organizer_id !== $organizer->id) {
             abort(403);
         }
 
         $data = $request->validate([
+            'event_organizer_id' => ['nullable', 'integer'],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'city_code' => ['nullable', 'string', 'max:10'],
@@ -194,9 +195,7 @@ class EventController extends Controller
 
     public function submit(Request $request, Event $event): RedirectResponse
     {
-        $organizer = EventOrganizer::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $organizer = $this->ownedOrganizer($request);
 
         if ($event->event_organizer_id !== $organizer->id) {
             abort(403);
@@ -220,5 +219,35 @@ class EventController extends Controller
                 'label' => trim(sprintf('%s %s', $row->type ?? 'Kabupaten', $row->name)),
             ])
             ->all();
+    }
+
+    private function ownedOrganizer(Request $request): EventOrganizer
+    {
+        $organizer = EventOrganizer::query()
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        if ($organizer->status === 'suspended') {
+            throw ValidationException::withMessages([
+                'event_organizer_id' => 'Organizer sedang disuspend oleh admin. Mitra tidak dapat mengubah produk event.',
+            ]);
+        }
+
+        return $organizer;
+    }
+
+    private function ensureSubmittedOrganizer(Request $request, int $organizerId): void
+    {
+        if (! $request->filled('event_organizer_id')) {
+            return;
+        }
+
+        if ((int) $request->input('event_organizer_id') === $organizerId) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'event_organizer_id' => 'Event hanya bisa dibuat untuk organizer milik akun mitra yang sedang login.',
+        ]);
     }
 }

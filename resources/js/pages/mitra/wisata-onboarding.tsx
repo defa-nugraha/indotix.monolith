@@ -376,7 +376,7 @@ export default function MitraWisataOnboarding({
 
         return (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
-                <input
+                <input aria-label="Wisata Onboarding input"
                     id={id}
                     type="file"
                     accept={accept}
@@ -1001,7 +1001,7 @@ export default function MitraWisataOnboarding({
                                         }
                                         placeholder="Nomor petugas loket"
                                     />
-                                    <Input
+                                    <Input aria-label="Jam bisa dihubungi"
                                         value={step2Form.data.contact_hours}
                                         onChange={(event) =>
                                             step2Form.setData(

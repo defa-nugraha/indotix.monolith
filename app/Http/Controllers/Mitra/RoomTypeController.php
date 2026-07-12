@@ -11,12 +11,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class RoomTypeController extends Controller
 {
-    private const STATUSES = ['draft', 'active', 'suspended'];
+    private const STATUSES = ['draft', 'active'];
+    private const SUSPENDED_STATUS = 'suspended';
 
     public function index(Request $request): Response
     {
@@ -69,7 +71,7 @@ class RoomTypeController extends Controller
     public function create(Request $request): Response|RedirectResponse
     {
         $user = $request->user();
-        if (! Hotel::query()->where('vendor_id', $user->id)->exists()) {
+        if (! $this->editableHotelsQuery((int) $user->id)->exists()) {
             return redirect()->route('mitra.hotels.create');
         }
 
@@ -135,6 +137,7 @@ class RoomTypeController extends Controller
             abort(404);
         }
 
+        $this->ensureRoomTypeEditable($roomType);
         $validated = $this->validateRoomType($request, $user->id);
         $images = $validated['images'] ?? [];
         unset($validated['images']);
@@ -152,6 +155,7 @@ class RoomTypeController extends Controller
             abort(404);
         }
 
+        $this->ensureRoomTypeEditable($roomType);
         $roomType->delete();
 
         return redirect()->route('mitra.room-types.index');
@@ -164,6 +168,7 @@ class RoomTypeController extends Controller
             abort(404);
         }
 
+        $this->ensureRoomTypeEditable($roomType);
         if ($roomImage->room_type_id !== $roomType->id) {
             abort(404);
         }
@@ -183,7 +188,9 @@ class RoomTypeController extends Controller
             'hotel_id' => [
                 'required',
                 'integer',
-                Rule::exists('hotels', 'id')->where('vendor_id', $vendorId),
+                Rule::exists('hotels', 'id')
+                    ->where('vendor_id', $vendorId)
+                    ->where(fn ($query) => $query->where('status', '!=', self::SUSPENDED_STATUS)),
             ],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
@@ -202,6 +209,24 @@ class RoomTypeController extends Controller
             'images' => ['nullable', 'array'],
             'images.*' => ['file', 'image'],
         ]);
+    }
+
+    private function ensureRoomTypeEditable(RoomType $roomType): void
+    {
+        if ($roomType->status !== self::SUSPENDED_STATUS && $roomType->hotel?->status !== self::SUSPENDED_STATUS) {
+            return;
+        }
+
+        throw ValidationException::withMessages([
+            'status' => 'Produk ini sedang disuspend oleh admin. Mitra tidak dapat mengubahnya.',
+        ]);
+    }
+
+    private function editableHotelsQuery(int $vendorId)
+    {
+        return Hotel::query()
+            ->where('vendor_id', $vendorId)
+            ->where('status', '!=', self::SUSPENDED_STATUS);
     }
 
     private function syncImages(RoomType $roomType, array $images, MediaCompressionService $mediaCompression): void
@@ -230,9 +255,8 @@ class RoomTypeController extends Controller
 
     private function hotelOptions(int $vendorId): array
     {
-        return Hotel::query()
+        return $this->editableHotelsQuery($vendorId)
             ->select('id', 'name')
-            ->where('vendor_id', $vendorId)
             ->orderBy('name')
             ->get()
             ->map(fn (Hotel $hotel) => [

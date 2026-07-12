@@ -12,11 +12,14 @@ use App\Models\Hotel;
 use App\Models\MitraEventOnboarding;
 use App\Models\MitraOnboarding;
 use App\Models\MitraWisataOnboarding;
+use App\Models\PartnerTermsDocument;
+use App\Models\PartnerTermsSignature;
 use App\Models\RoomType;
 use App\Models\WisataBooking;
 use App\Models\WisataTicket;
 use App\Models\WisataTicketScan;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -358,6 +361,48 @@ class DashboardController extends Controller
             'metrics' => $metrics,
             'activities' => $activities,
             'statusCards' => $statusCards,
+            'termsRequirement' => $this->termsRequirement($request),
         ]);
+    }
+
+    private function termsRequirement(Request $request): ?array
+    {
+        $user = $request->user();
+        $businessType = $user?->mitra_onboarding_type ?: 'hotel';
+
+        if (! in_array($businessType, PartnerTermsDocument::BUSINESS_TYPES, true)) {
+            return null;
+        }
+
+        $verified = match ($businessType) {
+            'wisata' => $user->mitraWisataOnboarding?->verification_status === 'verified',
+            'event' => $user->mitraEventOnboarding?->verification_status === 'verified',
+            default => $user->mitraOnboarding?->verification_status === 'verified',
+        };
+
+        if (! $verified) {
+            return null;
+        }
+
+        $document = PartnerTermsDocument::query()
+            ->where('business_type', $businessType)
+            ->first();
+
+        if (! $document) {
+            return null;
+        }
+
+        $signature = PartnerTermsSignature::query()
+            ->where('partner_terms_document_id', $document->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        return [
+            'required' => $signature === null,
+            'signed_at' => $signature?->signed_at?->toDateTimeString(),
+            'business_type' => $businessType,
+            'title' => $document->title,
+            'file_url' => Storage::url($document->file_path),
+        ];
     }
 }

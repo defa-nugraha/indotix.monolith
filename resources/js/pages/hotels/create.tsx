@@ -61,6 +61,9 @@ export default function CreateHotel({
         { title: 'Tambah', href: `${basePath}/create` },
     ];
     const [isMapOpen, setIsMapOpen] = useState(false);
+    const safeStatusOptions = isMitra
+        ? statusOptions.filter((status) => status !== 'suspended')
+        : statusOptions;
     const { data, setData, post, processing, errors, transform } = useForm<FormData>({
         vendor_id: mitraId ? String(mitraId) : '',
         name: '',
@@ -72,7 +75,7 @@ export default function CreateHotel({
         star_rating: '',
         check_in_time: '',
         check_out_time: '',
-        status: statusOptions[0] ?? 'draft',
+        status: safeStatusOptions[0] ?? 'draft',
         facility_codes: [],
         images: [],
         taxes: [],
@@ -319,7 +322,7 @@ export default function CreateHotel({
                                 }
                                 className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
                             >
-                                {statusOptions.map((status) => (
+                                {safeStatusOptions.map((status) => (
                                     <option key={status} value={status}>
                                         {status}
                                     </option>
