@@ -39,8 +39,8 @@ return [
         'hotel_bookings' => [
             'label' => 'Hotel - Booking',
             'parent' => 'Hotel',
-            'patterns' => ['admin.bookings.*'],
-            'paths' => ['admin/bookings*'],
+            'patterns' => ['admin.bookings.*', 'admin.hotel.exceptions.*'],
+            'paths' => ['admin/bookings*', 'admin/hotel/exceptions*'],
         ],
         'hotel_finance' => [
             'label' => 'Hotel - Keuangan & Payout',
@@ -72,11 +72,17 @@ return [
             'patterns' => ['admin.events.organizers.*'],
             'paths' => ['admin/events/organizers*'],
         ],
+        'mitra_documents' => [
+            'label' => 'Kelola Mitra - Dokumen S&K',
+            'parent' => 'Kelola Mitra',
+            'patterns' => ['admin.mitra-documents.*'],
+            'paths' => ['admin/mitra-documents*'],
+        ],
         'mitra_all' => [
             'label' => 'Kelola Mitra - Semua Mitra',
             'parent' => 'Kelola Mitra',
-            'patterns' => ['admin.mitra.*', 'admin.mitra-wisata.*', 'admin.events.organizers.*'],
-            'paths' => ['admin/mitra*', 'admin/mitra-wisata*', 'admin/events/organizers*'],
+            'patterns' => ['admin.mitra.*', 'admin.mitra-wisata.*', 'admin.events.organizers.*', 'admin.mitra-documents.*'],
+            'paths' => ['admin/mitra*', 'admin/mitra-wisata*', 'admin/events/organizers*', 'admin/mitra-documents*'],
         ],
         'wisata_destinations' => [
             'label' => 'Wisata - Destinasi',
@@ -287,20 +293,20 @@ return [
             'patterns' => ['admin.blog.tags.*'],
             'paths' => ['admin/blog/tags*'],
         ],
+        'public_home' => [
+            'label' => 'Konten Publik - Halaman Home',
+            'parent' => 'Konten Publik',
+            'patterns' => ['admin.public.home.*'],
+            'paths' => ['admin/public/home*'],
+        ],
         'public_banners' => [
             'label' => 'Konten Publik - Banner',
             'parent' => 'Konten Publik',
             'patterns' => ['admin.public.banners.*'],
             'paths' => ['admin/public/banners*'],
         ],
-        'public_promo_videos' => [
-            'label' => 'Konten Publik - Promo Video',
-            'parent' => 'Konten Publik',
-            'patterns' => ['admin.public.promo-videos.*'],
-            'paths' => ['admin/public/promo-videos*'],
-        ],
         'public_promo_items' => [
-            'label' => 'Konten Publik - Promo Terkini',
+            'label' => 'Konten Publik - Promo Terbaik',
             'parent' => 'Konten Publik',
             'patterns' => ['admin.public.promo-items.*'],
             'paths' => ['admin/public/promo-items*'],
@@ -314,8 +320,8 @@ return [
         'public_pages' => [
             'label' => 'Konten Publik - Halaman Statis',
             'parent' => 'Konten Publik',
-            'patterns' => ['admin.public.about.*', 'admin.public.partners.*', 'admin.public.faqs.*', 'admin.public.privacy-policy.*'],
-            'paths' => ['admin/public/about*', 'admin/public/partners*', 'admin/public/faqs*', 'admin/public/privacy-policy*'],
+            'patterns' => ['admin.public.about.*', 'admin.public.faqs.*', 'admin.public.privacy-policy.*'],
+            'paths' => ['admin/public/about*', 'admin/public/faqs*', 'admin/public/privacy-policy*'],
         ],
         'system_audit' => [
             'label' => 'Sistem - Audit Log',

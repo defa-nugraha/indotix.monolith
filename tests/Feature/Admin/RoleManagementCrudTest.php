@@ -184,8 +184,7 @@ test('custom role exposes hotel wisata and event sub feature permissions for adm
         ->get('/dashboard')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('auth.user.admin_permissions', fn ($permissions) =>
-                collect($permissions)->contains('hotel_properties.view')
+            ->where('auth.user.admin_permissions', fn ($permissions) => collect($permissions)->contains('hotel_properties.view')
                 && collect($permissions)->contains('wisata_destinations.view')
                 && collect($permissions)->contains('events_items.view')
             ));
@@ -229,9 +228,9 @@ test('role management expands legacy permissions before editing role', function 
         ->get('/admin/system/roles')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('roles.0.permissions', fn ($permissions) => collect($permissions)
-                ->contains('public_banners.view')
-                && collect($permissions)->contains('public_promo_videos.view')
+            ->where('roles.0.permissions', fn ($permissions) => collect($permissions)->contains('public_home.view')
+                && collect($permissions)->contains('public_banners.view')
+                && collect($permissions)->contains('public_promo_items.view')
                 && ! collect($permissions)->contains('public_content.view')));
 
     $this->actingAs($admin)
@@ -248,8 +247,9 @@ test('role management expands legacy permissions before editing role', function 
         ->assertSessionHasNoErrors();
 
     $role->refresh();
-    expect($role->permissions()->where('feature', 'public_banners')->where('action', 'view')->exists())->toBeTrue()
-        ->and($role->permissions()->where('feature', 'public_promo_videos')->where('action', 'view')->exists())->toBeTrue()
+    expect($role->permissions()->where('feature', 'public_home')->where('action', 'view')->exists())->toBeTrue()
+        ->and($role->permissions()->where('feature', 'public_banners')->where('action', 'view')->exists())->toBeTrue()
+        ->and($role->permissions()->where('feature', 'public_promo_items')->where('action', 'view')->exists())->toBeTrue()
         ->and($role->permissions()->where('feature', 'system_audit')->where('action', 'view')->exists())->toBeTrue()
         ->and($role->permissions()->where('feature', 'public_content')->exists())->toBeFalse();
 });

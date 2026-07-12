@@ -66,9 +66,12 @@ export function AppSidebarAdmin() {
     const hasAnyPermission = (features: string[]) =>
         isFullAdmin ||
         features.some((feature) =>
-            permissions.some((permission) => permission.startsWith(`${feature}.`)),
+            permissions.some((permission) =>
+                permission.startsWith(`${feature}.`),
+            ),
         );
-    const hasFeaturePermission = (feature: string) => hasAnyPermission([feature]);
+    const hasFeaturePermission = (feature: string) =>
+        hasAnyPermission([feature]);
     const hasHotelPermission = () =>
         hasAnyPermission([
             'hotel_properties',
@@ -94,14 +97,21 @@ export function AppSidebarAdmin() {
             'events_content',
             'events_system',
         ]);
+    const hasEventItemsPermission = () => hasAnyPermission(['events_items']);
     const hasMitraPermission = () =>
-        hasAnyPermission(['mitra', 'mitra_wisata', 'mitra_events', 'mitra_all']);
+        hasAnyPermission([
+            'mitra',
+            'mitra_wisata',
+            'mitra_events',
+            'mitra_documents',
+            'mitra_all',
+        ]);
     const hasBlogPermission = () =>
         hasAnyPermission(['blog_posts', 'blog_categories', 'blog_tags']);
     const hasPublicPermission = () =>
         hasAnyPermission([
+            'public_home',
             'public_banners',
-            'public_promo_videos',
             'public_promo_items',
             'public_contacts',
             'public_pages',
@@ -120,7 +130,6 @@ export function AppSidebarAdmin() {
             'special_program_tickets',
             'special_program_bookings',
             'special_program_scans',
-            'special_program_reviews',
         ]);
     const hasRetailPermission = () =>
         hasAnyPermission([
@@ -184,14 +193,14 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/finance/payouts') ||
         isCurrentUrl('/admin/finance/payouts/create') ||
         isCurrentUrl('/admin/finance/reports') ||
-        isCurrentUrl('/admin/marketing/vouchers');
+        isCurrentUrl('/admin/marketing/vouchers') ||
+        isCurrentUrl('/admin/hotel/exceptions');
     const isPublicSectionActive =
+        isCurrentUrl('/admin/public/home') ||
         isCurrentUrl('/admin/public/banners') ||
-        isCurrentUrl('/admin/public/promo-videos') ||
         isCurrentUrl('/admin/public/promo-items') ||
         isCurrentUrl('/admin/public/contacts') ||
         isCurrentUrl('/admin/public/about') ||
-        isCurrentUrl('/admin/public/partners') ||
         isCurrentUrl('/admin/public/faqs') ||
         isCurrentUrl('/admin/public/privacy-policy');
     const isWisataSectionActive =
@@ -224,7 +233,8 @@ export function AppSidebarAdmin() {
     const isMitraSectionActive =
         isCurrentUrl('/admin/mitra') ||
         isCurrentUrl('/admin/mitra-wisata') ||
-        isCurrentUrl('/admin/events/organizers');
+        isCurrentUrl('/admin/events/organizers') ||
+        isCurrentUrl('/admin/mitra-documents');
     const isBlogSectionActive =
         isCurrentUrl('/admin/blog/posts') ||
         isCurrentUrl('/admin/blog/posts/create') ||
@@ -236,8 +246,7 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/special-programs/tickets') ||
         isCurrentUrl('/admin/special-programs/bookings') ||
         isCurrentUrl('/admin/special-programs/attendees') ||
-        isCurrentUrl('/admin/special-programs/scans') ||
-        isCurrentUrl('/admin/special-programs/reviews');
+        isCurrentUrl('/admin/special-programs/scans');
     const isSouvenirSectionActive =
         isCurrentUrl('/admin/retail-shop/products') ||
         isCurrentUrl('/admin/retail-shop/categories') ||
@@ -258,7 +267,6 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/events/attendees') ||
         isCurrentUrl('/admin/events/scans') ||
         isCurrentUrl('/admin/events/content') ||
-        isCurrentUrl('/admin/events/reviews') ||
         isCurrentUrl('/admin/events/exceptions') ||
         isCurrentUrl('/admin/events/finance/commissions') ||
         isCurrentUrl('/admin/events/finance/settlements') ||
@@ -276,19 +284,19 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/academy/system/audit') ||
         isCurrentUrl('/admin/academy/system/settings');
     const showMitraSection = hasMitraPermission();
-    const showHotelSection = hasHotelPermission();
+    const showHotelSection = false;
     const showBlogSection = hasBlogPermission();
     const showWisataSection = hasWisataPermission();
     const showAffiliateSection = hasFeaturePermission('wisata_affiliates');
-    const showEventSection = hasEventPermission();
+    const showEventSection = false;
     const showPublicSection = hasPublicPermission();
     const showSystemSection = hasSystemPermission();
-    const showSpecialProgramSection = hasSpecialProgramPermission();
-    const showSouvenirSection = hasRetailPermission();
-    const showAcademySection = hasAcademyPermission();
-    const showAcademyFlatMenu = isAcademyAdmin && !isFullAdmin;
-    const showRetailFlatMenu = isRetailAdmin && !isFullAdmin;
-    const showSpecialFlatMenu = isSpecialAdmin && !isFullAdmin;
+    const showSpecialProgramSection = false;
+    const showSouvenirSection = false;
+    const showAcademySection = false;
+    const showAcademyFlatMenu = false;
+    const showRetailFlatMenu = false;
+    const showSpecialFlatMenu = false;
     const academyFlatItems = [
         {
             title: 'Master Kelas',
@@ -419,11 +427,6 @@ export function AppSidebarAdmin() {
             href: '/admin/special-programs/scans',
             icon: QrCode,
         },
-        {
-            title: 'Review & Rating',
-            href: '/admin/special-programs/reviews',
-            icon: Star,
-        },
     ];
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -500,18 +503,6 @@ export function AppSidebarAdmin() {
                                             <SidebarMenuSubButton
                                                 asChild
                                                 isActive={isCurrentUrl(
-                                                    '/admin/mitra',
-                                                )}
-                                            >
-                                                <Link href="/admin/mitra">
-                                                    Mitra Hotel
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
                                                     '/admin/mitra-wisata',
                                                 )}
                                             >
@@ -524,11 +515,11 @@ export function AppSidebarAdmin() {
                                             <SidebarMenuSubButton
                                                 asChild
                                                 isActive={isCurrentUrl(
-                                                    '/admin/events/organizers',
+                                                    '/admin/mitra-documents',
                                                 )}
                                             >
-                                                <Link href="/admin/events/organizers">
-                                                    Mitra Event (EO)
+                                                <Link href="/admin/mitra-documents">
+                                                    Dokumen S&K Mitra
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -642,6 +633,18 @@ export function AppSidebarAdmin() {
                                             >
                                                 <Link href="/admin/marketing/vouchers">
                                                     Promo & Voucher
+                                                </Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl(
+                                                    '/admin/hotel/exceptions',
+                                                )}
+                                            >
+                                                <Link href="/admin/hotel/exceptions">
+                                                    Refund & Exception
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -827,18 +830,6 @@ export function AppSidebarAdmin() {
                                             <SidebarMenuSubButton
                                                 asChild
                                                 isActive={isCurrentUrl(
-                                                    '/admin/system/audit-logs',
-                                                )}
-                                            >
-                                                <Link href="/admin/system/audit-logs">
-                                                    Audit Log
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
                                                     '/admin/system/settings',
                                                 )}
                                             >
@@ -1013,6 +1004,20 @@ export function AppSidebarAdmin() {
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
+                                        {hasEventItemsPermission() && (
+                                            <SidebarMenuSubItem>
+                                                <SidebarMenuSubButton
+                                                    asChild
+                                                    isActive={isCurrentUrl(
+                                                        '/admin/events/organizers',
+                                                    )}
+                                                >
+                                                    <Link href="/admin/events/organizers">
+                                                        Organizer Event
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                        )}
                                         <SidebarMenuSubItem>
                                             <SidebarMenuSubButton
                                                 asChild
@@ -1070,18 +1075,6 @@ export function AppSidebarAdmin() {
                                             >
                                                 <Link href="/admin/events/content">
                                                     Moderasi Konten
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/events/reviews',
-                                                )}
-                                            >
-                                                <Link href="/admin/events/reviews">
-                                                    Review & Rating
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -1361,18 +1354,6 @@ export function AppSidebarAdmin() {
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/special-programs/reviews',
-                                                )}
-                                            >
-                                                <Link href="/admin/special-programs/reviews">
-                                                    Review & Rating
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
                                     </SidebarMenuSub>
                                 </CollapsibleContent>
                             </Collapsible>
@@ -1543,6 +1524,18 @@ export function AppSidebarAdmin() {
                                             <SidebarMenuSubButton
                                                 asChild
                                                 isActive={isCurrentUrl(
+                                                    '/admin/public/home',
+                                                )}
+                                            >
+                                                <Link href="/admin/public/home">
+                                                    Halaman Home
+                                                </Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl(
                                                     '/admin/public/banners',
                                                 )}
                                             >
@@ -1555,23 +1548,11 @@ export function AppSidebarAdmin() {
                                             <SidebarMenuSubButton
                                                 asChild
                                                 isActive={isCurrentUrl(
-                                                    '/admin/public/promo-videos',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/promo-videos">
-                                                    Promo Video
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
                                                     '/admin/public/promo-items',
                                                 )}
                                             >
                                                 <Link href="/admin/public/promo-items">
-                                                    Promo Terkini
+                                                    Promo Terbaik
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
@@ -1596,18 +1577,6 @@ export function AppSidebarAdmin() {
                                             >
                                                 <Link href="/admin/public/about">
                                                     Tentang Kami
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/public/partners',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/partners">
-                                                    Partner Kami
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>

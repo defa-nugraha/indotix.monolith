@@ -2,7 +2,10 @@
 
 use App\Models\AdminPermission;
 use App\Models\AdminRole;
+use App\Models\Event;
+use App\Models\EventOrganizer;
 use App\Models\Hotel;
+use App\Models\MitraEventOnboarding;
 use App\Models\MitraWisataOnboarding;
 use App\Models\RoomInventory;
 use App\Models\RoomType;
@@ -307,6 +310,113 @@ test('custom admin retail product data is scoped to records created by that admi
             'price' => 12000,
             'status' => 'active',
         ])
+        ->assertNotFound();
+});
+
+test('custom admin can create event with an automatically owned organizer', function () {
+    $role = AdminRole::query()->create([
+        'name' => 'Operator Event',
+        'slug' => 'operator-event',
+        'is_active' => true,
+    ]);
+
+    $permissions = collect(['view', 'create'])
+        ->map(fn (string $action) => AdminPermission::query()->firstOrCreate(
+            ['feature' => 'events_items', 'action' => $action],
+            ['label' => "events_items.{$action}"],
+        ));
+    $role->permissions()->sync($permissions->pluck('id')->all());
+
+    $admin = customProductAdmin($role, 'event-rbac@example.test');
+
+    expect(EventOrganizer::query()->where('user_id', $admin->id)->exists())->toBeFalse();
+
+    $this->actingAs($admin)
+        ->get('/admin/events/create')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('organizerOptions', 1)
+            ->where('organizerOptions.0.name', $admin->name));
+
+    $organizer = EventOrganizer::query()->where('user_id', $admin->id)->firstOrFail();
+
+    expect($organizer->status)->toBe('verified');
+
+    $this->actingAs($admin)
+        ->post('/admin/events', [
+            'title' => 'Event RBAC Baru',
+            'description' => 'Event dibuat oleh akun RBAC.',
+            'city_code' => null,
+            'location' => 'Bandung',
+            'address' => 'Jl. Asia Afrika',
+            'start_at' => '2026-07-01 10:00:00',
+            'end_at' => '2026-07-01 12:00:00',
+            'capacity_total' => 100,
+            'status' => 'draft',
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $event = Event::query()->where('title', 'Event RBAC Baru')->firstOrFail();
+
+    expect($event->event_organizer_id)->toBe($organizer->id)
+        ->and($event->organizer?->user_id)->toBe($admin->id);
+});
+
+test('custom admin can create and view only their own event organizer', function () {
+    $role = AdminRole::query()->create([
+        'name' => 'Operator Organizer Event',
+        'slug' => 'operator-organizer-event',
+        'is_active' => true,
+    ]);
+
+    $permissions = collect(['view', 'create'])
+        ->map(fn (string $action) => AdminPermission::query()->firstOrCreate(
+            ['feature' => 'events_items', 'action' => $action],
+            ['label' => "events_items.{$action}"],
+        ));
+    $role->permissions()->sync($permissions->pluck('id')->all());
+
+    $adminA = customProductAdmin($role, 'organizer-a@example.test');
+    $adminB = customProductAdmin($role, 'organizer-b@example.test');
+
+    $organizerB = EventOrganizer::query()->create([
+        'user_id' => $adminB->id,
+        'name' => 'Organizer B',
+        'email' => 'organizer-b@example.test',
+        'status' => 'verified',
+    ]);
+
+    $this->actingAs($adminA)
+        ->post('/admin/events/organizers', [
+            'name' => 'Penanggung Jawab A',
+            'email' => 'eo-a@example.test',
+            'phone' => '081234567890',
+            'eo_name' => 'Organizer A',
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $organizerA = EventOrganizer::query()->where('user_id', $adminA->id)->firstOrFail();
+
+    expect($organizerA->name)->toBe('Organizer A')
+        ->and($organizerA->email)->toBe('eo-a@example.test')
+        ->and($organizerA->status)->toBe('verified')
+        ->and(MitraEventOnboarding::query()
+            ->where('user_id', $adminA->id)
+            ->where('verification_status', 'verified')
+            ->exists())->toBeTrue();
+
+    $this->actingAs($adminA)
+        ->get('/admin/events/organizers')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('canManageMitraEvent', false)
+            ->has('organizers.data', 1)
+            ->where('organizers.data.0.name', 'Organizer A'));
+
+    $this->actingAs($adminA)
+        ->get("/admin/events/organizers/{$organizerB->id}")
         ->assertNotFound();
 });
 

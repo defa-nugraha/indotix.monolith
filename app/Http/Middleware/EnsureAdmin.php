@@ -34,6 +34,10 @@ class EnsureAdmin
                 return $next($request);
             }
 
+            if ($this->canAccessOwnEventOrganizer($request)) {
+                return $next($request);
+            }
+
             abort(403, 'Anda tidak memiliki permission untuk mengakses fitur ini.');
         }
 
@@ -51,5 +55,18 @@ class EnsureAdmin
 
         return redirect()->route('dashboard');
 
+    }
+
+    private function canAccessOwnEventOrganizer(Request $request): bool
+    {
+        if (! $request->is('admin/events/organizers*')) {
+            return false;
+        }
+
+        $action = $request->isMethod('post') && ! $request->is('admin/events/organizers/*/status')
+            ? 'create'
+            : 'view';
+
+        return AdminPermissionRegistry::can($request->user(), 'events_items', $action);
     }
 }

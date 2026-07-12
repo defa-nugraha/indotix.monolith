@@ -30,8 +30,8 @@ class AdminPermissionRegistry
         ],
         'blog' => ['blog_posts', 'blog_categories', 'blog_tags'],
         'public_content' => [
+            'public_home',
             'public_banners',
-            'public_promo_videos',
             'public_promo_items',
             'public_contacts',
             'public_pages',
@@ -44,6 +44,7 @@ class AdminPermissionRegistry
             'system_special_admins',
         ],
     ];
+
     public static function features(): array
     {
         return config('admin_permissions.features', []);
@@ -181,6 +182,10 @@ class AdminPermissionRegistry
         $routeName = (string) optional($request->route())->getName();
         $suffix = Str::afterLast($routeName, '.');
 
+        if (Str::contains($routeName, ['.refunds.', '.capacity'])) {
+            return 'update';
+        }
+
         if (in_array($suffix, ['index', 'show'], true)) {
             return 'view';
         }
@@ -189,7 +194,7 @@ class AdminPermissionRegistry
             return 'create';
         }
 
-        if (in_array($suffix, ['edit', 'update', 'status', 'approve', 'transfer', 'verify', 'suspend', 'reply', 'broadcast', 'refund', 'cancel', 'dispute', 'payout', 'shipping', 'regenerate'], true)) {
+        if (in_array($suffix, ['edit', 'update', 'status', 'approve', 'transfer', 'verify', 'suspend', 'reply', 'broadcast', 'refund', 'cancel', 'dispute', 'payout', 'shipping', 'regenerate', 'capacity'], true)) {
             return 'update';
         }
 

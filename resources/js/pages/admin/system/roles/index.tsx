@@ -635,23 +635,28 @@ export default function RoleManagementIndex({
                                                                                     }
                                                                                     className="px-3 py-3 text-center"
                                                                                 >
-                                                                                    <input
-                                                                                        type="checkbox"
-                                                                                        checked={form.data.permissions.includes(
-                                                                                            permission,
-                                                                                        )}
-                                                                                        onChange={(
-                                                                                            event,
-                                                                                        ) =>
-                                                                                            togglePermission(
+                                                                                    <label className="inline-flex items-center justify-center">
+                                                                                        <span className="sr-only">
+                                                                                            Permission {permission}
+                                                                                        </span>
+                                                                                        <input
+                                                                                            type="checkbox"
+                                                                                            checked={form.data.permissions.includes(
                                                                                                 permission,
-                                                                                                event
-                                                                                                    .target
-                                                                                                    .checked,
-                                                                                            )
-                                                                                        }
-                                                                                        className="h-4 w-4 rounded border-slate-300"
-                                                                                    />
+                                                                                            )}
+                                                                                            onChange={(
+                                                                                                event,
+                                                                                            ) =>
+                                                                                                togglePermission(
+                                                                                                    permission,
+                                                                                                    event
+                                                                                                        .target
+                                                                                                        .checked,
+                                                                                                )
+                                                                                            }
+                                                                                            className="h-4 w-4 rounded border-slate-300"
+                                                                                        />
+                                                                                    </label>
                                                                                 </td>
                                                                             );
                                                                         },
@@ -820,35 +825,38 @@ export default function RoleManagementIndex({
                                                 </Badge>
                                             </td>
                                             <td className="py-4 pr-4">
-                                                <select
-                                                    value={nextAssignment}
-                                                    onChange={(event) =>
-                                                        setAssignments(
-                                                            (prev) => ({
-                                                                ...prev,
-                                                                [user.id]:
-                                                                    event.target
-                                                                        .value,
-                                                            }),
-                                                        )
-                                                    }
-                                                    className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
-                                                >
-                                                    {assignmentOptions.map(
-                                                        (option) => (
-                                                            <option
-                                                                key={
-                                                                    option.value
-                                                                }
-                                                                value={
-                                                                    option.value
-                                                                }
-                                                            >
-                                                                {option.label}
-                                                            </option>
-                                                        ),
-                                                    )}
-                                                </select>
+                                                <label className="grid gap-1 text-xs font-medium text-slate-600">
+                                                    <span>Role</span>
+                                                    <select
+                                                        value={nextAssignment}
+                                                        onChange={(event) =>
+                                                            setAssignments(
+                                                                (prev) => ({
+                                                                    ...prev,
+                                                                    [user.id]:
+                                                                        event.target
+                                                                            .value,
+                                                                }),
+                                                            )
+                                                        }
+                                                        className="h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs"
+                                                    >
+                                                        {assignmentOptions.map(
+                                                            (option) => (
+                                                                <option
+                                                                    key={
+                                                                        option.value
+                                                                    }
+                                                                    value={
+                                                                        option.value
+                                                                    }
+                                                                >
+                                                                    {option.label}
+                                                                </option>
+                                                            ),
+                                                        )}
+                                                    </select>
+                                                </label>
                                             </td>
                                             <td className="py-4 text-right">
                                                 <Button
