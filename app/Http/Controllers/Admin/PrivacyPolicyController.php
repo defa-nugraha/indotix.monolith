@@ -41,10 +41,13 @@ class PrivacyPolicyController extends Controller
         $data = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'content' => ['required', 'string'],
-            'terms_content' => ['nullable', 'string'],
+            'terms_content' => ['required', 'string'],
             'version' => ['nullable', 'string', 'max:50'],
             'effective_at' => ['nullable', 'date'],
             'is_active' => ['nullable', 'boolean'],
+        ], [
+            'content.required' => 'Konten Kebijakan Privasi wajib diisi.',
+            'terms_content.required' => 'Konten Syarat dan Ketentuan wajib diisi.',
         ]);
 
         $policy->update([

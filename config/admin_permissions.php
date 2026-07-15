@@ -318,7 +318,7 @@ return [
             'paths' => ['admin/public/contacts*'],
         ],
         'public_pages' => [
-            'label' => 'Konten Publik - Halaman Statis',
+            'label' => 'Konten Publik - Halaman & Dokumen Legal',
             'parent' => 'Konten Publik',
             'patterns' => ['admin.public.about.*', 'admin.public.faqs.*', 'admin.public.privacy-policy.*'],
             'paths' => ['admin/public/about*', 'admin/public/faqs*', 'admin/public/privacy-policy*'],

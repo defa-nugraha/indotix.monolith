@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\BlogPost;
+use App\Models\PrivacyPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -25,9 +26,29 @@ test('sitemap contains all public landing pages and published articles', functio
         ->assertSee(url('/about'), false)
         ->assertSee(url('/faq'), false)
         ->assertSee(url('/privacy-policy'), false)
+        ->assertSee(url('/terms-and-conditions'), false)
         ->assertSee(url('/delete-account'), false)
         ->assertSee(url('/jelajah/panduan-wisata-keluarga'), false)
         ->assertDontSee(url('/jelajah-indotix'), false);
+});
+
+test('terms and conditions page uses active legal document content', function () {
+    PrivacyPolicy::query()->create([
+        'title' => 'Kebijakan Privasi Indotix',
+        'content' => '<p>Konten privasi pengguna.</p>',
+        'terms_content' => '<p>Konten syarat dan ketentuan pengguna.</p>',
+        'version' => '2.0',
+        'effective_at' => now()->toDateString(),
+        'is_active' => true,
+    ]);
+
+    $this->get('/terms-and-conditions')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/privacy-policy')
+            ->where('initialSection', 'terms')
+            ->where('canonicalPath', '/terms-and-conditions')
+            ->where('policy.terms_content', '<p>Konten syarat dan ketentuan pengguna.</p>'));
 });
 
 test('published article exposes its custom seo fields to the public page', function () {

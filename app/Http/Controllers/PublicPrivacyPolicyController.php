@@ -10,14 +10,30 @@ class PublicPrivacyPolicyController extends Controller
 {
     public function show(): Response
     {
-        $policy = PrivacyPolicy::query()
+        return Inertia::render('public/privacy-policy', [
+            'policy' => $this->activePolicy(),
+            'initialSection' => 'privacy',
+            'pageTitle' => 'Kebijakan Privasi Indotix',
+            'canonicalPath' => '/privacy-policy',
+        ]);
+    }
+
+    public function terms(): Response
+    {
+        return Inertia::render('public/privacy-policy', [
+            'policy' => $this->activePolicy(),
+            'initialSection' => 'terms',
+            'pageTitle' => 'Syarat dan Ketentuan Indotix',
+            'canonicalPath' => '/terms-and-conditions',
+        ]);
+    }
+
+    private function activePolicy(): ?PrivacyPolicy
+    {
+        return PrivacyPolicy::query()
             ->where('is_active', true)
             ->orderByDesc('effective_at')
             ->orderByDesc('id')
             ->first();
-
-        return Inertia::render('public/privacy-policy', [
-            'policy' => $policy,
-        ]);
     }
 }

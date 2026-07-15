@@ -11,7 +11,7 @@ class SitemapController extends Controller
 {
     public function __invoke(): Response
     {
-        $xml = Cache::remember('public:sitemap:v3', now()->addHour(), function (): string {
+        $xml = Cache::remember('public:sitemap:v4', now()->addHour(), function (): string {
             $urls = collect([
                 ['loc' => url('/'), 'lastmod' => null],
                 ['loc' => url('/wisata'), 'lastmod' => null],
@@ -19,6 +19,7 @@ class SitemapController extends Controller
                 ['loc' => url('/about'), 'lastmod' => null],
                 ['loc' => url('/faq'), 'lastmod' => null],
                 ['loc' => url('/privacy-policy'), 'lastmod' => null],
+                ['loc' => url('/terms-and-conditions'), 'lastmod' => null],
                 ['loc' => url('/delete-account'), 'lastmod' => null],
             ]);
 

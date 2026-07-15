@@ -26,6 +26,10 @@ class SocialAuthController extends Controller
             $request->session()->put('url.intended', $request->query('redirect'));
         }
 
+        if ($request->boolean('legal_accepted')) {
+            $request->session()->put('social_legal_accepted', true);
+        }
+
         return Socialite::driver('google')->redirect();
     }
 
@@ -52,6 +56,12 @@ class SocialAuthController extends Controller
         $role = $request->session()->pull('social_role', 'user');
 
         if (! $user) {
+            if (! $request->session()->pull('social_legal_accepted', false)) {
+                return redirect()->route('register')->withErrors([
+                    'terms_accepted' => 'Anda perlu membaca dan menyetujui Syarat dan Ketentuan serta Kebijakan Privasi Indotix sebelum membuat akun.',
+                ]);
+            }
+
             $user = User::create([
                 'name' => $providerUser->getName() ?: 'Indotix User',
                 'email' => $email,

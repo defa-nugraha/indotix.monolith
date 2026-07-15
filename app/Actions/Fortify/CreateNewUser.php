@@ -21,6 +21,12 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        Validator::make($input, [
+            'terms_accepted' => ['accepted'],
+        ], [
+            'terms_accepted.accepted' => 'Anda perlu membaca dan menyetujui Syarat dan Ketentuan serta Kebijakan Privasi Indotix sebelum membuat akun.',
+        ])->validate();
+
         $existingUser = User::query()
             ->where('email', $input['email'] ?? null)
             ->first();

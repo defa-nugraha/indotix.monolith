@@ -1600,7 +1600,7 @@ export function AppSidebarAdmin() {
                                                 )}
                                             >
                                                 <Link href="/admin/public/privacy-policy">
-                                                    Privacy Policy
+                                                    Dokumen Legal
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>

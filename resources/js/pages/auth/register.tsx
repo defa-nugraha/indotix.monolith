@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
@@ -12,6 +12,8 @@ import { store } from '@/routes/register';
 
 export default function Register() {
     const [mode, setMode] = useState<'user' | 'mitra'>('user');
+    const [legalAccepted, setLegalAccepted] = useState(false);
+    const [legalError, setLegalError] = useState<string | null>(null);
     const isMitra = mode === 'mitra';
 
     return (
@@ -97,8 +99,21 @@ export default function Register() {
                             {({ processing, errors }) => (
                                 <>
                                     <a
-                                        href={`/auth/google/redirect?role=${mode}`}
-                                        className="flex h-11 items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm hover:border-sky-200"
+                                        href={`/auth/google/redirect?role=${mode}&legal_accepted=1`}
+                                        onClick={(event) => {
+                                            if (!legalAccepted) {
+                                                event.preventDefault();
+                                                setLegalError(
+                                                    'Silakan setujui Syarat dan Ketentuan serta Kebijakan Privasi terlebih dahulu.',
+                                                );
+                                            }
+                                        }}
+                                        aria-disabled={!legalAccepted}
+                                        className={`flex h-11 items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm transition hover:border-sky-200 ${
+                                            legalAccepted
+                                                ? ''
+                                                : 'cursor-not-allowed opacity-70'
+                                        }`}
                                     >
                                         <img
                                             src="/images/google.svg"
@@ -107,6 +122,11 @@ export default function Register() {
                                         />
                                         Daftar dengan Google
                                     </a>
+                                    {legalError && (
+                                        <p className="-mt-1 text-xs font-medium text-red-600">
+                                            {legalError}
+                                        </p>
+                                    )}
                                     <div className="flex items-center gap-3 text-xs text-slate-400">
                                         <span className="h-px flex-1 bg-slate-200" />
                                         atau daftar dengan email
@@ -226,6 +246,57 @@ export default function Register() {
                                             message={
                                                 errors.password_confirmation
                                             }
+                                        />
+                                    </div>
+
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                                        <div className="flex items-start gap-3">
+                                            <input
+                                                id="terms_accepted"
+                                                name="terms_accepted"
+                                                type="checkbox"
+                                                value="1"
+                                                required
+                                                checked={legalAccepted}
+                                                onChange={(event) => {
+                                                    setLegalAccepted(
+                                                        event.target.checked,
+                                                    );
+                                                    if (event.target.checked) {
+                                                        setLegalError(null);
+                                                    }
+                                                }}
+                                                className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                            />
+                                            <Label
+                                                htmlFor="terms_accepted"
+                                                className="text-sm leading-6 text-slate-600"
+                                            >
+                                                Saya telah membaca, memahami,
+                                                dan menyetujui{' '}
+                                                <Link
+                                                    href="/terms-and-conditions"
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="font-semibold text-sky-700 underline-offset-4 hover:underline"
+                                                >
+                                                    Syarat dan Ketentuan
+                                                </Link>{' '}
+                                                serta{' '}
+                                                <Link
+                                                    href="/privacy-policy"
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="font-semibold text-sky-700 underline-offset-4 hover:underline"
+                                                >
+                                                    Kebijakan Privasi
+                                                </Link>{' '}
+                                                Indotix.
+                                            </Label>
+                                        </div>
+                                        <InputError
+                                            message={errors.terms_accepted}
+                                            className="mt-2"
                                         />
                                     </div>
 

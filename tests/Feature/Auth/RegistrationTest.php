@@ -14,8 +14,20 @@ test('new users can register', function () {
         'email' => 'test@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
+        'terms_accepted' => '1',
     ]);
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('verification.notice', absolute: false));
+});
+
+test('new users must accept legal documents before registering', function () {
+    $this->post(route('register.store'), [
+        'name' => 'Test User',
+        'email' => 'test@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+    ])->assertSessionHasErrors('terms_accepted');
+
+    $this->assertGuest();
 });

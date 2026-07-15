@@ -22,6 +22,7 @@ test('web registration sends verification link and does not create email otp', f
         'password' => 'password123',
         'password_confirmation' => 'password123',
         'role' => 'user',
+        'terms_accepted' => '1',
     ])->assertRedirect(route('verification.notice'));
 
     $user = User::query()->where('email', $email)->firstOrFail();

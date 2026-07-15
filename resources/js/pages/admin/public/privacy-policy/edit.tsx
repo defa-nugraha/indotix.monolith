@@ -11,7 +11,7 @@ import CkeditorField from '@/components/ckeditor-field';
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Konten Publik', href: '/admin/public/privacy-policy' },
-    { title: 'Privacy Policy', href: '/admin/public/privacy-policy' },
+    { title: 'Dokumen Legal', href: '/admin/public/privacy-policy' },
 ];
 
 type Policy = {
@@ -36,7 +36,7 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Privacy Policy">
+            <Head title="Dokumen Legal">
                 <link
                     href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
                     rel="stylesheet"
@@ -45,8 +45,10 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
 
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h1 className="text-2xl font-semibold text-slate-900">Privacy Policy</h1>
-                    <p className="mt-2 text-sm text-slate-600">Kelola kebijakan privasi yang ditampilkan kepada pengguna.</p>
+                    <h1 className="text-2xl font-semibold text-slate-900">Dokumen Legal Pengguna</h1>
+                    <p className="mt-2 text-sm text-slate-600">
+                        Kelola Syarat dan Ketentuan serta Kebijakan Privasi yang ditampilkan kepada pengguna Indotix.
+                    </p>
                     <form
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
@@ -55,30 +57,30 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
                                 onSuccess: () =>
                                     Swal.fire({
                                         title: 'Berhasil',
-                                        text: 'Privacy policy diperbarui.',
+                                        text: 'Dokumen legal pengguna berhasil diperbarui.',
                                         icon: 'success',
                                     }),
                                 onError: () =>
                                     Swal.fire({
                                         title: 'Gagal',
-                                        text: 'Privacy policy gagal diperbarui.',
+                                        text: 'Dokumen legal pengguna gagal diperbarui. Periksa kembali isian yang wajib diisi.',
                                         icon: 'error',
                                     }),
                             });
                         }}
                     >
                         <div className="grid gap-2">
-                            <Label>Judul</Label>
+                            <Label>Judul dokumen</Label>
                             <Input value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
                             <InputError message={form.errors.title} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Versi</Label>
+                            <Label>Versi dokumen</Label>
                             <Input value={form.data.version} onChange={(event) => form.setData('version', event.target.value)} />
                             <InputError message={form.errors.version} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Tanggal Berlaku</Label>
+                            <Label>Tanggal mulai berlaku</Label>
                             <Input
                                 type="date"
                                 value={form.data.effective_at}
@@ -87,7 +89,7 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
                             <InputError message={form.errors.effective_at} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Konten</Label>
+                            <Label>Kebijakan Privasi</Label>
                             <CkeditorField
                                 value={form.data.content}
                                 onChange={(value) => form.setData('content', value)}
@@ -96,7 +98,7 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
                             <InputError message={form.errors.content} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Syarat & Ketentuan</Label>
+                            <Label>Syarat dan Ketentuan</Label>
                             <CkeditorField
                                 value={form.data.terms_content}
                                 onChange={(value) => form.setData('terms_content', value)}
@@ -111,10 +113,10 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
                                     checked={form.data.is_active}
                                     onChange={(event) => form.setData('is_active', event.target.checked)}
                                 />
-                                Aktif
+                                Publikasikan dokumen legal ini
                             </label>
                         </div>
-                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">Simpan</Button>
+                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">Simpan dokumen legal</Button>
                     </form>
                 </section>
             </div>

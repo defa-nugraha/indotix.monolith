@@ -22,9 +22,26 @@ type Policy = {
 
 export default function PrivacyPolicyPage({
     policy,
+    initialSection = 'privacy',
+    pageTitle,
+    canonicalPath = '/privacy-policy',
 }: {
     policy: Policy | null;
+    initialSection?: 'privacy' | 'terms';
+    pageTitle?: string;
+    canonicalPath?: string;
 }) {
+    const isTermsPage = initialSection === 'terms';
+    const resolvedTitle =
+        pageTitle ??
+        (isTermsPage ? 'Syarat dan Ketentuan Indotix' : 'Kebijakan Privasi Indotix');
+    const description = isTermsPage
+        ? 'Syarat dan ketentuan penggunaan layanan Indotix untuk pemesanan tiket wisata dan layanan digital terkait.'
+        : 'Kebijakan privasi Indotix mengenai pengumpulan, penggunaan, penyimpanan, dan perlindungan data pribadi pengguna.';
+    const sectionOrder = isTermsPage
+        ? ['terms', 'privacy-policy']
+        : ['privacy-policy', 'terms'];
+
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
         { label: 'Event', icon: CalendarCheck, href: '/events' },
@@ -51,18 +68,22 @@ export default function PrivacyPolicyPage({
     return (
         <PublicLayout categories={categories} chips={chips}>
             <PublicSeo
-                title={`${policy?.title ?? 'Kebijakan Privasi'} - Indotix`}
-                description="Kebijakan privasi Indotix mengenai pengumpulan, penggunaan, penyimpanan, dan perlindungan data pribadi pengguna."
-                canonicalPath="/privacy-policy"
+                title={`${resolvedTitle} - Indotix`}
+                description={description}
+                canonicalPath={canonicalPath}
                 keywords={[
-                    'kebijakan privasi Indotix',
-                    'perlindungan data pengguna',
+                    isTermsPage
+                        ? 'syarat dan ketentuan Indotix'
+                        : 'kebijakan privasi Indotix',
+                    isTermsPage
+                        ? 'ketentuan penggunaan layanan Indotix'
+                        : 'perlindungan data pengguna',
                 ]}
                 structuredData={{
                     '@context': 'https://schema.org',
                     '@type': 'WebPage',
-                    name: policy?.title ?? 'Kebijakan Privasi Indotix',
-                    url: '/privacy-policy',
+                    name: resolvedTitle,
+                    url: canonicalPath,
                     dateModified: policy?.effective_at ?? undefined,
                 }}
             />
@@ -77,11 +98,13 @@ export default function PrivacyPolicyPage({
                         </Link>
                         <span className="mx-2">/</span>
                         <span className="text-slate-700">
-                            Kebijakan Privasi
+                            {isTermsPage
+                                ? 'Syarat dan Ketentuan'
+                                : 'Kebijakan Privasi'}
                         </span>
                     </nav>
                     <h1 className="text-3xl font-semibold text-slate-900">
-                        {policy?.title ?? 'Kebijakan Privasi'}
+                        {resolvedTitle}
                     </h1>
                     <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
                         {policy?.version && (
@@ -97,56 +120,71 @@ export default function PrivacyPolicyPage({
                     </div>
 
                     <div className="mt-6 flex flex-wrap gap-2 text-xs">
-                        <a
-                            href="#privacy-policy"
-                            className="rounded-full border border-slate-200 px-3 py-1 text-slate-600 transition hover:border-sky-200 hover:text-sky-600"
+                        <Link
+                            href="/privacy-policy"
+                            className={`rounded-full border px-3 py-1 transition ${
+                                !isTermsPage
+                                    ? 'border-sky-200 bg-sky-50 text-sky-700'
+                                    : 'border-slate-200 text-slate-600 hover:border-sky-200 hover:text-sky-600'
+                            }`}
                         >
                             Kebijakan Privasi
-                        </a>
-                        <a
-                            href="#terms"
-                            className="rounded-full border border-slate-200 px-3 py-1 text-slate-600 transition hover:border-sky-200 hover:text-sky-600"
+                        </Link>
+                        <Link
+                            href="/terms-and-conditions"
+                            className={`rounded-full border px-3 py-1 transition ${
+                                isTermsPage
+                                    ? 'border-sky-200 bg-sky-50 text-sky-700'
+                                    : 'border-slate-200 text-slate-600 hover:border-sky-200 hover:text-sky-600'
+                            }`}
                         >
-                            Syarat &amp; Ketentuan
-                        </a>
+                            Syarat dan Ketentuan
+                        </Link>
                     </div>
 
                     {policy ? (
                         <div className="mt-8 space-y-10">
-                            <section
-                                id="privacy-policy"
-                                className="rounded-2xl border border-slate-200 bg-slate-50/60 p-6"
-                            >
-                                <h2 className="text-xl font-semibold text-slate-900">
-                                    Kebijakan Privasi
-                                </h2>
-                                <div
-                                    className="prose prose-slate mt-4 max-w-none"
-                                    dangerouslySetInnerHTML={{
-                                        __html: policy.content,
-                                    }}
-                                />
-                            </section>
-                            <section
-                                id="terms"
-                                className="rounded-2xl border border-slate-200 bg-slate-50/60 p-6"
-                            >
-                                <h2 className="text-xl font-semibold text-slate-900">
-                                    Syarat &amp; Ketentuan
-                                </h2>
-                                {policy.terms_content ? (
-                                    <div
-                                        className="prose prose-slate mt-4 max-w-none"
-                                        dangerouslySetInnerHTML={{
-                                            __html: policy.terms_content,
-                                        }}
-                                    />
+                            {sectionOrder.map((section) =>
+                                section === 'privacy-policy' ? (
+                                    <section
+                                        key={section}
+                                        id="privacy-policy"
+                                        className="rounded-2xl border border-slate-200 bg-slate-50/60 p-6"
+                                    >
+                                        <h2 className="text-xl font-semibold text-slate-900">
+                                            Kebijakan Privasi
+                                        </h2>
+                                        <div
+                                            className="prose prose-slate mt-4 max-w-none"
+                                            dangerouslySetInnerHTML={{
+                                                __html: policy.content,
+                                            }}
+                                        />
+                                    </section>
                                 ) : (
-                                    <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
-                                        Syarat &amp; ketentuan belum tersedia.
-                                    </div>
-                                )}
-                            </section>
+                                    <section
+                                        key={section}
+                                        id="terms"
+                                        className="rounded-2xl border border-slate-200 bg-slate-50/60 p-6"
+                                    >
+                                        <h2 className="text-xl font-semibold text-slate-900">
+                                            Syarat dan Ketentuan
+                                        </h2>
+                                        {policy.terms_content ? (
+                                            <div
+                                                className="prose prose-slate mt-4 max-w-none"
+                                                dangerouslySetInnerHTML={{
+                                                    __html: policy.terms_content,
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                                                Syarat dan ketentuan belum tersedia.
+                                            </div>
+                                        )}
+                                    </section>
+                                ),
+                            )}
                         </div>
                     ) : (
                         <div className="mt-6 rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
@@ -218,6 +256,14 @@ export default function PrivacyPolicyPage({
                                     className="transition hover:text-sky-600"
                                 >
                                     FAQ
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/terms-and-conditions"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Syarat dan Ketentuan
                                 </Link>
                             </li>
                             <li>

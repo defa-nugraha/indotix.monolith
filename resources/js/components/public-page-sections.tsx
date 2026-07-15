@@ -263,6 +263,14 @@ export function PublicFooter({ contact }: { contact?: PublicContact | null }) {
                         </li>
                         <li>
                             <Link
+                                href="/terms-and-conditions"
+                                className="transition hover:text-sky-600"
+                            >
+                                Syarat dan Ketentuan
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
                                 href="/privacy-policy"
                                 className="transition hover:text-sky-600"
                             >
