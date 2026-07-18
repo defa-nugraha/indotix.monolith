@@ -1064,9 +1064,11 @@ export default function Welcome({
                                                         voucher,
                                                     )}
                                                 </p>
-                                                <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
-                                                    <span className="inline-flex max-w-full rounded-full border border-dashed border-sky-200 bg-sky-50 px-3.5 py-1.5 text-xs font-black tracking-wider text-sky-700">
-                                                        {voucher.code}
+                                                <div className="mt-auto flex min-w-0 items-center gap-2 pt-4">
+                                                    <span className="inline-flex min-w-0 flex-1 rounded-full border border-dashed border-sky-200 bg-sky-50 px-3.5 py-1.5 text-xs font-black tracking-wider text-sky-700">
+                                                        <span className="truncate">
+                                                            {voucher.code}
+                                                        </span>
                                                     </span>
                                                     <button
                                                         type="button"
@@ -1075,7 +1077,7 @@ export default function Welcome({
                                                                 voucher.code,
                                                             )
                                                         }
-                                                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-black text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                                                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-black text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
                                                     >
                                                         {copied ? (
                                                             <Check className="h-3.5 w-3.5" />
