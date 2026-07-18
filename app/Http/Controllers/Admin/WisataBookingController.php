@@ -85,7 +85,7 @@ class WisataBookingController extends Controller
 
     public function show(WisataBooking $booking): Response
     {
-        $booking->load(['destination', 'ticket', 'user:id,name,email', 'scans']);
+        $booking->load(['destination', 'ticket', 'items.ticket', 'user:id,name,email', 'scans']);
         if ($booking->destination) {
             AdminDataScope::authorizeCreatedByOrUser($booking->destination, request());
         }

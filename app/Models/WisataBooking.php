@@ -60,6 +60,11 @@ class WisataBooking extends Model
         return $this->belongsTo(WisataTicket::class, 'wisata_ticket_id');
     }
 
+    public function items()
+    {
+        return $this->hasMany(WisataBookingItem::class, 'wisata_booking_id');
+    }
+
     public function scans()
     {
         return $this->hasMany(WisataTicketScan::class);

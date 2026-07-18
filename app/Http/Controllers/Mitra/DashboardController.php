@@ -16,6 +16,7 @@ use App\Models\PartnerTermsDocument;
 use App\Models\PartnerTermsSignature;
 use App\Models\RoomType;
 use App\Models\WisataBooking;
+use App\Models\WisataBookingItem;
 use App\Models\WisataTicket;
 use App\Models\WisataTicketScan;
 use Illuminate\Http\Request;
@@ -181,11 +182,21 @@ class DashboardController extends Controller
 
             $availableQuota = 0;
             foreach ($tickets as $ticket) {
-                $reserved = WisataBooking::query()
+                $itemReserved = WisataBookingItem::query()
+                    ->where('wisata_ticket_id', $ticket->id)
+                    ->whereHas('booking', function ($query) use ($today) {
+                        $query
+                            ->whereDate('visit_date', $today)
+                            ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+                    })
+                    ->sum('quantity');
+                $legacyReserved = WisataBooking::query()
                     ->where('wisata_ticket_id', $ticket->id)
                     ->whereDate('visit_date', $today)
                     ->whereIn('status', ['pending_payment', 'paid', 'completed'])
+                    ->whereDoesntHave('items')
                     ->sum('quantity');
+                $reserved = (int) $itemReserved + (int) $legacyReserved;
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $availableQuota += max(0, $maxQuota - $reserved);
             }

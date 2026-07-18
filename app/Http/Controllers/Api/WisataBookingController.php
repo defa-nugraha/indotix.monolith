@@ -10,6 +10,7 @@ use App\Models\WisataAffiliateCommission;
 use App\Models\WisataAffiliateCommissionItem;
 use App\Models\WisataAffiliateLink;
 use App\Models\WisataBooking;
+use App\Models\WisataBookingItem;
 use App\Models\WisataPayment;
 use App\Models\WisataTicket;
 use App\Services\MidtransService;
@@ -29,7 +30,7 @@ class WisataBookingController extends Controller
     {
         $bookings = WisataBooking::query()
             ->where('user_id', $request->user()->id)
-            ->with(['ticket', 'destination', 'payments'])
+            ->with(['ticket', 'destination', 'items.ticket', 'payments'])
             ->latest()
             ->get()
             ->map(fn (WisataBooking $booking) => $this->bookingPayload($booking));
@@ -173,6 +174,14 @@ class WisataBookingController extends Controller
                     'special_request' => $data['special_request'] ?? null,
                 ]);
 
+                $order->items()->create([
+                    'wisata_ticket_id' => $ticket->id,
+                    'ticket_name' => $ticket->name,
+                    'quantity' => (int) $data['quantity'],
+                    'unit_price' => (int) $ticket->price,
+                    'subtotal' => (int) $ticket->price * (int) $data['quantity'],
+                ]);
+
                 $this->attachAffiliateCommission($order, $link);
 
                 return $order;
@@ -205,7 +214,7 @@ class WisataBookingController extends Controller
             ],
         ]);
 
-        $booking->load(['ticket', 'destination', 'payments']);
+        $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
 
         return response()->json([
             'booking' => $this->bookingPayload($booking),
@@ -220,7 +229,7 @@ class WisataBookingController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
-        $booking->load(['ticket', 'destination', 'payments']);
+        $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
 
         return response()->json([
             'booking' => $this->bookingPayload($booking),
@@ -242,7 +251,7 @@ class WisataBookingController extends Controller
         }
 
         if ($booking->status !== 'pending_payment') {
-            $booking->load(['ticket', 'destination', 'payments']);
+            $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
 
             return response()->json([
                 'booking' => $this->bookingPayload($booking),
@@ -334,7 +343,7 @@ class WisataBookingController extends Controller
             ],
         ]);
 
-        $booking->load(['ticket', 'destination', 'payments']);
+        $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
 
         return response()->json([
             'booking' => $this->bookingPayload($booking),
@@ -349,7 +358,7 @@ class WisataBookingController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
-        $booking->load('ticket', 'destination');
+        $booking->load('ticket', 'destination', 'items.ticket');
 
         $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
         $cacheAllowed = in_array($booking->status, ['paid', 'completed'], true);
@@ -372,6 +381,7 @@ class WisataBookingController extends Controller
 
     private function bookingPayload(WisataBooking $booking): array
     {
+        $items = $this->bookingLineItems($booking);
         $latestPayment = $booking->payments()->latest()->first();
 
         return [
@@ -389,6 +399,7 @@ class WisataBookingController extends Controller
                 'id' => $booking->ticket?->id,
                 'name' => $booking->ticket?->name,
             ],
+            'items' => $items,
             'destination' => [
                 'id' => $booking->destination?->id,
                 'slug' => $booking->destination?->slug,
@@ -412,36 +423,78 @@ class WisataBookingController extends Controller
 
     private function availableTickets(WisataTicket $ticket, string $date, bool $lock = false): int
     {
-        $query = WisataBooking::query()
+        $itemQuery = WisataBookingItem::query()
             ->where('wisata_ticket_id', $ticket->id)
-            ->whereDate('visit_date', $date)
-            ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+            ->whereHas('booking', function ($query) use ($date) {
+                $query
+                    ->whereDate('visit_date', $date)
+                    ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+            });
 
         if ($lock) {
-            $query->lockForUpdate();
+            $itemQuery->lockForUpdate();
         }
 
-        $reserved = (int) $query->sum('quantity');
+        $legacyQuery = WisataBooking::query()
+            ->where('wisata_ticket_id', $ticket->id)
+            ->whereDate('visit_date', $date)
+            ->whereIn('status', ['pending_payment', 'paid', 'completed'])
+            ->whereDoesntHave('items');
+
+        if ($lock) {
+            $legacyQuery->lockForUpdate();
+        }
+
+        $reserved = (int) $itemQuery->sum('quantity') + (int) $legacyQuery->sum('quantity');
         $maxQuota = $ticket->daily_quota ?? $ticket->quota;
 
         return max(0, (int) $maxQuota - $reserved);
     }
 
+    private function bookingLineItems(WisataBooking $booking): array
+    {
+        $booking->loadMissing(['ticket', 'items.ticket']);
+
+        if ($booking->items->isNotEmpty()) {
+            return $booking->items
+                ->map(fn (WisataBookingItem $item): array => [
+                    'ticket_id' => $item->wisata_ticket_id,
+                    'name' => $item->ticket_name ?: ($item->ticket?->name ?? 'Tiket Wisata'),
+                    'quantity' => (int) $item->quantity,
+                    'unit_price' => (int) $item->unit_price,
+                    'subtotal' => (int) $item->subtotal,
+                ])
+                ->values()
+                ->all();
+        }
+
+        return [[
+            'ticket_id' => $booking->wisata_ticket_id,
+            'name' => $booking->ticket?->name ?? 'Tiket Wisata',
+            'quantity' => (int) $booking->quantity,
+            'unit_price' => (int) $booking->unit_price,
+            'subtotal' => (int) $booking->total_price,
+        ]];
+    }
+
     private function buildSnapPayload(WisataBooking $booking, string $orderId): array
     {
+        $items = $this->bookingLineItems($booking);
+
         return [
             'transaction_details' => [
                 'order_id' => $orderId,
                 'gross_amount' => (int) $booking->total_price,
             ],
-            'item_details' => [
-                [
-                    'id' => (string) $booking->ticket?->id,
-                    'price' => (int) $booking->unit_price,
-                    'quantity' => (int) $booking->quantity,
-                    'name' => $booking->ticket?->name ?? 'Tiket Wisata',
-                ],
-            ],
+            'item_details' => collect($items)
+                ->map(fn (array $item): array => [
+                    'id' => (string) $item['ticket_id'],
+                    'price' => (int) $item['unit_price'],
+                    'quantity' => (int) $item['quantity'],
+                    'name' => $item['name'],
+                ])
+                ->values()
+                ->all(),
             'customer_details' => [
                 'first_name' => $booking->guest_name,
                 'email' => $booking->guest_email,

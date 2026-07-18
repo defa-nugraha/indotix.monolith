@@ -17,6 +17,13 @@ type Booking = {
     payment_status?: string | null;
     payment_deadline?: string | null;
     ticket: { id: number; name: string };
+    items?: Array<{
+        ticket_id: number;
+        name: string;
+        quantity: number;
+        unit_price: number;
+        subtotal: number;
+    }>;
     destination: { id: number; name: string; address?: string | null };
     guest: { name: string; email: string; phone: string };
     payment?: { status?: string; payment_type?: string; payload?: any } | null;
@@ -39,7 +46,12 @@ export default function WisataBookingPayment({
     snapClientKey: string;
     snapScriptUrl: string;
 }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage()
+        .props as {
+        auth?: { user?: { role?: string } };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+    };
     const role = auth?.user?.role;
     const [remaining, setRemaining] = useState<string | null>(null);
     const form = useForm({});
@@ -57,7 +69,9 @@ export default function WisataBookingPayment({
             } else {
                 const minutes = Math.floor(diff / 60000);
                 const seconds = Math.floor((diff % 60000) / 1000);
-                setRemaining(`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+                setRemaining(
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
+                );
             }
         }, 1000);
         return () => clearInterval(interval);
@@ -97,8 +111,8 @@ export default function WisataBookingPayment({
             <main className="mx-auto w-full max-w-7xl px-4 py-8 font-sans text-slate-800 sm:px-6 lg:px-8">
                 <div className="mx-auto w-full max-w-3xl">
                     <div className="relative z-0 flex items-center justify-between">
-                        <div className="absolute right-0 left-0 top-1/2 z-0 h-1 -translate-y-1/2 bg-slate-200" />
-                        <div className="absolute left-0 top-1/2 z-0 h-1 w-3/4 -translate-y-1/2 bg-sky-600" />
+                        <div className="absolute top-1/2 right-0 left-0 z-0 h-1 -translate-y-1/2 bg-slate-200" />
+                        <div className="absolute top-1/2 left-0 z-0 h-1 w-3/4 -translate-y-1/2 bg-sky-600" />
                         {[
                             ['✓', 'Detail'],
                             ['2', 'Pembayaran'],
@@ -131,7 +145,7 @@ export default function WisataBookingPayment({
                     </div>
                 </div>
 
-                <section className="mx-auto mt-10 max-w-xl space-y-6 rounded-3xl border border-slate-150 bg-white p-6 text-center shadow-lg sm:p-10">
+                <section className="border-slate-150 mx-auto mt-10 max-w-xl space-y-6 rounded-3xl border bg-white p-6 text-center shadow-lg sm:p-10">
                     <div className="flex flex-col items-center">
                         <div className="mb-3 flex h-14 w-14 animate-pulse items-center justify-center rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-500">
                             <Clock className="h-7 w-7" />
@@ -174,8 +188,12 @@ export default function WisataBookingPayment({
                             <ol className="list-decimal space-y-1 pl-4 leading-relaxed font-medium">
                                 <li>Buka popup pembayaran Midtrans.</li>
                                 <li>Pilih metode pembayaran yang tersedia.</li>
-                                <li>Ikuti instruksi sesuai metode pembayaran.</li>
-                                <li>Pastikan nominal sesuai total transaksi.</li>
+                                <li>
+                                    Ikuti instruksi sesuai metode pembayaran.
+                                </li>
+                                <li>
+                                    Pastikan nominal sesuai total transaksi.
+                                </li>
                             </ol>
                         </div>
                     </div>
@@ -191,10 +209,19 @@ export default function WisataBookingPayment({
                                     window.snap.pay(snapToken);
                                     return;
                                 }
-                                form.post(`/wisata/booking/${booking.encrypted_id}/payment`, {
-                                    onError: (errors) =>
-                                        Swal.fire({ icon: 'error', title: 'Gagal', text: errors.payment ?? 'Tidak dapat memproses pembayaran.' }),
-                                });
+                                form.post(
+                                    `/wisata/booking/${booking.encrypted_id}/payment`,
+                                    {
+                                        onError: (errors) =>
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Gagal',
+                                                text:
+                                                    errors.payment ??
+                                                    'Tidak dapat memproses pembayaran.',
+                                            }),
+                                    },
+                                );
                             }}
                             className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 text-xs font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50"
                             disabled={form.processing}

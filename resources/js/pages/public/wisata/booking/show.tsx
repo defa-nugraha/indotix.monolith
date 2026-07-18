@@ -30,22 +30,56 @@ type Booking = {
     qr_url?: string | null;
     qr_data?: string | null;
     ticket: { name: string };
+    items?: Array<{
+        ticket_id: number;
+        name: string;
+        quantity: number;
+        unit_price: number;
+        subtotal: number;
+    }>;
     destination: { name: string; address?: string | null };
     guest: { name: string; email: string; phone: string };
     review?: { can_review?: boolean; url?: string | null } | null;
 };
 
 export default function WisataBookingShow({ booking }: { booking: Booking }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage()
+        .props as {
+        auth?: { user?: { role?: string } };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+    };
     const role = auth?.user?.role;
     const isUser = Boolean(auth?.user?.role === 'user');
     const [isDownloading, setIsDownloading] = useState(false);
+    const ticketItems =
+        booking.items && booking.items.length > 0
+            ? booking.items
+            : [
+                  {
+                      ticket_id: 0,
+                      name: booking.ticket.name,
+                      quantity: booking.quantity,
+                      unit_price: booking.unit_price,
+                      subtotal: booking.total,
+                  },
+              ];
 
-    const categories = [
-        { label: 'Wisata', icon: MapPinned, href: '/wisata' },
+    const categories = [{ label: 'Wisata', icon: MapPinned, href: '/wisata' }];
+
+    const chips = [
+        'Alam',
+        'Budaya',
+        'Edukasi',
+        'Kuliner',
+        'Desa Wisata',
+        'Religi',
+        'Pantai',
+        'Gunung',
+        'Taman Nasional',
+        'Air Terjun',
+        'Danau',
     ];
-
-    const chips = ['Alam', 'Budaya', 'Edukasi', 'Kuliner', 'Desa Wisata', 'Religi', 'Pantai', 'Gunung', 'Taman Nasional', 'Air Terjun', 'Danau'];
 
     const statusBadge = (status?: string | null) => {
         switch (status) {
@@ -85,13 +119,16 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
             showChips={false}
         >
             <Head title="Detail Booking Wisata">
-                <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
+                <link
+                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
+                    rel="stylesheet"
+                />
             </Head>
             <main className="mx-auto w-full max-w-7xl px-4 py-10 md:px-8">
                 <div className="mx-auto mb-8 w-full max-w-3xl">
                     <div className="relative z-0 flex items-center justify-between">
-                        <div className="absolute right-0 left-0 top-1/2 z-0 h-1 -translate-y-1/2 bg-slate-200" />
-                        <div className="absolute left-0 top-1/2 z-0 h-1 w-full -translate-y-1/2 bg-sky-600" />
+                        <div className="absolute top-1/2 right-0 left-0 z-0 h-1 -translate-y-1/2 bg-slate-200" />
+                        <div className="absolute top-1/2 left-0 z-0 h-1 w-full -translate-y-1/2 bg-sky-600" />
                         {[
                             ['✓', 'Detail'],
                             ['✓', 'Pembayaran'],
@@ -124,10 +161,17 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                         <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_24px_70px_-36px_rgba(15,23,42,0.34)]">
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
-                                    <h1 className="font-['Space_Grotesk'] text-2xl font-black text-slate-950">Detail Booking Wisata</h1>
-                                    <p className="mt-2 text-sm text-slate-500">Cek informasi tiket dan status pembayaran kamu.</p>
+                                    <h1 className="font-['Space_Grotesk'] text-2xl font-black text-slate-950">
+                                        Detail Booking Wisata
+                                    </h1>
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        Cek informasi tiket dan status
+                                        pembayaran kamu.
+                                    </p>
                                 </div>
-                                <span className={`rounded-full px-4 py-2 text-xs font-semibold ${statusBadge(booking.status)}`}>
+                                <span
+                                    className={`rounded-full px-4 py-2 text-xs font-semibold ${statusBadge(booking.status)}`}
+                                >
                                     {statusLabel(booking.status)}
                                 </span>
                             </div>
@@ -146,30 +190,57 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Users className="h-4 w-4 text-sky-500" />
-                                    {booking.quantity} tiket
+                                    {booking.quantity} tiket ·{' '}
+                                    {ticketItems.length} jenis
                                 </div>
                             </div>
-                            <div className="mt-4 text-lg font-semibold text-sky-600">Rp {booking.total.toLocaleString('id-ID')}</div>
+                            <div className="mt-4 text-lg font-semibold text-sky-600">
+                                Rp {booking.total.toLocaleString('id-ID')}
+                            </div>
                         </div>
 
                         <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Detail Tiket</h2>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Detail Tiket
+                            </h2>
                             <div className="mt-4 grid gap-3">
-                                <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm">
-                                    <div>
-                                        <div className="font-semibold text-slate-900">{booking.ticket.name}</div>
-                                        <div className="text-xs text-slate-500">{booking.quantity} tiket</div>
+                                {ticketItems.map((item) => (
+                                    <div
+                                        key={item.ticket_id}
+                                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm"
+                                    >
+                                        <div>
+                                            <div className="font-semibold text-slate-900">
+                                                {item.name}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                {item.quantity} tiket
+                                            </div>
+                                        </div>
+                                        <div className="text-right text-sm text-slate-600">
+                                            <div>
+                                                Rp{' '}
+                                                {item.unit_price.toLocaleString(
+                                                    'id-ID',
+                                                )}
+                                                /tiket
+                                            </div>
+                                            <div className="font-semibold text-slate-900">
+                                                Rp{' '}
+                                                {item.subtotal.toLocaleString(
+                                                    'id-ID',
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="text-right text-sm text-slate-600">
-                                        <div>Rp {booking.unit_price.toLocaleString('id-ID')}/tiket</div>
-                                        <div className="font-semibold text-slate-900">Rp {booking.total.toLocaleString('id-ID')}</div>
-                                    </div>
-                                </div>
+                                ))}
                             </div>
                         </div>
 
                         <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-slate-900">Data Tamu</h2>
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Data Tamu
+                            </h2>
                             <div className="mt-4 grid gap-3 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <UserCircle className="h-4 w-4 text-sky-500" />
@@ -196,12 +267,16 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                             <div className="mt-4 space-y-2 text-sm text-slate-600">
                                 <div className="flex items-center gap-2">
                                     <CreditCard className="h-4 w-4 text-slate-400" />
-                                    Status pembayaran: {booking.payment_status ?? 'pending'}
+                                    Status pembayaran:{' '}
+                                    {booking.payment_status ?? 'pending'}
                                 </div>
                                 {booking.payment_deadline && (
                                     <div className="flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-slate-400" />
-                                        Batas bayar: {new Date(booking.payment_deadline).toLocaleString('id-ID')}
+                                        Batas bayar:{' '}
+                                        {new Date(
+                                            booking.payment_deadline,
+                                        ).toLocaleString('id-ID')}
                                     </div>
                                 )}
                             </div>
@@ -218,14 +293,21 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                     Lanjutkan Pembayaran
                                 </Link>
                             )}
-                            {(booking.status === 'paid' || booking.status === 'completed') && (
+                            {(booking.status === 'paid' ||
+                                booking.status === 'completed') && (
                                 <button
                                     type="button"
                                     onClick={() => {
                                         if (isDownloading) return;
                                         setIsDownloading(true);
-                                        window.open(`/wisata/booking/${booking.encrypted_id}/ticket`, '_blank');
-                                        window.setTimeout(() => setIsDownloading(false), 8000);
+                                        window.open(
+                                            `/wisata/booking/${booking.encrypted_id}/ticket`,
+                                            '_blank',
+                                        );
+                                        window.setTimeout(
+                                            () => setIsDownloading(false),
+                                            8000,
+                                        );
                                     }}
                                     className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
                                 >
@@ -239,26 +321,40 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                     )}
                                 </button>
                             )}
-                            {booking.review?.can_review && booking.review?.url && (
-                                <Link
-                                    href={booking.review.url}
-                                    className="mt-3 block rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
-                                >
-                                    Beri Ulasan
-                                </Link>
-                            )}
+                            {booking.review?.can_review &&
+                                booking.review?.url && (
+                                    <Link
+                                        href={booking.review.url}
+                                        className="mt-3 block rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
+                                    >
+                                        Beri Ulasan
+                                    </Link>
+                                )}
                         </div>
 
-                        {(booking.status === 'paid' || booking.status === 'completed') && booking.qr_url && (
-                            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
-                                <div className="text-sm font-semibold text-slate-900">QR Validasi Tiket</div>
-                                <img src={booking.qr_url} alt="QR Tiket" className="mx-auto mt-3 h-44 w-44" />
-                                {booking.qr_data && (
-                                    <div className="mt-2 text-xs text-slate-500">Kode: {booking.qr_data}</div>
-                                )}
-                                <div className="mt-2 text-xs text-slate-500">Tunjukkan QR ini saat validasi di lokasi.</div>
-                            </div>
-                        )}
+                        {(booking.status === 'paid' ||
+                            booking.status === 'completed') &&
+                            booking.qr_url && (
+                                <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+                                    <div className="text-sm font-semibold text-slate-900">
+                                        QR Validasi Tiket
+                                    </div>
+                                    <img
+                                        src={booking.qr_url}
+                                        alt="QR Tiket"
+                                        className="mx-auto mt-3 h-44 w-44"
+                                    />
+                                    {booking.qr_data && (
+                                        <div className="mt-2 text-xs text-slate-500">
+                                            Kode: {booking.qr_data}
+                                        </div>
+                                    )}
+                                    <div className="mt-2 text-xs text-slate-500">
+                                        Tunjukkan QR ini saat validasi di
+                                        lokasi.
+                                    </div>
+                                </div>
+                            )}
                     </aside>
                 </div>
             </main>

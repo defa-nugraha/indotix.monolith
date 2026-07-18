@@ -11,29 +11,33 @@ use App\Models\WisataAffiliateCommissionItem;
 use App\Models\WisataAffiliateLink;
 use App\Models\WisataPayment;
 use App\Models\WisataTicket;
+use App\Models\WisataBookingItem;
 use App\Services\MidtransService;
 use App\Services\ProductReviewService;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use RuntimeException;
 use Spatie\LaravelPdf\Facades\Pdf;
 
 class WisataBookingController extends Controller
 {
     private const PAYMENT_TTL_MINUTES = 15;
+    private const MAX_TICKETS_PER_BOOKING = 20;
 
     public function prepare(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'destination_id' => ['required', 'integer', 'exists:mitra_wisata_onboardings,id'],
-            'ticket_id' => ['required', 'integer', 'exists:wisata_tickets,id'],
+            'ticket_id' => ['nullable', 'integer', 'exists:wisata_tickets,id'],
             'visit_date' => ['required', 'date'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:20'],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_TICKETS_PER_BOOKING],
+            'items' => ['nullable', 'array'],
+            'items.*.ticket_id' => ['required_with:items', 'integer', 'exists:wisata_tickets,id'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:0', 'max:'.self::MAX_TICKETS_PER_BOOKING],
         ]);
 
         $destination = MitraWisataOnboarding::query()
@@ -41,24 +45,23 @@ class WisataBookingController extends Controller
             ->where('id', $data['destination_id'])
             ->firstOrFail();
 
-        $ticket = WisataTicket::query()->where('id', $data['ticket_id'])->firstOrFail();
-        if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
-            return back()->withErrors(['ticket_id' => 'Tiket tidak sesuai destinasi.']);
-        }
-
-        if (! $ticket->is_active || $ticket->is_closed) {
-            return back()->withErrors(['ticket_id' => 'Tiket belum tersedia.']);
-        }
-
-        if ($this->availableTickets($ticket, $data['visit_date']) < (int) $data['quantity']) {
-            return back()->withErrors(['quantity' => 'Kuota tiket tidak mencukupi.']);
+        try {
+            $selections = $this->normalizeTicketSelections($data);
+            $summary = $this->buildDraftSummary([
+                'destination_id' => (int) $destination->id,
+                'visit_date' => $data['visit_date'],
+                'items' => $selections,
+            ], $destination);
+        } catch (ValidationException $exception) {
+            return back()->withErrors($exception->errors());
         }
 
         $draft = [
             'destination_id' => (int) $destination->id,
-            'ticket_id' => (int) $ticket->id,
+            'ticket_id' => (int) $summary['items'][0]['ticket_id'],
             'visit_date' => $data['visit_date'],
-            'quantity' => (int) $data['quantity'],
+            'quantity' => (int) $summary['quantity'],
+            'items' => $selections,
         ];
 
         $request->session()->put('wisata_booking_draft', $draft);
@@ -81,32 +84,11 @@ class WisataBookingController extends Controller
             return redirect()->route('wisata.search')->withErrors(['booking' => 'Data pemesanan tidak ditemukan.']);
         }
 
-        $destination = MitraWisataOnboarding::query()->publiclyVisible()->findOrFail($draft['destination_id']);
-        $ticket = WisataTicket::query()->findOrFail($draft['ticket_id']);
-
-        $total = (int) $ticket->price * (int) $draft['quantity'];
-
-        return Inertia::render('public/wisata/booking/review', [
-            'draft' => $draft,
-            'destination' => [
-                'id' => $destination->id,
-                'destination_name' => $destination->destination_name,
-                'city_name' => $this->resolveCityName($destination->city_code),
-                'address_full' => $destination->address_full,
-            ],
-            'ticket' => [
-                'id' => $ticket->id,
-                'name' => $ticket->name,
-                'price' => $ticket->price,
-            ],
-            'pricing' => [
-                'total' => $total,
-            ],
-            'snapClientKey' => (string) config('services.midtrans.client_key', ''),
-            'snapScriptUrl' => config('services.midtrans.is_production')
-                ? 'https://app.midtrans.com/snap/snap.js'
-                : 'https://app.sandbox.midtrans.com/snap/snap.js',
-        ]);
+        try {
+            return $this->reviewResponse($draft);
+        } catch (ValidationException $exception) {
+            return redirect()->route('wisata.search')->withErrors($exception->errors());
+        }
     }
 
     public function confirm(Request $request, MidtransService $midtransService): RedirectResponse|\Illuminate\Http\JsonResponse|\Inertia\Response
@@ -142,52 +124,31 @@ class WisataBookingController extends Controller
                     ]);
                 }
 
-                $destination = MitraWisataOnboarding::query()->publiclyVisible()->findOrFail($draft['destination_id']);
-                $ticket = WisataTicket::query()->findOrFail($draft['ticket_id']);
-                $total = (int) $ticket->price * (int) $draft['quantity'];
                 $snap = $this->createSnapPayment($existingBooking, $midtransService);
 
-                return Inertia::render('public/wisata/booking/review', [
-                    'draft' => $draft,
-                    'destination' => [
-                        'id' => $destination->id,
-                        'destination_name' => $destination->destination_name,
-                        'city_name' => $this->resolveCityName($destination->city_code),
-                        'address_full' => $destination->address_full,
-                    ],
-                    'ticket' => [
-                        'id' => $ticket->id,
-                        'name' => $ticket->name,
-                        'price' => $ticket->price,
-                    ],
-                    'pricing' => [
-                        'total' => $total,
-                    ],
+                return $this->reviewResponse($draft, [
                     'snapToken' => $snap['token'] ?? null,
-                    'snapClientKey' => (string) config('services.midtrans.client_key', ''),
-                    'snapScriptUrl' => config('services.midtrans.is_production')
-                        ? 'https://app.midtrans.com/snap/snap.js'
-                        : 'https://app.sandbox.midtrans.com/snap/snap.js',
                 ]);
             }
         }
 
         $booking = DB::transaction(function () use ($draft, $data, $request) {
-            $ticket = WisataTicket::query()->lockForUpdate()->findOrFail($draft['ticket_id']);
-            $available = $this->availableTickets($ticket, $draft['visit_date'], true);
-            if ($available < (int) $draft['quantity']) {
-                throw new RuntimeException('Kuota tiket sudah habis.');
-            }
+            $destination = MitraWisataOnboarding::query()
+                ->publiclyVisible()
+                ->lockForUpdate()
+                ->findOrFail($draft['destination_id']);
+            $summary = $this->buildDraftSummary($draft, $destination, true);
+            $primaryItem = $summary['items'][0];
 
             $order = WisataBooking::create([
                 'user_id' => $request->user()->id,
                 'mitra_wisata_onboarding_id' => $draft['destination_id'],
-                'wisata_ticket_id' => $ticket->id,
+                'wisata_ticket_id' => $primaryItem['ticket_id'],
                 'booking_code' => strtoupper('WISATA-'.$request->user()->id.'-'.now()->format('ymdHis')),
                 'visit_date' => $draft['visit_date'],
-                'quantity' => $draft['quantity'],
-                'unit_price' => $ticket->price,
-                'total_price' => $ticket->price * $draft['quantity'],
+                'quantity' => $summary['quantity'],
+                'unit_price' => $primaryItem['unit_price'],
+                'total_price' => $summary['total'],
                 'status' => 'pending_payment',
                 'payment_status' => 'pending',
                 'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
@@ -196,6 +157,14 @@ class WisataBookingController extends Controller
                 'guest_phone' => $data['guest_phone'],
                 'special_request' => $data['special_request'] ?? null,
             ]);
+
+            $order->items()->createMany(array_map(fn (array $item) => [
+                'wisata_ticket_id' => $item['ticket_id'],
+                'ticket_name' => $item['name'],
+                'quantity' => $item['quantity'],
+                'unit_price' => $item['unit_price'],
+                'subtotal' => $item['subtotal'],
+            ], $summary['items']));
 
             $this->attachAffiliateCommission($order, $request);
 
@@ -245,32 +214,10 @@ class WisataBookingController extends Controller
             ]);
         }
 
-        $destination = MitraWisataOnboarding::query()->publiclyVisible()->findOrFail($draft['destination_id']);
-        $ticket = WisataTicket::query()->findOrFail($draft['ticket_id']);
-        $total = (int) $ticket->price * (int) $draft['quantity'];
         $snap = $this->createSnapPayment($booking, $midtransService);
 
-        return Inertia::render('public/wisata/booking/review', [
-            'draft' => $draft,
-            'destination' => [
-                'id' => $destination->id,
-                'destination_name' => $destination->destination_name,
-                'city_name' => $this->resolveCityName($destination->city_code),
-                'address_full' => $destination->address_full,
-            ],
-            'ticket' => [
-                'id' => $ticket->id,
-                'name' => $ticket->name,
-                'price' => $ticket->price,
-            ],
-            'pricing' => [
-                'total' => $total,
-            ],
+        return $this->reviewResponse($draft, [
             'snapToken' => $snap['token'] ?? null,
-            'snapClientKey' => (string) config('services.midtrans.client_key', ''),
-            'snapScriptUrl' => config('services.midtrans.is_production')
-                ? 'https://app.midtrans.com/snap/snap.js'
-                : 'https://app.sandbox.midtrans.com/snap/snap.js',
         ]);
     }
 
@@ -289,7 +236,7 @@ class WisataBookingController extends Controller
             ]);
         }
 
-        $booking->load('ticket', 'payments');
+        $booking->load('ticket', 'items.ticket', 'payments');
 
         return Inertia::render('public/wisata/booking/payment', [
             'booking' => $this->bookingPayload($booking),
@@ -359,7 +306,7 @@ class WisataBookingController extends Controller
             return redirect()->route('home');
         }
 
-        $booking->load('ticket', 'destination');
+        $booking->load('ticket', 'destination', 'items.ticket');
 
         $reviewUrl = $booking->mitra_wisata_onboarding_id
             ? '/wisata/'.$booking->destination?->slug
@@ -383,7 +330,7 @@ class WisataBookingController extends Controller
             return redirect()->route('home');
         }
 
-        $booking->load('ticket', 'destination');
+        $booking->load('ticket', 'destination', 'items.ticket');
 
         $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
         $cacheAllowed = in_array($booking->status, ['paid', 'completed'], true);
@@ -404,26 +351,207 @@ class WisataBookingController extends Controller
         ])->download($filename);
     }
 
-    private function availableTickets(WisataTicket $ticket, string $date, bool $lock = false): int
+    private function normalizeTicketSelections(array $data): array
     {
-        $query = WisataBooking::query()
-            ->where('wisata_ticket_id', $ticket->id)
-            ->whereDate('visit_date', $date)
-            ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+        $rawItems = collect($data['items'] ?? [])
+            ->map(fn ($item) => [
+                'ticket_id' => (int) ($item['ticket_id'] ?? 0),
+                'quantity' => (int) ($item['quantity'] ?? 0),
+            ])
+            ->filter(fn ($item) => $item['ticket_id'] > 0 && $item['quantity'] > 0)
+            ->values();
 
-        if ($lock) {
-            $query->lockForUpdate();
+        if ($rawItems->isEmpty() && ! empty($data['ticket_id']) && ! empty($data['quantity'])) {
+            $rawItems = collect([[
+                'ticket_id' => (int) $data['ticket_id'],
+                'quantity' => (int) $data['quantity'],
+            ]]);
         }
 
-        $reserved = (int) $query->sum('quantity');
+        $items = $rawItems
+            ->groupBy('ticket_id')
+            ->map(fn ($rows, $ticketId) => [
+                'ticket_id' => (int) $ticketId,
+                'quantity' => (int) $rows->sum('quantity'),
+            ])
+            ->values()
+            ->all();
+
+        $totalQuantity = array_sum(array_column($items, 'quantity'));
+
+        if ($totalQuantity < 1) {
+            throw ValidationException::withMessages([
+                'items' => 'Pilih minimal satu tiket.',
+            ]);
+        }
+
+        if ($totalQuantity > self::MAX_TICKETS_PER_BOOKING) {
+            throw ValidationException::withMessages([
+                'items' => 'Jumlah tiket maksimal '.self::MAX_TICKETS_PER_BOOKING.' per pemesanan.',
+            ]);
+        }
+
+        return $items;
+    }
+
+    private function buildDraftSummary(array $draft, ?MitraWisataOnboarding $destination = null, bool $lock = false): array
+    {
+        $destination ??= MitraWisataOnboarding::query()
+            ->publiclyVisible()
+            ->findOrFail($draft['destination_id']);
+
+        $selections = $this->normalizeTicketSelections($draft);
+        $ticketIds = array_column($selections, 'ticket_id');
+        $ticketQuery = WisataTicket::query()->whereIn('id', $ticketIds);
+
+        if ($lock) {
+            $ticketQuery->lockForUpdate();
+        }
+
+        $tickets = $ticketQuery->get()->keyBy('id');
+        $items = [];
+
+        foreach ($selections as $selection) {
+            /** @var WisataTicket|null $ticket */
+            $ticket = $tickets->get($selection['ticket_id']);
+
+            if (! $ticket || (int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
+                throw ValidationException::withMessages([
+                    'items' => 'Tiket tidak sesuai destinasi.',
+                ]);
+            }
+
+            if (! $ticket->is_active || $ticket->is_closed) {
+                throw ValidationException::withMessages([
+                    'items' => "Tiket {$ticket->name} belum tersedia.",
+                ]);
+            }
+
+            $available = $this->availableTickets($ticket, $draft['visit_date'], $lock);
+            if ($available < (int) $selection['quantity']) {
+                throw ValidationException::withMessages([
+                    'items' => "Kuota {$ticket->name} tersisa {$available}.",
+                ]);
+            }
+
+            $unitPrice = (int) $ticket->price;
+            $quantity = (int) $selection['quantity'];
+
+            $items[] = [
+                'ticket_id' => (int) $ticket->id,
+                'name' => $ticket->name,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'subtotal' => $unitPrice * $quantity,
+                'available' => $available,
+            ];
+        }
+
+        return [
+            'destination' => $destination,
+            'items' => $items,
+            'quantity' => array_sum(array_column($items, 'quantity')),
+            'total' => array_sum(array_column($items, 'subtotal')),
+        ];
+    }
+
+    private function reviewResponse(array $draft, array $extra = []): Response
+    {
+        $summary = $this->buildDraftSummary($draft);
+        $destination = $summary['destination'];
+        $primaryItem = $summary['items'][0];
+
+        return Inertia::render('public/wisata/booking/review', array_merge([
+            'draft' => [
+                'destination_id' => (int) $destination->id,
+                'ticket_id' => (int) $primaryItem['ticket_id'],
+                'visit_date' => $draft['visit_date'],
+                'quantity' => (int) $summary['quantity'],
+                'items' => array_map(fn (array $item) => [
+                    'ticket_id' => (int) $item['ticket_id'],
+                    'quantity' => (int) $item['quantity'],
+                ], $summary['items']),
+            ],
+            'destination' => [
+                'id' => $destination->id,
+                'destination_name' => $destination->destination_name,
+                'city_name' => $this->resolveCityName($destination->city_code),
+                'address_full' => $destination->address_full,
+            ],
+            'ticket' => [
+                'id' => $primaryItem['ticket_id'],
+                'name' => $primaryItem['name'],
+                'price' => $primaryItem['unit_price'],
+            ],
+            'items' => $summary['items'],
+            'pricing' => [
+                'total' => $summary['total'],
+                'quantity' => $summary['quantity'],
+            ],
+            'snapClientKey' => (string) config('services.midtrans.client_key', ''),
+            'snapScriptUrl' => config('services.midtrans.is_production')
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js',
+        ], $extra));
+    }
+
+    private function availableTickets(WisataTicket $ticket, string $date, bool $lock = false): int
+    {
+        $itemQuery = WisataBookingItem::query()
+            ->where('wisata_ticket_id', $ticket->id)
+            ->whereHas('booking', function ($query) use ($date) {
+                $query
+                    ->whereDate('visit_date', $date)
+                    ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+            });
+
+        $legacyQuery = WisataBooking::query()
+            ->where('wisata_ticket_id', $ticket->id)
+            ->whereDate('visit_date', $date)
+            ->whereIn('status', ['pending_payment', 'paid', 'completed'])
+            ->whereDoesntHave('items');
+
+        if ($lock) {
+            $itemQuery->lockForUpdate();
+            $legacyQuery->lockForUpdate();
+        }
+
+        $reserved = (int) $itemQuery->sum('quantity') + (int) $legacyQuery->sum('quantity');
         $maxQuota = $ticket->daily_quota ?? $ticket->quota;
 
         return max(0, (int) $maxQuota - $reserved);
     }
 
+    private function bookingLineItems(WisataBooking $booking): array
+    {
+        $booking->loadMissing('ticket', 'items.ticket');
+
+        if ($booking->items->isNotEmpty()) {
+            return $booking->items
+                ->map(fn (WisataBookingItem $item) => [
+                    'ticket_id' => (int) $item->wisata_ticket_id,
+                    'name' => $item->ticket_name ?? $item->ticket?->name ?? 'Tiket Wisata',
+                    'quantity' => (int) $item->quantity,
+                    'unit_price' => (int) $item->unit_price,
+                    'subtotal' => (int) $item->subtotal,
+                ])
+                ->values()
+                ->all();
+        }
+
+        return [[
+            'ticket_id' => (int) $booking->wisata_ticket_id,
+            'name' => $booking->ticket?->name ?? 'Tiket Wisata',
+            'quantity' => (int) $booking->quantity,
+            'unit_price' => (int) $booking->unit_price,
+            'subtotal' => (int) $booking->total_price,
+        ]];
+    }
+
     private function bookingPayload(WisataBooking $booking): array
     {
         $latestPayment = $booking->payments()->latest()->first();
+        $items = $this->bookingLineItems($booking);
 
         return [
             'id' => $booking->id,
@@ -440,6 +568,7 @@ class WisataBookingController extends Controller
                 'id' => $booking->ticket?->id,
                 'name' => $booking->ticket?->name,
             ],
+            'items' => $items,
             'destination' => [
                 'id' => $booking->destination?->id,
                 'name' => $booking->destination?->destination_name,
@@ -462,19 +591,19 @@ class WisataBookingController extends Controller
 
     private function buildSnapPayload(WisataBooking $booking, string $orderId): array
     {
+        $items = $this->bookingLineItems($booking);
+
         return [
             'transaction_details' => [
                 'order_id' => $orderId,
                 'gross_amount' => (int) $booking->total_price,
             ],
-            'item_details' => [
-                [
-                    'id' => (string) $booking->ticket?->id,
-                    'price' => (int) $booking->unit_price,
-                    'quantity' => (int) $booking->quantity,
-                    'name' => $booking->ticket?->name ?? 'Tiket Wisata',
-                ],
-            ],
+            'item_details' => array_map(fn (array $item) => [
+                'id' => (string) $item['ticket_id'],
+                'price' => (int) $item['unit_price'],
+                'quantity' => (int) $item['quantity'],
+                'name' => $item['name'] ?: 'Tiket Wisata',
+            ], $items),
             'customer_details' => [
                 'first_name' => $booking->guest_name,
                 'email' => $booking->guest_email,

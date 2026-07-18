@@ -73,7 +73,7 @@ class BookingController extends Controller
             abort(403);
         }
 
-        $booking->load(['ticket', 'user', 'disputes']);
+        $booking->load(['ticket', 'items.ticket', 'user', 'disputes']);
 
         return Inertia::render('mitra/wisata/bookings/show', [
             'destination' => [
@@ -92,6 +92,21 @@ class BookingController extends Controller
                     'id' => $booking->ticket?->id,
                     'name' => $booking->ticket?->name,
                 ],
+                'items' => $booking->items->isNotEmpty()
+                    ? $booking->items->map(fn ($item) => [
+                        'ticket_id' => $item->wisata_ticket_id,
+                        'name' => $item->ticket_name ?? $item->ticket?->name ?? 'Tiket Wisata',
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
+                        'subtotal' => $item->subtotal,
+                    ])->values()->all()
+                    : [[
+                        'ticket_id' => $booking->wisata_ticket_id,
+                        'name' => $booking->ticket?->name ?? 'Tiket Wisata',
+                        'quantity' => $booking->quantity,
+                        'unit_price' => $booking->unit_price,
+                        'subtotal' => $booking->total_price,
+                    ]],
                 'user' => [
                     'id' => $booking->user?->id,
                     'name' => $booking->user?->name,

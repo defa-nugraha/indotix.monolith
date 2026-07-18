@@ -106,7 +106,7 @@ class HistoryDetailController extends Controller
     {
         $bookingId = $this->resolveId($booking);
         $booking = WisataBooking::query()
-            ->with(['ticket', 'destination', 'payments'])
+            ->with(['ticket', 'items.ticket', 'destination', 'payments'])
             ->findOrFail($bookingId);
 
         if ((int) $booking->user_id !== $userId) {
@@ -132,6 +132,24 @@ class HistoryDetailController extends Controller
                     'id' => $booking->ticket?->id,
                     'name' => $booking->ticket?->name,
                 ],
+                'items' => $booking->items->isNotEmpty()
+                    ? $booking->items
+                        ->map(fn ($item) => [
+                            'ticket_id' => $item->wisata_ticket_id,
+                            'name' => $item->ticket_name ?: ($item->ticket?->name ?? 'Tiket Wisata'),
+                            'quantity' => (int) $item->quantity,
+                            'unit_price' => (int) $item->unit_price,
+                            'subtotal' => (int) $item->subtotal,
+                        ])
+                        ->values()
+                        ->all()
+                    : [[
+                        'ticket_id' => $booking->wisata_ticket_id,
+                        'name' => $booking->ticket?->name ?? 'Tiket Wisata',
+                        'quantity' => (int) $booking->quantity,
+                        'unit_price' => (int) $booking->unit_price,
+                        'subtotal' => (int) $booking->total_price,
+                    ]],
                 'destination' => [
                     'id' => $booking->destination?->id,
                     'name' => $booking->destination?->destination_name,

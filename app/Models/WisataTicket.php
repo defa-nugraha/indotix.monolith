@@ -58,4 +58,9 @@ class WisataTicket extends Model
     {
         return $this->hasMany(WisataBooking::class, 'wisata_ticket_id');
     }
+
+    public function bookingItems()
+    {
+        return $this->hasMany(WisataBookingItem::class, 'wisata_ticket_id');
+    }
 }

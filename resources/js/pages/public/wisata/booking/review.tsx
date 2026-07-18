@@ -1,7 +1,14 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
-import { CalendarCheck, ClipboardCheck, Mail, Phone, Ticket, User } from 'lucide-react';
+import {
+    CalendarCheck,
+    ClipboardCheck,
+    Mail,
+    Phone,
+    Ticket,
+    User,
+} from 'lucide-react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
@@ -11,6 +18,15 @@ type Draft = {
     ticket_id: number;
     visit_date: string;
     quantity: number;
+    items?: Array<{ ticket_id: number; quantity: number }>;
+};
+
+type TicketLineItem = {
+    ticket_id: number;
+    name: string;
+    quantity: number;
+    unit_price: number;
+    subtotal: number;
 };
 
 type Props = {
@@ -28,7 +44,9 @@ type Props = {
     };
     pricing: {
         total: number;
+        quantity?: number;
     };
+    items?: TicketLineItem[];
     snapClientKey: string;
     snapScriptUrl: string;
     snapToken?: string | null;
@@ -47,11 +65,24 @@ export default function WisataBookingReview({
     destination,
     ticket,
     pricing,
+    items = [],
     snapClientKey,
     snapScriptUrl,
     snapToken: initialSnapToken,
 }: Props) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { role?: string; name?: string; email?: string; phone?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth, unread_notifications, souvenir_cart_count } = usePage()
+        .props as {
+        auth?: {
+            user?: {
+                role?: string;
+                name?: string;
+                email?: string;
+                phone?: string;
+            };
+        };
+        unread_notifications?: number;
+        souvenir_cart_count?: number;
+    };
     const role = auth?.user?.role;
     const isUser = Boolean(auth?.user?.role === 'user');
     const form = useForm({
@@ -61,8 +92,25 @@ export default function WisataBookingReview({
         special_request: '',
     });
     const [loading, setLoading] = useState(false);
-    const [snapToken, setSnapToken] = useState<string | null>(initialSnapToken ?? null);
+    const [snapToken, setSnapToken] = useState<string | null>(
+        initialSnapToken ?? null,
+    );
     const snapOpened = useRef(false);
+    const ticketItems =
+        items.length > 0
+            ? items
+            : [
+                  {
+                      ticket_id: ticket.id,
+                      name: ticket.name,
+                      quantity: draft.quantity,
+                      unit_price: ticket.price,
+                      subtotal: ticket.price * draft.quantity,
+                  },
+              ];
+    const totalQuantity =
+        pricing.quantity ??
+        ticketItems.reduce((total, item) => total + item.quantity, 0);
 
     useEffect(() => {
         if (auth?.user?.name && !form.data.guest_name) {
@@ -118,8 +166,8 @@ export default function WisataBookingReview({
             <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 md:px-8">
                 <div className="mx-auto w-full max-w-3xl">
                     <div className="relative z-0 flex items-center justify-between">
-                        <div className="absolute right-0 left-0 top-1/2 z-0 h-1 -translate-y-1/2 bg-slate-200" />
-                        <div className="absolute left-0 top-1/2 z-0 h-1 w-1/2 -translate-y-1/2 bg-sky-600" />
+                        <div className="absolute top-1/2 right-0 left-0 z-0 h-1 -translate-y-1/2 bg-slate-200" />
+                        <div className="absolute top-1/2 left-0 z-0 h-1 w-1/2 -translate-y-1/2 bg-sky-600" />
                         {[
                             ['1', 'Detail'],
                             ['2', 'Pembayaran'],
@@ -152,19 +200,26 @@ export default function WisataBookingReview({
                     <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_24px_70px_-36px_rgba(15,23,42,0.34)] sm:p-8">
                         <div className="flex items-start justify-between">
                             <div>
-                                <h1 className="font-['Space_Grotesk'] text-2xl font-black text-slate-950">Review Pemesanan Tiket</h1>
-                                <div className="mt-2 text-sm text-slate-500">Pastikan data sudah benar sebelum melanjutkan.</div>
+                                <h1 className="font-['Space_Grotesk'] text-2xl font-black text-slate-950">
+                                    Review Pemesanan Tiket
+                                </h1>
+                                <div className="mt-2 text-sm text-slate-500">
+                                    Pastikan data sudah benar sebelum
+                                    melanjutkan.
+                                </div>
                             </div>
                             <ClipboardCheck className="h-6 w-6 text-sky-500" />
                         </div>
                         <div className="mt-4 grid gap-2 text-sm text-slate-600">
                             <div className="flex items-center gap-2">
                                 <Ticket className="h-4 w-4 text-sky-500" />
-                                {destination.destination_name} · {destination.city_name ?? destination.address_full}
+                                {destination.destination_name} ·{' '}
+                                {destination.city_name ??
+                                    destination.address_full}
                             </div>
                             <div className="flex items-center gap-2">
                                 <CalendarCheck className="h-4 w-4 text-sky-500" />
-                                {draft.visit_date} · {draft.quantity} tiket
+                                {draft.visit_date} · {totalQuantity} tiket
                             </div>
                         </div>
                         <form
@@ -181,7 +236,10 @@ export default function WisataBookingReview({
                                         Swal.fire({
                                             icon: 'error',
                                             title: 'Gagal',
-                                            text: errors.booking ?? errors.guest_name ?? 'Tidak dapat memproses pembayaran.',
+                                            text:
+                                                errors.booking ??
+                                                errors.guest_name ??
+                                                'Tidak dapat memproses pembayaran.',
                                         });
                                         setLoading(false);
                                     },
@@ -193,32 +251,48 @@ export default function WisataBookingReview({
                         >
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700">Nama Lengkap</label>
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Nama Lengkap
+                                    </label>
                                     <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
                                         <User className="h-4 w-4 text-slate-400" />
                                         <input
                                             className="w-full text-sm font-medium focus:outline-none"
                                             value={form.data.guest_name}
-                                            onChange={(event) => form.setData('guest_name', event.target.value)}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'guest_name',
+                                                    event.target.value,
+                                                )
+                                            }
                                             required
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700">Email</label>
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Email
+                                    </label>
                                     <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
                                         <Mail className="h-4 w-4 text-slate-400" />
                                         <input
                                             className="w-full text-sm font-medium focus:outline-none"
                                             type="email"
                                             value={form.data.guest_email}
-                                            onChange={(event) => form.setData('guest_email', event.target.value)}
+                                            onChange={(event) =>
+                                                form.setData(
+                                                    'guest_email',
+                                                    event.target.value,
+                                                )
+                                            }
                                             required
                                         />
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700">Nomor HP</label>
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Nomor HP
+                                    </label>
                                     <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
                                         <Phone className="h-4 w-4 text-slate-400" />
                                         <input
@@ -230,7 +304,10 @@ export default function WisataBookingReview({
                                     {!hasPhone && (
                                         <div className="mt-1 text-xs text-rose-600">
                                             Nomor HP belum diisi. Lengkapi di{' '}
-                                            <Link href="/settings/profile" className="font-semibold underline underline-offset-2">
+                                            <Link
+                                                href="/settings/profile"
+                                                className="font-semibold underline underline-offset-2"
+                                            >
                                                 halaman profil
                                             </Link>{' '}
                                             terlebih dahulu.
@@ -238,11 +315,18 @@ export default function WisataBookingReview({
                                     )}
                                 </div>
                                 <div className="md:col-span-2">
-                                    <label className="text-sm font-medium text-slate-700">Permintaan Khusus</label>
+                                    <label className="text-sm font-medium text-slate-700">
+                                        Permintaan Khusus
+                                    </label>
                                     <textarea
                                         className="mt-2 min-h-[110px] w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
                                         value={form.data.special_request}
-                                        onChange={(event) => form.setData('special_request', event.target.value)}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'special_request',
+                                                event.target.value,
+                                            )
+                                        }
                                     />
                                 </div>
                             </div>
@@ -252,30 +336,64 @@ export default function WisataBookingReview({
                                     className="rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-sky-700 disabled:opacity-70"
                                     disabled={loading || !hasPhone}
                                 >
-                                    {loading ? 'Memproses...' : 'Lanjutkan Pembayaran'}
+                                    {loading
+                                        ? 'Memproses...'
+                                        : 'Lanjutkan Pembayaran'}
                                 </button>
                             </div>
                         </form>
                     </div>
                     <aside className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_24px_70px_-36px_rgba(15,23,42,0.34)] lg:sticky lg:top-28">
-                        <h2 className="font-['Space_Grotesk'] text-xl font-black text-slate-950">{destination.destination_name}</h2>
-                        <p className="text-sm text-slate-500">{destination.city_name ?? destination.address_full}</p>
+                        <h2 className="font-['Space_Grotesk'] text-xl font-black text-slate-950">
+                            {destination.destination_name}
+                        </h2>
+                        <p className="text-sm text-slate-500">
+                            {destination.city_name ?? destination.address_full}
+                        </p>
                         <div className="mt-5 space-y-3 rounded-2xl bg-slate-50 p-4 text-sm">
                             <div className="flex justify-between">
                                 <span>Tiket</span>
-                                <span className="font-semibold">{ticket.name}</span>
+                                <span className="font-semibold">
+                                    {ticketItems.length} jenis tiket
+                                </span>
                             </div>
                             <div className="flex justify-between">
                                 <span>Tanggal</span>
-                                <span className="font-semibold">{draft.visit_date}</span>
+                                <span className="font-semibold">
+                                    {draft.visit_date}
+                                </span>
                             </div>
-                            <div className="flex justify-between">
-                                <span>Jumlah</span>
-                                <span className="font-semibold">{draft.quantity} tiket</span>
+                            <div className="space-y-2 border-t border-slate-200 pt-3">
+                                {ticketItems.map((item) => (
+                                    <div
+                                        key={item.ticket_id}
+                                        className="flex items-start justify-between gap-3"
+                                    >
+                                        <div>
+                                            <div className="font-semibold text-slate-900">
+                                                {item.name}
+                                            </div>
+                                            <div className="text-xs text-slate-500">
+                                                {item.quantity} x Rp{' '}
+                                                {item.unit_price.toLocaleString(
+                                                    'id-ID',
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="text-right font-semibold text-slate-900">
+                                            Rp{' '}
+                                            {item.subtotal.toLocaleString(
+                                                'id-ID',
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                            <div className="border-t border-slate-200 pt-3 flex justify-between text-lg font-black text-sky-600">
+                            <div className="flex justify-between border-t border-slate-200 pt-3 text-lg font-black text-sky-600">
                                 <span>Total</span>
-                                <span>Rp {pricing.total.toLocaleString('id-ID')}</span>
+                                <span>
+                                    Rp {pricing.total.toLocaleString('id-ID')}
+                                </span>
                             </div>
                         </div>
                     </aside>
@@ -284,17 +402,30 @@ export default function WisataBookingReview({
             <footer className="mt-10 border-t border-slate-200 bg-white">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
                     <div>
-                        <Link href="/"><img src="/logo.png" alt="Indotix" className="h-11 w-36 object-contain" /></Link>
+                        <Link href="/">
+                            <img
+                                src="/logo.png"
+                                alt="Indotix"
+                                className="h-11 w-36 object-contain"
+                            />
+                        </Link>
                         <p className="mt-3 text-sm text-slate-600">
-                            Neo Soho Capital 40th Floor<br />
+                            Neo Soho Capital 40th Floor
+                            <br />
                             Jl. Tanjung Duren Raya No 1<br />
                             Jakarta Barat, DKI Jakarta 11470
                         </p>
-                        <p className="mt-4 text-sm text-slate-600">0812 9205 9888</p>
-                        <p className="text-sm text-slate-600">info@indotix.co.id</p>
+                        <p className="mt-4 text-sm text-slate-600">
+                            0812 9205 9888
+                        </p>
+                        <p className="text-sm text-slate-600">
+                            info@indotix.co.id
+                        </p>
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Layanan</h4>
+                        <h4 className="text-sm font-semibold text-slate-900">
+                            Layanan
+                        </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>Wisata</li>
                             <li>Special Program</li>
@@ -304,19 +435,41 @@ export default function WisataBookingReview({
                         </ul>
                     </div>
                     <div>
-                        <h4 className="text-sm font-semibold text-slate-900">Perusahaan</h4>
+                        <h4 className="text-sm font-semibold text-slate-900">
+                            Perusahaan
+                        </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>
-                                <Link href="/about" className="transition hover:text-sky-600">Tentang Kami</Link>
+                                <Link
+                                    href="/about"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Tentang Kami
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/jelajah" className="transition hover:text-sky-600">Blog</Link>
+                                <Link
+                                    href="/jelajah"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Blog
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/faq" className="transition hover:text-sky-600">FAQ</Link>
+                                <Link
+                                    href="/faq"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    FAQ
+                                </Link>
                             </li>
                             <li>
-                                <Link href="/privacy-policy" className="transition hover:text-sky-600">Kebijakan Privasi</Link>
+                                <Link
+                                    href="/privacy-policy"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Kebijakan Privasi
+                                </Link>
                             </li>
                         </ul>
                     </div>

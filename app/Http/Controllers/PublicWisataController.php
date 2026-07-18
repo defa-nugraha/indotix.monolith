@@ -7,6 +7,7 @@ use App\Models\PublicContact;
 use App\Models\WisataAffiliateClick;
 use App\Models\WisataAffiliateLink;
 use App\Models\WisataBooking;
+use App\Models\WisataBookingItem;
 use App\Models\WisataTicket;
 use App\Services\ProductReviewService;
 use App\Services\Discovery\DiscoveryService;
@@ -129,12 +130,7 @@ class PublicWisataController extends Controller
             ->where('is_closed', false)
             ->get()
             ->map(function (WisataTicket $ticket) use ($data) {
-                $reserved = WisataBooking::query()
-                    ->where('wisata_ticket_id', $ticket->id)
-                    ->whereDate('visit_date', $data['visit_date'])
-                    ->whereIn('status', ['pending_payment', 'paid', 'completed'])
-                    ->sum('quantity');
-
+                $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);
 
@@ -282,5 +278,26 @@ class PublicWisataController extends Controller
         }
 
         return null;
+    }
+
+    private function reservedTicketQuantity(int $ticketId, string $date): int
+    {
+        $itemReserved = WisataBookingItem::query()
+            ->where('wisata_ticket_id', $ticketId)
+            ->whereHas('booking', function ($query) use ($date) {
+                $query
+                    ->whereDate('visit_date', $date)
+                    ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+            })
+            ->sum('quantity');
+
+        $legacyReserved = WisataBooking::query()
+            ->where('wisata_ticket_id', $ticketId)
+            ->whereDate('visit_date', $date)
+            ->whereIn('status', ['pending_payment', 'paid', 'completed'])
+            ->whereDoesntHave('items')
+            ->sum('quantity');
+
+        return (int) $itemReserved + (int) $legacyReserved;
     }
 }

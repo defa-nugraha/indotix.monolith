@@ -47,6 +47,19 @@
 </head>
 <body>
     <div class="ticket">
+        @php
+            $ticketRows = $booking->items && $booking->items->isNotEmpty()
+                ? $booking->items->map(fn ($item) => [
+                    'name' => $item->ticket_name ?? $item->ticket?->name ?? 'Tiket Wisata',
+                    'quantity' => (int) $item->quantity,
+                    'subtotal' => (int) $item->subtotal,
+                ])
+                : collect([[
+                    'name' => $booking->ticket?->name ?? 'Tiket Wisata',
+                    'quantity' => (int) $booking->quantity,
+                    'subtotal' => (int) ($booking->total_price ?? 0),
+                ]]);
+        @endphp
         <div class="brand-ribbon">indotix</div>
         <div class="topbar">
             <div>
@@ -75,7 +88,9 @@
                 <div style="font-size:12px; font-weight:700;">{{ $booking->destination?->destination_name ?? '-' }}</div>
                 <div class="route-sub">{{ $booking->destination?->address_full ?? '-' }}</div>
                 <div class="section-title">Informasi Tiket</div>
-                <div style="font-size:12px; font-weight:700;">{{ $booking->ticket?->name ?? 'Tiket Wisata' }}</div>
+                <div style="font-size:12px; font-weight:700;">
+                    {{ $ticketRows->count() > 1 ? $ticketRows->count().' jenis tiket' : $ticketRows->first()['name'] }}
+                </div>
                 <div class="route-sub">Berlaku {{ $booking->visit_date?->format('d M Y') }}</div>
             </div>
             <div>
@@ -113,13 +128,15 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>1</td>
-                    <td>{{ $booking->guest_name ?? '-' }}</td>
-                    <td>{{ $booking->ticket?->name ?? 'Tiket Wisata' }}</td>
-                    <td>{{ $booking->quantity }}</td>
-                    <td>Rp {{ number_format($booking->total_price ?? 0, 0, ',', '.') }}</td>
-                </tr>
+                @foreach ($ticketRows as $index => $item)
+                    <tr>
+                        <td>{{ $index + 1 }}</td>
+                        <td>{{ $booking->guest_name ?? '-' }}</td>
+                        <td>{{ $item['name'] }}</td>
+                        <td>{{ $item['quantity'] }}</td>
+                        <td>Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
 

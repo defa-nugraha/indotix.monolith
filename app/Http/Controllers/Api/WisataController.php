@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\WisataBooking;
+use App\Models\WisataBookingItem;
 use App\Models\WisataTicket;
 use App\Services\ProductReviewService;
 use Carbon\Carbon;
@@ -49,12 +50,7 @@ class WisataController extends Controller
             $items = $tickets->get($destination->id, collect());
 
             $ticketRows = $items->map(function (WisataTicket $ticket) use ($data) {
-                $reserved = WisataBooking::query()
-                    ->where('wisata_ticket_id', $ticket->id)
-                    ->whereDate('visit_date', $data['visit_date'])
-                    ->whereIn('status', ['pending_payment', 'paid', 'completed'])
-                    ->sum('quantity');
-
+                $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);
 
@@ -133,12 +129,7 @@ class WisataController extends Controller
             ->where('is_closed', false)
             ->get()
             ->map(function (WisataTicket $ticket) use ($data) {
-                $reserved = WisataBooking::query()
-                    ->where('wisata_ticket_id', $ticket->id)
-                    ->whereDate('visit_date', $data['visit_date'])
-                    ->whereIn('status', ['pending_payment', 'paid', 'completed'])
-                    ->sum('quantity');
-
+                $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);
 
@@ -310,6 +301,27 @@ class WisataController extends Controller
         }
 
         return $this->fallbackImageUrl($destination->id);
+    }
+
+    private function reservedTicketQuantity(int $ticketId, string $date): int
+    {
+        $itemReserved = WisataBookingItem::query()
+            ->where('wisata_ticket_id', $ticketId)
+            ->whereHas('booking', function ($query) use ($date) {
+                $query
+                    ->whereDate('visit_date', $date)
+                    ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+            })
+            ->sum('quantity');
+
+        $legacyReserved = WisataBooking::query()
+            ->where('wisata_ticket_id', $ticketId)
+            ->whereDate('visit_date', $date)
+            ->whereIn('status', ['pending_payment', 'paid', 'completed'])
+            ->whereDoesntHave('items')
+            ->sum('quantity');
+
+        return (int) $itemReserved + (int) $legacyReserved;
     }
 
     private function fallbackImageUrl(int $id): string
