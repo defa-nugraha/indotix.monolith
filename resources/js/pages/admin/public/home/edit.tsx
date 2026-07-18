@@ -1,11 +1,67 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import Swal from 'sweetalert2';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
+import {
+    BadgePercent,
+    Backpack,
+    BaggageClaim,
+    Bell,
+    Bike,
+    Binoculars,
+    BookOpen,
+    Bus,
+    CableCar,
+    Camera,
+    Car,
+    Check,
+    ChevronDown,
+    Compass,
+    Droplets,
+    FerrisWheel,
+    Gift,
+    GraduationCap,
+    Home as HomeIcon,
+    Landmark,
+    MapPin,
+    Mountain,
+    Navigation,
+    Plane,
+    RefreshCcw,
+    Sailboat,
+    ShieldCheck,
+    Ship,
+    ShipWheel,
+    Sparkles,
+    Sprout,
+    Sun,
+    Sunrise,
+    Sunset,
+    Tent,
+    TentTree,
+    Ticket,
+    Train,
+    TreePalm,
+    TreePine,
+    Trees,
+    Umbrella,
+    Utensils,
+    Volleyball,
+    Waves,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -48,14 +104,10 @@ const categoryFields: Field[] = Array.from({ length: 10 }, (_, index) => {
 
 const sections: { title: string; description: string; fields: Field[] }[] = [
     {
-        title: 'Hero dan menu cepat',
+        title: 'Kategori wisata',
         description:
-            'Mengatur field pencarian dan menu kategori yang muncul di atas halaman home.',
-        fields: [
-            { key: 'search_placeholder', label: 'Placeholder pencarian' },
-            { key: 'search_button_label', label: 'Teks tombol pencarian' },
-            ...categoryFields,
-        ],
+            'Mengatur menu kategori wisata yang muncul di bawah banner halaman home.',
+        fields: [...categoryFields],
     },
     {
         title: 'Kupon pengguna baru',
@@ -218,9 +270,66 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
     },
 ];
 
+const adminHomeIconMap = {
+    BadgePercent,
+    Gift,
+    Navigation,
+    BookOpen,
+    ShieldCheck,
+    Ticket,
+    Bell,
+    RefreshCcw,
+    MapPin,
+    Sparkles,
+    Mountain,
+    Landmark,
+    GraduationCap,
+    Utensils,
+    HomeIcon,
+    Waves,
+    Trees,
+    Droplets,
+    Compass,
+    Backpack,
+    BaggageClaim,
+    Bike,
+    Binoculars,
+    Bus,
+    CableCar,
+    Camera,
+    Car,
+    FerrisWheel,
+    Plane,
+    Sailboat,
+    Ship,
+    ShipWheel,
+    Sprout,
+    Sun,
+    Sunrise,
+    Sunset,
+    Tent,
+    TentTree,
+    Train,
+    TreePalm,
+    TreePine,
+    Umbrella,
+    Volleyball,
+} satisfies Record<string, LucideIcon>;
+
+const resolveAdminHomeIcon = (value: string | undefined | null) =>
+    adminHomeIconMap[value as keyof typeof adminHomeIconMap] ?? Sparkles;
+
 export default function HomeContentEdit({ content }: Props) {
     const form = useForm<HomeContentValues>({ ...content.values });
-    const iconOptions = Object.entries(content.icon_options);
+    const [activeIconField, setActiveIconField] = useState<string | null>(null);
+    const iconOptions = useMemo(
+        () => Object.entries(content.icon_options),
+        [content.icon_options],
+    );
+    const activeIconFieldLabel =
+        sections
+            .flatMap((section) => section.fields)
+            .find((field) => field.key === activeIconField)?.label ?? 'Icon';
 
     const resetToDefault = (key: string) => {
         form.setData(key, content.defaults[key] ?? '');
@@ -301,30 +410,46 @@ export default function HomeContentEdit({ content }: Props) {
                                         </div>
 
                                         {field.type === 'icon' ? (
-                                            <select
+                                            <button
+                                                type="button"
                                                 id={field.key}
-                                                value={
-                                                    form.data[field.key] ?? ''
-                                                }
-                                                onChange={(event) =>
-                                                    form.setData(
+                                                onClick={() =>
+                                                    setActiveIconField(
                                                         field.key,
-                                                        event.target.value,
                                                     )
                                                 }
-                                                className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
+                                                className="flex h-12 w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 text-left text-sm shadow-xs transition hover:border-sky-300 hover:bg-sky-50/60 focus-visible:ring-[3px] focus-visible:ring-sky-500/20 focus-visible:outline-none"
                                             >
-                                                {iconOptions.map(
-                                                    ([value, label]) => (
-                                                        <option
-                                                            key={value}
-                                                            value={value}
-                                                        >
-                                                            {label}
-                                                        </option>
-                                                    ),
-                                                )}
-                                            </select>
+                                                <span className="flex min-w-0 items-center gap-3">
+                                                    {(() => {
+                                                        const Icon =
+                                                            resolveAdminHomeIcon(
+                                                                form.data[
+                                                                    field.key
+                                                                ],
+                                                            );
+                                                        const label =
+                                                            content
+                                                                .icon_options[
+                                                                form.data[
+                                                                    field.key
+                                                                ] ?? ''
+                                                            ] ?? 'Pilih icon';
+
+                                                        return (
+                                                            <>
+                                                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+                                                                    <Icon className="h-5 w-5" />
+                                                                </span>
+                                                                <span className="truncate font-medium text-slate-800">
+                                                                    {label}
+                                                                </span>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </span>
+                                                <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+                                            </button>
                                         ) : (
                                             <Input
                                                 id={field.key}
@@ -363,6 +488,78 @@ export default function HomeContentEdit({ content }: Props) {
                         </Button>
                     </div>
                 </form>
+
+                <Dialog
+                    open={Boolean(activeIconField)}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setActiveIconField(null);
+                        }
+                    }}
+                >
+                    <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>Pilih icon kategori</DialogTitle>
+                            <DialogDescription>
+                                Pilih icon yang paling sesuai untuk{' '}
+                                {activeIconFieldLabel.toLowerCase()}.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="grid max-h-[62vh] gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
+                            {iconOptions.map(([value, label]) => {
+                                const Icon = resolveAdminHomeIcon(value);
+                                const selected =
+                                    activeIconField !== null &&
+                                    form.data[activeIconField] === value;
+
+                                return (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        onClick={() => {
+                                            if (activeIconField) {
+                                                form.setData(
+                                                    activeIconField,
+                                                    value,
+                                                );
+                                            }
+                                            setActiveIconField(null);
+                                        }}
+                                        className={`flex items-center justify-between gap-3 rounded-2xl border p-3 text-left transition ${
+                                            selected
+                                                ? 'border-sky-400 bg-sky-50 text-sky-800 shadow-sm'
+                                                : 'border-slate-200 bg-white text-slate-700 hover:border-sky-200 hover:bg-sky-50/60'
+                                        }`}
+                                    >
+                                        <span className="flex min-w-0 items-center gap-3">
+                                            <span
+                                                className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
+                                                    selected
+                                                        ? 'bg-sky-600 text-white'
+                                                        : 'bg-slate-100 text-slate-600'
+                                                }`}
+                                            >
+                                                <Icon className="h-5 w-5" />
+                                            </span>
+                                            <span className="min-w-0">
+                                                <span className="block truncate text-sm font-semibold">
+                                                    {label}
+                                                </span>
+                                                <span className="block truncate text-xs text-slate-500">
+                                                    {value}
+                                                </span>
+                                            </span>
+                                        </span>
+                                        {selected && (
+                                            <Check className="h-4 w-4 shrink-0 text-sky-600" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

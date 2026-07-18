@@ -93,7 +93,7 @@ test('invalid banner replacement keeps the current image', function () {
     Storage::disk('public')->assertExists($oldPath);
 });
 
-test('only one public banner can be active at a time', function () {
+test('multiple public banners can be active for homepage carousel', function () {
     Storage::fake('public');
     $admin = superAdminForUploadTest();
 
@@ -121,8 +121,8 @@ test('only one public banner can be active at a time', function () {
 
     $secondBanner = PublicBanner::query()->where('title', 'Banner Kedua')->firstOrFail();
 
-    expect(PublicBanner::query()->where('is_active', true)->count())->toBe(1)
-        ->and($firstBanner->fresh()->is_active)->toBeFalse()
+    expect(PublicBanner::query()->where('is_active', true)->count())->toBe(2)
+        ->and($firstBanner->fresh()->is_active)->toBeTrue()
         ->and($secondBanner->fresh()->is_active)->toBeTrue();
 
     $this->actingAs($admin)
@@ -135,9 +135,9 @@ test('only one public banner can be active at a time', function () {
         ->assertRedirect('/admin/public/banners')
         ->assertSessionHasNoErrors();
 
-    expect(PublicBanner::query()->where('is_active', true)->count())->toBe(1)
+    expect(PublicBanner::query()->where('is_active', true)->count())->toBe(2)
         ->and($firstBanner->fresh()->is_active)->toBeTrue()
-        ->and($secondBanner->fresh()->is_active)->toBeFalse();
+        ->and($secondBanner->fresh()->is_active)->toBeTrue();
 });
 
 test('promo homepage slots cannot be reused', function () {

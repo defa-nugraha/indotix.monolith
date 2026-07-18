@@ -3,7 +3,7 @@
 test('public home product surface prioritizes wisata', function () {
     $source = file_get_contents(__DIR__.'/../../resources/js/pages/welcome.tsx');
     $contentSource = file_get_contents(__DIR__.'/../../app/Support/HomePageContent.php');
-    $heroPosition = strpos($source, 'homeContent.search.placeholder');
+    $heroPosition = strpos($source, 'bannerSlides.map');
     $wisataPosition = strpos($source, 'id="featured-destinations-section"');
 
     expect($source)
@@ -12,7 +12,9 @@ test('public home product surface prioritizes wisata', function () {
         ->toContain('title="Indotix - Pesan Tiket Wisata dan Destinasi Rekreasi"')
         ->toContain("'query-input': 'required name=search_term_string'")
         ->toContain('homeContent.categories.map')
-        ->toContain('homeContent.search.button_label')
+        ->toContain('bannerSlides.map')
+        ->toContain('setActiveBannerIndex')
+        ->toContain('window.setInterval')
         ->toContain('id="featured-destinations-section"')
         ->toContain('homeContent.featured.title')
         ->toContain('featuredProducts.map((item)')
@@ -53,6 +55,8 @@ test('banner upload does not automatically resize images and home avoids dummy b
         ->not->toContain('Menyiapkan gambar');
 
     expect($homeSource)
+        ->toContain('bannerSlides.map')
+        ->toContain('window.setInterval')
         ->not->toContain('aspect-[842/236]')
         ->not->toContain('https://images.unsplash.com')
         ->not->toContain('gradient:')

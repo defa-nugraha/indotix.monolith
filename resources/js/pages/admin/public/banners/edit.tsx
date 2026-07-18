@@ -145,7 +145,8 @@ export default function BannerEdit({ banner }: { banner: Banner }) {
                             </label>
                         </div>
                         <p className="text-xs text-slate-500">
-                            Hanya satu banner yang bisa aktif. Jika banner ini diaktifkan, banner aktif lain akan otomatis dinonaktifkan.
+                            Banner aktif akan masuk ke carousel halaman depan
+                            sesuai urutan yang diatur.
                         </p>
                         <Button
                             type="submit"

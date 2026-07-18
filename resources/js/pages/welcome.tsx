@@ -12,15 +12,23 @@ import PublicLayout from '@/layouts/public-layout';
 import { PublicSeo } from '@/components/public-seo';
 import {
     BadgePercent,
+    Backpack,
+    BaggageClaim,
     Bell,
+    Bike,
+    Binoculars,
     BookOpen,
+    Bus,
+    CableCar,
     Camera,
+    Car,
     Check,
     ChevronRight,
     Compass,
     Copy,
     Download,
     Droplets,
+    FerrisWheel,
     GraduationCap,
     Gift,
     Home as HomeIcon,
@@ -30,16 +38,30 @@ import {
     MapPin,
     Mountain,
     Navigation,
+    Plane,
     Play,
     RefreshCcw,
-    Search,
+    Sailboat,
     Send,
     ShieldCheck,
+    Ship,
+    ShipWheel,
     Sparkles,
+    Sprout,
+    Sun,
+    Sunrise,
+    Sunset,
+    Tent,
+    TentTree,
     Ticket,
     TicketPercent,
+    Train,
+    TreePalm,
+    TreePine,
     Trees,
+    Umbrella,
     Utensils,
+    Volleyball,
     Waves,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -174,6 +196,30 @@ const homeIconMap = {
     Trees,
     Droplets,
     Compass,
+    Backpack,
+    BaggageClaim,
+    Bike,
+    Binoculars,
+    Bus,
+    CableCar,
+    Camera,
+    Car,
+    FerrisWheel,
+    Plane,
+    Sailboat,
+    Ship,
+    ShipWheel,
+    Sprout,
+    Sun,
+    Sunrise,
+    Sunset,
+    Tent,
+    TentTree,
+    Train,
+    TreePalm,
+    TreePine,
+    Umbrella,
+    Volleyball,
 } satisfies Record<string, LucideIcon>;
 
 const resolveHomeIcon = (
@@ -225,6 +271,7 @@ export default function Welcome({
     );
     const [shouldLoadSpecialPromoVideo, setShouldLoadSpecialPromoVideo] =
         useState(false);
+    const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
     const categories = [
         {
@@ -324,9 +371,40 @@ export default function Welcome({
             })
             .slice(0, 6);
     }, [featuredProductIds, userLocation, wisataProducts]);
-    const heroImage =
-        (banners[0]?.image_path ? `/storage/${banners[0].image_path}` : null) ??
-        wisataProducts.find((item) => item.image_url)?.image_url;
+    const bannerSlides = useMemo(() => {
+        const configuredBanners = banners
+            .filter((banner) => Boolean(banner.image_path))
+            .map((banner) => ({
+                id: `banner-${banner.id}`,
+                title: 'Banner Indotix',
+                imageUrl: banner.image_path.startsWith('http')
+                    ? banner.image_path
+                    : `/storage/${banner.image_path}`,
+                href: banner.link_url?.trim() || null,
+            }));
+
+        if (configuredBanners.length > 0) {
+            return configuredBanners;
+        }
+
+        const fallbackDestination = wisataProducts.find(
+            (item) => item.image_url,
+        );
+
+        return fallbackDestination?.image_url
+            ? [
+                  {
+                      id: `fallback-${fallbackDestination.id}`,
+                      title: fallbackDestination.name,
+                      imageUrl: fallbackDestination.image_url,
+                      href: fallbackDestination.slug
+                          ? `/wisata/${fallbackDestination.slug}`
+                          : null,
+                  },
+              ]
+            : [];
+    }, [banners, wisataProducts]);
+    const heroImage = bannerSlides[activeBannerIndex]?.imageUrl ?? null;
     const addressText =
         contact?.address ??
         'Neo Soho Capital 40th Floor\\nJl. Tanjung Duren Raya No 1\\nJakarta Barat, DKI Jakarta 11470';
@@ -413,6 +491,24 @@ export default function Welcome({
         { length: 4 },
         (_, index) => specialPromoImageCards[index] ?? null,
     );
+
+    useEffect(() => {
+        setActiveBannerIndex(0);
+    }, [bannerSlides.length]);
+
+    useEffect(() => {
+        if (bannerSlides.length <= 1) {
+            return;
+        }
+
+        const timer = window.setInterval(() => {
+            setActiveBannerIndex((current) =>
+                current + 1 >= bannerSlides.length ? 0 : current + 1,
+            );
+        }, 5000);
+
+        return () => window.clearInterval(timer);
+    }, [bannerSlides.length]);
 
     useEffect(() => {
         const downloadUrl = contact?.download_url?.trim();
@@ -691,12 +787,50 @@ export default function Welcome({
             <main className="space-y-8 pb-0 font-sans text-slate-800">
                 <section className="relative z-10 h-[clamp(200px,24vw,360px)] w-full border-b border-slate-200 text-slate-800 shadow-md">
                     <div className="absolute inset-0 -z-10 overflow-hidden bg-[linear-gradient(135deg,#dbeafe,#f8fafc_45%,#e0f2fe)]">
-                        {heroImage ? (
-                            <img
-                                src={heroImage}
-                                alt="Destinasi wisata Indotix"
-                                className="absolute inset-0 h-full w-full object-fill"
-                            />
+                        {bannerSlides.length > 0 ? (
+                            bannerSlides.map((slide, index) => {
+                                const image = (
+                                    <img
+                                        src={slide.imageUrl}
+                                        alt={slide.title}
+                                        className={`absolute inset-0 h-full w-full object-fill transition-opacity duration-700 ${
+                                            index === activeBannerIndex
+                                                ? 'opacity-100'
+                                                : 'opacity-0'
+                                        }`}
+                                    />
+                                );
+
+                                if (!slide.href) {
+                                    return <div key={slide.id}>{image}</div>;
+                                }
+
+                                const sharedLinkProps = {
+                                    key: slide.id,
+                                    'aria-hidden': index !== activeBannerIndex,
+                                    tabIndex:
+                                        index === activeBannerIndex ? 0 : -1,
+                                    className: 'absolute inset-0',
+                                };
+
+                                return slide.href.startsWith('http') ? (
+                                    <a
+                                        {...sharedLinkProps}
+                                        href={slide.href}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                    >
+                                        {image}
+                                    </a>
+                                ) : (
+                                    <Link
+                                        {...sharedLinkProps}
+                                        href={slide.href}
+                                    >
+                                        {image}
+                                    </Link>
+                                );
+                            })
                         ) : (
                             <div className="absolute inset-0 bg-[linear-gradient(135deg,#dbeafe,#f8fafc_45%,#e0f2fe)]" />
                         )}
@@ -710,26 +844,25 @@ export default function Welcome({
 
                     <div className="absolute right-0 bottom-0 left-0 z-20 px-4 sm:px-6 lg:px-8">
                         <div className="mx-auto max-w-6xl space-y-3">
-                            <form
-                                action="/wisata"
-                                method="get"
-                                className="relative mx-auto flex max-w-2xl translate-y-3 items-center rounded-full border border-slate-200 bg-white p-1.5 text-slate-800 shadow-lg transition-all focus-within:border-transparent focus-within:ring-4 focus-within:ring-sky-500/20 sm:-translate-y-2"
-                            >
-                                <Search className="ml-4 h-5 w-5 shrink-0 text-slate-400" />
-                                <input
-                                    type="search"
-                                    name="q"
-                                    placeholder={homeContent.search.placeholder}
-                                    aria-label={homeContent.search.placeholder}
-                                    className="flex-1 border-none bg-transparent px-3 py-2 text-xs font-medium placeholder:text-slate-400 focus:outline-none sm:text-sm"
-                                />
-                                <button
-                                    type="submit"
-                                    className="shrink-0 rounded-full bg-sky-600 px-6 py-2.5 text-xs font-bold tracking-wide text-white uppercase shadow-md transition-all hover:bg-sky-700 sm:text-sm"
-                                >
-                                    {homeContent.search.button_label}
-                                </button>
-                            </form>
+                            {bannerSlides.length > 1 && (
+                                <div className="flex items-center justify-center gap-2">
+                                    {bannerSlides.map((slide, index) => (
+                                        <button
+                                            key={`${slide.id}-indicator`}
+                                            type="button"
+                                            onClick={() =>
+                                                setActiveBannerIndex(index)
+                                            }
+                                            aria-label={`Tampilkan banner ${index + 1}`}
+                                            className={`h-2.5 rounded-full transition-all ${
+                                                index === activeBannerIndex
+                                                    ? 'w-8 bg-white shadow-md'
+                                                    : 'w-2.5 bg-white/60 hover:bg-white/90'
+                                            }`}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                             <div className="flex translate-y-1/2 items-center gap-2 overflow-x-auto scroll-smooth rounded-2xl border border-slate-100 bg-white p-3 shadow-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                                 {chipItems.map((chip) => {
                                     const Icon = chip.icon;
@@ -752,7 +885,7 @@ export default function Welcome({
 
                 <div className="h-3 sm:h-4" />
 
-                <section className="relative mx-auto max-w-7xl space-y-5 overflow-hidden px-4 pt-0 sm:px-6 lg:px-8">
+                <section className="relative mx-auto max-w-6xl space-y-5 overflow-hidden px-4 pt-0 sm:px-6 lg:px-8">
                     <div className="pointer-events-none absolute top-8 right-12 hidden text-sky-700/45 lg:block">
                         <Send className="h-14 w-14 rotate-12 stroke-[1.5]" />
                         <div className="mt-1 ml-10 h-8 w-24 rounded-[50%] border-b border-dashed border-sky-400/50" />
@@ -880,7 +1013,7 @@ export default function Welcome({
                     </div>
                 </section>
 
-                <section className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
+                <section className="mx-auto max-w-6xl space-y-5 px-4 sm:px-6 lg:px-8">
                     <div className="flex items-start gap-3">
                         <CouponIcon className="mt-1 h-6 w-6 shrink-0 text-sky-600" />
                         <div>
@@ -980,7 +1113,7 @@ export default function Welcome({
                     )}
                 </section>
 
-                <section className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
+                <section className="mx-auto max-w-6xl space-y-5 px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-3">
                         <PromoIcon className="h-6 w-6 shrink-0 text-sky-600" />
                         <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
@@ -1045,7 +1178,7 @@ export default function Welcome({
 
                 <section
                     id="featured-destinations-section"
-                    className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8"
+                    className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8"
                 >
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
@@ -1091,7 +1224,7 @@ export default function Welcome({
                     )}
                 </section>
 
-                <section className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+                <section className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
                     <div className="flex flex-col justify-between gap-4 rounded-3xl border border-sky-100 bg-sky-50/70 p-5 sm:flex-row sm:items-center">
                         <div>
                             <p className="flex items-center gap-2 text-xs font-bold tracking-wider text-sky-600 uppercase">
@@ -1145,7 +1278,7 @@ export default function Welcome({
                     )}
                 </section>
 
-                <section className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+                <section className="mx-auto max-w-6xl space-y-6 px-4 sm:px-6 lg:px-8">
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
                             <p className="flex items-center gap-2 text-xs font-bold tracking-wider text-sky-600 uppercase">

@@ -27,13 +27,15 @@ test('public mobile navigation adapts to guests and user accounts', function () 
 
 test('public home follows the tourism design without dummy promo rails', function () {
     $home = file_get_contents(__DIR__.'/../../resources/js/pages/welcome.tsx');
+    $adminHome = file_get_contents(__DIR__.'/../../resources/js/pages/admin/public/home/edit.tsx');
     $contentSource = file_get_contents(__DIR__.'/../../app/Support/HomePageContent.php');
     $styles = file_get_contents(__DIR__.'/../../resources/css/app.css');
 
     expect($home)
         ->toContain('space-y-8 pb-0 font-sans text-slate-800')
-        ->toContain('homeContent.search.placeholder')
         ->toContain('homeContent.categories.map')
+        ->toContain('bannerSlides.map')
+        ->toContain('window.setInterval')
         ->toContain('homeContent.special_promo.title')
         ->toContain('const [shouldLoadSpecialPromoVideo')
         ->toContain('shouldLoadSpecialPromoVideo &&')
@@ -63,12 +65,20 @@ test('public home follows the tourism design without dummy promo rails', functio
 
     expect($contentSource)
         ->toContain('Cari kota, destinasi, atau tiket wisata...')
+        ->toContain("'TreePalm' => 'Tropis / Pantai'")
         ->toContain('special_promo_video_url')
         ->toContain('special_promo_card_4_image_url')
         ->toContain('category_1_label')
         ->toContain('Destinasi Wisata Unggulan')
         ->toContain('Rekomendasi Terdekat')
         ->toContain('Jelajah Indotix');
+
+    expect($adminHome)
+        ->toContain('Pilih icon kategori')
+        ->toContain('activeIconField')
+        ->toContain('adminHomeIconMap')
+        ->not->toContain('Placeholder pencarian')
+        ->not->toContain('Teks tombol pencarian');
 
     expect($styles)
         ->toContain('.public-shell footer > div:first-child')

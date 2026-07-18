@@ -60,27 +60,34 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
             </Head>
 
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
-                <div className="pointer-events-none absolute -left-32 top-12 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-                <div className="pointer-events-none absolute right-[-10%] top-0 h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
+                <div className="pointer-events-none absolute top-12 -left-32 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
+                <div className="pointer-events-none absolute top-0 right-[-10%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
 
                 <section className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-2">
-                            <p className="text-xs font-semibold uppercase text-sky-600">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Banner
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
                                 Kelola banner halaman publik
                             </h1>
                             <p className="text-sm text-slate-600">
-                                Tambah, ubah, dan atur urutan banner.
+                                Tambah, ubah, dan atur urutan banner carousel
+                                halaman depan.
                             </p>
                             <p className="text-xs text-slate-500">
+                                Banner aktif akan tampil otomatis sesuai urutan.
                                 Ukuran banner: 1200 × 450 px.
                             </p>
                         </div>
-                        <Button asChild className="bg-sky-600 text-white hover:bg-sky-700">
-                            <Link href="/admin/public/banners/create">Tambah Banner</Link>
+                        <Button
+                            asChild
+                            className="bg-sky-600 text-white hover:bg-sky-700"
+                        >
+                            <Link href="/admin/public/banners/create">
+                                Tambah Banner
+                            </Link>
                         </Button>
                     </div>
                 </section>
@@ -88,18 +95,31 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+                            <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
-                                    <th className="px-4 py-3 text-left">Preview</th>
-                                    <th className="px-4 py-3 text-left">Judul</th>
-                                    <th className="px-4 py-3 text-left">Urutan</th>
-                                    <th className="px-4 py-3 text-left">Status</th>
-                                    <th className="px-4 py-3 text-left">Aksi</th>
+                                    <th className="px-4 py-3 text-left">
+                                        Preview
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Judul
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Urutan
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Status
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Aksi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {banners.map((banner) => (
-                                    <tr key={banner.id} className="border-t border-slate-100">
+                                    <tr
+                                        key={banner.id}
+                                        className="border-t border-slate-100"
+                                    >
                                         <td className="px-4 py-3">
                                             <img
                                                 src={`/storage/${banner.image_path}`}
@@ -112,24 +132,46 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                                                 {banner.title ?? 'Tanpa judul'}
                                             </div>
                                             {banner.link_url && (
-                                                <div className="text-xs text-slate-500">{banner.link_url}</div>
+                                                <div className="text-xs text-slate-500">
+                                                    {banner.link_url}
+                                                </div>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3">{banner.sort_order}</td>
                                         <td className="px-4 py-3">
-                                            <Badge className={banner.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}>
-                                                {banner.is_active ? 'active' : 'inactive'}
+                                            {banner.sort_order}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <Badge
+                                                className={
+                                                    banner.is_active
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-slate-100 text-slate-500'
+                                                }
+                                            >
+                                                {banner.is_active
+                                                    ? 'active'
+                                                    : 'inactive'}
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="flex gap-2">
-                                                <Button asChild variant="outline" className="border-sky-200 text-slate-700 hover:bg-sky-50">
-                                                    <Link href={`/admin/public/banners/${banner.id}/edit`}>Edit</Link>
+                                                <Button
+                                                    asChild
+                                                    variant="outline"
+                                                    className="border-sky-200 text-slate-700 hover:bg-sky-50"
+                                                >
+                                                    <Link
+                                                        href={`/admin/public/banners/${banner.id}/edit`}
+                                                    >
+                                                        Edit
+                                                    </Link>
                                                 </Button>
                                                 <Button
                                                     variant="outline"
                                                     className="border-red-200 text-red-600 hover:bg-red-50"
-                                                    onClick={() => handleDelete(banner.id)}
+                                                    onClick={() =>
+                                                        handleDelete(banner.id)
+                                                    }
                                                 >
                                                     Hapus
                                                 </Button>
@@ -139,7 +181,10 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                                 ))}
                                 {banners.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td
+                                            colSpan={5}
+                                            className="px-4 py-8 text-center text-sm text-slate-500"
+                                        >
                                             Belum ada banner.
                                         </td>
                                     </tr>

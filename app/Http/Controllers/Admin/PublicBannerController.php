@@ -7,7 +7,6 @@ use App\Models\PublicBanner;
 use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -49,19 +48,13 @@ class PublicBannerController extends Controller
         $isActive = (bool) ($data['is_active'] ?? true);
 
         try {
-            DB::transaction(function () use ($data, $isActive, $path) {
-                if ($isActive) {
-                    PublicBanner::query()->where('is_active', true)->update(['is_active' => false]);
-                }
-
-                PublicBanner::create([
-                    'title' => $data['title'] ?? null,
-                    'link_url' => $data['link_url'] ?? null,
-                    'sort_order' => $data['sort_order'] ?? 0,
-                    'is_active' => $isActive,
-                    'image_path' => $path,
-                ]);
-            });
+            PublicBanner::create([
+                'title' => $data['title'] ?? null,
+                'link_url' => $data['link_url'] ?? null,
+                'sort_order' => $data['sort_order'] ?? 0,
+                'is_active' => $isActive,
+                'image_path' => $path,
+            ]);
         } catch (\Throwable $exception) {
             Storage::disk('public')->delete($path);
 
@@ -102,22 +95,13 @@ class PublicBannerController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($banner, $data, $isActive) {
-                if ($isActive) {
-                    PublicBanner::query()
-                        ->where('id', '!=', $banner->id)
-                        ->where('is_active', true)
-                        ->update(['is_active' => false]);
-                }
-
-                $banner->fill([
-                    'title' => $data['title'] ?? null,
-                    'link_url' => $data['link_url'] ?? null,
-                    'sort_order' => $data['sort_order'] ?? 0,
-                    'is_active' => $isActive,
-                ]);
-                $banner->save();
-            });
+            $banner->fill([
+                'title' => $data['title'] ?? null,
+                'link_url' => $data['link_url'] ?? null,
+                'sort_order' => $data['sort_order'] ?? 0,
+                'is_active' => $isActive,
+            ]);
+            $banner->save();
         } catch (\Throwable $exception) {
             if ($newImagePath) {
                 Storage::disk('public')->delete($newImagePath);

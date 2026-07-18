@@ -21,7 +21,8 @@ test('admin can manage dynamic public home content', function () {
             ->component('admin/public/home/edit')
             ->where('content.values.search_placeholder', HomePageContent::DEFAULTS['search_placeholder'])
             ->where('content.values.coupon_title', HomePageContent::DEFAULTS['coupon_title'])
-            ->where('content.icon_options.Gift', HomePageContent::ICON_OPTIONS['Gift']));
+            ->where('content.icon_options.Gift', HomePageContent::ICON_OPTIONS['Gift'])
+            ->where('content.icon_options.TreePalm', HomePageContent::ICON_OPTIONS['TreePalm']));
 
     $payload = HomePageContent::DEFAULTS;
     $payload['search_placeholder'] = 'Cari wisata keluarga favoritmu';
