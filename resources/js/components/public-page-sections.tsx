@@ -131,30 +131,48 @@ export function PublicPartnerSection({
         return null;
     }
 
-    const marqueeItems = [...partners, ...partners];
+    const minimumRepeatCount = Math.max(2, Math.ceil(10 / partners.length));
+    const repeatCount =
+        minimumRepeatCount % 2 === 0
+            ? minimumRepeatCount
+            : minimumRepeatCount + 1;
+    const marqueeItems = Array.from({ length: repeatCount }).flatMap(
+        () => partners,
+    );
 
     return (
-        <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-white py-8 sm:py-10">
-            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-white to-transparent sm:w-32" />
-            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-white to-transparent sm:w-32" />
-            <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-                <h2 className="text-2xl font-light tracking-tight text-slate-700 sm:text-3xl">
+        <section
+            className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden border-y border-sky-100/70 bg-gradient-to-b from-white via-sky-50/70 to-white py-8 sm:py-10"
+            aria-label="Partner Indotix"
+        >
+            <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
+                <div className="inline-flex items-center gap-2 text-xs font-black tracking-wider text-sky-600 uppercase">
+                    <Sparkles className="h-4 w-4" />
+                    Kolaborasi terpercaya
+                </div>
+                <h2 className="mt-2 font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
                     Partner Indotix
                 </h2>
+                <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
+                    Bersama mitra pilihan untuk menghadirkan pengalaman wisata
+                    yang lebih mudah, aman, dan nyaman.
+                </p>
             </div>
-            <div className="mt-7 flex overflow-hidden">
-                <div className="partner-logo-marquee flex min-w-max items-center gap-8 pr-8 sm:gap-12 sm:pr-12">
+            <div className="relative mt-7 overflow-hidden">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-sky-50 via-sky-50/80 to-transparent sm:w-36" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-sky-50 via-sky-50/80 to-transparent sm:w-36" />
+                <div className="partner-logo-marquee flex min-w-max items-center gap-10 pr-10 sm:gap-14 sm:pr-14">
                     {marqueeItems.map((partner, index) => {
                         const logo = partner.image_url ? (
                             <img
                                 src={partner.image_url}
                                 alt={partner.name ?? 'Partner Indotix'}
-                                className="h-10 w-auto max-w-[11rem] object-contain opacity-70 grayscale transition hover:opacity-100 hover:grayscale-0 sm:h-12 sm:max-w-[13rem]"
+                                className="h-10 w-auto max-w-[10rem] object-contain opacity-80 grayscale-[35%] transition duration-200 hover:opacity-100 hover:grayscale-0 sm:h-12 sm:max-w-[12rem]"
                                 loading="lazy"
                             />
                         ) : (
-                            <span className="text-xl font-black tracking-tight whitespace-nowrap text-slate-500 opacity-70 sm:text-2xl">
-                                {partner.name}
+                            <span className="text-xl font-black tracking-tight whitespace-nowrap text-slate-600 opacity-80 sm:text-2xl">
+                                {partner.name ?? 'Partner Indotix'}
                             </span>
                         );
 
@@ -177,7 +195,7 @@ export function PublicPartnerSection({
                                             ? 'noreferrer'
                                             : undefined
                                     }
-                                    className="flex h-16 shrink-0 items-center justify-center"
+                                    className="flex h-16 min-w-[9rem] shrink-0 items-center justify-center sm:min-w-[11rem]"
                                 >
                                     {logo}
                                 </a>
@@ -187,7 +205,7 @@ export function PublicPartnerSection({
                         return (
                             <div
                                 key={`${partner.id}-${index}`}
-                                className="flex h-16 shrink-0 items-center justify-center"
+                                className="flex h-16 min-w-[9rem] shrink-0 items-center justify-center sm:min-w-[11rem]"
                             >
                                 {logo}
                             </div>
