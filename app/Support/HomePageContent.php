@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\PublicPartner;
 use App\Models\SystemSetting;
+use Illuminate\Support\Facades\Storage;
 
 class HomePageContent
 {
@@ -210,6 +212,22 @@ class HomePageContent
                 ],
             ],
         ];
+    }
+
+    public static function publicPartners(): array
+    {
+        return PublicPartner::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (PublicPartner $partner) => [
+                'id' => $partner->id,
+                'name' => $partner->name,
+                'image_url' => $partner->image_path ? Storage::url($partner->image_path) : null,
+                'link_url' => $partner->link_url,
+            ])
+            ->all();
     }
 
     public static function formPayload(): array

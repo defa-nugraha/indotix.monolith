@@ -2,6 +2,7 @@
 
 use App\Models\SystemSetting;
 use App\Models\User;
+use App\Models\PublicPartner;
 use App\Support\HomePageContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -55,6 +56,20 @@ test('admin can manage dynamic public home content', function () {
         ->and(SystemSetting::query()->where('key', 'home_promo_title')->value('value'))->toBe('Promo liburan pilihan')
         ->and(SystemSetting::query()->where('key', 'home_featured_link_label')->value('value'))->toBe('Jelajah semua wisata');
 
+    PublicPartner::query()->create([
+        'name' => 'Partner Aktif',
+        'image_path' => 'public-partners/partner-aktif.png',
+        'link_url' => 'https://partner.example.test',
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+    PublicPartner::query()->create([
+        'name' => 'Partner Nonaktif',
+        'image_path' => 'public-partners/partner-nonaktif.png',
+        'sort_order' => 2,
+        'is_active' => false,
+    ]);
+
     $this->get('/')
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
@@ -69,5 +84,8 @@ test('admin can manage dynamic public home content', function () {
             ->where('homeContent.special_promo.cards.0.title', 'Wisata keluarga')
             ->where('homeContent.special_promo.cards.0.image_url', '/storage/promo/family.jpg')
             ->where('homeContent.promo.title', 'Promo liburan pilihan')
-            ->where('homeContent.featured.link_label', 'Jelajah semua wisata'));
+            ->where('homeContent.featured.link_label', 'Jelajah semua wisata')
+            ->where('partners.0.name', 'Partner Aktif')
+            ->where('partners.0.image_url', '/storage/public-partners/partner-aktif.png')
+            ->missing('partners.1'));
 });

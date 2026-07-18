@@ -133,6 +133,7 @@ class PublicHomeController extends Controller
             'promoItems' => $promoItems,
             'promoVouchers' => $promoVouchers,
             'contact' => $contact,
+            'partners' => HomePageContent::publicPartners(),
             'wisataCards' => $wisataCards,
             'blogPosts' => $blogPosts,
         ]);

@@ -46,6 +46,7 @@ class PublicBlogController extends Controller
         return Inertia::render('public/blog/index', [
             'posts' => $posts,
             'homeContent' => HomePageContent::publicPayload(),
+            'partners' => HomePageContent::publicPartners(),
             'contact' => PublicContact::query()->first(),
         ]);
     }

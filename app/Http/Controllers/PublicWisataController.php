@@ -59,6 +59,7 @@ class PublicWisataController extends Controller
             'discovery' => $listing['discovery'] ?? null,
             'meta' => $listing['meta'] ?? null,
             'homeContent' => HomePageContent::publicPayload(),
+            'partners' => HomePageContent::publicPartners(),
             'contact' => PublicContact::query()->first(),
         ]);
     }

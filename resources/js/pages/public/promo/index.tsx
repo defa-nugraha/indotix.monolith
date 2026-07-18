@@ -14,8 +14,10 @@ import {
 import { PublicSeo } from '@/components/public-seo';
 import {
     PublicFooter,
+    PublicPartnerSection,
     PublicTrustSection,
     type PublicContact,
+    type PublicPartner,
     type PublicTrustContent,
 } from '@/components/public-page-sections';
 import PublicLayout from '@/layouts/public-layout';
@@ -135,12 +137,14 @@ export default function PromoIndex({
     categoryOptions = {},
     homeContent,
     contact,
+    partners = [],
 }: {
     vouchers: Voucher[];
     promoItems: PromoItem[];
     categoryOptions?: Record<string, string>;
     homeContent?: PublicTrustContent | null;
     contact?: PublicContact | null;
+    partners?: PublicPartner[];
 }) {
     const [activeTab, setActiveTab] = useState<PromoTab>('all');
     const [activeCategory, setActiveCategory] = useState('all');
@@ -627,6 +631,7 @@ export default function PromoIndex({
                     </div>
                 </section>
             </main>
+            <PublicPartnerSection partners={partners} />
             <PublicTrustSection homeContent={homeContent} contact={contact} />
             <PublicFooter contact={contact} />
         </PublicLayout>

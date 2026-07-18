@@ -20,6 +20,7 @@ class PublicAboutController extends Controller
         return Inertia::render('public/about', [
             'about' => $about,
             'homeContent' => HomePageContent::publicPayload(),
+            'partners' => HomePageContent::publicPartners(),
             'contact' => PublicContact::query()->first(),
         ]);
     }

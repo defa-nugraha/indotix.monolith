@@ -64,6 +64,7 @@ class PublicPromoController extends Controller
             'promoItems' => $promoItems,
             'categoryOptions' => self::CATEGORY_OPTIONS,
             'homeContent' => HomePageContent::publicPayload(),
+            'partners' => HomePageContent::publicPartners(),
             'contact' => PublicContact::query()->first(),
         ]);
     }

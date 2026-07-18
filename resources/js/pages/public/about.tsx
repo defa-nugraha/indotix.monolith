@@ -11,8 +11,10 @@ import PublicLayout from '@/layouts/public-layout';
 import { PublicSeo } from '@/components/public-seo';
 import {
     PublicFooter,
+    PublicPartnerSection,
     PublicTrustSection,
     type PublicContact,
+    type PublicPartner,
     type PublicTrustContent,
 } from '@/components/public-page-sections';
 
@@ -25,10 +27,12 @@ export default function AboutPage({
     about,
     homeContent,
     contact,
+    partners = [],
 }: {
     about: AboutPage;
     homeContent?: PublicTrustContent | null;
     contact?: PublicContact | null;
+    partners?: PublicPartner[];
 }) {
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
@@ -113,6 +117,7 @@ export default function AboutPage({
                 </div>
             </div>
 
+            <PublicPartnerSection partners={partners} />
             <PublicTrustSection homeContent={homeContent} contact={contact} />
             <PublicFooter contact={contact} />
         </PublicLayout>

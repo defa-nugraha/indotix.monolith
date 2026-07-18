@@ -12,8 +12,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { PublicSeo } from '@/components/public-seo';
 import {
     PublicFooter,
+    PublicPartnerSection,
     PublicTrustSection,
     type PublicContact,
+    type PublicPartner,
     type PublicTrustContent,
 } from '@/components/public-page-sections';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -104,6 +106,7 @@ export default function WisataSearch({
     destinations,
     homeContent,
     contact,
+    partners = [],
 }: {
     filters: Filters;
     destinations: Destination[];
@@ -111,6 +114,7 @@ export default function WisataSearch({
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
     homeContent?: PublicTrustContent | null;
     contact?: PublicContact | null;
+    partners?: PublicPartner[];
 }) {
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
@@ -620,6 +624,7 @@ export default function WisataSearch({
                     </>
                 )}
             </div>
+            <PublicPartnerSection partners={partners} />
             <PublicTrustSection homeContent={homeContent} contact={contact} />
             <PublicFooter contact={contact} />
         </PublicLayout>

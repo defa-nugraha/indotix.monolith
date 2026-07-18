@@ -47,6 +47,13 @@ export type PublicTrustContent = {
     };
 };
 
+export type PublicPartner = {
+    id: number | string;
+    name?: string | null;
+    image_url?: string | null;
+    link_url?: string | null;
+};
+
 const iconMap = {
     BadgePercent,
     Gift,
@@ -101,6 +108,96 @@ const defaultTrust = {
 
 const resolveIcon = (icon: string | null | undefined, fallback: LucideIcon) =>
     iconMap[icon as keyof typeof iconMap] ?? fallback;
+
+const normalizePublicLinkUrl = (value: string | null | undefined) => {
+    const path = value?.trim();
+    if (!path) {
+        return null;
+    }
+
+    if (path.startsWith('http') || path.startsWith('/')) {
+        return path;
+    }
+
+    return `/${path}`;
+};
+
+export function PublicPartnerSection({
+    partners = [],
+}: {
+    partners?: PublicPartner[];
+}) {
+    if (partners.length === 0) {
+        return null;
+    }
+
+    const marqueeItems = [...partners, ...partners];
+
+    return (
+        <section className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden bg-white py-8 sm:py-10">
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-white to-transparent sm:w-32" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-white to-transparent sm:w-32" />
+            <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
+                <h2 className="text-2xl font-light tracking-tight text-slate-700 sm:text-3xl">
+                    Partner Indotix
+                </h2>
+            </div>
+            <div className="mt-7 flex overflow-hidden">
+                <div className="partner-logo-marquee flex min-w-max items-center gap-8 pr-8 sm:gap-12 sm:pr-12">
+                    {marqueeItems.map((partner, index) => {
+                        const logo = partner.image_url ? (
+                            <img
+                                src={partner.image_url}
+                                alt={partner.name ?? 'Partner Indotix'}
+                                className="h-10 w-auto max-w-[11rem] object-contain opacity-70 grayscale transition hover:opacity-100 hover:grayscale-0 sm:h-12 sm:max-w-[13rem]"
+                                loading="lazy"
+                            />
+                        ) : (
+                            <span className="text-xl font-black tracking-tight whitespace-nowrap text-slate-500 opacity-70 sm:text-2xl">
+                                {partner.name}
+                            </span>
+                        );
+
+                        if (partner.link_url) {
+                            return (
+                                <a
+                                    key={`${partner.id}-${index}`}
+                                    href={
+                                        normalizePublicLinkUrl(
+                                            partner.link_url,
+                                        ) ?? '#'
+                                    }
+                                    target={
+                                        partner.link_url.startsWith('http')
+                                            ? '_blank'
+                                            : undefined
+                                    }
+                                    rel={
+                                        partner.link_url.startsWith('http')
+                                            ? 'noreferrer'
+                                            : undefined
+                                    }
+                                    className="flex h-16 shrink-0 items-center justify-center"
+                                >
+                                    {logo}
+                                </a>
+                            );
+                        }
+
+                        return (
+                            <div
+                                key={`${partner.id}-${index}`}
+                                className="flex h-16 shrink-0 items-center justify-center"
+                            >
+                                {logo}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </section>
+    );
+}
 
 export function PublicTrustSection({
     homeContent,
@@ -161,14 +258,14 @@ export function PublicTrustSection({
                     </a>
                 </div>
 
-                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scroll-smooth [scrollbar-width:none] md:grid md:snap-none md:grid-cols-3 md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden">
+                <div className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth pb-2 [scrollbar-width:none] md:grid md:snap-none md:grid-cols-3 md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden">
                     {trust.cards.map((item) => {
                         const Icon = resolveIcon(item.icon, BadgePercent);
 
                         return (
                             <article
                                 key={item.title}
-                                className="flex w-[72vw] min-w-[16rem] max-w-[20rem] shrink-0 snap-start gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm sm:p-5 md:w-auto md:min-w-0 md:max-w-none"
+                                className="flex w-[72vw] max-w-[20rem] min-w-[16rem] shrink-0 snap-start gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm sm:p-5 md:w-auto md:max-w-none md:min-w-0"
                             >
                                 <Icon className="mt-1 h-9 w-9 shrink-0 text-sky-600" />
                                 <div>

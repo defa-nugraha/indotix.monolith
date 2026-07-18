@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { PublicPartnerSection } from '@/components/public-page-sections';
 import {
     Dialog,
     DialogContent,
@@ -86,6 +87,12 @@ type PromoVoucher = {
     quota_used?: number;
     starts_at?: string | null;
     ends_at?: string | null;
+};
+type Partner = {
+    id: number | string;
+    name?: string | null;
+    image_url?: string | null;
+    link_url?: string | null;
 };
 type WisataCard = {
     id: number;
@@ -249,12 +256,14 @@ export default function Welcome({
     blogPosts = [],
     promoItems = [],
     promoVouchers = [],
+    partners = [],
 }: {
     homeContent: HomeContent;
     banners?: Banner[];
     promoItems?: PromoItem[];
     promoVouchers?: PromoVoucher[];
     contact?: Contact | null;
+    partners?: Partner[];
     wisataCards?: WisataCard[];
     blogPosts?: BlogPost[];
 }) {
@@ -1349,6 +1358,8 @@ export default function Welcome({
                         </div>
                     )}
                 </section>
+
+                <PublicPartnerSection partners={partners} />
 
                 <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[url('/images/backgroun-section.png')] bg-[length:calc(100%+96px)_calc(100%+48px)] bg-center bg-no-repeat py-8 sm:py-10">
                     <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[0.85fr_2fr] lg:items-center lg:px-8">

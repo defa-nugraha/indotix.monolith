@@ -34,6 +34,30 @@
     max-width: 100%;
 }
 
+.partner-logo-marquee {
+    animation: indotix-partner-marquee 28s linear infinite;
+}
+
+.partner-logo-marquee:hover {
+    animation-play-state: paused;
+}
+
+@keyframes indotix-partner-marquee {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .partner-logo-marquee {
+        animation: none;
+    }
+}
+
 html {
     text-rendering: optimizeLegibility;
 }
