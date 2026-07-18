@@ -29,6 +29,12 @@ test('admin can manage dynamic public home content', function () {
     $payload['category_1_icon'] = 'Sparkles';
     $payload['coupon_title'] = 'Voucher khusus keluarga';
     $payload['coupon_icon'] = 'Gift';
+    $payload['special_promo_title'] = 'Promo spesial akhir pekan';
+    $payload['special_promo_video_url'] = '/storage/promo-videos/weekend.mp4';
+    $payload['special_promo_video_poster_url'] = '/storage/promo-videos/weekend.jpg';
+    $payload['special_promo_card_1_title'] = 'Wisata keluarga';
+    $payload['special_promo_card_1_image_url'] = '/storage/promo/family.jpg';
+    $payload['special_promo_card_1_link_url'] = '/promo/wisata-keluarga';
     $payload['promo_title'] = 'Promo liburan pilihan';
     $payload['featured_link_label'] = 'Jelajah semua wisata';
 
@@ -42,6 +48,9 @@ test('admin can manage dynamic public home content', function () {
         ->and(SystemSetting::query()->where('key', 'home_category_1_icon')->value('value'))->toBe('Sparkles')
         ->and(SystemSetting::query()->where('key', 'home_coupon_title')->value('value'))->toBe('Voucher khusus keluarga')
         ->and(SystemSetting::query()->where('key', 'home_coupon_icon')->value('value'))->toBe('Gift')
+        ->and(SystemSetting::query()->where('key', 'home_special_promo_title')->value('value'))->toBe('Promo spesial akhir pekan')
+        ->and(SystemSetting::query()->where('key', 'home_special_promo_video_url')->value('value'))->toBe('/storage/promo-videos/weekend.mp4')
+        ->and(SystemSetting::query()->where('key', 'home_special_promo_card_1_image_url')->value('value'))->toBe('/storage/promo/family.jpg')
         ->and(SystemSetting::query()->where('key', 'home_promo_title')->value('value'))->toBe('Promo liburan pilihan')
         ->and(SystemSetting::query()->where('key', 'home_featured_link_label')->value('value'))->toBe('Jelajah semua wisata');
 
@@ -54,6 +63,10 @@ test('admin can manage dynamic public home content', function () {
             ->where('homeContent.categories.0.icon', 'Sparkles')
             ->where('homeContent.coupon.title', 'Voucher khusus keluarga')
             ->where('homeContent.coupon.icon', 'Gift')
+            ->where('homeContent.special_promo.title', 'Promo spesial akhir pekan')
+            ->where('homeContent.special_promo.video.url', '/storage/promo-videos/weekend.mp4')
+            ->where('homeContent.special_promo.cards.0.title', 'Wisata keluarga')
+            ->where('homeContent.special_promo.cards.0.image_url', '/storage/promo/family.jpg')
             ->where('homeContent.promo.title', 'Promo liburan pilihan')
             ->where('homeContent.featured.link_label', 'Jelajah semua wisata'));
 });

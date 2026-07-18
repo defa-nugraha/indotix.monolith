@@ -54,6 +54,27 @@ class HomePageContent
         'coupon_icon' => 'BadgePercent',
         'coupon_title' => 'Kupon Diskon 12% untuk Pengguna Baru',
         'coupon_description' => 'Berlaku untuk transaksi pertama di aplikasi Indotix',
+        'special_promo_title' => 'Promo Spesial Untukmu',
+        'special_promo_video_title' => 'Cerita liburan pilihan Indotix',
+        'special_promo_video_subtitle' => 'Inspirasi wisata',
+        'special_promo_video_url' => '',
+        'special_promo_video_poster_url' => '',
+        'special_promo_card_1_title' => '',
+        'special_promo_card_1_subtitle' => '',
+        'special_promo_card_1_image_url' => '',
+        'special_promo_card_1_link_url' => '',
+        'special_promo_card_2_title' => '',
+        'special_promo_card_2_subtitle' => '',
+        'special_promo_card_2_image_url' => '',
+        'special_promo_card_2_link_url' => '',
+        'special_promo_card_3_title' => '',
+        'special_promo_card_3_subtitle' => '',
+        'special_promo_card_3_image_url' => '',
+        'special_promo_card_3_link_url' => '',
+        'special_promo_card_4_title' => '',
+        'special_promo_card_4_subtitle' => '',
+        'special_promo_card_4_image_url' => '',
+        'special_promo_card_4_link_url' => '',
         'promo_icon' => 'Gift',
         'promo_title' => 'Promo terbaik buat liburan irit!',
         'promo_link_label' => 'Lihat Semua Promo',
@@ -129,6 +150,23 @@ class HomePageContent
                 ->values()
                 ->all(),
             'coupon' => self::only($values, ['icon', 'title', 'description'], 'coupon_'),
+            'special_promo' => [
+                'title' => $values['special_promo_title'],
+                'video' => [
+                    'title' => $values['special_promo_video_title'],
+                    'subtitle' => $values['special_promo_video_subtitle'],
+                    'url' => $values['special_promo_video_url'],
+                    'poster_url' => $values['special_promo_video_poster_url'],
+                ],
+                'cards' => collect(range(1, 4))
+                    ->map(fn (int $index) => [
+                        'title' => $values["special_promo_card_{$index}_title"],
+                        'subtitle' => $values["special_promo_card_{$index}_subtitle"],
+                        'image_url' => $values["special_promo_card_{$index}_image_url"],
+                        'link_url' => $values["special_promo_card_{$index}_link_url"],
+                    ])
+                    ->all(),
+            ],
             'promo' => self::only($values, ['icon', 'title', 'link_label'], 'promo_'),
             'featured' => self::only($values, ['title', 'description', 'link_label'], 'featured_'),
             'nearby' => self::only($values, ['icon', 'eyebrow', 'title', 'description', 'button_default', 'button_active', 'button_loading'], 'nearby_'),
@@ -163,9 +201,7 @@ class HomePageContent
     {
         return collect(self::DEFAULTS)
             ->mapWithKeys(fn (string $default, string $key) => [
-                $key => str_ends_with($key, '_icon')
-                    ? ['required', 'string', 'in:'.implode(',', array_keys(self::ICON_OPTIONS))]
-                    : ['required', 'string', 'max:255'],
+                $key => self::ruleFor($key),
             ])
             ->all();
     }
@@ -189,5 +225,22 @@ class HomePageContent
         return collect($keys)
             ->mapWithKeys(fn (string $key) => [$key => $values["{$prefix}{$key}"]])
             ->all();
+    }
+
+    private static function ruleFor(string $key): array
+    {
+        if (str_ends_with($key, '_icon')) {
+            return ['required', 'string', 'in:'.implode(',', array_keys(self::ICON_OPTIONS))];
+        }
+
+        if (str_ends_with($key, '_url')) {
+            return ['nullable', 'string', 'max:2048'];
+        }
+
+        if (str_starts_with($key, 'special_promo_card_')) {
+            return ['nullable', 'string', 'max:255'];
+        }
+
+        return ['required', 'string', 'max:255'];
     }
 }

@@ -26,7 +26,8 @@ type Props = {
 type Field = {
     key: string;
     label: string;
-    type?: 'text' | 'icon';
+    type?: 'text' | 'icon' | 'url';
+    placeholder?: string;
 };
 
 const categoryFields: Field[] = Array.from({ length: 10 }, (_, index) => {
@@ -64,6 +65,60 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
             { key: 'coupon_icon', label: 'Icon section', type: 'icon' },
             { key: 'coupon_title', label: 'Judul section' },
             { key: 'coupon_description', label: 'Deskripsi section' },
+        ],
+    },
+    {
+        title: 'Promo Spesial Untukmu',
+        description:
+            'Mengatur video utama dan empat gambar promo yang tampil di section Promo Spesial pada halaman depan.',
+        fields: [
+            { key: 'special_promo_title', label: 'Judul section' },
+            {
+                key: 'special_promo_video_title',
+                label: 'Judul video utama',
+            },
+            {
+                key: 'special_promo_video_subtitle',
+                label: 'Label kecil video utama',
+            },
+            {
+                key: 'special_promo_video_url',
+                label: 'URL video utama',
+                type: 'url',
+                placeholder: 'https://.../video.mp4 atau URL CDN video',
+            },
+            {
+                key: 'special_promo_video_poster_url',
+                label: 'URL poster video',
+                type: 'url',
+                placeholder: 'https://.../poster.jpg',
+            },
+            ...Array.from({ length: 4 }, (_, index) => {
+                const number = index + 1;
+
+                return [
+                    {
+                        key: `special_promo_card_${number}_title`,
+                        label: `Judul gambar promo ${number}`,
+                    },
+                    {
+                        key: `special_promo_card_${number}_subtitle`,
+                        label: `Label kecil gambar promo ${number}`,
+                    },
+                    {
+                        key: `special_promo_card_${number}_image_url`,
+                        label: `URL gambar promo ${number}`,
+                        type: 'url' as const,
+                        placeholder: 'https://.../promo.jpg',
+                    },
+                    {
+                        key: `special_promo_card_${number}_link_url`,
+                        label: `Link tujuan gambar promo ${number}`,
+                        type: 'url' as const,
+                        placeholder: '/promo/nama-promo atau https://...',
+                    },
+                ];
+            }).flat(),
         ],
     },
     {
@@ -273,6 +328,8 @@ export default function HomeContentEdit({ content }: Props) {
                                         ) : (
                                             <Input
                                                 id={field.key}
+                                                type="text"
+                                                placeholder={field.placeholder}
                                                 value={
                                                     form.data[field.key] ?? ''
                                                 }

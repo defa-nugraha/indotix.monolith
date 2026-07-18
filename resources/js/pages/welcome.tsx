@@ -103,6 +103,21 @@ type HomeContent = {
     search: { placeholder: string; button_label: string };
     categories: { icon: string; label: string }[];
     coupon: { icon: string; title: string; description: string };
+    special_promo: {
+        title: string;
+        video: {
+            title: string;
+            subtitle: string;
+            url?: string | null;
+            poster_url?: string | null;
+        };
+        cards: {
+            title?: string | null;
+            subtitle?: string | null;
+            image_url?: string | null;
+            link_url?: string | null;
+        }[];
+    };
     promo: { icon: string; title: string; link_label: string };
     featured: { title: string; description: string; link_label: string };
     nearby: {
@@ -208,6 +223,8 @@ export default function Welcome({
     const [copiedVoucherCode, setCopiedVoucherCode] = useState<string | null>(
         null,
     );
+    const [shouldLoadSpecialPromoVideo, setShouldLoadSpecialPromoVideo] =
+        useState(false);
 
     const categories = [
         {
@@ -318,7 +335,8 @@ export default function Welcome({
     const downloadLinkAttributes =
         downloadAppUrl !== '#' ? { target: '_blank', rel: 'noreferrer' } : {};
     const activePromoItems = promoItems.slice(0, 3);
-    const promoImageUrl = (path: string | null | undefined) => {
+    const normalizeMediaUrl = (value: string | null | undefined) => {
+        const path = value?.trim();
         if (!path) {
             return null;
         }
@@ -329,15 +347,34 @@ export default function Welcome({
 
         return `/storage/${path}`;
     };
-    const specialPromoCards = useMemo(() => {
+    const normalizeLinkUrl = (value: string | null | undefined) => {
+        const path = value?.trim();
+        if (!path) {
+            return null;
+        }
+
+        if (path.startsWith('http') || path.startsWith('/')) {
+            return path;
+        }
+
+        return `/${path}`;
+    };
+    const specialPromoImageCards = useMemo(() => {
         const seen = new Set<string>();
         const cards = [
+            ...homeContent.special_promo.cards.map((card, index) => ({
+                id: `configured-${index + 1}`,
+                title: card.title || `Promo spesial ${index + 1}`,
+                subtitle: card.subtitle || 'Promo pilihan',
+                href: normalizeLinkUrl(card.link_url) ?? '/promo',
+                imageUrl: normalizeMediaUrl(card.image_url),
+            })),
             ...promoItems.map((promo) => ({
                 id: `promo-${promo.id}`,
                 title: promo.title ?? 'Promo Indotix',
                 subtitle: promo.excerpt ?? promo.category ?? 'Promo wisata',
                 href: promo.slug ? `/promo/${promo.slug}` : '/promo',
-                imageUrl: promoImageUrl(promo.image_path),
+                imageUrl: normalizeMediaUrl(promo.image_path),
             })),
             ...wisataProducts.map((destination) => ({
                 id: `wisata-${destination.id}`,
@@ -354,17 +391,28 @@ export default function Welcome({
         return cards
             .filter((card) => card.imageUrl && card.title)
             .filter((card) => {
-                if (seen.has(card.href)) {
+                const identity = `${card.href}|${card.imageUrl}`;
+
+                if (seen.has(identity)) {
                     return false;
                 }
 
-                seen.add(card.href);
+                seen.add(identity);
                 return true;
             })
-            .slice(0, 5);
-    }, [promoItems, wisataProducts]);
-    const primarySpecialPromo = specialPromoCards[0];
-    const secondarySpecialPromos = specialPromoCards.slice(1, 5);
+            .slice(0, 4);
+    }, [homeContent.special_promo.cards, promoItems, wisataProducts]);
+    const specialPromoVideoUrl = normalizeMediaUrl(
+        homeContent.special_promo.video.url,
+    );
+    const specialPromoVideoPosterUrl =
+        normalizeMediaUrl(homeContent.special_promo.video.poster_url) ??
+        specialPromoImageCards[0]?.imageUrl ??
+        heroImage;
+    const specialPromoSlots = Array.from(
+        { length: 4 },
+        (_, index) => specialPromoImageCards[index] ?? null,
+    );
 
     useEffect(() => {
         const downloadUrl = contact?.download_url?.trim();
@@ -702,9 +750,9 @@ export default function Welcome({
                     </div>
                 </section>
 
-                <div className="h-7 sm:h-9" />
+                <div className="h-3 sm:h-4" />
 
-                <section className="relative mx-auto max-w-7xl space-y-5 overflow-hidden px-4 pt-3 sm:px-6 lg:px-8">
+                <section className="relative mx-auto max-w-7xl space-y-5 overflow-hidden px-4 pt-0 sm:px-6 lg:px-8">
                     <div className="pointer-events-none absolute top-8 right-12 hidden text-sky-700/45 lg:block">
                         <Send className="h-14 w-14 rotate-12 stroke-[1.5]" />
                         <div className="mt-1 ml-10 h-8 w-24 rounded-[50%] border-b border-dashed border-sky-400/50" />
@@ -719,77 +767,117 @@ export default function Welcome({
                     </div>
 
                     <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-                        Promo Spesial Untukmu
+                        {homeContent.special_promo.title}
                     </h2>
 
-                    {primarySpecialPromo ? (
-                        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.92fr)]">
-                            <Link
-                                href={primarySpecialPromo.href}
-                                className="group relative block min-h-[230px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.65)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_24px_60px_-24px_rgba(15,23,42,0.75)] sm:min-h-[320px] lg:min-h-[360px]"
-                            >
-                                <img
-                                    src={primarySpecialPromo.imageUrl ?? ''}
-                                    alt={primarySpecialPromo.title}
-                                    loading="lazy"
-                                    decoding="async"
-                                    className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.92fr)]">
+                        <div className="group relative min-h-[230px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.65)] ring-1 ring-slate-200 sm:min-h-[320px] lg:min-h-[360px]">
+                            {shouldLoadSpecialPromoVideo &&
+                            specialPromoVideoUrl ? (
+                                <video
+                                    src={specialPromoVideoUrl}
+                                    poster={
+                                        specialPromoVideoPosterUrl ?? undefined
+                                    }
+                                    className="absolute inset-0 h-full w-full object-cover"
+                                    controls
+                                    autoPlay
+                                    playsInline
+                                    preload="metadata"
                                 />
-                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/10 to-transparent" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl ring-1 ring-white/60 transition group-hover:scale-105 sm:h-24 sm:w-24">
-                                        <Play className="ml-1 h-9 w-9 fill-current sm:h-10 sm:w-10" />
-                                    </span>
-                                </div>
-                                <div className="absolute right-5 bottom-5 left-5 text-white">
-                                    <p className="line-clamp-1 text-xs font-bold tracking-wider text-white/80 uppercase">
-                                        {primarySpecialPromo.subtitle}
-                                    </p>
-                                    <h3 className="mt-1 line-clamp-2 text-xl font-black sm:text-2xl">
-                                        {primarySpecialPromo.title}
-                                    </h3>
-                                </div>
-                            </Link>
-
-                            {secondarySpecialPromos.length > 0 ? (
-                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                                    {secondarySpecialPromos.map((promo) => (
-                                        <Link
-                                            key={promo.id}
-                                            href={promo.href}
-                                            className="group relative min-h-[150px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] sm:min-h-[170px]"
-                                        >
-                                            <img
-                                                src={promo.imageUrl ?? ''}
-                                                alt={promo.title}
-                                                loading="lazy"
-                                                decoding="async"
-                                                className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-                                            <div className="absolute right-4 bottom-4 left-4 text-white">
-                                                <p className="line-clamp-1 text-[10px] font-bold tracking-wider text-white/70 uppercase">
-                                                    {promo.subtitle}
-                                                </p>
-                                                <h3 className="mt-1 line-clamp-2 text-lg leading-tight font-black">
-                                                    {promo.title}
-                                                </h3>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
                             ) : (
-                                <div className="flex min-h-[180px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                                    Promo pendukung akan tampil saat data promo
-                                    atau destinasi aktif tersedia.
-                                </div>
+                                <>
+                                    {specialPromoVideoPosterUrl ? (
+                                        <img
+                                            src={specialPromoVideoPosterUrl}
+                                            alt={
+                                                homeContent.special_promo.video
+                                                    .title
+                                            }
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-sky-50 text-sky-500">
+                                            <ImageOff className="h-14 w-14" />
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent" />
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setShouldLoadSpecialPromoVideo(true)
+                                        }
+                                        disabled={!specialPromoVideoUrl}
+                                        className="absolute inset-0 flex items-center justify-center disabled:cursor-not-allowed"
+                                        aria-label="Putar video promo spesial"
+                                    >
+                                        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl ring-1 ring-white/60 transition group-hover:scale-105 sm:h-24 sm:w-24">
+                                            <Play className="ml-1 h-9 w-9 fill-current sm:h-10 sm:w-10" />
+                                        </span>
+                                    </button>
+                                    <div className="absolute right-5 bottom-5 left-5 text-white">
+                                        <p className="line-clamp-1 text-xs font-bold tracking-wider text-white/80 uppercase">
+                                            {
+                                                homeContent.special_promo.video
+                                                    .subtitle
+                                            }
+                                        </p>
+                                        <h3 className="mt-1 line-clamp-2 text-xl font-black sm:text-2xl">
+                                            {
+                                                homeContent.special_promo.video
+                                                    .title
+                                            }
+                                        </h3>
+                                        {!specialPromoVideoUrl && (
+                                            <p className="mt-2 text-xs font-semibold text-white/75">
+                                                Tambahkan URL video di admin
+                                                untuk mengaktifkan playback.
+                                            </p>
+                                        )}
+                                    </div>
+                                </>
                             )}
                         </div>
-                    ) : (
-                        <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-                            Belum ada promo spesial yang aktif saat ini.
+
+                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                            {specialPromoSlots.map((promo, index) =>
+                                promo ? (
+                                    <Link
+                                        key={promo.id}
+                                        href={promo.href}
+                                        className="group relative min-h-[150px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] sm:min-h-[170px]"
+                                    >
+                                        <img
+                                            src={promo.imageUrl ?? ''}
+                                            alt={promo.title}
+                                            loading="lazy"
+                                            decoding="async"
+                                            className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                                        />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+                                        <div className="absolute right-4 bottom-4 left-4 text-white">
+                                            <p className="line-clamp-1 text-[10px] font-bold tracking-wider text-white/70 uppercase">
+                                                {promo.subtitle}
+                                            </p>
+                                            <h3 className="mt-1 line-clamp-2 text-lg leading-tight font-black">
+                                                {promo.title}
+                                            </h3>
+                                        </div>
+                                    </Link>
+                                ) : (
+                                    <div
+                                        key={`empty-special-promo-${index + 1}`}
+                                        className="flex min-h-[150px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-5 text-center text-xs font-semibold text-slate-500 sm:min-h-[170px]"
+                                    >
+                                        Slot gambar promo {index + 1} belum
+                                        diatur.
+                                    </div>
+                                ),
+                            )}
                         </div>
-                    )}
+                    </div>
                 </section>
 
                 <section className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
