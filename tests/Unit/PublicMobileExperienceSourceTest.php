@@ -47,12 +47,16 @@ test('public home follows the tourism design without dummy promo rails', functio
         ->toContain('[scrollbar-width:none] [&::-webkit-scrollbar]:hidden')
         ->toContain('const mobileRailClass =')
         ->toContain('w-[72vw] min-w-[16rem]')
+        ->toContain('wisataProducts.slice(0, 3)')
         ->toContain('homeContent.featured.title')
-        ->toContain('md:grid-cols-4 md:gap-6')
-        ->toContain('relative h-28 overflow-hidden bg-slate-100 sm:h-40')
+        ->toContain('md:grid-cols-3 md:gap-6')
+        ->toContain('relative h-32 overflow-hidden bg-slate-100 sm:h-44 lg:h-48')
+        ->toContain('grid-cols-[minmax(0,1.02fr)_minmax(430px,1fr)]')
+        ->toContain('relative h-[12.75rem] overflow-hidden rounded-[1.4rem]')
         ->toContain('featuredProducts.map((item)')
         ->toContain('homeContent.nearby.eyebrow')
         ->toContain('homeContent.blog.eyebrow')
+        ->not->toContain('absolute top-6 left-1/4 -rotate-12 animate-bounce')
         ->not->toContain('Lihat semua promo')
         ->not->toContain('promo-current-grid')
         ->not->toContain('menu-shimmer')
@@ -128,8 +132,8 @@ test('public listing pages keep mobile card layouts compact and paginated', func
 
     expect($home)
         ->toContain('const mobileVoucherRailItemClass =')
-        ->toContain('p-3.5 md:p-5')
-        ->toContain('text-2xl font-black tracking-tight text-slate-950 md:text-3xl');
+        ->toContain('h-[12.75rem] overflow-hidden rounded-[1.4rem]')
+        ->toContain('text-3xl font-black tracking-tight text-slate-950 md:text-4xl');
 
     expect($wisata)
         ->toContain('const mobileProductRailClass =')

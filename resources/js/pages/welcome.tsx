@@ -173,7 +173,7 @@ const mobileRailClass =
 const mobileRailItemClass =
     'w-[72vw] min-w-[16rem] max-w-[20rem] shrink-0 snap-start md:w-auto md:min-w-0 md:max-w-none';
 const mobileVoucherRailItemClass =
-    'w-[78vw] min-w-[17.5rem] max-w-[22rem] shrink-0 snap-start md:w-auto md:min-w-0 md:max-w-none';
+    'w-[82vw] min-w-[19rem] max-w-[23rem] shrink-0 snap-start md:w-auto md:min-w-0 md:max-w-none';
 const mobileWideRailItemClass =
     'w-[72vw] min-w-[16rem] max-w-[20rem] shrink-0 snap-start md:w-auto md:min-w-0 md:max-w-none';
 const homeIconMap = {
@@ -336,7 +336,7 @@ export default function Welcome({
     };
 
     const wisataProducts = wisataCards;
-    const featuredProducts = wisataProducts.slice(0, 6);
+    const featuredProducts = wisataProducts.slice(0, 3);
     const featuredProductIds = new Set(featuredProducts.map((item) => item.id));
     const nearbyProducts = useMemo(() => {
         const source = wisataProducts.filter(
@@ -345,7 +345,7 @@ export default function Welcome({
         const fallbackSource = source.length > 0 ? source : wisataProducts;
 
         if (!userLocation) {
-            return fallbackSource.slice(0, 6);
+            return fallbackSource.slice(0, 3);
         }
 
         return [...fallbackSource]
@@ -369,7 +369,7 @@ export default function Welcome({
 
                 return distanceA - distanceB;
             })
-            .slice(0, 6);
+            .slice(0, 3);
     }, [featuredProductIds, userLocation, wisataProducts]);
     const bannerSlides = useMemo(() => {
         const configuredBanners = banners
@@ -589,7 +589,7 @@ export default function Welcome({
                 key={item.id}
                 className="group overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
             >
-                <div className="relative h-28 overflow-hidden bg-slate-100 sm:h-40">
+                <div className="relative h-32 overflow-hidden bg-slate-100 sm:h-44 lg:h-48">
                     {item.image_url ? (
                         <img
                             src={item.image_url}
@@ -835,11 +835,6 @@ export default function Welcome({
                             <div className="absolute inset-0 bg-[linear-gradient(135deg,#dbeafe,#f8fafc_45%,#e0f2fe)]" />
                         )}
                         <div className="absolute inset-0 bg-white/5" />
-                        <div className="absolute top-6 right-20 h-8 w-16 animate-pulse rounded-full bg-white/30 blur-md" />
-                        <div className="absolute bottom-8 left-12 h-10 w-24 rounded-full bg-white/20 blur-lg" />
-                        <div className="absolute top-6 left-1/4 -rotate-12 animate-bounce opacity-40">
-                            <Send className="h-8 w-8 fill-current text-sky-500" />
-                        </div>
                     </div>
 
                     <div className="absolute right-0 bottom-0 left-0 z-20 px-4 sm:px-6 lg:px-8">
@@ -903,7 +898,7 @@ export default function Welcome({
                         {homeContent.special_promo.title}
                     </h2>
 
-                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.92fr)]">
+                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.02fr)_minmax(430px,1fr)]">
                         <div className="group relative min-h-[230px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.65)] ring-1 ring-slate-200 sm:min-h-[320px] lg:min-h-[360px]">
                             {shouldLoadSpecialPromoVideo &&
                             specialPromoVideoUrl ? (
@@ -980,7 +975,7 @@ export default function Welcome({
                                     <Link
                                         key={promo.id}
                                         href={promo.href}
-                                        className="group relative min-h-[150px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] sm:min-h-[170px]"
+                                        className="group relative min-h-[150px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] sm:min-h-[178px]"
                                     >
                                         <img
                                             src={promo.imageUrl ?? ''}
@@ -1002,7 +997,7 @@ export default function Welcome({
                                 ) : (
                                     <div
                                         key={`empty-special-promo-${index + 1}`}
-                                        className="flex min-h-[150px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-5 text-center text-xs font-semibold text-slate-500 sm:min-h-[170px]"
+                                        className="flex min-h-[150px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-5 text-center text-xs font-semibold text-slate-500 sm:min-h-[178px]"
                                     >
                                         Slot gambar promo {index + 1} belum
                                         diatur.
@@ -1045,32 +1040,32 @@ export default function Welcome({
                                 return (
                                     <article
                                         key={voucher.id}
-                                        className={`relative overflow-hidden rounded-[1.25rem] border border-sky-100 bg-white shadow-sm ${mobileVoucherRailItemClass}`}
+                                        className={`relative h-[12.75rem] overflow-hidden rounded-[1.4rem] border border-sky-100 bg-white shadow-sm ${mobileVoucherRailItemClass}`}
                                     >
                                         <div className="absolute top-1/2 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-slate-50 ring-1 ring-sky-100" />
                                         <div className="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-slate-50 ring-1 ring-sky-100" />
-                                        <div className="grid grid-cols-[1fr_auto]">
-                                            <div className="p-3.5 md:p-5">
-                                                <p className="text-[10px] font-black tracking-widest text-sky-600 uppercase">
+                                        <div className="grid h-full grid-cols-[minmax(0,1fr)_7.5rem]">
+                                            <div className="flex min-w-0 flex-col p-5">
+                                                <p className="text-[10px] font-black tracking-[0.18em] text-sky-600 uppercase">
                                                     Voucher Indotix
                                                 </p>
-                                                <div className="mt-2 flex items-end gap-2 md:mt-3">
-                                                    <span className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 md:text-3xl">
+                                                <div className="mt-3 flex items-end gap-2">
+                                                    <span className="font-['Space_Grotesk'] text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
                                                         {formatVoucherDiscount(
                                                             voucher,
                                                         )}
                                                     </span>
-                                                    <span className="pb-1 text-xs font-bold text-slate-500">
+                                                    <span className="pb-1.5 text-sm font-bold text-slate-500">
                                                         OFF
                                                     </span>
                                                 </div>
-                                                <p className="mt-1 line-clamp-1 text-xs font-semibold text-slate-500 md:mt-2">
+                                                <p className="mt-3 line-clamp-1 text-sm font-semibold text-slate-500">
                                                     {formatVoucherRequirement(
                                                         voucher,
                                                     )}
                                                 </p>
-                                                <div className="mt-3 flex flex-wrap items-center gap-2 md:mt-4">
-                                                    <span className="inline-flex rounded-full border border-dashed border-sky-200 bg-sky-50 px-3 py-1 text-xs font-black tracking-wider text-sky-700">
+                                                <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+                                                    <span className="inline-flex max-w-full rounded-full border border-dashed border-sky-200 bg-sky-50 px-3.5 py-1.5 text-xs font-black tracking-wider text-sky-700">
                                                         {voucher.code}
                                                     </span>
                                                     <button
@@ -1080,7 +1075,7 @@ export default function Welcome({
                                                                 voucher.code,
                                                             )
                                                         }
-                                                        className="inline-flex items-center gap-1 rounded-full border border-slate-200 px-3 py-1 text-xs font-black text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
+                                                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-black text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
                                                     >
                                                         {copied ? (
                                                             <Check className="h-3.5 w-3.5" />
@@ -1093,9 +1088,9 @@ export default function Welcome({
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div className="flex w-20 flex-col items-center justify-center border-l border-dashed border-sky-100 bg-sky-600 px-3 text-center text-white md:w-24">
+                                            <div className="flex h-full flex-col items-center justify-center border-l border-dashed border-sky-100 bg-sky-600 px-4 text-center text-white">
                                                 <TicketPercent className="h-6 w-6" />
-                                                <span className="mt-2 text-[10px] leading-tight font-bold uppercase">
+                                                <span className="mt-3 text-xs leading-tight font-bold uppercase">
                                                     {remainingQuota === null
                                                         ? 'Kuota terbatas'
                                                         : `${remainingQuota} tersisa`}
@@ -1200,7 +1195,7 @@ export default function Welcome({
 
                     {featuredProducts.length > 0 ? (
                         <div
-                            className={`${mobileRailClass} md:grid-cols-4 md:gap-6`}
+                            className={`${mobileRailClass} md:grid-cols-3 md:gap-6`}
                         >
                             {featuredProducts.map((item) => (
                                 <div
@@ -1260,7 +1255,7 @@ export default function Welcome({
 
                     {nearbyProducts.length > 0 ? (
                         <div
-                            className={`${mobileRailClass} md:grid-cols-4 md:gap-6`}
+                            className={`${mobileRailClass} md:grid-cols-3 md:gap-6`}
                         >
                             {nearbyProducts.map((item) => (
                                 <div

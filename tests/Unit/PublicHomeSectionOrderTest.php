@@ -17,6 +17,8 @@ test('public home product surface prioritizes wisata', function () {
         ->toContain('window.setInterval')
         ->toContain('id="featured-destinations-section"')
         ->toContain('homeContent.featured.title')
+        ->toContain('wisataProducts.slice(0, 3)')
+        ->toContain('fallbackSource.slice(0, 3)')
         ->toContain('featuredProducts.map((item)')
         ->toContain('nearbyProducts.map((item)')
         ->toContain('homeContent.blog.eyebrow')
