@@ -146,11 +146,7 @@ export function PublicPartnerSection({
             aria-label="Partner Indotix"
         >
             <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
-                <div className="inline-flex items-center gap-2 text-xs font-black tracking-wider text-sky-600 uppercase">
-                    <Sparkles className="h-4 w-4" />
-                    Kolaborasi terpercaya
-                </div>
-                <h2 className="mt-2 font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
                     Partner Indotix
                 </h2>
                 <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
@@ -167,11 +163,11 @@ export function PublicPartnerSection({
                             <img
                                 src={partner.image_url}
                                 alt={partner.name ?? 'Partner Indotix'}
-                                className="h-10 w-auto max-w-[10rem] object-contain opacity-80 grayscale-[35%] transition duration-200 hover:opacity-100 hover:grayscale-0 sm:h-12 sm:max-w-[12rem]"
+                                className="h-14 w-auto max-w-[13rem] object-contain opacity-90 grayscale-[20%] transition duration-200 hover:opacity-100 hover:grayscale-0 sm:h-16 sm:max-w-[15rem]"
                                 loading="lazy"
                             />
                         ) : (
-                            <span className="text-xl font-black tracking-tight whitespace-nowrap text-slate-600 opacity-80 sm:text-2xl">
+                            <span className="text-2xl font-black tracking-tight whitespace-nowrap text-slate-600 opacity-90 sm:text-3xl">
                                 {partner.name ?? 'Partner Indotix'}
                             </span>
                         );
@@ -195,7 +191,7 @@ export function PublicPartnerSection({
                                             ? 'noreferrer'
                                             : undefined
                                     }
-                                    className="flex h-16 min-w-[9rem] shrink-0 items-center justify-center sm:min-w-[11rem]"
+                                    className="flex h-24 min-w-[12rem] shrink-0 items-center justify-center rounded-[1.75rem] border border-white/80 bg-white/90 px-6 shadow-sm ring-1 ring-sky-100/70 transition hover:-translate-y-0.5 hover:shadow-md sm:min-w-[14rem]"
                                 >
                                     {logo}
                                 </a>
@@ -205,7 +201,7 @@ export function PublicPartnerSection({
                         return (
                             <div
                                 key={`${partner.id}-${index}`}
-                                className="flex h-16 min-w-[9rem] shrink-0 items-center justify-center sm:min-w-[11rem]"
+                                className="flex h-24 min-w-[12rem] shrink-0 items-center justify-center rounded-[1.75rem] border border-white/80 bg-white/90 px-6 shadow-sm ring-1 ring-sky-100/70 sm:min-w-[14rem]"
                             >
                                 {logo}
                             </div>
