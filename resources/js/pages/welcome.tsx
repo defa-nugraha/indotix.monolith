@@ -30,6 +30,7 @@ import {
     MapPin,
     Mountain,
     Navigation,
+    Play,
     RefreshCcw,
     Search,
     Send,
@@ -317,6 +318,53 @@ export default function Welcome({
     const downloadLinkAttributes =
         downloadAppUrl !== '#' ? { target: '_blank', rel: 'noreferrer' } : {};
     const activePromoItems = promoItems.slice(0, 3);
+    const promoImageUrl = (path: string | null | undefined) => {
+        if (!path) {
+            return null;
+        }
+
+        if (path.startsWith('http') || path.startsWith('/')) {
+            return path;
+        }
+
+        return `/storage/${path}`;
+    };
+    const specialPromoCards = useMemo(() => {
+        const seen = new Set<string>();
+        const cards = [
+            ...promoItems.map((promo) => ({
+                id: `promo-${promo.id}`,
+                title: promo.title ?? 'Promo Indotix',
+                subtitle: promo.excerpt ?? promo.category ?? 'Promo wisata',
+                href: promo.slug ? `/promo/${promo.slug}` : '/promo',
+                imageUrl: promoImageUrl(promo.image_path),
+            })),
+            ...wisataProducts.map((destination) => ({
+                id: `wisata-${destination.id}`,
+                title: destination.name,
+                subtitle:
+                    destination.city_name ??
+                    destination.type ??
+                    'Destinasi wisata',
+                href: `/wisata/${destination.slug ?? destination.encrypted_id ?? destination.id}`,
+                imageUrl: destination.image_url ?? null,
+            })),
+        ];
+
+        return cards
+            .filter((card) => card.imageUrl && card.title)
+            .filter((card) => {
+                if (seen.has(card.href)) {
+                    return false;
+                }
+
+                seen.add(card.href);
+                return true;
+            })
+            .slice(0, 5);
+    }, [promoItems, wisataProducts]);
+    const primarySpecialPromo = specialPromoCards[0];
+    const secondarySpecialPromos = specialPromoCards.slice(1, 5);
 
     useEffect(() => {
         const downloadUrl = contact?.download_url?.trim();
@@ -655,6 +703,94 @@ export default function Welcome({
                 </section>
 
                 <div className="h-7 sm:h-9" />
+
+                <section className="relative mx-auto max-w-7xl space-y-5 overflow-hidden px-4 pt-3 sm:px-6 lg:px-8">
+                    <div className="pointer-events-none absolute top-8 right-12 hidden text-sky-700/45 lg:block">
+                        <Send className="h-14 w-14 rotate-12 stroke-[1.5]" />
+                        <div className="mt-1 ml-10 h-8 w-24 rounded-[50%] border-b border-dashed border-sky-400/50" />
+                    </div>
+                    <div className="pointer-events-none absolute top-28 left-1 hidden h-10 w-20 rounded-full bg-blue-100/80 lg:block">
+                        <span className="absolute -top-4 left-5 h-8 w-8 rounded-full bg-blue-100/90" />
+                        <span className="absolute -top-2 right-4 h-6 w-6 rounded-full bg-blue-100/90" />
+                    </div>
+                    <div className="pointer-events-none absolute right-0 bottom-12 hidden h-10 w-24 rounded-full bg-blue-100/80 lg:block">
+                        <span className="absolute -top-4 left-7 h-8 w-8 rounded-full bg-blue-100/90" />
+                        <span className="absolute -top-2 right-5 h-7 w-7 rounded-full bg-blue-100/90" />
+                    </div>
+
+                    <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                        Promo Spesial Untukmu
+                    </h2>
+
+                    {primarySpecialPromo ? (
+                        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.92fr)]">
+                            <Link
+                                href={primarySpecialPromo.href}
+                                className="group relative block min-h-[230px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.65)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_24px_60px_-24px_rgba(15,23,42,0.75)] sm:min-h-[320px] lg:min-h-[360px]"
+                            >
+                                <img
+                                    src={primarySpecialPromo.imageUrl ?? ''}
+                                    alt={primarySpecialPromo.title}
+                                    loading="lazy"
+                                    decoding="async"
+                                    className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/10 to-transparent" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl ring-1 ring-white/60 transition group-hover:scale-105 sm:h-24 sm:w-24">
+                                        <Play className="ml-1 h-9 w-9 fill-current sm:h-10 sm:w-10" />
+                                    </span>
+                                </div>
+                                <div className="absolute right-5 bottom-5 left-5 text-white">
+                                    <p className="line-clamp-1 text-xs font-bold tracking-wider text-white/80 uppercase">
+                                        {primarySpecialPromo.subtitle}
+                                    </p>
+                                    <h3 className="mt-1 line-clamp-2 text-xl font-black sm:text-2xl">
+                                        {primarySpecialPromo.title}
+                                    </h3>
+                                </div>
+                            </Link>
+
+                            {secondarySpecialPromos.length > 0 ? (
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                    {secondarySpecialPromos.map((promo) => (
+                                        <Link
+                                            key={promo.id}
+                                            href={promo.href}
+                                            className="group relative min-h-[150px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] sm:min-h-[170px]"
+                                        >
+                                            <img
+                                                src={promo.imageUrl ?? ''}
+                                                alt={promo.title}
+                                                loading="lazy"
+                                                decoding="async"
+                                                className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+                                            <div className="absolute right-4 bottom-4 left-4 text-white">
+                                                <p className="line-clamp-1 text-[10px] font-bold tracking-wider text-white/70 uppercase">
+                                                    {promo.subtitle}
+                                                </p>
+                                                <h3 className="mt-1 line-clamp-2 text-lg leading-tight font-black">
+                                                    {promo.title}
+                                                </h3>
+                                            </div>
+                                        </Link>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex min-h-[180px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+                                    Promo pendukung akan tampil saat data promo
+                                    atau destinasi aktif tersedia.
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+                            Belum ada promo spesial yang aktif saat ini.
+                        </div>
+                    )}
+                </section>
 
                 <section className="mx-auto max-w-7xl space-y-5 px-4 sm:px-6 lg:px-8">
                     <div className="flex items-start gap-3">
