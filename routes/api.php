@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Api\AdminNotificationController;
-use App\Http\Controllers\Api\AffiliateController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\DiscoveryController;
@@ -76,11 +75,6 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('push')->group(function 
 
 Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
     Route::put('/', [ProfileController::class, 'update']);
-    Route::get('addresses', [ProfileController::class, 'addresses']);
-    Route::post('addresses', [ProfileController::class, 'storeAddress']);
-    Route::put('addresses/{address}', [ProfileController::class, 'updateAddress']);
-    Route::post('addresses/{address}/default', [ProfileController::class, 'setDefaultAddress']);
-    Route::delete('addresses/{address}', [ProfileController::class, 'destroyAddress']);
     Route::post('password/otp', [ProfileController::class, 'sendPasswordOtp']);
     Route::put('password', [ProfileController::class, 'updatePassword']);
     Route::delete('/', [ProfileController::class, 'destroy']);
@@ -88,20 +82,6 @@ Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
 
 Route::middleware(['auth:sanctum', 'verified', 'api.admin'])->prefix('admin')->group(function () {
     Route::post('notifications', [AdminNotificationController::class, 'store']);
-});
-
-Route::middleware(['auth:sanctum', 'verified'])->prefix('affiliate')->group(function () {
-    Route::get('overview', [AffiliateController::class, 'overview']);
-    Route::get('destinations', [AffiliateController::class, 'destinations']);
-    Route::post('register', [AffiliateController::class, 'register']);
-    Route::get('profile', [AffiliateController::class, 'profile']);
-    Route::put('profile', [AffiliateController::class, 'updateProfile']);
-    Route::get('links', [AffiliateController::class, 'links']);
-    Route::post('links', [AffiliateController::class, 'createLink']);
-    Route::get('catalog', [AffiliateController::class, 'catalog']);
-    Route::get('commissions', [AffiliateController::class, 'commissions']);
-    Route::get('payouts', [AffiliateController::class, 'payouts']);
-    Route::post('payouts', [AffiliateController::class, 'requestPayout']);
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('reviews')->group(function () {
