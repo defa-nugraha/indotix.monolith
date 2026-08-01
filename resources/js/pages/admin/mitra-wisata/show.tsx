@@ -45,6 +45,7 @@ type Onboarding = {
     verification_reason?: string | null;
     payout_status?: string | null;
     payout_reason?: string | null;
+    created_at?: string | null;
 };
 
 type Props = {
@@ -264,6 +265,18 @@ export default function AdminMitraWisataShow({
                             </h1>
                             <p className="text-sm text-slate-500">
                                 {mitra.name} · {mitra.email}
+                            </p>
+                            <p className="mt-1 text-xs font-semibold text-slate-500">
+                                Tanggal pengajuan:{' '}
+                                {onboarding.created_at
+                                    ? new Date(
+                                          onboarding.created_at,
+                                      ).toLocaleDateString('id-ID', {
+                                          day: '2-digit',
+                                          month: 'long',
+                                          year: 'numeric',
+                                      })
+                                    : '-'}
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">

@@ -56,6 +56,7 @@ type Onboarding = {
     tax_type: string | null;
     payout_status: 'draft' | 'pending' | 'verified' | 'rejected';
     payout_reason: string | null;
+    created_at?: string | null;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -340,6 +341,18 @@ export default function AdminMitraShow({
                             </h1>
                             <p className="text-sm text-slate-600">
                                 {mitra.email}
+                            </p>
+                            <p className="mt-1 text-xs font-semibold text-slate-500">
+                                Tanggal pengajuan:{' '}
+                                {onboarding.created_at
+                                    ? new Date(
+                                          onboarding.created_at,
+                                      ).toLocaleDateString('id-ID', {
+                                          day: '2-digit',
+                                          month: 'long',
+                                          year: 'numeric',
+                                      })
+                                    : '-'}
                             </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-3">

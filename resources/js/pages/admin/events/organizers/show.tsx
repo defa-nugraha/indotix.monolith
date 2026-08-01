@@ -35,6 +35,7 @@ type Organizer = {
         operational_hours?: string | null;
         verification_status?: string | null;
         verification_reason?: string | null;
+        created_at?: string | null;
     } | null;
 };
 
@@ -174,6 +175,18 @@ export default function EventOrganizerShow({
                             <p className="text-sm text-slate-500">
                                 {organizer.email ?? '-'}
                                 {organizer.phone ? ` · ${organizer.phone}` : ''}
+                            </p>
+                            <p className="mt-1 text-xs font-semibold text-slate-500">
+                                Tanggal pengajuan:{' '}
+                                {organizer.onboarding?.created_at
+                                    ? new Date(
+                                          organizer.onboarding.created_at,
+                                      ).toLocaleDateString('id-ID', {
+                                          day: '2-digit',
+                                          month: 'long',
+                                          year: 'numeric',
+                                      })
+                                    : '-'}
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
