@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PrivacyPolicy;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -52,8 +53,8 @@ class PrivacyPolicyController extends Controller
 
         $policy->update([
             'title' => $data['title'],
-            'content' => $data['content'],
-            'terms_content' => $data['terms_content'] ?? $policy->terms_content,
+            'content' => HtmlSanitizer::clean($data['content']),
+            'terms_content' => HtmlSanitizer::clean($data['terms_content'] ?? $policy->terms_content),
             'version' => $data['version'] ?? $policy->version,
             'effective_at' => $data['effective_at'] ?? $policy->effective_at,
             'is_active' => (bool) ($data['is_active'] ?? $policy->is_active),

@@ -13,6 +13,8 @@ use Inertia\Response;
 
 class MitraEventOnboardingController extends Controller
 {
+    private const MAX_UPLOAD_KILOBYTES = 5120;
+
     public function show(Request $request): Response
     {
         $user = $request->user();
@@ -73,7 +75,7 @@ class MitraEventOnboardingController extends Controller
             'eo_description' => ['nullable', 'string', 'max:1000'],
             'legal_doc_type' => ['nullable', 'in:nib_siup_akta,surat_eo_komunitas,surat_kampus_ukm,surat_pernyataan'],
             'legal_doc_number' => ['nullable', 'string', 'max:255'],
-            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
+            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:'.self::MAX_UPLOAD_KILOBYTES],
             'operational_phone' => ['nullable', 'string', 'max:50'],
             'operational_email' => ['nullable', 'email', 'max:255'],
             'operational_hours' => ['nullable', 'string', 'max:255'],
@@ -115,8 +117,8 @@ class MitraEventOnboardingController extends Controller
         ]);
 
         $data = $request->validate([
-            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
-            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:'.self::MAX_UPLOAD_KILOBYTES],
+            'selfie_ktp_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:'.self::MAX_UPLOAD_KILOBYTES],
         ]);
 
         $folder = "mitra-event/{$user->id}";

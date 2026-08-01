@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogPost;
 use App\Models\PublicContact;
+use App\Support\HtmlSanitizer;
 use App\Support\HomePageContent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -133,7 +134,7 @@ class PublicBlogController extends Controller
                 'title' => $post->title,
                 'slug' => $post->slug,
                 'excerpt' => $post->excerpt,
-                'content' => $post->content,
+                'content' => HtmlSanitizer::clean($post->content),
                 'label' => $post->label,
                 'category' => $post->category?->name,
                 'cover_image_url' => $post->cover_image_path ? Storage::url($post->cover_image_path) : null,

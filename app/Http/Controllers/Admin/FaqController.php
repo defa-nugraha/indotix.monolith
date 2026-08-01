@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -40,7 +41,7 @@ class FaqController extends Controller
 
         Faq::create([
             'question' => $data['question'],
-            'answer' => $data['answer'],
+            'answer' => HtmlSanitizer::clean($data['answer']),
             'category' => $data['category'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
             'is_active' => (bool) ($data['is_active'] ?? true),
@@ -68,7 +69,7 @@ class FaqController extends Controller
 
         $faq->update([
             'question' => $data['question'],
-            'answer' => $data['answer'],
+            'answer' => HtmlSanitizer::clean($data['answer']),
             'category' => $data['category'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
             'is_active' => (bool) ($data['is_active'] ?? true),

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AboutPage;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -40,7 +41,7 @@ class AboutPageController extends Controller
 
         $about->update([
             'title' => $data['title'],
-            'content' => $data['content'],
+            'content' => HtmlSanitizer::clean($data['content']),
             'is_active' => (bool) ($data['is_active'] ?? $about->is_active),
         ]);
 

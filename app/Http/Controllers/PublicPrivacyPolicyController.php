@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PrivacyPolicy;
+use App\Support\HtmlSanitizer;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -30,10 +31,19 @@ class PublicPrivacyPolicyController extends Controller
 
     private function activePolicy(): ?PrivacyPolicy
     {
-        return PrivacyPolicy::query()
+        $policy = PrivacyPolicy::query()
             ->where('is_active', true)
             ->orderByDesc('effective_at')
             ->orderByDesc('id')
             ->first();
+
+        if (! $policy) {
+            return null;
+        }
+
+        $policy->content = HtmlSanitizer::clean($policy->content);
+        $policy->terms_content = HtmlSanitizer::clean($policy->terms_content);
+
+        return $policy;
     }
 }

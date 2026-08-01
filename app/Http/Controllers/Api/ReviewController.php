@@ -60,8 +60,8 @@ class ReviewController extends Controller
             'rating' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['nullable', 'string', 'max:1000'],
             'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['file', 'image'],
-            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime'],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'video' => ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg,video/quicktime', 'max:51200'],
         ]);
 
         $productId = $this->resolveId($data['product_id']);

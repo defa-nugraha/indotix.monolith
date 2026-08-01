@@ -14,6 +14,8 @@ use Inertia\Response;
 
 class MitraOnboardingController extends Controller
 {
+    private const MAX_UPLOAD_KILOBYTES = 5120;
+
     public function selectType(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -109,14 +111,14 @@ class MitraOnboardingController extends Controller
             'responsible_name' => ['nullable', 'string', 'max:255'],
             'responsible_nik' => ['nullable', 'string', 'max:32'],
             'responsible_role' => ['nullable', 'in:owner,manager,admin'],
-            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
-            'selfie_ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'ktp_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:'.self::MAX_UPLOAD_KILOBYTES],
+            'selfie_ktp_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:'.self::MAX_UPLOAD_KILOBYTES],
             'legal_doc_type' => ['nullable', 'in:nib,siup,tdp,surat_izin_daerah,surat_rt_rw,akta_pendirian'],
             'legal_doc_number' => ['nullable', 'string', 'max:255'],
-            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
-            'photo_front_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_lobby_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
-            'photo_room_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png'],
+            'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:'.self::MAX_UPLOAD_KILOBYTES],
+            'photo_front_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:'.self::MAX_UPLOAD_KILOBYTES],
+            'photo_lobby_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:'.self::MAX_UPLOAD_KILOBYTES],
+            'photo_room_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:'.self::MAX_UPLOAD_KILOBYTES],
             'address_full' => ['nullable', 'string', 'max:500'],
             'maps_pin_url' => ['nullable', 'string', 'max:500'],
             'reception_phone' => ['nullable', 'string', 'max:50'],

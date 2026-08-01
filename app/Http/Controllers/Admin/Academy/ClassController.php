@@ -53,7 +53,7 @@ class ClassController extends Controller
             'status' => ['required', 'in:draft,scheduled,open_for_sale,closed,completed,cancelled'],
             'is_active' => ['required', 'boolean'],
             'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $class = AcademyClass::create($data);
@@ -93,7 +93,7 @@ class ClassController extends Controller
             'status' => ['required', 'in:draft,scheduled,open_for_sale,closed,completed,cancelled'],
             'is_active' => ['required', 'boolean'],
             'images' => ['nullable', 'array', 'max:5'],
-            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp'],
+            'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $class->update($data);

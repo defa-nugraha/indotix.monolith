@@ -243,8 +243,11 @@ class MediaCompressionService
             }
         }
 
-        $path = trim((string) @shell_exec('command -v ffmpeg'));
+        $path = trim(strtok((string) @shell_exec('command -v ffmpeg'), "\r\n") ?: '');
+        if ($path === '' || str_contains($path, ' ') || ! is_file($path) || ! is_executable($path)) {
+            return null;
+        }
 
-        return $path !== '' ? $path : null;
+        return $path;
     }
 }

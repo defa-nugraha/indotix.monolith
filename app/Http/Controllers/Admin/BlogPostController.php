@@ -7,6 +7,7 @@ use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\BlogTag;
 use App\Services\MediaCompressionService;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -74,7 +75,7 @@ class BlogPostController extends Controller
             'title' => $data['title'],
             'slug' => $slug,
             'excerpt' => $data['excerpt'] ?? null,
-            'content' => $data['content'],
+            'content' => HtmlSanitizer::clean($data['content']),
             'label' => $data['label'] ?? null,
             'category_id' => $data['category_id'] ?? null,
             'author_id' => $request->user()?->id,
@@ -135,7 +136,7 @@ class BlogPostController extends Controller
             'title' => $data['title'],
             'slug' => $slug,
             'excerpt' => $data['excerpt'] ?? null,
-            'content' => $data['content'],
+            'content' => HtmlSanitizer::clean($data['content']),
             'label' => $data['label'] ?? null,
             'category_id' => $data['category_id'] ?? null,
             'meta_title' => $data['meta_title'] ?? null,
@@ -178,7 +179,7 @@ class BlogPostController extends Controller
             'meta_title' => ['nullable', 'string', 'max:180'],
             'meta_description' => ['nullable', 'string', 'max:255'],
             'meta_keywords' => ['nullable', 'string', 'max:255'],
-            'cover_image' => ['nullable', 'image'],
+            'cover_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
     }
 

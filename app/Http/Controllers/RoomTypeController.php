@@ -16,6 +16,7 @@ use Inertia\Response;
 
 class RoomTypeController extends Controller
 {
+    private const MAX_IMAGE_KILOBYTES = 5120;
     private const STATUSES = ['draft', 'active', 'suspended'];
 
     public function index(Request $request): Response
@@ -168,7 +169,7 @@ class RoomTypeController extends Controller
             'total_rooms' => ['required', 'integer', 'min:0'],
             'status' => ['required', Rule::in(self::STATUSES)],
             'images' => ['nullable', 'array'],
-            'images.*' => ['file', 'image'],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
         ]);
     }
 

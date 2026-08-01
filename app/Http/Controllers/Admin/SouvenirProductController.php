@@ -93,7 +93,7 @@ class SouvenirProductController extends Controller
             'min_stock' => ['nullable', 'integer', 'min:0'],
             'stock' => ['nullable', 'integer'],
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['file', 'image'],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $product = SouvenirProduct::create([
@@ -146,7 +146,7 @@ class SouvenirProductController extends Controller
             'min_stock' => ['nullable', 'integer', 'min:0'],
             'stock' => ['nullable', 'integer'],
             'images' => ['nullable', 'array', 'max:10'],
-            'images.*' => ['file', 'image'],
+            'images.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $images = $data['images'] ?? [];
