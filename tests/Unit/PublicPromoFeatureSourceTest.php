@@ -66,10 +66,12 @@ test('public promo page exposes voucher discovery and copy code ux', function ()
         ->toContain('Slot homepage');
 
     expect($home)
-        ->toContain('copyVoucherCode')
-        ->toContain('copiedVoucherCode === voucher.code')
-        ->toContain('href="/promo"')
+        ->toContain('specialPromoImageCards')
+        ->toContain('promoItems.map((promo)')
         ->toContain('`/promo/${promo.slug}`')
+        ->not->toContain('copyVoucherCode')
+        ->not->toContain('copiedVoucherCode === voucher.code')
+        ->not->toContain('homeContent.promo.title')
         ->not->toContain($foreignBrand);
 
     expect($header)

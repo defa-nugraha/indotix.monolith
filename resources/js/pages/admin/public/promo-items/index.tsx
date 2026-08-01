@@ -8,7 +8,7 @@ import type { BreadcrumbItem } from '@/types';
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Konten Publik', href: '/admin/public/promo-items' },
-    { title: 'Promo Terkini', href: '/admin/public/promo-items' },
+    { title: 'Promo Spesial', href: '/admin/public/promo-items' },
 ];
 
 type PromoItem = {
@@ -20,6 +20,8 @@ type PromoItem = {
     excerpt: string | null;
     image_path: string;
     link_url: string | null;
+    voucher_code?: string | null;
+    voucher_remaining_count?: number | null;
     sort_order: number;
     starts_at: string | null;
     ends_at: string | null;
@@ -53,7 +55,7 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kelola Promo Terkini">
+            <Head title="Kelola Promo Spesial">
                 <link
                     href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
                     rel="stylesheet"
@@ -65,13 +67,13 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-2">
                             <p className="text-xs font-semibold uppercase text-sky-600">
-                                Promo Terkini
+                                Promo Spesial
                             </p>
                             <h1 className="text-2xl font-semibold text-slate-900 sm:text-3xl">
-                                Kelola promo terkini
+                                Kelola promo spesial
                             </h1>
                             <p className="text-sm text-slate-600">
-                                Tambahkan promo yang tampil di halaman promo publik. Slot homepage 1-3 digunakan untuk section promo di beranda.
+                                Tambahkan promo yang tampil di halaman promo publik. Slot homepage 1-3 digunakan untuk section Promo Spesial di beranda.
                             </p>
                             <p className="text-xs text-slate-500">
                                 Ukuran rekomendasi: slot homepage 1-2 → 600 × 800 px, slot 0 atau 3 → 1200 × 400 px.
@@ -96,6 +98,7 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                                     <th className="px-4 py-3 text-left">Preview</th>
                                     <th className="px-4 py-3 text-left">Judul</th>
                                     <th className="px-4 py-3 text-left">Kategori</th>
+                                    <th className="px-4 py-3 text-left">Voucher</th>
                                     <th className="px-4 py-3 text-left">Slot</th>
                                     <th className="px-4 py-3 text-left">Periode</th>
                                     <th className="px-4 py-3 text-left">Status</th>
@@ -130,6 +133,20 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                                         </td>
                                         <td className="px-4 py-3">{item.category_label ?? 'Promo'}</td>
                                         <td className="px-4 py-3">
+                                            {item.voucher_code ? (
+                                                <div className="grid gap-1">
+                                                    <span className="font-semibold text-slate-900">{item.voucher_code}</span>
+                                                    <span className="text-xs text-slate-500">
+                                                        {item.voucher_remaining_count === null || item.voucher_remaining_count === undefined
+                                                            ? 'Kuota tidak dibatasi'
+                                                            : `${item.voucher_remaining_count} tersisa`}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-slate-400">Tidak terhubung</span>
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3">
                                             {item.sort_order > 0 ? `Homepage ${item.sort_order}` : 'Halaman promo'}
                                         </td>
                                         <td className="px-4 py-3 text-xs text-slate-500">
@@ -158,8 +175,8 @@ export default function PromoItemIndex({ items }: { items: PromoItem[] }) {
                                 ))}
                                 {items.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
-                                            Belum ada promo terkini.
+                                        <td colSpan={8} className="px-4 py-8 text-center text-sm text-slate-500">
+                                            Belum ada promo spesial.
                                         </td>
                                     </tr>
                                 )}

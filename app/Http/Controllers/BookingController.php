@@ -177,6 +177,9 @@ class BookingController extends Controller
                 'total' => $total,
             ],
             'voucher' => $voucherPayload,
+            'pendingVoucherCode' => empty($draft['voucher_code'])
+                ? $request->session()->get('pending_voucher_code')
+                : null,
         ]);
     }
 
@@ -224,6 +227,7 @@ class BookingController extends Controller
 
         $draft['voucher_code'] = $voucher->code;
         $request->session()->put('booking_draft', $draft);
+        $request->session()->forget('pending_voucher_code');
 
         return back()->with('status', 'voucher-applied');
     }

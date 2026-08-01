@@ -10,7 +10,7 @@ import type { BreadcrumbItem } from '@/types';
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Konten Publik', href: '/admin/public/promo-items' },
-    { title: 'Promo Terkini', href: '/admin/public/promo-items' },
+    { title: 'Promo Spesial', href: '/admin/public/promo-items' },
     { title: 'Edit', href: '#' },
 ];
 
@@ -26,6 +26,9 @@ type PromoItem = {
     description: string | null;
     terms: string | null;
     link_url: string | null;
+    voucher_id?: number | null;
+    voucher_code?: string | null;
+    voucher_remaining_count?: number | null;
     sort_order: number;
     starts_at: string | null;
     ends_at: string | null;
@@ -40,14 +43,23 @@ type HomepageSlot = {
     used_by?: string | null;
 };
 
+type VoucherOption = {
+    id: number;
+    code: string;
+    remaining_quota?: number | null;
+    is_active: boolean;
+};
+
 export default function PromoItemEdit({
     promoItem,
     homepageSlots = [],
     categoryOptions = {},
+    voucherOptions = [],
 }: {
     promoItem: PromoItem;
     homepageSlots?: HomepageSlot[];
     categoryOptions?: Record<string, string>;
+    voucherOptions?: VoucherOption[];
 }) {
     const slots = homepageSlots.length > 0
         ? homepageSlots
@@ -65,6 +77,7 @@ export default function PromoItemEdit({
         description: promoItem.description ?? '',
         terms: promoItem.terms ?? '',
         link_url: promoItem.link_url ?? '',
+        voucher_id: promoItem.voucher_id ? String(promoItem.voucher_id) : '',
         sort_order: promoItem.sort_order ?? 0,
         starts_at: promoItem.starts_at ?? '',
         ends_at: promoItem.ends_at ?? '',
@@ -98,7 +111,7 @@ export default function PromoItemEdit({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Edit Promo Terkini">
+            <Head title="Edit Promo Spesial">
                 <link
                     href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
                     rel="stylesheet"
@@ -106,7 +119,7 @@ export default function PromoItemEdit({
             </Head>
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <h1 className="text-2xl font-semibold text-slate-900">Edit Promo Terkini</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900">Edit Promo Spesial</h1>
                     <form
                         className="mt-6 grid gap-4"
                         onSubmit={(event) => {
@@ -176,6 +189,29 @@ export default function PromoItemEdit({
                             <Input value={form.data.link_url} onChange={(event) => form.setData('link_url', event.target.value)} />
                             <p className="text-xs text-slate-500">Opsional. Jika kosong, tombol detail promo akan mengarah ke halaman wisata.</p>
                             <InputError message={form.errors.link_url} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label>Voucher promo terhubung</Label>
+                            <select
+                                value={form.data.voucher_id}
+                                onChange={(event) => form.setData('voucher_id', event.target.value)}
+                                className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-sky-400 focus:outline-none"
+                            >
+                                <option value="">Tidak memakai voucher</option>
+                                {voucherOptions.map((voucher) => (
+                                    <option key={voucher.id} value={voucher.id}>
+                                        {voucher.code}
+                                        {voucher.remaining_quota === null
+                                            ? ' · kuota tidak dibatasi'
+                                            : ` · ${voucher.remaining_quota} tersisa`}
+                                        {!voucher.is_active ? ' · nonaktif' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                            <p className="text-xs text-slate-500">
+                                Jika dipilih, kartu promo homepage menampilkan badge kuota dan klik promo akan menyimpan kode voucher untuk checkout.
+                            </p>
+                            <InputError message={form.errors.voucher_id} />
                         </div>
                         <div className="grid gap-2 md:grid-cols-3">
                             <div className="grid gap-2">

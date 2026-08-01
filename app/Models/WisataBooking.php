@@ -17,6 +17,12 @@ class WisataBooking extends Model
         'visit_date',
         'quantity',
         'unit_price',
+        'subtotal_price',
+        'voucher_id',
+        'voucher_code',
+        'discount_type',
+        'discount_value',
+        'discount_amount',
         'total_price',
         'status',
         'guest_name',
@@ -39,6 +45,9 @@ class WisataBooking extends Model
         'visit_date' => 'date',
         'quantity' => 'integer',
         'unit_price' => 'integer',
+        'subtotal_price' => 'integer',
+        'discount_value' => 'integer',
+        'discount_amount' => 'integer',
         'total_price' => 'integer',
         'payment_deadline' => 'datetime',
         'cancelled_at' => 'datetime',
@@ -58,6 +67,11 @@ class WisataBooking extends Model
     public function ticket()
     {
         return $this->belongsTo(WisataTicket::class, 'wisata_ticket_id');
+    }
+
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class);
     }
 
     public function items()

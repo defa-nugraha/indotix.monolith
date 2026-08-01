@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 
 class PromoItem extends Model
@@ -18,6 +19,7 @@ class PromoItem extends Model
         'terms',
         'image_path',
         'link_url',
+        'voucher_id',
         'sort_order',
         'starts_at',
         'ends_at',
@@ -31,5 +33,10 @@ class PromoItem extends Model
             'ends_at' => 'date',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class);
     }
 }

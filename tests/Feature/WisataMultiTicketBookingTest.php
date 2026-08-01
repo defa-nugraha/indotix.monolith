@@ -4,6 +4,7 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\User;
 use App\Models\WisataBooking;
 use App\Models\WisataTicket;
+use App\Models\Voucher;
 use App\Services\MidtransService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -143,4 +144,98 @@ test('user can book multiple wisata ticket types in one order', function () {
         ->assertOk()
         ->assertJsonPath('tickets.0.available', 23)
         ->assertJsonPath('tickets.1.available', 21);
+});
+
+test('selected promo voucher prefills and discounts wisata booking', function () {
+    [$destination, $regular, $children] = createWisataMultiTicketFixture();
+    $visitDate = now()->addDays(3)->toDateString();
+    $voucher = Voucher::query()->create([
+        'code' => 'WISATAHEMAT10',
+        'discount_type' => 'percentage',
+        'discount_value' => 10,
+        'min_transaction' => 100000,
+        'quota_total' => 5,
+        'quota_used' => 0,
+        'is_active' => true,
+    ]);
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+
+    $this->get("/promo/voucher/{$voucher->code}")
+        ->assertRedirect('/wisata');
+
+    $this->actingAs($user)
+        ->post('/wisata/booking/prepare', [
+            'destination_id' => $destination->id,
+            'ticket_id' => $regular->id,
+            'visit_date' => $visitDate,
+            'items' => [
+                ['ticket_id' => $regular->id, 'quantity' => 2],
+                ['ticket_id' => $children->id, 'quantity' => 4],
+            ],
+        ])
+        ->assertRedirect('/wisata/booking/review');
+
+    $this->actingAs($user)
+        ->get('/wisata/booking/review')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/wisata/booking/review')
+            ->where('pendingVoucherCode', 'WISATAHEMAT10')
+            ->where('pricing.subtotal', 400000)
+            ->where('pricing.discount_amount', 0)
+            ->where('pricing.total', 400000)
+        );
+
+    $this->actingAs($user)
+        ->from('/wisata/booking/review')
+        ->post('/wisata/booking/voucher', [
+            'voucher_code' => 'wisatahemat10',
+        ])
+        ->assertRedirect('/wisata/booking/review');
+
+    $this->actingAs($user)
+        ->get('/wisata/booking/review')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('voucher.code', 'WISATAHEMAT10')
+            ->where('pricing.subtotal', 400000)
+            ->where('pricing.discount_amount', 40000)
+            ->where('pricing.total', 360000)
+        );
+
+    $this->mock(MidtransService::class, function ($mock) {
+        $mock
+            ->shouldReceive('snap')
+            ->once()
+            ->with(\Mockery::on(function (array $payload) {
+                return $payload['transaction_details']['gross_amount'] === 360000
+                    && collect($payload['item_details'])->contains(fn (array $item) => str_starts_with((string) $item['id'], 'VOUCHER-') && $item['price'] === -40000);
+            }))
+            ->andReturn([
+                'token' => 'snap-token-voucher',
+                'redirect_url' => 'https://payments.test/wisata-voucher',
+                'transaction_id' => 'trx-wisata-voucher',
+            ]);
+    });
+
+    $this->actingAs($user)
+        ->postJson('/wisata/booking/confirm', [
+            'guest_name' => 'User Indotix',
+            'guest_email' => 'user@example.test',
+        ])
+        ->assertOk()
+        ->assertJsonPath('snap_token', 'snap-token-voucher');
+
+    $booking = WisataBooking::query()->firstOrFail();
+
+    expect((int) $booking->subtotal_price)->toBe(400000)
+        ->and($booking->voucher_code)->toBe('WISATAHEMAT10')
+        ->and((int) $booking->discount_amount)->toBe(40000)
+        ->and((int) $booking->total_price)->toBe(360000);
+
+    expect((int) $voucher->fresh()->quota_used)->toBe(1);
 });

@@ -6,6 +6,7 @@ use App\Models\PromoItem;
 use App\Models\PublicContact;
 use App\Models\Voucher;
 use App\Support\HomePageContent;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -24,6 +25,9 @@ class PublicPromoController extends Controller
     public function index(): Response
     {
         $vouchers = Voucher::query()
+            ->where(function ($query) {
+                $query->whereNull('hotel_id')->orWhere('hotel_id', 0);
+            })
             ->where('is_active', true)
             ->where(function ($query) {
                 $query->whereNull('starts_at')
@@ -88,9 +92,21 @@ class PublicPromoController extends Controller
         ]);
     }
 
+    public function selectVoucher(Voucher $voucher): RedirectResponse
+    {
+        abort_unless($this->isVoucherSelectable($voucher), HttpResponse::HTTP_NOT_FOUND);
+
+        session(['pending_voucher_code' => $voucher->code]);
+
+        return redirect()
+            ->route('wisata.search')
+            ->with('status', 'voucher-selected');
+    }
+
     private function activePromoItemsQuery()
     {
         return PromoItem::query()
+            ->with('voucher')
             ->where('is_active', true)
             ->where(function ($query) {
                 $query->whereNull('starts_at')
@@ -123,6 +139,11 @@ class PublicPromoController extends Controller
 
     private function promoItemPayload(PromoItem $promo): array
     {
+        $remainingQuota = null;
+        if ($promo->voucher && (int) $promo->voucher->quota_total > 0) {
+            $remainingQuota = max(0, (int) $promo->voucher->quota_total - (int) $promo->voucher->quota_used);
+        }
+
         return [
             'id' => $promo->id,
             'title' => $promo->title,
@@ -136,9 +157,38 @@ class PublicPromoController extends Controller
                 ? $promo->image_path
                 : Storage::url($promo->image_path),
             'link_url' => $promo->link_url,
+            'voucher_code' => $promo->voucher?->code,
+            'voucher_remaining_count' => $remainingQuota,
             'sort_order' => (int) $promo->sort_order,
             'starts_at' => $promo->starts_at?->toDateString(),
             'ends_at' => $promo->ends_at?->toDateString(),
         ];
+    }
+
+    private function isVoucherSelectable(Voucher $voucher): bool
+    {
+        $today = now()->toDateString();
+
+        if (! $voucher->is_active) {
+            return false;
+        }
+
+        if ($voucher->hotel_id) {
+            return false;
+        }
+
+        if ($voucher->starts_at && $voucher->starts_at->toDateString() > $today) {
+            return false;
+        }
+
+        if ($voucher->ends_at && $voucher->ends_at->toDateString() < $today) {
+            return false;
+        }
+
+        if ((int) $voucher->quota_total > 0 && (int) $voucher->quota_used >= (int) $voucher->quota_total) {
+            return false;
+        }
+
+        return true;
     }
 }

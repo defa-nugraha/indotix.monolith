@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PromoItem;
+use App\Models\Voucher;
 use App\Services\MediaCompressionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,7 @@ class PromoItemController extends Controller
     public function index(): Response
     {
         $items = PromoItem::query()
+            ->with('voucher')
             ->orderBy('sort_order')
             ->orderByDesc('id')
             ->get()
@@ -48,6 +50,7 @@ class PromoItemController extends Controller
             'orderFull' => empty($availableOrders),
             'homepageSlots' => $this->homepageSlots(),
             'categoryOptions' => self::CATEGORY_OPTIONS,
+            'voucherOptions' => $this->voucherOptions(),
         ]);
     }
 
@@ -75,6 +78,7 @@ class PromoItemController extends Controller
             'description' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'link_url' => ['nullable', 'string', 'max:500'],
+            'voucher_id' => ['nullable', 'integer', 'exists:vouchers,id'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:3', Rule::notIn($usedOrders)],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
@@ -95,6 +99,7 @@ class PromoItemController extends Controller
             'description' => $data['description'] ?? null,
             'terms' => $data['terms'] ?? null,
             'link_url' => $data['link_url'] ?? null,
+            'voucher_id' => $data['voucher_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? $sortOrder,
             'starts_at' => $data['starts_at'] ?? null,
             'ends_at' => $data['ends_at'] ?? null,
@@ -111,6 +116,7 @@ class PromoItemController extends Controller
             'promoItem' => $this->promoItemPayload($promoItem),
             'homepageSlots' => $this->homepageSlots($promoItem),
             'categoryOptions' => self::CATEGORY_OPTIONS,
+            'voucherOptions' => $this->voucherOptions(),
         ]);
     }
 
@@ -135,6 +141,7 @@ class PromoItemController extends Controller
             'description' => ['nullable', 'string'],
             'terms' => ['nullable', 'string'],
             'link_url' => ['nullable', 'string', 'max:500'],
+            'voucher_id' => ['nullable', 'integer', 'exists:vouchers,id'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:3', Rule::notIn($usedOrders)],
             'starts_at' => ['nullable', 'date'],
             'ends_at' => ['nullable', 'date', 'after_or_equal:starts_at'],
@@ -161,6 +168,7 @@ class PromoItemController extends Controller
             'description' => $data['description'] ?? null,
             'terms' => $data['terms'] ?? null,
             'link_url' => $data['link_url'] ?? null,
+            'voucher_id' => $data['voucher_id'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
             'starts_at' => $data['starts_at'] ?? null,
             'ends_at' => $data['ends_at'] ?? null,
@@ -202,6 +210,13 @@ class PromoItemController extends Controller
 
     private function promoItemPayload(PromoItem $item): array
     {
+        $item->loadMissing('voucher');
+        $remainingQuota = null;
+
+        if ($item->voucher && (int) $item->voucher->quota_total > 0) {
+            $remainingQuota = max(0, (int) $item->voucher->quota_total - (int) $item->voucher->quota_used);
+        }
+
         return [
             'id' => $item->id,
             'title' => $item->title,
@@ -213,6 +228,9 @@ class PromoItemController extends Controller
             'terms' => $item->terms,
             'image_path' => $item->image_path,
             'link_url' => $item->link_url,
+            'voucher_id' => $item->voucher_id,
+            'voucher_code' => $item->voucher?->code,
+            'voucher_remaining_count' => $remainingQuota,
             'sort_order' => (int) $item->sort_order,
             'starts_at' => $item->starts_at?->toDateString(),
             'ends_at' => $item->ends_at?->toDateString(),
@@ -229,6 +247,30 @@ class PromoItemController extends Controller
             ->filter(fn ($value) => $value >= 1 && $value <= 3)
             ->unique()
             ->values()
+            ->all();
+    }
+
+    private function voucherOptions(): array
+    {
+        return Voucher::query()
+            ->where(function ($query) {
+                $query->whereNull('hotel_id')->orWhere('hotel_id', 0);
+            })
+            ->orderBy('code')
+            ->get()
+            ->map(function (Voucher $voucher) {
+                $remainingQuota = null;
+                if ((int) $voucher->quota_total > 0) {
+                    $remainingQuota = max(0, (int) $voucher->quota_total - (int) $voucher->quota_used);
+                }
+
+                return [
+                    'id' => $voucher->id,
+                    'code' => $voucher->code,
+                    'remaining_quota' => $remainingQuota,
+                    'is_active' => (bool) $voucher->is_active,
+                ];
+            })
             ->all();
     }
 

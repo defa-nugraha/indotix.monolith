@@ -41,6 +41,7 @@ use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\PromoItemController;
 use App\Http\Controllers\Admin\PublicBannerController;
 use App\Http\Controllers\Admin\PublicContactController;
+use App\Http\Controllers\Admin\PublicPartnerController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\SouvenirAuditController;
 use App\Http\Controllers\Admin\SouvenirCategoryController;
@@ -129,6 +130,8 @@ Route::get('/', [PublicHomeController::class, 'index'])
     ->name('home');
 Route::get('/promo', [PublicPromoController::class, 'index'])
     ->name('promo.index');
+Route::get('/promo/voucher/{voucher:code}', [PublicPromoController::class, 'selectVoucher'])
+    ->name('promo.voucher.select');
 Route::get('/promo/{promoItem:slug}', [PublicPromoController::class, 'show'])
     ->name('promo.show');
 Route::get('/sitemap.xml', SitemapController::class)
@@ -757,6 +760,19 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.public.contacts.edit');
     Route::put('admin/public/contacts', [PublicContactController::class, 'update'])
         ->name('admin.public.contacts.update');
+
+    Route::get('admin/public/partners', [PublicPartnerController::class, 'index'])
+        ->name('admin.public.partners.index');
+    Route::get('admin/public/partners/create', [PublicPartnerController::class, 'create'])
+        ->name('admin.public.partners.create');
+    Route::post('admin/public/partners', [PublicPartnerController::class, 'store'])
+        ->name('admin.public.partners.store');
+    Route::get('admin/public/partners/{partner}/edit', [PublicPartnerController::class, 'edit'])
+        ->name('admin.public.partners.edit');
+    Route::put('admin/public/partners/{partner}', [PublicPartnerController::class, 'update'])
+        ->name('admin.public.partners.update');
+    Route::delete('admin/public/partners/{partner}', [PublicPartnerController::class, 'destroy'])
+        ->name('admin.public.partners.destroy');
 });
 
 Route::get('mitra/dashboard', [App\Http\Controllers\Mitra\DashboardController::class, 'index'])
@@ -1241,6 +1257,12 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
     Route::get('/wisata/booking/review', [WisataBookingController::class, 'review'])
         ->middleware('maintenance.transactions')
         ->name('wisata.booking.review');
+    Route::post('/wisata/booking/voucher', [WisataBookingController::class, 'applyVoucher'])
+        ->middleware('maintenance.transactions')
+        ->name('wisata.booking.voucher.apply');
+    Route::post('/wisata/booking/voucher/remove', [WisataBookingController::class, 'removeVoucher'])
+        ->middleware('maintenance.transactions')
+        ->name('wisata.booking.voucher.remove');
     Route::post('/wisata/booking/confirm', [WisataBookingController::class, 'confirm'])
         ->middleware('maintenance.transactions')
         ->name('wisata.booking.confirm');

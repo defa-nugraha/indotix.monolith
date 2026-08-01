@@ -6,7 +6,7 @@ import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
-export default function BookingReview({ draft, hotel, roomType, pricing, voucher }: any) {
+export default function BookingReview({ draft, hotel, roomType, pricing, voucher, pendingVoucherCode }: any) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: { name?: string; email?: string; role?: string; phone?: string } }; unread_notifications?: number; souvenir_cart_count?: number };
     const role = auth?.user?.role;
     const isUser = Boolean((auth?.user as any)?.role === 'user');
@@ -17,7 +17,7 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
         special_request: '',
     });
     const voucherForm = useForm({
-        voucher_code: '',
+        voucher_code: voucher?.code ?? pendingVoucherCode ?? '',
     });
     const [showPrice, setShowPrice] = useState(true);
 
@@ -32,6 +32,12 @@ export default function BookingReview({ draft, hotel, roomType, pricing, voucher
             form.setData('guest_phone', auth.user.phone);
         }
     }, [auth?.user?.name, auth?.user?.email, auth?.user?.phone]);
+
+    useEffect(() => {
+        if (!voucher && pendingVoucherCode && !voucherForm.data.voucher_code) {
+            voucherForm.setData('voucher_code', pendingVoucherCode);
+        }
+    }, [pendingVoucherCode, voucher]);
 
     const hasPhone = Boolean(auth?.user?.phone);
 

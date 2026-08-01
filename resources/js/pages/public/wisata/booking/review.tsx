@@ -43,9 +43,18 @@ type Props = {
         price: number;
     };
     pricing: {
+        subtotal?: number;
+        discount_amount?: number;
         total: number;
         quantity?: number;
     };
+    voucher?: {
+        code: string;
+        discount_type: string;
+        discount_value: number;
+        discount_amount: number;
+    } | null;
+    pendingVoucherCode?: string | null;
     items?: TicketLineItem[];
     snapClientKey: string;
     snapScriptUrl: string;
@@ -65,6 +74,8 @@ export default function WisataBookingReview({
     destination,
     ticket,
     pricing,
+    voucher = null,
+    pendingVoucherCode = null,
     items = [],
     snapClientKey,
     snapScriptUrl,
@@ -90,6 +101,9 @@ export default function WisataBookingReview({
         guest_email: '',
         guest_phone: '',
         special_request: '',
+    });
+    const voucherForm = useForm({
+        voucher_code: voucher?.code ?? pendingVoucherCode ?? '',
     });
     const [loading, setLoading] = useState(false);
     const [snapToken, setSnapToken] = useState<string | null>(
@@ -123,6 +137,12 @@ export default function WisataBookingReview({
             form.setData('guest_phone', auth.user.phone);
         }
     }, [auth?.user?.name, auth?.user?.email, auth?.user?.phone]);
+
+    useEffect(() => {
+        if (!voucher && pendingVoucherCode && !voucherForm.data.voucher_code) {
+            voucherForm.setData('voucher_code', pendingVoucherCode);
+        }
+    }, [pendingVoucherCode, voucher]);
 
     const hasPhone = Boolean(auth?.user?.phone);
 
@@ -389,12 +409,103 @@ export default function WisataBookingReview({
                                     </div>
                                 ))}
                             </div>
+                            {(pricing.discount_amount ?? 0) > 0 && (
+                                <div className="space-y-2 border-t border-slate-200 pt-3">
+                                    <div className="flex justify-between text-slate-600">
+                                        <span>Subtotal</span>
+                                        <span className="font-semibold text-slate-900">
+                                            Rp {(pricing.subtotal ?? pricing.total).toLocaleString('id-ID')}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-emerald-600">
+                                        <span>Diskon voucher</span>
+                                        <span className="font-semibold">
+                                            - Rp {(pricing.discount_amount ?? 0).toLocaleString('id-ID')}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
                             <div className="flex justify-between border-t border-slate-200 pt-3 text-lg font-black text-sky-600">
                                 <span>Total</span>
                                 <span>
                                     Rp {pricing.total.toLocaleString('id-ID')}
                                 </span>
                             </div>
+                        </div>
+                        <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-sm font-black text-slate-950">
+                                    Promo & Voucher
+                                </h3>
+                                <Ticket className="h-4 w-4 text-sky-500" />
+                            </div>
+                            {voucher ? (
+                                <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-700">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <div>
+                                            <p className="text-[10px] font-bold uppercase text-emerald-500">
+                                                Voucher aktif
+                                            </p>
+                                            <p className="mt-1 font-black">
+                                                {voucher.code}
+                                            </p>
+                                            <p className="text-xs">
+                                                Potongan Rp {voucher.discount_amount.toLocaleString('id-ID')}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            className="rounded-lg border border-emerald-200 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                                            onClick={() => voucherForm.post('/wisata/booking/voucher/remove')}
+                                        >
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <form
+                                    className="mt-3 flex flex-col gap-2 sm:flex-row lg:flex-col"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        voucherForm.post('/wisata/booking/voucher', {
+                                            preserveScroll: true,
+                                            onSuccess: () =>
+                                                Swal.fire({
+                                                    title: 'Berhasil',
+                                                    text: 'Voucher diterapkan.',
+                                                    icon: 'success',
+                                                }),
+                                            onError: (errors) =>
+                                                Swal.fire({
+                                                    title: 'Gagal',
+                                                    text:
+                                                        errors.voucher_code ??
+                                                        'Voucher tidak valid.',
+                                                    icon: 'error',
+                                                }),
+                                        });
+                                    }}
+                                >
+                                    <input
+                                        className="h-11 flex-1 rounded-xl border border-slate-200 px-3 text-sm focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
+                                        placeholder="Masukkan kode voucher"
+                                        value={voucherForm.data.voucher_code}
+                                        onChange={(event) =>
+                                            voucherForm.setData(
+                                                'voucher_code',
+                                                event.target.value,
+                                            )
+                                        }
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="h-11 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-70"
+                                        disabled={voucherForm.processing}
+                                    >
+                                        Terapkan
+                                    </button>
+                                </form>
+                            )}
                         </div>
                     </aside>
                 </section>

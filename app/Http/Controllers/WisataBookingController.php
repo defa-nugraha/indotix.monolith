@@ -12,6 +12,7 @@ use App\Models\WisataAffiliateLink;
 use App\Models\WisataPayment;
 use App\Models\WisataTicket;
 use App\Models\WisataBookingItem;
+use App\Models\Voucher;
 use App\Services\MidtransService;
 use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
@@ -85,10 +86,56 @@ class WisataBookingController extends Controller
         }
 
         try {
-            return $this->reviewResponse($draft);
+            return $this->reviewResponse($draft, [], $request);
         } catch (ValidationException $exception) {
             return redirect()->route('wisata.search')->withErrors($exception->errors());
         }
+    }
+
+    public function applyVoucher(Request $request): RedirectResponse
+    {
+        $draft = $request->session()->get('wisata_booking_draft');
+        if (! $draft) {
+            return redirect()->route('wisata.search')->withErrors(['voucher_code' => 'Data pemesanan tidak ditemukan.']);
+        }
+
+        $data = $request->validate([
+            'voucher_code' => ['required', 'string', 'max:50'],
+        ]);
+
+        $summary = $this->buildDraftSummary($draft);
+        $voucher = $this->resolveVoucher($data['voucher_code']);
+        if (! $voucher) {
+            return back()->withErrors(['voucher_code' => 'Voucher tidak valid atau sudah habis.']);
+        }
+
+        if ($voucher->min_transaction > 0 && $summary['total'] < $voucher->min_transaction) {
+            return back()->withErrors(['voucher_code' => 'Minimum transaksi belum memenuhi syarat voucher.']);
+        }
+
+        if (! $this->canUseVoucherForUser($voucher, (int) $request->user()->id)) {
+            return back()->withErrors(['voucher_code' => 'Voucher sudah mencapai limit penggunaan untuk akun ini.']);
+        }
+
+        $draft['voucher_code'] = $voucher->code;
+        $request->session()->put('wisata_booking_draft', $draft);
+        $request->session()->forget('pending_voucher_code');
+
+        return back()->with('status', 'wisata-voucher-applied');
+    }
+
+    public function removeVoucher(Request $request): RedirectResponse
+    {
+        $draft = $request->session()->get('wisata_booking_draft');
+        if (! $draft) {
+            return redirect()->route('wisata.search');
+        }
+
+        unset($draft['voucher_code']);
+        $request->session()->put('wisata_booking_draft', $draft);
+        $request->session()->forget('pending_voucher_code');
+
+        return back()->with('status', 'wisata-voucher-removed');
     }
 
     public function confirm(Request $request, MidtransService $midtransService): RedirectResponse|\Illuminate\Http\JsonResponse|\Inertia\Response
@@ -128,7 +175,7 @@ class WisataBookingController extends Controller
 
                 return $this->reviewResponse($draft, [
                     'snapToken' => $snap['token'] ?? null,
-                ]);
+                ], $request);
             }
         }
 
@@ -139,6 +186,35 @@ class WisataBookingController extends Controller
                 ->findOrFail($draft['destination_id']);
             $summary = $this->buildDraftSummary($draft, $destination, true);
             $primaryItem = $summary['items'][0];
+            $voucher = null;
+            $discountAmount = 0;
+            $subtotal = (int) $summary['total'];
+
+            if (! empty($draft['voucher_code'])) {
+                $voucher = $this->resolveVoucher($draft['voucher_code'], true);
+                if (! $voucher) {
+                    throw ValidationException::withMessages([
+                        'booking' => 'Voucher tidak valid atau sudah habis.',
+                    ]);
+                }
+
+                if ($voucher->min_transaction > 0 && $subtotal < $voucher->min_transaction) {
+                    throw ValidationException::withMessages([
+                        'booking' => 'Minimum transaksi belum memenuhi syarat voucher.',
+                    ]);
+                }
+
+                if (! $this->canUseVoucherForUser($voucher, (int) $request->user()->id)) {
+                    throw ValidationException::withMessages([
+                        'booking' => 'Voucher sudah mencapai limit penggunaan untuk akun ini.',
+                    ]);
+                }
+
+                $discountAmount = $this->calculateDiscountAmount($subtotal, $voucher);
+                $voucher->quota_used = (int) $voucher->quota_used + 1;
+                $voucher->save();
+            }
+            $total = max(0, $subtotal - $discountAmount);
 
             $order = WisataBooking::create([
                 'user_id' => $request->user()->id,
@@ -148,7 +224,13 @@ class WisataBookingController extends Controller
                 'visit_date' => $draft['visit_date'],
                 'quantity' => $summary['quantity'],
                 'unit_price' => $primaryItem['unit_price'],
-                'total_price' => $summary['total'],
+                'subtotal_price' => $subtotal,
+                'voucher_id' => $voucher?->id,
+                'voucher_code' => $voucher?->code,
+                'discount_type' => $voucher?->discount_type,
+                'discount_value' => $voucher?->discount_value,
+                'discount_amount' => $discountAmount > 0 ? $discountAmount : null,
+                'total_price' => $total,
                 'status' => 'pending_payment',
                 'payment_status' => 'pending',
                 'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
@@ -196,6 +278,7 @@ class WisataBookingController extends Controller
         ]);
 
         $request->session()->forget('wisata_booking_draft');
+        $request->session()->forget('pending_voucher_code');
         $request->session()->put('wisata_booking_pending', $booking->id);
 
         if ($request->expectsJson()) {
@@ -218,7 +301,7 @@ class WisataBookingController extends Controller
 
         return $this->reviewResponse($draft, [
             'snapToken' => $snap['token'] ?? null,
-        ]);
+        ], $request);
     }
 
     public function payment(Request $request, string $booking): Response|RedirectResponse
@@ -455,11 +538,36 @@ class WisataBookingController extends Controller
         ];
     }
 
-    private function reviewResponse(array $draft, array $extra = []): Response
+    private function reviewResponse(array $draft, array $extra = [], ?Request $request = null): Response
     {
         $summary = $this->buildDraftSummary($draft);
         $destination = $summary['destination'];
         $primaryItem = $summary['items'][0];
+        $subtotal = (int) $summary['total'];
+        $discountAmount = 0;
+        $voucherPayload = null;
+
+        if (! empty($draft['voucher_code'])) {
+            $voucher = $this->resolveVoucher($draft['voucher_code']);
+            $userId = (int) ($request?->user()?->id ?? request()->user()?->id ?? 0);
+
+            if (
+                $voucher
+                && ($voucher->min_transaction <= 0 || $subtotal >= $voucher->min_transaction)
+                && ($userId === 0 || $this->canUseVoucherForUser($voucher, $userId))
+            ) {
+                $discountAmount = $this->calculateDiscountAmount($subtotal, $voucher);
+                $voucherPayload = [
+                    'code' => $voucher->code,
+                    'discount_type' => $voucher->discount_type,
+                    'discount_value' => (int) $voucher->discount_value,
+                    'discount_amount' => $discountAmount,
+                ];
+            } else {
+                unset($draft['voucher_code']);
+                ($request ?? request())->session()->put('wisata_booking_draft', $draft);
+            }
+        }
 
         return Inertia::render('public/wisata/booking/review', array_merge([
             'draft' => [
@@ -485,9 +593,15 @@ class WisataBookingController extends Controller
             ],
             'items' => $summary['items'],
             'pricing' => [
-                'total' => $summary['total'],
+                'subtotal' => $subtotal,
+                'discount_amount' => $discountAmount,
+                'total' => max(0, $subtotal - $discountAmount),
                 'quantity' => $summary['quantity'],
             ],
+            'voucher' => $voucherPayload,
+            'pendingVoucherCode' => empty($draft['voucher_code'])
+                ? ($request ?? request())->session()->get('pending_voucher_code')
+                : null,
             'snapClientKey' => (string) config('services.midtrans.client_key', ''),
             'snapScriptUrl' => config('services.midtrans.is_production')
                 ? 'https://app.midtrans.com/snap/snap.js'
@@ -560,6 +674,9 @@ class WisataBookingController extends Controller
             'visit_date' => $booking->visit_date->toDateString(),
             'quantity' => $booking->quantity,
             'unit_price' => $booking->unit_price,
+            'subtotal' => $booking->subtotal_price ?: $booking->total_price,
+            'discount_amount' => (int) ($booking->discount_amount ?? 0),
+            'voucher_code' => $booking->voucher_code,
             'total' => $booking->total_price,
             'status' => $booking->status,
             'payment_status' => $booking->payment_status,
@@ -592,18 +709,28 @@ class WisataBookingController extends Controller
     private function buildSnapPayload(WisataBooking $booking, string $orderId): array
     {
         $items = $this->bookingLineItems($booking);
+        $itemDetails = array_map(fn (array $item) => [
+            'id' => (string) $item['ticket_id'],
+            'price' => (int) $item['unit_price'],
+            'quantity' => (int) $item['quantity'],
+            'name' => $item['name'] ?: 'Tiket Wisata',
+        ], $items);
+
+        if ((int) ($booking->discount_amount ?? 0) > 0) {
+            $itemDetails[] = [
+                'id' => 'VOUCHER-'.$booking->id,
+                'price' => -1 * (int) $booking->discount_amount,
+                'quantity' => 1,
+                'name' => 'Diskon voucher '.$booking->voucher_code,
+            ];
+        }
 
         return [
             'transaction_details' => [
                 'order_id' => $orderId,
                 'gross_amount' => (int) $booking->total_price,
             ],
-            'item_details' => array_map(fn (array $item) => [
-                'id' => (string) $item['ticket_id'],
-                'price' => (int) $item['unit_price'],
-                'quantity' => (int) $item['quantity'],
-                'name' => $item['name'] ?: 'Tiket Wisata',
-            ], $items),
+            'item_details' => $itemDetails,
             'customer_details' => [
                 'first_name' => $booking->guest_name,
                 'email' => $booking->guest_email,
@@ -665,6 +792,80 @@ class WisataBookingController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function resolveVoucher(?string $code, bool $lock = false): ?Voucher
+    {
+        $normalizedCode = strtoupper(trim((string) $code));
+        if ($normalizedCode === '') {
+            return null;
+        }
+
+        $query = Voucher::query()
+            ->where('code', $normalizedCode)
+            ->where(function ($query) {
+                $query->whereNull('hotel_id')->orWhere('hotel_id', 0);
+            });
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        $voucher = $query->first();
+
+        return $voucher && $this->isVoucherValid($voucher) ? $voucher : null;
+    }
+
+    private function isVoucherValid(Voucher $voucher): bool
+    {
+        $today = now()->toDateString();
+
+        if (! $voucher->is_active) {
+            return false;
+        }
+
+        if ($voucher->starts_at && $voucher->starts_at->toDateString() > $today) {
+            return false;
+        }
+
+        if ($voucher->ends_at && $voucher->ends_at->toDateString() < $today) {
+            return false;
+        }
+
+        if ($voucher->quota_total > 0 && $voucher->quota_used >= $voucher->quota_total) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function calculateDiscountAmount(int $subtotal, Voucher $voucher): int
+    {
+        if ($subtotal <= 0) {
+            return 0;
+        }
+
+        if ($voucher->discount_type === 'percentage') {
+            return min($subtotal, (int) floor($subtotal * ((float) $voucher->discount_value / 100)));
+        }
+
+        return min($subtotal, (int) $voucher->discount_value);
+    }
+
+    private function canUseVoucherForUser(Voucher $voucher, int $userId): bool
+    {
+        $limit = (int) ($voucher->max_per_user_per_day ?? 0);
+        if ($limit <= 0) {
+            return true;
+        }
+
+        $usedToday = WisataBooking::query()
+            ->where('user_id', $userId)
+            ->where('voucher_id', $voucher->id)
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+
+        return $usedToday < $limit;
     }
 
     private function attachAffiliateCommission(WisataBooking $booking, Request $request): void
