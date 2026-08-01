@@ -231,6 +231,7 @@ test('role management expands legacy permissions before editing role', function 
             ->where('roles.0.permissions', fn ($permissions) => collect($permissions)->contains('public_home.view')
                 && collect($permissions)->contains('public_banners.view')
                 && collect($permissions)->contains('public_promo_items.view')
+                && collect($permissions)->contains('public_partners.view')
                 && ! collect($permissions)->contains('public_content.view')));
 
     $this->actingAs($admin)
@@ -250,6 +251,7 @@ test('role management expands legacy permissions before editing role', function 
     expect($role->permissions()->where('feature', 'public_home')->where('action', 'view')->exists())->toBeTrue()
         ->and($role->permissions()->where('feature', 'public_banners')->where('action', 'view')->exists())->toBeTrue()
         ->and($role->permissions()->where('feature', 'public_promo_items')->where('action', 'view')->exists())->toBeTrue()
+        ->and($role->permissions()->where('feature', 'public_partners')->where('action', 'view')->exists())->toBeTrue()
         ->and($role->permissions()->where('feature', 'system_audit')->where('action', 'view')->exists())->toBeTrue()
         ->and($role->permissions()->where('feature', 'public_content')->exists())->toBeFalse();
 });

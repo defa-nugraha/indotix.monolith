@@ -306,7 +306,7 @@ return [
             'paths' => ['admin/public/banners*'],
         ],
         'public_promo_items' => [
-            'label' => 'Konten Publik - Promo Terbaik',
+            'label' => 'Konten Publik - Promo Spesial',
             'parent' => 'Konten Publik',
             'patterns' => ['admin.public.promo-items.*'],
             'paths' => ['admin/public/promo-items*'],
@@ -316,6 +316,12 @@ return [
             'parent' => 'Konten Publik',
             'patterns' => ['admin.public.contacts.*'],
             'paths' => ['admin/public/contacts*'],
+        ],
+        'public_partners' => [
+            'label' => 'Konten Publik - Partner Kami',
+            'parent' => 'Konten Publik',
+            'patterns' => ['admin.public.partners.*'],
+            'paths' => ['admin/public/partners*'],
         ],
         'public_pages' => [
             'label' => 'Konten Publik - Halaman & Dokumen Legal',

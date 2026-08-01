@@ -20,16 +20,21 @@ test('admin dashboard does not expose removed event and report shortcuts', funct
 
 test('admin public content menu follows active public home sections', function () {
     $sidebar = file_get_contents(__DIR__.'/../../resources/js/components/app-sidebar-admin.tsx');
+    $routes = file_get_contents(__DIR__.'/../../routes/web.php');
 
     expect($sidebar)
         ->toContain('<span>Konten Publik</span>')
         ->toContain('/admin/public/home')
         ->toContain('Halaman Home')
         ->toContain('Banner')
-        ->toContain('Promo Terbaik')
+        ->toContain('Promo Spesial')
         ->toContain('Kontak')
+        ->toContain('/admin/public/partners')
+        ->toContain('Partner Kami')
         ->not->toContain('/admin/public/promo-videos')
-        ->not->toContain('/admin/public/partners')
-        ->not->toContain('Promo Video')
-        ->not->toContain('Partner Kami');
+        ->not->toContain('Promo Video');
+
+    expect($routes)
+        ->toContain('admin/public/partners')
+        ->not->toContain('admin/public/promo-videos');
 });

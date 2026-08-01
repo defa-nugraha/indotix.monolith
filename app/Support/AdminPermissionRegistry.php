@@ -34,6 +34,7 @@ class AdminPermissionRegistry
             'public_banners',
             'public_promo_items',
             'public_contacts',
+            'public_partners',
             'public_pages',
         ],
         'system' => [

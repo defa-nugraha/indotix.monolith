@@ -114,6 +114,7 @@ export function AppSidebarAdmin() {
             'public_banners',
             'public_promo_items',
             'public_contacts',
+            'public_partners',
             'public_pages',
         ]);
     const hasSystemPermission = () =>
@@ -200,9 +201,52 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/public/banners') ||
         isCurrentUrl('/admin/public/promo-items') ||
         isCurrentUrl('/admin/public/contacts') ||
+        isCurrentUrl('/admin/public/partners') ||
         isCurrentUrl('/admin/public/about') ||
         isCurrentUrl('/admin/public/faqs') ||
         isCurrentUrl('/admin/public/privacy-policy');
+    const publicMenuItems = [
+        {
+            feature: 'public_home',
+            href: '/admin/public/home',
+            label: 'Halaman Home',
+        },
+        {
+            feature: 'public_banners',
+            href: '/admin/public/banners',
+            label: 'Banner',
+        },
+        {
+            feature: 'public_promo_items',
+            href: '/admin/public/promo-items',
+            label: 'Promo Spesial',
+        },
+        {
+            feature: 'public_contacts',
+            href: '/admin/public/contacts',
+            label: 'Kontak',
+        },
+        {
+            feature: 'public_partners',
+            href: '/admin/public/partners',
+            label: 'Partner Kami',
+        },
+        {
+            feature: 'public_pages',
+            href: '/admin/public/about',
+            label: 'Tentang Kami',
+        },
+        {
+            feature: 'public_pages',
+            href: '/admin/public/faqs',
+            label: 'FAQ',
+        },
+        {
+            feature: 'public_pages',
+            href: '/admin/public/privacy-policy',
+            label: 'Dokumen Legal',
+        },
+    ];
     const isWisataSectionActive =
         isCurrentUrl('/admin/wisata/destinations') ||
         isCurrentUrl('/admin/wisata/tickets') ||
@@ -1520,90 +1564,28 @@ export function AppSidebarAdmin() {
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/public/home',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/home">
-                                                    Halaman Home
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/public/banners',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/banners">
-                                                    Banner
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/public/promo-items',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/promo-items">
-                                                    Promo Terbaik
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/public/contacts',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/contacts">
-                                                    Kontak
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/public/about',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/about">
-                                                    Tentang Kami
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/public/faqs',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/faqs">
-                                                    FAQ
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/public/privacy-policy',
-                                                )}
-                                            >
-                                                <Link href="/admin/public/privacy-policy">
-                                                    Dokumen Legal
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
+                                        {publicMenuItems
+                                            .filter((item) =>
+                                                hasAnyPermission([
+                                                    item.feature,
+                                                ]),
+                                            )
+                                            .map((item) => (
+                                                <SidebarMenuSubItem
+                                                    key={item.href}
+                                                >
+                                                    <SidebarMenuSubButton
+                                                        asChild
+                                                        isActive={isCurrentUrl(
+                                                            item.href,
+                                                        )}
+                                                    >
+                                                        <Link href={item.href}>
+                                                            {item.label}
+                                                        </Link>
+                                                    </SidebarMenuSubButton>
+                                                </SidebarMenuSubItem>
+                                            ))}
                                     </SidebarMenuSub>
                                 </CollapsibleContent>
                             </Collapsible>
