@@ -143,11 +143,11 @@ export function PublicPartnerSection({
     return (
         <section
             className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden border-y border-sky-100/70 bg-gradient-to-b from-white via-sky-50/70 to-white py-8 sm:py-10"
-            aria-label="Partner Indotix"
+            aria-label="Partner Kami"
         >
             <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
                 <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-                    Partner Indotix
+                    Partner Kami
                 </h2>
                 <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
                     Bersama mitra pilihan untuk menghadirkan pengalaman wisata

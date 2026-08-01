@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\PublicPartner;
 use App\Models\SystemSetting;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class HomePageContent
@@ -137,6 +138,18 @@ class HomePageContent
         'trust_card_3_description' => 'Terima update pesanan, e-tiket, dan informasi penting secara langsung.',
     ];
 
+    private const IMAGE_UPLOAD_FIELDS = [
+        'special_promo_video_poster_url' => 'special_promo_video_poster_url_file',
+        'special_promo_card_1_image_url' => 'special_promo_card_1_image_url_file',
+        'special_promo_card_2_image_url' => 'special_promo_card_2_image_url_file',
+        'special_promo_card_3_image_url' => 'special_promo_card_3_image_url_file',
+        'special_promo_card_4_image_url' => 'special_promo_card_4_image_url_file',
+    ];
+
+    private const VIDEO_UPLOAD_FIELDS = [
+        'special_promo_video_url' => 'special_promo_video_url_file',
+    ];
+
     public static function keys(): array
     {
         return array_map(fn (string $key) => "home_{$key}", array_keys(self::DEFAULTS));
@@ -236,20 +249,58 @@ class HomePageContent
             'values' => self::values(),
             'defaults' => self::DEFAULTS,
             'icon_options' => self::ICON_OPTIONS,
+            'image_upload_fields' => self::IMAGE_UPLOAD_FIELDS,
+            'video_upload_fields' => self::VIDEO_UPLOAD_FIELDS,
         ];
     }
 
     public static function validationRules(): array
     {
-        return collect(self::DEFAULTS)
+        $rules = collect(self::DEFAULTS)
             ->mapWithKeys(fn (string $default, string $key) => [
                 $key => self::ruleFor($key),
             ])
             ->all();
+
+        foreach (self::IMAGE_UPLOAD_FIELDS as $fileKey) {
+            $rules[$fileKey] = ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
+        }
+
+        foreach (self::VIDEO_UPLOAD_FIELDS as $fileKey) {
+            $rules[$fileKey] = ['nullable', 'file', 'mimetypes:video/mp4,video/webm,video/ogg', 'max:102400'];
+        }
+
+        return $rules;
     }
 
     public static function persist(array $data, ?int $userId): void
     {
+        $existingValues = self::values();
+
+        foreach (self::IMAGE_UPLOAD_FIELDS as $valueKey => $fileKey) {
+            if (($data[$fileKey] ?? null) instanceof UploadedFile) {
+                $data[$valueKey] = Storage::url(
+                    $data[$fileKey]->store('home-content', 'public')
+                );
+
+                self::deleteLocalPublicFile($existingValues[$valueKey] ?? null);
+            } elseif (array_key_exists($valueKey, $data) && trim((string) $data[$valueKey]) === '') {
+                self::deleteLocalPublicFile($existingValues[$valueKey] ?? null);
+            }
+        }
+
+        foreach (self::VIDEO_UPLOAD_FIELDS as $valueKey => $fileKey) {
+            if (($data[$fileKey] ?? null) instanceof UploadedFile) {
+                $data[$valueKey] = Storage::url(
+                    $data[$fileKey]->store('home-content', 'public')
+                );
+
+                self::deleteLocalPublicFile($existingValues[$valueKey] ?? null);
+            } elseif (array_key_exists($valueKey, $data) && trim((string) $data[$valueKey]) === '') {
+                self::deleteLocalPublicFile($existingValues[$valueKey] ?? null);
+            }
+        }
+
         foreach (self::DEFAULTS as $key => $default) {
             SystemSetting::query()->updateOrCreate(
                 ['key' => "home_{$key}"],
@@ -259,6 +310,27 @@ class HomePageContent
                     'updated_by' => $userId,
                 ],
             );
+        }
+    }
+
+    private static function deleteLocalPublicFile(?string $url): void
+    {
+        if (! $url) {
+            return;
+        }
+
+        $publicPrefix = rtrim(Storage::url(''), '/').'/';
+        $appUrl = rtrim((string) config('app.url'), '/');
+        $path = null;
+
+        if (str_starts_with($url, $publicPrefix)) {
+            $path = substr($url, strlen($publicPrefix));
+        } elseif ($appUrl !== '' && str_starts_with($url, $appUrl.$publicPrefix)) {
+            $path = substr($url, strlen($appUrl.$publicPrefix));
+        }
+
+        if ($path) {
+            Storage::disk('public')->delete($path);
         }
     }
 

@@ -3,7 +3,7 @@
 test('public home product surface prioritizes wisata', function () {
     $source = file_get_contents(__DIR__.'/../../resources/js/pages/welcome.tsx');
     $contentSource = file_get_contents(__DIR__.'/../../app/Support/HomePageContent.php');
-    $heroPosition = strpos($source, 'bannerSlides.map');
+    $heroPosition = strpos($source, 'visibleBannerSlides.map');
     $wisataPosition = strpos($source, 'id="featured-destinations-section"');
 
     expect($source)
@@ -11,10 +11,27 @@ test('public home product surface prioritizes wisata', function () {
         ->toContain("href: '/wisata'")
         ->toContain('title="Indotix - Pesan Tiket Wisata dan Destinasi Rekreasi"')
         ->toContain("'query-input': 'required name=search_term_string'")
-        ->toContain('homeContent.categories.map')
-        ->toContain('bannerSlides.map')
+        ->toContain('type CategoryProductSection')
+        ->toContain('bannerCategoryLabels.map')
+        ->toContain('visibleBannerSlides.map')
+        ->toContain('activeBanner')
+        ->toContain('getBannerSlideStyle')
+        ->toContain('sideBannerSlideWidth')
+        ->toContain("clamp(18rem, 46vw, 58rem)")
+        ->toContain('w-[clamp(20rem,54vw,68rem)]')
+        ->toContain('left-1/2 mt-0 w-screen -translate-x-1/2 overflow-hidden bg-white')
         ->toContain('setActiveBannerIndex')
         ->toContain('window.setInterval')
+        ->toContain('shouldLoadCompactSpecialPromoVideo')
+        ->toContain('aspect-[1920/1080]')
+        ->toContain('aspect-[1920/520]')
+        ->toContain('lg:grid-rows-[auto_auto]')
+        ->toContain('specialPromoSlots')
+        ->toContain('specialPromoImageCards[index % specialPromoImageCards.length]')
+        ->toContain('renderSpecialPromoImageSlot')
+        ->toContain('h-full w-full min-h-[150px]')
+        ->toContain('categorySections.map((section)')
+        ->toContain('section.products.map((item)')
         ->toContain('id="featured-destinations-section"')
         ->toContain('homeContent.featured.title')
         ->toContain('wisataProducts.slice(0, 3)')
@@ -22,6 +39,12 @@ test('public home product surface prioritizes wisata', function () {
         ->toContain('featuredProducts.map((item)')
         ->toContain('nearbyProducts.map((item)')
         ->toContain('homeContent.blog.eyebrow')
+        ->toContain('Baca artikel')
+        ->toContain('mb-10 sm:mb-14')
+        ->not->toContain('homeContent.categories.map')
+        ->not->toContain('homeContent.coupon.title')
+        ->not->toContain('homeContent.promo.title')
+        ->not->toContain('homeContent.trust.title')
         ->not->toContain('Wisata Pantai')
         ->not->toContain('Desa Wisata Lestari')
         ->not->toContain('Taman Edukasi');
@@ -57,10 +80,19 @@ test('banner upload does not automatically resize images and home avoids dummy b
         ->not->toContain('Menyiapkan gambar');
 
     expect($homeSource)
-        ->toContain('bannerSlides.map')
+        ->toContain('visibleBannerSlides.map')
+        ->toContain('bannerCategoryLabels.map')
+        ->toContain('getBannerSlideStyle')
+        ->toContain('sideBannerSlideWidth')
+        ->toContain("clamp(18rem, 46vw, 58rem)")
+        ->toContain('w-[clamp(20rem,54vw,68rem)]')
         ->toContain('window.setInterval')
         ->not->toContain('aspect-[842/236]')
+        ->not->toContain('grid-cols-2 grid-rows-[1fr_1fr]')
+        ->not->toContain('getBannerSlideTransform')
+        ->not->toContain('w-[24vw] min-w-[17rem]')
         ->not->toContain('https://images.unsplash.com')
         ->not->toContain('gradient:')
+        ->toContain('slide.imageUrl')
         ->not->toContain('Lihat semua promo');
 });

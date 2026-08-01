@@ -28,13 +28,17 @@ import {
     Car,
     Check,
     ChevronDown,
+    Clapperboard,
     Compass,
     Droplets,
     FerrisWheel,
     Gift,
     GraduationCap,
     Home as HomeIcon,
+    Image as ImageIcon,
     Landmark,
+    LayoutGrid,
+    Link2,
     MapPin,
     Mountain,
     Navigation,
@@ -70,20 +74,24 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 type HomeContentValues = Record<string, string>;
+type HomeContentFormData = Record<string, string | File | null>;
 
 type Props = {
     content: {
         values: HomeContentValues;
         defaults: HomeContentValues;
         icon_options: Record<string, string>;
+        image_upload_fields: Record<string, string>;
+        video_upload_fields: Record<string, string>;
     };
 };
 
 type Field = {
     key: string;
     label: string;
-    type?: 'text' | 'icon' | 'url';
+    type?: 'text' | 'icon' | 'url' | 'image' | 'video';
     placeholder?: string;
+    hint?: string;
 };
 
 const categoryFields: Field[] = Array.from({ length: 10 }, (_, index) => {
@@ -110,16 +118,6 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
         fields: [...categoryFields],
     },
     {
-        title: 'Kupon pengguna baru',
-        description:
-            'Mengatur judul, deskripsi, dan icon section voucher di home.',
-        fields: [
-            { key: 'coupon_icon', label: 'Icon section', type: 'icon' },
-            { key: 'coupon_title', label: 'Judul section' },
-            { key: 'coupon_description', label: 'Deskripsi section' },
-        ],
-    },
-    {
         title: 'Promo Spesial Untukmu',
         description:
             'Mengatur video utama dan empat gambar promo yang tampil di section Promo Spesial pada halaman depan.',
@@ -135,15 +133,15 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
             },
             {
                 key: 'special_promo_video_url',
-                label: 'URL video utama',
-                type: 'url',
-                placeholder: 'https://.../video.mp4 atau URL CDN video',
+                label: 'Video utama',
+                type: 'video',
+                hint: 'Format MP4, WebM, atau OGG. Maksimal 100 MB.',
             },
             {
                 key: 'special_promo_video_poster_url',
-                label: 'URL poster video',
-                type: 'url',
-                placeholder: 'https://.../poster.jpg',
+                label: 'Poster video',
+                type: 'image',
+                hint: 'Format JPG, PNG, atau WebP. Maksimal 5 MB.',
             },
             ...Array.from({ length: 4 }, (_, index) => {
                 const number = index + 1;
@@ -159,9 +157,9 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
                     },
                     {
                         key: `special_promo_card_${number}_image_url`,
-                        label: `URL gambar promo ${number}`,
-                        type: 'url' as const,
-                        placeholder: 'https://.../promo.jpg',
+                        label: `Gambar promo ${number}`,
+                        type: 'image' as const,
+                        hint: 'Format JPG, PNG, atau WebP. Maksimal 5 MB.',
                     },
                     {
                         key: `special_promo_card_${number}_link_url`,
@@ -171,16 +169,6 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
                     },
                 ];
             }).flat(),
-        ],
-    },
-    {
-        title: 'Promo terbaik',
-        description:
-            'Mengatur section banner promo yang tampil sebelum destinasi wisata.',
-        fields: [
-            { key: 'promo_icon', label: 'Icon section', type: 'icon' },
-            { key: 'promo_title', label: 'Judul section' },
-            { key: 'promo_link_label', label: 'Teks tombol lihat semua' },
         ],
     },
     {
@@ -220,9 +208,9 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
         ],
     },
     {
-        title: 'CTA download dan keunggulan',
+        title: 'Keunggulan publik',
         description:
-            'Mengatur section sebelum footer, badge, dan kartu manfaat.',
+            'Mengatur section Kenapa pesan di Indotix yang tampil di halaman destinasi, promo, jelajah, dan tentang.',
         fields: [
             { key: 'trust_eyebrow', label: 'Label kecil' },
             { key: 'trust_title', label: 'Judul section' },
@@ -320,20 +308,346 @@ const resolveAdminHomeIcon = (value: string | undefined | null) =>
     adminHomeIconMap[value as keyof typeof adminHomeIconMap] ?? Sparkles;
 
 export default function HomeContentEdit({ content }: Props) {
-    const form = useForm<HomeContentValues>({ ...content.values });
+    const imageUploadDefaults = Object.fromEntries(
+        Object.values(content.image_upload_fields).map((fileKey) => [
+            fileKey,
+            null,
+        ]),
+    ) as Record<string, null>;
+    const videoUploadDefaults = Object.fromEntries(
+        Object.values(content.video_upload_fields).map((fileKey) => [
+            fileKey,
+            null,
+        ]),
+    ) as Record<string, null>;
+    const form = useForm<HomeContentFormData>({
+        _method: 'put',
+        ...content.values,
+        ...imageUploadDefaults,
+        ...videoUploadDefaults,
+    });
     const [activeIconField, setActiveIconField] = useState<string | null>(null);
+    const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+    const [fileInputVersion, setFileInputVersion] = useState(0);
     const iconOptions = useMemo(
         () => Object.entries(content.icon_options),
         [content.icon_options],
     );
+    const fieldsByKey = useMemo(
+        () =>
+            new Map(
+                sections
+                    .flatMap((section) => section.fields)
+                    .map((field) => [field.key, field]),
+            ),
+        [],
+    );
+    const activeSection = sections[activeSectionIndex] ?? sections[0];
     const activeIconFieldLabel =
-        sections
-            .flatMap((section) => section.fields)
-            .find((field) => field.key === activeIconField)?.label ?? 'Icon';
+        fieldsByKey.get(activeIconField ?? '')?.label ?? 'Icon';
+
+    const fieldValue = (key: string) => {
+        const value = form.data[key];
+
+        return typeof value === 'string' ? value : '';
+    };
 
     const resetToDefault = (key: string) => {
         form.setData(key, content.defaults[key] ?? '');
+
+        const fileKey = content.image_upload_fields[key];
+        const videoFileKey = content.video_upload_fields[key];
+        if (fileKey || videoFileKey) {
+            form.setData(fileKey ?? videoFileKey, null);
+            setFileInputVersion((version) => version + 1);
+        }
     };
+
+    const renderField = (
+        field: Field,
+        className = 'grid gap-2',
+        previewClassName = 'h-32 w-full rounded-xl object-cover md:max-w-lg',
+    ) => {
+        const imageFileKey = content.image_upload_fields[field.key];
+        const videoFileKey = content.video_upload_fields[field.key];
+        const uploadFileKey = imageFileKey ?? videoFileKey;
+        const selectedFile =
+            uploadFileKey && form.data[uploadFileKey] instanceof File
+                ? (form.data[uploadFileKey] as File)
+                : null;
+        const uploadError = uploadFileKey ? form.errors[uploadFileKey] : undefined;
+        const isImageUpload = field.type === 'image' && imageFileKey;
+        const isVideoUpload = field.type === 'video' && videoFileKey;
+        const inputId = isImageUpload
+            ? imageFileKey
+            : isVideoUpload
+              ? videoFileKey
+              : field.key;
+
+        return (
+            <div key={field.key} className={className}>
+                <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor={inputId}>{field.label}</Label>
+                    <button
+                        type="button"
+                        onClick={() => resetToDefault(field.key)}
+                        className="text-xs font-semibold text-sky-600 hover:text-sky-700"
+                    >
+                        Reset
+                    </button>
+                </div>
+
+                {field.type === 'icon' ? (
+                    <button
+                        type="button"
+                        id={field.key}
+                        onClick={() => setActiveIconField(field.key)}
+                        className="flex h-12 w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 text-left text-sm shadow-xs transition hover:border-sky-300 hover:bg-sky-50/60 focus-visible:ring-[3px] focus-visible:ring-sky-500/20 focus-visible:outline-none"
+                    >
+                        <span className="flex min-w-0 items-center gap-3">
+                            {(() => {
+                                const value = fieldValue(field.key);
+                                const Icon = resolveAdminHomeIcon(value);
+                                const label =
+                                    content.icon_options[value] ?? 'Pilih icon';
+
+                                return (
+                                    <>
+                                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
+                                            <Icon className="h-5 w-5" />
+                                        </span>
+                                        <span className="truncate font-medium text-slate-800">
+                                            {label}
+                                        </span>
+                                    </>
+                                );
+                            })()}
+                        </span>
+                        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+                    </button>
+                ) : isImageUpload ? (
+                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                        {fieldValue(field.key) ? (
+                            <img
+                                src={fieldValue(field.key)}
+                                alt={field.label}
+                                className={previewClassName}
+                            />
+                        ) : (
+                            <div className="flex h-32 w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white text-sm text-slate-500">
+                                Belum ada gambar
+                            </div>
+                        )}
+
+                        <Input
+                            key={`${imageFileKey}-${fileInputVersion}`}
+                            id={imageFileKey}
+                            aria-label={field.label}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={(event) =>
+                                form.setData(
+                                    imageFileKey,
+                                    event.target.files?.[0] ?? null,
+                                )
+                            }
+                            disabled={form.processing}
+                        />
+                        <div className="space-y-1 text-xs text-slate-500">
+                            {field.hint && <p>{field.hint}</p>}
+                            {selectedFile && (
+                                <p className="font-medium text-sky-700">
+                                    File dipilih: {selectedFile.name}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                ) : isVideoUpload ? (
+                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+                        {fieldValue(field.key) ? (
+                            <video
+                                src={fieldValue(field.key)}
+                                className="aspect-video w-full rounded-xl bg-slate-950 object-cover"
+                                controls
+                                preload="metadata"
+                            />
+                        ) : (
+                            <div className="flex aspect-video w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white text-sm text-slate-500">
+                                Belum ada video
+                            </div>
+                        )}
+
+                        <Input
+                            key={`${videoFileKey}-${fileInputVersion}`}
+                            id={videoFileKey}
+                            aria-label={field.label}
+                            type="file"
+                            accept="video/mp4,video/webm,video/ogg"
+                            onChange={(event) =>
+                                form.setData(
+                                    videoFileKey,
+                                    event.target.files?.[0] ?? null,
+                                )
+                            }
+                            disabled={form.processing}
+                        />
+                        <div className="space-y-1 text-xs text-slate-500">
+                            {field.hint && <p>{field.hint}</p>}
+                            {selectedFile && (
+                                <p className="font-medium text-sky-700">
+                                    File dipilih: {selectedFile.name}
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <Input
+                        id={field.key}
+                        aria-label={field.label}
+                        type="text"
+                        placeholder={field.placeholder}
+                        value={fieldValue(field.key)}
+                        onChange={(event) =>
+                            form.setData(field.key, event.target.value)
+                        }
+                        disabled={form.processing}
+                    />
+                )}
+
+                <InputError message={uploadError ?? form.errors[field.key]} />
+            </div>
+        );
+    };
+
+    const renderFieldByKey = (
+        key: string,
+        className?: string,
+        previewClassName?: string,
+    ) => {
+        const field = fieldsByKey.get(key);
+
+        return field ? renderField(field, className, previewClassName) : null;
+    };
+
+    const renderPromoSpecialSection = () => (
+        <div className="space-y-6">
+            <div className="rounded-3xl border border-sky-100 bg-sky-50/60 p-5">
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-start gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
+                            <Clapperboard className="h-5 w-5" />
+                        </span>
+                        <div>
+                            <p className="text-xs font-semibold tracking-wide text-sky-700 uppercase">
+                                Langkah 1
+                            </p>
+                            <h3 className="text-base font-semibold text-slate-950">
+                                Atur video utama
+                            </h3>
+                            <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                                Video utama tampil paling besar di section Promo
+                                Spesial. Isi judul singkat, upload video, lalu
+                                tambahkan poster agar tampil rapi sebelum video
+                                diputar.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+                    <div className="space-y-4">
+                        {renderFieldByKey('special_promo_title')}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {renderFieldByKey('special_promo_video_title')}
+                            {renderFieldByKey('special_promo_video_subtitle')}
+                        </div>
+                        {renderFieldByKey('special_promo_video_url')}
+                    </div>
+                    {renderFieldByKey(
+                        'special_promo_video_poster_url',
+                        'grid gap-2',
+                        'aspect-video w-full rounded-xl object-cover',
+                    )}
+                </div>
+            </div>
+
+            <div className="rounded-3xl border border-slate-200 bg-white p-5">
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex items-start gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                            <LayoutGrid className="h-5 w-5" />
+                        </span>
+                        <div>
+                            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                Langkah 2
+                            </p>
+                            <h3 className="text-base font-semibold text-slate-950">
+                                Atur empat kartu promo
+                            </h3>
+                            <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                                Setiap kartu berisi gambar, judul, label kecil,
+                                dan link tujuan. Gunakan link internal seperti
+                                /promo/nama-promo bila promo tersedia di
+                                Indotix.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid gap-4 xl:grid-cols-2">
+                    {Array.from({ length: 4 }, (_, index) => {
+                        const number = index + 1;
+
+                        return (
+                            <section
+                                key={number}
+                                className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
+                            >
+                                <div className="mb-4 flex items-center justify-between gap-3">
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-900">
+                                            Kartu promo {number}
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                            Posisi {number} di kolase promo.
+                                        </p>
+                                    </div>
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sky-700 shadow-xs">
+                                        <ImageIcon className="h-4 w-4" />
+                                    </span>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {renderFieldByKey(
+                                        `special_promo_card_${number}_image_url`,
+                                        'grid gap-2',
+                                        'h-44 w-full rounded-xl object-cover',
+                                    )}
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        {renderFieldByKey(
+                                            `special_promo_card_${number}_title`,
+                                        )}
+                                        {renderFieldByKey(
+                                            `special_promo_card_${number}_subtitle`,
+                                        )}
+                                    </div>
+                                    <div className="rounded-2xl border border-slate-200 bg-white p-3">
+                                        <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
+                                            <Link2 className="h-4 w-4 text-sky-600" />
+                                            Link tujuan
+                                        </div>
+                                        {renderFieldByKey(
+                                            `special_promo_card_${number}_link_url`,
+                                        )}
+                                    </div>
+                                </div>
+                            </section>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -350,8 +664,9 @@ export default function HomeContentEdit({ content }: Props) {
                         </h1>
                         <p className="max-w-3xl text-sm text-slate-600">
                             Ubah teks dan icon section homepage tanpa deploy
-                            ulang. Banner, voucher, promo gambar, produk wisata,
-                            dan artikel tetap dikelola dari menu masing-masing.
+                            ulang. Promo Spesial dikelola dari tab halaman ini,
+                            sementara banner, partner, produk wisata, dan
+                            artikel tetap dikelola dari menu masing-masing.
                         </p>
                     </div>
                 </section>
@@ -360,8 +675,9 @@ export default function HomeContentEdit({ content }: Props) {
                     className="space-y-6"
                     onSubmit={(event) => {
                         event.preventDefault();
-                        form.put('/admin/public/home', {
+                        form.post('/admin/public/home', {
                             preserveScroll: true,
+                            forceFormData: true,
                             onSuccess: () =>
                                 Swal.fire({
                                     title: 'Berhasil',
@@ -371,110 +687,63 @@ export default function HomeContentEdit({ content }: Props) {
                             onError: () =>
                                 Swal.fire({
                                     title: 'Gagal',
-                                    text: 'Periksa kembali field konten home.',
+                                    text: 'Periksa kembali field konten home dan format gambar yang dipilih.',
                                     icon: 'error',
                                 }),
                         });
                     }}
                 >
-                    {sections.map((section) => (
-                        <section
-                            key={section.title}
-                            className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
+                    <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
+                        <div
+                            className="flex gap-2 overflow-x-auto border-b border-slate-100 p-3"
+                            role="tablist"
+                            aria-label="Section konten halaman home"
                         >
+                            {sections.map((section, index) => {
+                                const active = index === activeSectionIndex;
+
+                                return (
+                                    <button
+                                        key={section.title}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={active}
+                                        onClick={() =>
+                                            setActiveSectionIndex(index)
+                                        }
+                                        className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${
+                                            active
+                                                ? 'bg-sky-600 text-white shadow-sm'
+                                                : 'bg-slate-50 text-slate-600 hover:bg-sky-50 hover:text-sky-700'
+                                        }`}
+                                    >
+                                        {section.title}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="p-6">
                             <div className="mb-5">
                                 <h2 className="text-lg font-semibold text-slate-900">
-                                    {section.title}
+                                    {activeSection.title}
                                 </h2>
                                 <p className="mt-1 text-sm text-slate-500">
-                                    {section.description}
+                                    {activeSection.description}
                                 </p>
                             </div>
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                                {section.fields.map((field) => (
-                                    <div key={field.key} className="grid gap-2">
-                                        <div className="flex items-center justify-between gap-3">
-                                            <Label htmlFor={field.key}>
-                                                {field.label}
-                                            </Label>
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    resetToDefault(field.key)
-                                                }
-                                                className="text-xs font-semibold text-sky-600 hover:text-sky-700"
-                                            >
-                                                Reset
-                                            </button>
-                                        </div>
-
-                                        {field.type === 'icon' ? (
-                                            <button
-                                                type="button"
-                                                id={field.key}
-                                                onClick={() =>
-                                                    setActiveIconField(
-                                                        field.key,
-                                                    )
-                                                }
-                                                className="flex h-12 w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 text-left text-sm shadow-xs transition hover:border-sky-300 hover:bg-sky-50/60 focus-visible:ring-[3px] focus-visible:ring-sky-500/20 focus-visible:outline-none"
-                                            >
-                                                <span className="flex min-w-0 items-center gap-3">
-                                                    {(() => {
-                                                        const Icon =
-                                                            resolveAdminHomeIcon(
-                                                                form.data[
-                                                                    field.key
-                                                                ],
-                                                            );
-                                                        const label =
-                                                            content
-                                                                .icon_options[
-                                                                form.data[
-                                                                    field.key
-                                                                ] ?? ''
-                                                            ] ?? 'Pilih icon';
-
-                                                        return (
-                                                            <>
-                                                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
-                                                                    <Icon className="h-5 w-5" />
-                                                                </span>
-                                                                <span className="truncate font-medium text-slate-800">
-                                                                    {label}
-                                                                </span>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </span>
-                                                <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
-                                            </button>
-                                        ) : (
-                                            <Input
-                                                id={field.key}
-                                                type="text"
-                                                placeholder={field.placeholder}
-                                                value={
-                                                    form.data[field.key] ?? ''
-                                                }
-                                                onChange={(event) =>
-                                                    form.setData(
-                                                        field.key,
-                                                        event.target.value,
-                                                    )
-                                                }
-                                            />
-                                        )}
-
-                                        <InputError
-                                            message={form.errors[field.key]}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        </section>
-                    ))}
+                            {activeSection.title === 'Promo Spesial Untukmu' ? (
+                                renderPromoSpecialSection()
+                            ) : (
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    {activeSection.fields.map((field) =>
+                                        renderField(field),
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </section>
 
                     <div className="sticky bottom-4 z-10 flex justify-end rounded-2xl border border-sky-100 bg-white/95 p-4 shadow-lg backdrop-blur">
                         <Button

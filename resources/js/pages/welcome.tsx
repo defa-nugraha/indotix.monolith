@@ -23,10 +23,8 @@ import {
     CableCar,
     Camera,
     Car,
-    Check,
     ChevronRight,
     Compass,
-    Copy,
     Download,
     Droplets,
     FerrisWheel,
@@ -43,7 +41,6 @@ import {
     Play,
     RefreshCcw,
     Sailboat,
-    Send,
     ShieldCheck,
     Ship,
     ShipWheel,
@@ -55,7 +52,6 @@ import {
     Tent,
     TentTree,
     Ticket,
-    TicketPercent,
     Train,
     TreePalm,
     TreePine,
@@ -76,17 +72,8 @@ type PromoItem = {
     excerpt?: string | null;
     image_path: string;
     link_url?: string | null;
-};
-type PromoVoucher = {
-    id: number;
-    code: string;
-    discount_type: 'percentage' | 'fixed';
-    discount_value: number;
-    min_transaction?: number | null;
-    quota_total?: number;
-    quota_used?: number;
-    starts_at?: string | null;
-    ends_at?: string | null;
+    voucher_code?: string | null;
+    voucher_remaining_count?: number | null;
 };
 type Partner = {
     id: number | string;
@@ -106,6 +93,13 @@ type WisataCard = {
     type?: string | null;
     latitude?: number | null;
     longitude?: number | null;
+};
+type CategoryProductSection = {
+    key: string;
+    title: string;
+    description?: string | null;
+    href?: string | null;
+    products: WisataCard[];
 };
 type BlogPost = {
     id: number;
@@ -179,10 +173,6 @@ const mobileRailClass =
     'flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 scroll-smooth [scrollbar-width:none] md:grid md:snap-none md:overflow-visible md:pb-0 [&::-webkit-scrollbar]:hidden';
 const mobileRailItemClass =
     'w-[72vw] min-w-[16rem] max-w-[20rem] shrink-0 snap-start md:w-auto md:min-w-0 md:max-w-none';
-const mobileVoucherRailItemClass =
-    'w-[82vw] min-w-[19rem] max-w-[23rem] shrink-0 snap-start md:w-auto md:min-w-0 md:max-w-none';
-const mobileWideRailItemClass =
-    'w-[72vw] min-w-[16rem] max-w-[20rem] shrink-0 snap-start md:w-auto md:min-w-0 md:max-w-none';
 const homeIconMap = {
     BadgePercent,
     Gift,
@@ -253,18 +243,18 @@ export default function Welcome({
     banners = [],
     contact,
     wisataCards = [],
+    categorySections = [],
     blogPosts = [],
     promoItems = [],
-    promoVouchers = [],
     partners = [],
 }: {
     homeContent: HomeContent;
     banners?: Banner[];
     promoItems?: PromoItem[];
-    promoVouchers?: PromoVoucher[];
     contact?: Contact | null;
     partners?: Partner[];
     wisataCards?: WisataCard[];
+    categorySections?: CategoryProductSection[];
     blogPosts?: BlogPost[];
 }) {
     const [showMobileDownloadPrompt, setShowMobileDownloadPrompt] =
@@ -275,11 +265,12 @@ export default function Welcome({
     } | null>(null);
     const [isLocating, setIsLocating] = useState(false);
     const [locationNotice, setLocationNotice] = useState<string | null>(null);
-    const [copiedVoucherCode, setCopiedVoucherCode] = useState<string | null>(
-        null,
-    );
     const [shouldLoadSpecialPromoVideo, setShouldLoadSpecialPromoVideo] =
         useState(false);
+    const [
+        shouldLoadCompactSpecialPromoVideo,
+        setShouldLoadCompactSpecialPromoVideo,
+    ] = useState(false);
     const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
     const categories = [
@@ -290,29 +281,36 @@ export default function Welcome({
             href: '/wisata',
         },
     ];
+    const bannerCategoryLabels = useMemo(() => {
+        const fallbackLabels = [
+            'Alam',
+            'Budaya',
+            'Edukasi',
+            'Kuliner',
+            'Desa Wisata',
+            'Religi',
+            'Pantai',
+            'Gunung',
+            'Taman Nasional',
+            'Air Terjun',
+            'Danau',
+        ];
+        const configuredLabels = homeContent.categories
+            .map((item) => item.label?.trim())
+            .filter((label): label is string => Boolean(label));
+        const seen = new Set<string>();
 
-    const categoryStyles = [
-        'bg-emerald-600 text-white shadow-emerald-500/20',
-        'bg-amber-600 text-white shadow-amber-500/20',
-        'bg-indigo-600 text-white shadow-indigo-500/20',
-        'bg-rose-600 text-white shadow-rose-500/20',
-        'bg-lime-600 text-white shadow-lime-500/20',
-        'bg-violet-600 text-white shadow-violet-500/20',
-        'bg-cyan-600 text-white shadow-cyan-500/20',
-        'bg-teal-700 text-white shadow-teal-500/20',
-        'bg-green-700 text-white shadow-green-500/20',
-        'bg-sky-600 text-white shadow-sky-500/20',
-    ];
-    const chipItems = homeContent.categories.map((item, index) => ({
-        label: item.label,
-        icon: resolveHomeIcon(item.icon, Mountain),
-        className:
-            categoryStyles[index % categoryStyles.length] ??
-            'bg-sky-600 text-white shadow-sky-500/20',
-    }));
-    const chips = chipItems.map((item) => item.label);
-    const CouponIcon = resolveHomeIcon(homeContent.coupon.icon, BadgePercent);
-    const PromoIcon = resolveHomeIcon(homeContent.promo.icon, Gift);
+        return [...configuredLabels, ...fallbackLabels].filter((label) => {
+            const key = label.toLowerCase();
+            if (seen.has(key)) {
+                return false;
+            }
+
+            seen.add(key);
+            return true;
+        });
+    }, [homeContent.categories]);
+
     const NearbyIcon = resolveHomeIcon(homeContent.nearby.icon, Navigation);
     const BlogIcon = resolveHomeIcon(homeContent.blog.icon, BookOpen);
 
@@ -414,6 +412,64 @@ export default function Welcome({
             : [];
     }, [banners, wisataProducts]);
     const heroImage = bannerSlides[activeBannerIndex]?.imageUrl ?? null;
+    const totalBannerSlides = bannerSlides.length;
+    const hasMultipleBanners = totalBannerSlides > 1;
+    const activeBanner =
+        bannerSlides[activeBannerIndex] ?? bannerSlides[0] ?? null;
+    const visibleBannerSlides = useMemo(() => {
+        if (bannerSlides.length === 0) {
+            return [];
+        }
+
+        const offsets = bannerSlides.length > 1 ? [-1, 0, 1] : [0];
+
+        return offsets.map((offset) => {
+            const index =
+                (activeBannerIndex + offset + bannerSlides.length) %
+                bannerSlides.length;
+
+            return {
+                slide: bannerSlides[index],
+                active: offset === 0,
+                offset,
+            };
+        });
+    }, [activeBannerIndex, bannerSlides]);
+    const getBannerSlideStyle = (offset: number) => {
+        const activeBannerSlideWidth = 'clamp(20rem, 54vw, 68rem)';
+        const sideBannerSlideWidth = 'clamp(18rem, 46vw, 58rem)';
+        const bannerSlideGap = '1.25rem';
+        const frameWidth =
+            offset === 0 ? activeBannerSlideWidth : sideBannerSlideWidth;
+
+        if (offset < 0) {
+            return {
+                width: frameWidth,
+                transform: `translateX(calc(-50% - (${activeBannerSlideWidth} / 2) - (${sideBannerSlideWidth} / 2) - ${bannerSlideGap})) translateY(-50%)`,
+            };
+        }
+
+        if (offset > 0) {
+            return {
+                width: frameWidth,
+                transform: `translateX(calc(-50% + (${activeBannerSlideWidth} / 2) + (${sideBannerSlideWidth} / 2) + ${bannerSlideGap})) translateY(-50%)`,
+            };
+        }
+
+        return {
+            width: frameWidth,
+            transform: 'translateX(-50%) translateY(-50%)',
+        };
+    };
+    const advanceBanner = (direction: number) => {
+        if (totalBannerSlides <= 1) {
+            return;
+        }
+
+        setActiveBannerIndex((current) =>
+            (current + direction + totalBannerSlides) % totalBannerSlides,
+        );
+    };
     const addressText =
         contact?.address ??
         'Neo Soho Capital 40th Floor\\nJl. Tanjung Duren Raya No 1\\nJakarta Barat, DKI Jakarta 11470';
@@ -421,7 +477,6 @@ export default function Welcome({
     const downloadAppUrl = contact?.download_url?.trim() || '#';
     const downloadLinkAttributes =
         downloadAppUrl !== '#' ? { target: '_blank', rel: 'noreferrer' } : {};
-    const activePromoItems = promoItems.slice(0, 3);
     const normalizeMediaUrl = (value: string | null | undefined) => {
         const path = value?.trim();
         if (!path) {
@@ -497,8 +552,11 @@ export default function Welcome({
         specialPromoImageCards[0]?.imageUrl ??
         heroImage;
     const specialPromoSlots = Array.from(
-        { length: 4 },
-        (_, index) => specialPromoImageCards[index] ?? null,
+        { length: 3 },
+        (_, index) =>
+            specialPromoImageCards[index] ??
+            specialPromoImageCards[index % specialPromoImageCards.length] ??
+            null,
     );
 
     useEffect(() => {
@@ -668,38 +726,106 @@ export default function Welcome({
             </article>
         );
     };
-
-    const formatVoucherDiscount = (voucher: PromoVoucher) => {
-        if (voucher.discount_type === 'percentage') {
-            return `${voucher.discount_value}%`;
-        }
-
-        return formatRupiah(voucher.discount_value) ?? 'Promo';
-    };
-
-    const formatVoucherRequirement = (voucher: PromoVoucher) => {
-        const minTransaction = Number(voucher.min_transaction ?? 0);
-        if (!Number.isFinite(minTransaction) || minTransaction <= 0) {
-            return 'Tanpa minimum transaksi';
-        }
-
-        return `Min. transaksi ${formatRupiah(minTransaction)}`;
-    };
-
-    const copyVoucherCode = async (code: string) => {
-        try {
-            await navigator.clipboard.writeText(code);
-            setCopiedVoucherCode(code);
-            window.setTimeout(() => setCopiedVoucherCode(null), 1500);
-        } catch {
-            setCopiedVoucherCode(null);
-        }
-    };
+    const renderSpecialPromoVideo = ({
+        compact = false,
+        shouldLoad,
+        onLoad,
+        ariaLabel,
+    }: {
+        compact?: boolean;
+        shouldLoad: boolean;
+        onLoad: () => void;
+        ariaLabel: string;
+    }) => (
+        <div
+            className={`group relative overflow-hidden rounded-3xl bg-slate-100 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.65)] ring-1 ring-slate-200 ${
+                compact ? 'aspect-[1920/520]' : 'aspect-[1920/1080]'
+            }`}
+        >
+            {shouldLoad && specialPromoVideoUrl ? (
+                <video
+                    src={specialPromoVideoUrl}
+                    poster={specialPromoVideoPosterUrl ?? undefined}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                />
+            ) : (
+                <>
+                    {specialPromoVideoPosterUrl ? (
+                        <img
+                            src={specialPromoVideoPosterUrl}
+                            alt={homeContent.special_promo.video.title}
+                            loading="lazy"
+                            decoding="async"
+                            className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                        />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center bg-sky-50 text-sky-500">
+                            <ImageOff className="h-14 w-14" />
+                        </div>
+                    )}
+                    <button
+                        type="button"
+                        onClick={onLoad}
+                        disabled={!specialPromoVideoUrl}
+                        className="absolute inset-0 flex items-center justify-center disabled:cursor-not-allowed"
+                        aria-label={ariaLabel}
+                    >
+                        <span
+                            className={`flex items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl ring-1 ring-white/60 transition group-hover:scale-105 ${
+                                compact
+                                    ? 'h-14 w-14 sm:h-16 sm:w-16'
+                                    : 'h-20 w-20 sm:h-24 sm:w-24'
+                            }`}
+                        >
+                            <Play
+                                className={`ml-1 fill-current ${
+                                    compact
+                                        ? 'h-7 w-7 sm:h-8 sm:w-8'
+                                        : 'h-9 w-9 sm:h-10 sm:w-10'
+                                }`}
+                            />
+                        </span>
+                    </button>
+                </>
+            )}
+        </div>
+    );
+    const renderSpecialPromoImageSlot = (
+        promo: (typeof specialPromoSlots)[number],
+        index: number,
+        className = '',
+    ) =>
+        promo ? (
+            <Link
+                key={promo.id}
+                href={promo.href}
+                className={`group relative min-h-[132px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] ${className}`}
+            >
+                <img
+                    src={promo.imageUrl ?? ''}
+                    alt={promo.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                />
+            </Link>
+        ) : (
+            <div
+                key={`empty-special-promo-${index + 1}`}
+                className={`flex min-h-[132px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-5 text-center text-xs font-semibold text-slate-500 ${className}`}
+            >
+                Slot gambar promo {index + 1} belum diatur.
+            </div>
+        );
 
     return (
         <PublicLayout
             categories={categories}
-            chips={chips}
+            chips={[]}
             showCategories={false}
             showChips={false}
         >
@@ -794,393 +920,208 @@ export default function Welcome({
             </Dialog>
 
             <main className="space-y-8 pb-0 font-sans text-slate-800">
-                <section className="relative z-10 h-[clamp(200px,24vw,360px)] w-full border-b border-slate-200 text-slate-800 shadow-md">
-                    <div className="absolute inset-0 -z-10 overflow-hidden bg-[linear-gradient(135deg,#dbeafe,#f8fafc_45%,#e0f2fe)]">
-                        {bannerSlides.length > 0 ? (
-                            bannerSlides.map((slide, index) => {
-                                const image = (
-                                    <img
-                                        src={slide.imageUrl}
-                                        alt={slide.title}
-                                        className={`absolute inset-0 h-full w-full object-fill transition-opacity duration-700 ${
-                                            index === activeBannerIndex
-                                                ? 'opacity-100'
-                                                : 'opacity-0'
-                                        }`}
-                                    />
-                                );
-
-                                if (!slide.href) {
-                                    return <div key={slide.id}>{image}</div>;
-                                }
-
-                                const sharedLinkProps = {
-                                    key: slide.id,
-                                    'aria-hidden': index !== activeBannerIndex,
-                                    tabIndex:
-                                        index === activeBannerIndex ? 0 : -1,
-                                    className: 'absolute inset-0',
-                                };
-
-                                return slide.href.startsWith('http') ? (
-                                    <a
-                                        {...sharedLinkProps}
-                                        href={slide.href}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                    >
-                                        {image}
-                                    </a>
-                                ) : (
-                                    <Link
-                                        {...sharedLinkProps}
-                                        href={slide.href}
-                                    >
-                                        {image}
-                                    </Link>
-                                );
-                            })
-                        ) : (
-                            <div className="absolute inset-0 bg-[linear-gradient(135deg,#dbeafe,#f8fafc_45%,#e0f2fe)]" />
-                        )}
-                        <div className="absolute inset-0 bg-white/5" />
-                    </div>
-
-                    <div className="absolute right-0 bottom-0 left-0 z-20 px-4 sm:px-6 lg:px-8">
-                        <div className="mx-auto max-w-6xl space-y-3">
-                            {bannerSlides.length > 1 && (
-                                <div className="flex items-center justify-center gap-2">
-                                    {bannerSlides.map((slide, index) => (
-                                        <button
-                                            key={`${slide.id}-indicator`}
-                                            type="button"
-                                            onClick={() =>
-                                                setActiveBannerIndex(index)
-                                            }
-                                            aria-label={`Tampilkan banner ${index + 1}`}
-                                            className={`h-2.5 rounded-full transition-all ${
-                                                index === activeBannerIndex
-                                                    ? 'w-8 bg-white shadow-md'
-                                                    : 'w-2.5 bg-white/60 hover:bg-white/90'
-                                            }`}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                            <div className="flex translate-y-1/2 items-center gap-2 overflow-x-auto scroll-smooth rounded-2xl border border-slate-100 bg-white p-3 shadow-xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                                {chipItems.map((chip) => {
-                                    const Icon = chip.icon;
-
-                                    return (
-                                        <Link
-                                            key={chip.label}
-                                            href={`/wisata?q=${encodeURIComponent(chip.label)}`}
-                                            className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold shadow-md transition-all hover:-translate-y-0.5 sm:text-sm ${chip.className}`}
-                                        >
-                                            <Icon className="h-4 w-4 shrink-0 stroke-[2.7]" />
-                                            <span>{chip.label}</span>
-                                        </Link>
-                                    );
-                                })}
-                            </div>
+                <section
+                    id="hero-banner"
+                    className="relative left-1/2 mt-0 w-screen -translate-x-1/2 overflow-hidden bg-white"
+                >
+                    <nav
+                        aria-label="Kategori wisata"
+                        className="border-y border-slate-100 bg-white"
+                    >
+                        <div className="flex items-center justify-center gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            {bannerCategoryLabels.map((label) => (
+                                <Link
+                                    key={label}
+                                    href={`/wisata?q=${encodeURIComponent(label)}`}
+                                    className="shrink-0 rounded-full bg-slate-100 px-5 py-1.5 text-xs font-bold text-slate-600 transition hover:bg-sky-100 hover:text-sky-700"
+                                >
+                                    {label}
+                                </Link>
+                            ))}
                         </div>
-                    </div>
+                    </nav>
+
+                    {activeBanner ? (
+                        <div className="relative overflow-hidden bg-[#f4f6f8] py-7">
+                            <div className="relative mx-auto aspect-[1200/450] w-[clamp(20rem,54vw,68rem)]">
+                                {visibleBannerSlides.map(
+                                    ({ slide, active, offset }) => {
+                                        const bannerFrameClass = `absolute top-1/2 left-1/2 block aspect-[1200/450] overflow-hidden rounded-2xl shadow-sm transition duration-500 ease-out ${
+                                            active
+                                                ? 'z-10'
+                                                : 'z-0 opacity-95'
+                                        }`;
+                                        const bannerFrameStyle =
+                                            getBannerSlideStyle(offset);
+                                        const bannerImage = (
+                                            <img
+                                                src={slide.imageUrl}
+                                                alt={slide.title}
+                                                className="h-full w-full object-cover"
+                                                loading={active ? 'eager' : 'lazy'}
+                                                decoding="async"
+                                            />
+                                        );
+
+                                        if (slide.href?.startsWith('http')) {
+                                            return (
+                                                <a
+                                                    key={`${slide.id}-${offset}`}
+                                                    href={slide.href}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className={bannerFrameClass}
+                                                    style={bannerFrameStyle}
+                                                >
+                                                    {bannerImage}
+                                                </a>
+                                            );
+                                        }
+
+                                        if (slide.href) {
+                                            return (
+                                                <Link
+                                                    key={`${slide.id}-${offset}`}
+                                                    href={slide.href}
+                                                    className={bannerFrameClass}
+                                                    style={bannerFrameStyle}
+                                                >
+                                                    {bannerImage}
+                                                </Link>
+                                            );
+                                        }
+
+                                        return (
+                                            <div
+                                                key={`${slide.id}-${offset}`}
+                                                className={bannerFrameClass}
+                                                style={bannerFrameStyle}
+                                            >
+                                                {bannerImage}
+                                            </div>
+                                        );
+                                    },
+                                )}
+                            </div>
+
+                            {hasMultipleBanners && (
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => advanceBanner(-1)}
+                                        className="absolute top-1/2 left-3 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl font-bold text-slate-600 shadow-lg transition hover:bg-sky-50 hover:text-sky-700"
+                                        aria-label="Banner sebelumnya"
+                                    >
+                                        ‹
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => advanceBanner(1)}
+                                        className="absolute top-1/2 right-3 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl font-bold text-slate-600 shadow-lg transition hover:bg-sky-50 hover:text-sky-700"
+                                        aria-label="Banner berikutnya"
+                                    >
+                                        ›
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="aspect-[1200/450] w-full border-y border-dashed border-slate-200 bg-sky-50" />
+                    )}
                 </section>
 
-                <div className="h-3 sm:h-4" />
-
-                <section className="relative mx-auto max-w-6xl space-y-5 overflow-hidden px-4 pt-0 sm:px-6 lg:px-8">
-                    <div className="pointer-events-none absolute top-8 right-12 hidden text-sky-700/45 lg:block">
-                        <Send className="h-14 w-14 rotate-12 stroke-[1.5]" />
-                        <div className="mt-1 ml-10 h-8 w-24 rounded-[50%] border-b border-dashed border-sky-400/50" />
-                    </div>
-                    <div className="pointer-events-none absolute top-28 left-1 hidden h-10 w-20 rounded-full bg-blue-100/80 lg:block">
-                        <span className="absolute -top-4 left-5 h-8 w-8 rounded-full bg-blue-100/90" />
-                        <span className="absolute -top-2 right-4 h-6 w-6 rounded-full bg-blue-100/90" />
-                    </div>
-                    <div className="pointer-events-none absolute right-0 bottom-12 hidden h-10 w-24 rounded-full bg-blue-100/80 lg:block">
-                        <span className="absolute -top-4 left-7 h-8 w-8 rounded-full bg-blue-100/90" />
-                        <span className="absolute -top-2 right-5 h-7 w-7 rounded-full bg-blue-100/90" />
-                    </div>
-
+                <section className="mx-auto max-w-6xl space-y-5 px-4 pt-0 sm:px-6 lg:px-8">
                     <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
                         {homeContent.special_promo.title}
                     </h2>
 
-                    <div className="grid gap-5 lg:grid-cols-[minmax(0,1.02fr)_minmax(430px,1fr)]">
-                        <div className="group relative min-h-[230px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.65)] ring-1 ring-slate-200 sm:min-h-[320px] lg:min-h-[360px]">
-                            {shouldLoadSpecialPromoVideo &&
-                            specialPromoVideoUrl ? (
-                                <video
-                                    src={specialPromoVideoUrl}
-                                    poster={
-                                        specialPromoVideoPosterUrl ?? undefined
-                                    }
-                                    className="absolute inset-0 h-full w-full object-cover"
-                                    controls
-                                    autoPlay
-                                    playsInline
-                                    preload="metadata"
-                                />
-                            ) : (
-                                <>
-                                    {specialPromoVideoPosterUrl ? (
-                                        <img
-                                            src={specialPromoVideoPosterUrl}
-                                            alt={
-                                                homeContent.special_promo.video
-                                                    .title
-                                            }
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                                        />
-                                    ) : (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-sky-50 text-sky-500">
-                                            <ImageOff className="h-14 w-14" />
-                                        </div>
-                                    )}
-                                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-slate-950/10 to-transparent" />
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setShouldLoadSpecialPromoVideo(true)
-                                        }
-                                        disabled={!specialPromoVideoUrl}
-                                        className="absolute inset-0 flex items-center justify-center disabled:cursor-not-allowed"
-                                        aria-label="Putar video promo spesial"
-                                    >
-                                        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl ring-1 ring-white/60 transition group-hover:scale-105 sm:h-24 sm:w-24">
-                                            <Play className="ml-1 h-9 w-9 fill-current sm:h-10 sm:w-10" />
-                                        </span>
-                                    </button>
-                                    <div className="absolute right-5 bottom-5 left-5 text-white">
-                                        <p className="line-clamp-1 text-xs font-bold tracking-wider text-white/80 uppercase">
-                                            {
-                                                homeContent.special_promo.video
-                                                    .subtitle
-                                            }
-                                        </p>
-                                        <h3 className="mt-1 line-clamp-2 text-xl font-black sm:text-2xl">
-                                            {
-                                                homeContent.special_promo.video
-                                                    .title
-                                            }
-                                        </h3>
-                                        {!specialPromoVideoUrl && (
-                                            <p className="mt-2 text-xs font-semibold text-white/75">
-                                                Tambahkan URL video di admin
-                                                untuk mengaktifkan playback.
-                                            </p>
-                                        )}
-                                    </div>
-                                </>
-                            )}
+                    <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] lg:grid-rows-[auto_auto]">
+                        <div className="lg:col-start-1 lg:row-start-1">
+                            {renderSpecialPromoVideo({
+                                shouldLoad: shouldLoadSpecialPromoVideo,
+                                onLoad: () =>
+                                    setShouldLoadSpecialPromoVideo(true),
+                                ariaLabel: 'Putar video promo spesial',
+                            })}
                         </div>
 
-                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                            {specialPromoSlots.map((promo, index) =>
-                                promo ? (
-                                    <Link
-                                        key={promo.id}
-                                        href={promo.href}
-                                        className="group relative min-h-[150px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] sm:min-h-[178px]"
-                                    >
-                                        <img
-                                            src={promo.imageUrl ?? ''}
-                                            alt={promo.title}
-                                            loading="lazy"
-                                            decoding="async"
-                                            className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
-                                        <div className="absolute right-4 bottom-4 left-4 text-white">
-                                            <p className="line-clamp-1 text-[10px] font-bold tracking-wider text-white/70 uppercase">
-                                                {promo.subtitle}
-                                            </p>
-                                            <h3 className="mt-1 line-clamp-2 text-lg leading-tight font-black">
-                                                {promo.title}
-                                            </h3>
-                                        </div>
-                                    </Link>
-                                ) : (
-                                    <div
-                                        key={`empty-special-promo-${index + 1}`}
-                                        className="flex min-h-[150px] items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-5 text-center text-xs font-semibold text-slate-500 sm:min-h-[178px]"
-                                    >
-                                        Slot gambar promo {index + 1} belum
-                                        diatur.
-                                    </div>
-                                ),
+                        <div className="lg:col-start-1 lg:row-start-2">
+                            {renderSpecialPromoVideo({
+                                compact: true,
+                                shouldLoad: shouldLoadCompactSpecialPromoVideo,
+                                onLoad: () =>
+                                    setShouldLoadCompactSpecialPromoVideo(true),
+                                ariaLabel: 'Putar video promo tambahan',
+                            })}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-5 lg:col-start-2 lg:row-start-1">
+                            {specialPromoSlots
+                                .slice(0, 2)
+                                .map((promo, index) =>
+                                    renderSpecialPromoImageSlot(
+                                        promo,
+                                        index,
+                                        'h-full min-h-[220px] lg:min-h-[240px]',
+                                    ),
+                                )}
+                        </div>
+
+                        <div className="w-full lg:col-start-2 lg:row-start-2">
+                            {renderSpecialPromoImageSlot(
+                                specialPromoSlots[2],
+                                2,
+                                'h-full w-full min-h-[150px]',
                             )}
                         </div>
                     </div>
                 </section>
 
-                <section className="mx-auto max-w-6xl space-y-5 px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-start gap-3">
-                        <CouponIcon className="mt-1 h-6 w-6 shrink-0 text-sky-600" />
-                        <div>
-                            <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
-                                {homeContent.coupon.title}
-                            </h2>
-                            <p className="mt-1 text-sm font-medium text-slate-500">
-                                {homeContent.coupon.description}
-                            </p>
-                        </div>
-                    </div>
+                {categorySections.map((section) => (
+                    <section
+                        key={section.key}
+                        className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8"
+                    >
+                        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                            <div>
+                                <p className="text-xs font-bold tracking-wider text-sky-600 uppercase">
+                                    Kategori Wisata
+                                </p>
+                                <h2 className="mt-2 font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                                    {section.title}
+                                </h2>
+                                {section.description && (
+                                    <p className="mt-1 max-w-2xl text-xs leading-relaxed font-medium text-slate-500 sm:text-sm">
+                                        {section.description}
+                                    </p>
+                                )}
+                            </div>
 
-                    {promoVouchers.length > 0 ? (
+                            {section.href && (
+                                <Link
+                                    href={section.href}
+                                    className="inline-flex items-center gap-1 text-xs font-bold tracking-wider text-sky-600 uppercase hover:text-sky-700"
+                                >
+                                    Lihat semua
+                                    <ChevronRight className="h-4 w-4" />
+                                </Link>
+                            )}
+                        </div>
+
                         <div
-                            className={`${mobileRailClass} md:grid-cols-3 md:gap-4`}
+                            className={`${mobileRailClass} md:grid-cols-3 md:gap-6`}
                         >
-                            {promoVouchers.slice(0, 3).map((voucher) => {
-                                const remainingQuota =
-                                    (voucher.quota_total ?? 0) > 0
-                                        ? Math.max(
-                                              0,
-                                              (voucher.quota_total ?? 0) -
-                                                  (voucher.quota_used ?? 0),
-                                          )
-                                        : null;
-                                const copied =
-                                    copiedVoucherCode === voucher.code;
-
-                                return (
-                                    <article
-                                        key={voucher.id}
-                                        className={`relative h-[12.75rem] overflow-hidden rounded-[1.4rem] border border-sky-100 bg-white shadow-sm ${mobileVoucherRailItemClass}`}
-                                    >
-                                        <div className="absolute top-1/2 -left-3 h-6 w-6 -translate-y-1/2 rounded-full bg-slate-50 ring-1 ring-sky-100" />
-                                        <div className="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-slate-50 ring-1 ring-sky-100" />
-                                        <div className="grid h-full grid-cols-[minmax(0,1fr)_7.5rem]">
-                                            <div className="flex min-w-0 flex-col p-5">
-                                                <p className="text-[10px] font-black tracking-[0.18em] text-sky-600 uppercase">
-                                                    Voucher Indotix
-                                                </p>
-                                                <div className="mt-3 flex items-end gap-2">
-                                                    <span className="font-['Space_Grotesk'] text-3xl font-black tracking-tight text-slate-950 md:text-4xl">
-                                                        {formatVoucherDiscount(
-                                                            voucher,
-                                                        )}
-                                                    </span>
-                                                    <span className="pb-1.5 text-sm font-bold text-slate-500">
-                                                        OFF
-                                                    </span>
-                                                </div>
-                                                <p className="mt-3 line-clamp-1 text-sm font-semibold text-slate-500">
-                                                    {formatVoucherRequirement(
-                                                        voucher,
-                                                    )}
-                                                </p>
-                                                <div className="mt-auto flex min-w-0 items-center gap-2 pt-4">
-                                                    <span className="inline-flex min-w-0 flex-1 rounded-full border border-dashed border-sky-200 bg-sky-50 px-3.5 py-1.5 text-xs font-black tracking-wider text-sky-700">
-                                                        <span className="truncate">
-                                                            {voucher.code}
-                                                        </span>
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            copyVoucherCode(
-                                                                voucher.code,
-                                                            )
-                                                        }
-                                                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-slate-200 px-3.5 py-1.5 text-xs font-black text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-700"
-                                                    >
-                                                        {copied ? (
-                                                            <Check className="h-3.5 w-3.5" />
-                                                        ) : (
-                                                            <Copy className="h-3.5 w-3.5" />
-                                                        )}
-                                                        {copied
-                                                            ? 'Tersalin'
-                                                            : 'Salin'}
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div className="flex h-full flex-col items-center justify-center border-l border-dashed border-sky-100 bg-sky-600 px-4 text-center text-white">
-                                                <TicketPercent className="h-6 w-6" />
-                                                <span className="mt-3 text-xs leading-tight font-bold uppercase">
-                                                    {remainingQuota === null
-                                                        ? 'Kuota terbatas'
-                                                        : `${remainingQuota} tersisa`}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </article>
-                                );
-                            })}
+                            {section.products.map((item) => (
+                                <div
+                                    key={`${section.key}-${item.id}`}
+                                    className={mobileRailItemClass}
+                                >
+                                    {renderWisataCard(item)}
+                                </div>
+                            ))}
                         </div>
-                    ) : (
-                        <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                            Belum ada voucher promo yang aktif saat ini.
-                        </div>
-                    )}
-                </section>
-
-                <section className="mx-auto max-w-6xl space-y-5 px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center gap-3">
-                        <PromoIcon className="h-6 w-6 shrink-0 text-sky-600" />
-                        <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
-                            {homeContent.promo.title}
-                        </h2>
-                    </div>
-
-                    {activePromoItems.length > 0 ? (
-                        <div
-                            className={`${mobileRailClass} md:grid-cols-3 md:gap-4`}
-                        >
-                            {activePromoItems.map((promo, index) => {
-                                const imageUrl = promo.image_path.startsWith(
-                                    'http',
-                                )
-                                    ? promo.image_path
-                                    : `/storage/${promo.image_path}`;
-                                const detailHref = promo.slug
-                                    ? `/promo/${promo.slug}`
-                                    : '/promo';
-
-                                const content = (
-                                    <img
-                                        src={imageUrl}
-                                        alt={
-                                            promo.title ??
-                                            `Promo terbaik ${index + 1}`
-                                        }
-                                        className="h-full w-full object-cover"
-                                        loading="lazy"
-                                        decoding="async"
-                                    />
-                                );
-
-                                return (
-                                    <Link
-                                        key={promo.id}
-                                        href={detailHref}
-                                        className={`block h-28 overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-xl sm:h-36 md:h-40 ${mobileRailItemClass}`}
-                                    >
-                                        {content}
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                            Belum ada promo terbaik yang aktif saat ini.
-                        </div>
-                    )}
-
-                    <div className="text-center">
-                        <Link
-                            href="/promo"
-                            className="inline-flex items-center gap-1 text-sm font-black text-sky-600 transition hover:text-sky-700"
-                        >
-                            {homeContent.promo.link_label}
-                            <ChevronRight className="h-4 w-4" />
-                        </Link>
-                    </div>
-                </section>
+                    </section>
+                ))}
 
                 <section
                     id="featured-destinations-section"
@@ -1308,48 +1249,59 @@ export default function Welcome({
 
                     {blogPosts.length > 0 ? (
                         <div
-                            className={`${mobileRailClass} md:grid-cols-4 md:gap-6`}
+                            className={`${mobileRailClass} md:grid-cols-3 md:gap-6`}
                         >
                             {blogPosts.map((post) => (
-                                <Link
+                                <div
                                     key={post.id}
-                                    href={`/jelajah/${post.slug}`}
-                                    className={`group overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl ${mobileRailItemClass}`}
+                                    className={mobileRailItemClass}
                                 >
-                                    <div className="relative h-28 overflow-hidden bg-slate-100 sm:h-40">
-                                        {post.cover_image_url ? (
-                                            <img
-                                                src={post.cover_image_url}
-                                                alt={post.title}
-                                                loading="lazy"
-                                                decoding="async"
-                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                        ) : (
-                                            <div className="flex h-full w-full items-center justify-center bg-sky-50 text-sky-600">
-                                                <Camera className="h-9 w-9" />
-                                            </div>
-                                        )}
-                                        {post.label && (
-                                            <span className="absolute top-3 left-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold text-sky-600 shadow-sm">
-                                                {post.label}
+                                    <Link
+                                        href={`/jelajah/${post.slug}`}
+                                        className="group block overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+                                    >
+                                        <div className="relative h-32 overflow-hidden bg-slate-100 sm:h-44 lg:h-48">
+                                            {post.cover_image_url ? (
+                                                <img
+                                                    src={post.cover_image_url}
+                                                    alt={post.title}
+                                                    loading="lazy"
+                                                    decoding="async"
+                                                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full w-full items-center justify-center bg-sky-50 text-sky-600">
+                                                    <Camera className="h-10 w-10" />
+                                                </div>
+                                            )}
+                                            {post.label && (
+                                                <span className="absolute top-3 left-3 rounded-full bg-white/95 px-3 py-1 text-[10px] font-bold text-sky-600 shadow-sm sm:top-4 sm:left-4">
+                                                    {post.label}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="space-y-2 p-3 sm:p-4">
+                                            <span className="inline-flex rounded-full bg-sky-50 px-2.5 py-1 text-[10px] font-bold text-sky-600">
+                                                Jelajah
                                             </span>
-                                        )}
-                                    </div>
-                                    <div className="space-y-2 p-3 sm:p-4">
-                                        <h3 className="line-clamp-2 text-sm leading-snug font-bold text-slate-950">
-                                            {post.title}
-                                        </h3>
-                                        {post.excerpt && (
-                                            <p className="line-clamp-2 text-xs leading-relaxed text-slate-500">
-                                                {post.excerpt}
+                                            <h3 className="line-clamp-2 text-sm leading-snug font-bold text-slate-950">
+                                                {post.title}
+                                            </h3>
+                                            <p className="line-clamp-2 text-xs leading-relaxed font-normal text-slate-500">
+                                                {post.excerpt ??
+                                                    'Cerita dan inspirasi wisata pilihan Indotix'}
                                             </p>
-                                        )}
-                                        <span className="inline-flex text-xs font-bold text-sky-600 group-hover:text-sky-700">
-                                            Baca artikel
-                                        </span>
-                                    </div>
-                                </Link>
+
+                                            <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                                                <span className="text-xs font-bold text-sky-600 group-hover:text-sky-700">
+                                                    Baca artikel
+                                                </span>
+                                                <ChevronRight className="h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-sky-600" />
+                                            </div>
+                                        </div>
+                                    </Link>
+                                </div>
                             ))}
                         </div>
                     ) : (
@@ -1359,72 +1311,11 @@ export default function Welcome({
                     )}
                 </section>
 
-                <PublicPartnerSection partners={partners} />
-
-                <section className="relative left-1/2 w-screen -translate-x-1/2 bg-[url('/images/backgroun-section.png')] bg-[length:calc(100%+96px)_calc(100%+48px)] bg-center bg-no-repeat py-8 sm:py-10">
-                    <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[0.85fr_2fr] lg:items-center lg:px-8">
-                        <div>
-                            <p className="text-base font-black text-slate-950 sm:text-lg">
-                                {homeContent.trust.eyebrow}
-                            </p>
-                            <h2 className="mt-5 font-['Space_Grotesk'] text-2xl leading-tight font-black tracking-tight text-slate-950 sm:text-3xl">
-                                {homeContent.trust.title}
-                            </h2>
-                            <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-700">
-                                {homeContent.trust.badges.map((badge) => {
-                                    const BadgeIcon = resolveHomeIcon(
-                                        badge.icon,
-                                        ShieldCheck,
-                                    );
-
-                                    return (
-                                        <span
-                                            key={`${badge.icon}-${badge.text}`}
-                                            className="inline-flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-1.5 shadow-sm ring-1 ring-sky-100"
-                                        >
-                                            <BadgeIcon className="h-4 w-4 text-sky-600" />
-                                            {badge.text}
-                                        </span>
-                                    );
-                                })}
-                            </div>
-                            <a
-                                href={downloadAppUrl}
-                                {...downloadLinkAttributes}
-                                className="mt-5 inline-flex items-center justify-center gap-2 rounded-full bg-sky-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-sky-700"
-                            >
-                                {homeContent.trust.cta_label}
-                                <Download className="h-4 w-4" />
-                            </a>
-                        </div>
-
-                        <div className={`${mobileRailClass} md:grid-cols-3`}>
-                            {homeContent.trust.cards.map((item) => {
-                                const Icon = resolveHomeIcon(
-                                    item.icon,
-                                    BadgePercent,
-                                );
-
-                                return (
-                                    <article
-                                        key={item.title}
-                                        className={`flex gap-3 rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm sm:p-5 ${mobileWideRailItemClass}`}
-                                    >
-                                        <Icon className="mt-1 h-9 w-9 shrink-0 text-sky-600" />
-                                        <div>
-                                            <h3 className="text-sm font-black text-slate-950">
-                                                {item.title}
-                                            </h3>
-                                            <p className="mt-1 text-sm leading-relaxed text-slate-600">
-                                                {item.description}
-                                            </p>
-                                        </div>
-                                    </article>
-                                );
-                            })}
-                        </div>
+                {partners.length > 0 && (
+                    <div className="mb-10 sm:mb-14">
+                        <PublicPartnerSection partners={partners} />
                     </div>
-                </section>
+                )}
             </main>
 
             <footer className="mt-0 border-t border-slate-200 bg-white">
