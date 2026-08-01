@@ -27,6 +27,10 @@ class MobileErrorLogController extends Controller
         ]);
 
         $user = $request->user('sanctum');
+        $data['message'] = $this->redactString($data['message']);
+        $data['stack_trace'] = $this->redactString($data['stack_trace'] ?? null);
+        $data['device'] = $this->sanitizeArray($data['device'] ?? null);
+        $data['extra'] = $this->sanitizeArray($data['extra'] ?? null);
 
         $log = MobileErrorLog::create([
             ...$data,
@@ -51,5 +55,62 @@ class MobileErrorLogController extends Controller
             'message' => 'Error berhasil dicatat.',
             'id' => $log->id,
         ], 201);
+    }
+
+    private function sanitizeArray(?array $payload): ?array
+    {
+        if ($payload === null) {
+            return null;
+        }
+
+        return collect($payload)
+            ->mapWithKeys(fn ($value, string|int $key) => [
+                $key => $this->isSensitiveKey((string) $key) ? '[redacted]' : $this->sanitizeValue($value),
+            ])
+            ->all();
+    }
+
+    private function sanitizeValue(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return $this->sanitizeArray($value);
+        }
+
+        if (is_string($value)) {
+            return $this->redactString($value);
+        }
+
+        return $value;
+    }
+
+    private function isSensitiveKey(string $key): bool
+    {
+        return str($key)->lower()->contains([
+            'token',
+            'secret',
+            'password',
+            'otp',
+            'pin',
+            'authorization',
+            'signature',
+            'email',
+            'phone',
+            'account',
+        ]);
+    }
+
+    private function redactString(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        $value = preg_replace('/Bearer\s+[A-Za-z0-9._~+\-\/]+=*/i', 'Bearer [redacted]', $value) ?? $value;
+
+        return preg_replace(
+            '/("?((access_)?token|id_token|refresh_token|password|otp|pin|authorization|signature|email|phone|account(_number)?)"?\s*[:=]\s*)("[^"]+"|[^,\s}]+)/i',
+            '$1[redacted]',
+            $value
+        ) ?? $value;
     }
 }

@@ -3,6 +3,7 @@
 use App\Models\AdminAuditLog;
 use App\Models\User;
 use App\Models\UserActivityLog;
+use App\Support\HomePageContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -83,4 +84,30 @@ test('admin can view audit logs with useful filters and payload detail', functio
             ->where('logs.data.0.path', 'admin/hotels')
             ->where('logs.data.0.payload.name', 'Hotel Test')
         );
+});
+
+test('admin audit log redacts sensitive payload fields', function () {
+    $admin = User::factory()->create([
+        'role' => 'admin',
+        'email_verified_at' => now(),
+    ]);
+
+    $payload = HomePageContent::DEFAULTS;
+    $payload['api_token'] = 'secret-token';
+    $payload['payment'] = [
+        'snap_token' => 'snap-secret',
+        'bank_account_number' => '1234567890',
+        'status' => 'paid',
+    ];
+
+    $this->actingAs($admin)
+        ->put('/admin/public/home', $payload)
+        ->assertRedirect();
+
+    $stored = AdminAuditLog::query()->latest('id')->firstOrFail()->payload;
+
+    expect($stored['api_token'])->toBe('[redacted]')
+        ->and($stored['payment']['snap_token'])->toBe('[redacted]')
+        ->and($stored['payment']['bank_account_number'])->toBe('[redacted]')
+        ->and($stored['payment']['status'])->toBe('paid');
 });

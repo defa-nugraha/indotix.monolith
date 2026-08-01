@@ -54,3 +54,32 @@ test('mobile app error report stores authenticated user when token exists', func
 
     expect(MobileErrorLog::query()->where('user_id', $user->id)->exists())->toBeTrue();
 });
+
+test('mobile error endpoint redacts sensitive payload before storage', function () {
+    Log::shouldReceive('warning')->once();
+
+    $this->postJson('/api/mobile/errors', [
+        'message' => 'HTTP 500 token=plain-secret Authorization: Bearer abc.def',
+        'exception_type' => 'String',
+        'context' => 'AuthService.http',
+        'source' => 'flutter',
+        'platform' => 'android',
+        'extra' => [
+            'email' => 'user@example.test',
+            'response_body' => '{"access_token":"secret","message":"gagal"}',
+            'nested' => [
+                'refresh_token' => 'refresh-secret',
+                'status' => 500,
+            ],
+        ],
+    ])->assertCreated();
+
+    $log = MobileErrorLog::query()->latest('id')->firstOrFail();
+
+    expect($log->message)->not->toContain('plain-secret')
+        ->and($log->message)->not->toContain('abc.def')
+        ->and($log->extra['email'])->toBe('[redacted]')
+        ->and($log->extra['response_body'])->not->toContain('secret')
+        ->and($log->extra['nested']['refresh_token'])->toBe('[redacted]')
+        ->and($log->extra['nested']['status'])->toBe(500);
+});

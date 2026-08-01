@@ -28,19 +28,12 @@ class LogAdminActivity
             'action' => substr(sprintf('%s %s', $request->method(), $request->path()), 0, 120),
             'method' => $request->method(),
             'path' => substr($request->path(), 0, 255),
-            'payload' => $this->sanitizePayload($request->except(['password', 'password_confirmation'])),
+            'payload' => $this->sanitizePayload($request->except(['password', 'password_confirmation', 'current_password'])),
             'ip_address' => $request->ip(),
             'user_agent' => substr((string) $request->userAgent(), 0, 255),
         ]);
 
         return $response;
-    }
-
-    private function sanitizePayload(array $payload): array
-    {
-        return collect($payload)
-            ->map(fn ($value) => $this->sanitizeValue($value))
-            ->all();
     }
 
     private function sanitizeValue(mixed $value): mixed
@@ -56,7 +49,9 @@ class LogAdminActivity
 
         if (is_array($value)) {
             return collect($value)
-                ->map(fn ($item) => $this->sanitizeValue($item))
+                ->mapWithKeys(fn ($item, string|int $key) => [
+                    $key => $this->isSensitiveKey((string) $key) ? '[redacted]' : $this->sanitizeValue($item),
+                ])
                 ->all();
         }
 
@@ -67,5 +62,29 @@ class LogAdminActivity
         }
 
         return $value;
+    }
+
+    private function sanitizePayload(array $payload): array
+    {
+        return collect($payload)
+            ->mapWithKeys(fn ($value, string|int $key) => [
+                $key => $this->isSensitiveKey((string) $key) ? '[redacted]' : $this->sanitizeValue($value),
+            ])
+            ->all();
+    }
+
+    private function isSensitiveKey(string $key): bool
+    {
+        return str($key)->lower()->contains([
+            'token',
+            'secret',
+            'password',
+            'otp',
+            'pin',
+            'authorization',
+            'signature',
+            'bank_account_number',
+            'account_number',
+        ]);
     }
 }
