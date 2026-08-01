@@ -63,7 +63,7 @@ class DisputeController extends Controller
             'wisata_booking_id' => ['required', 'exists:wisata_bookings,id'],
             'subject' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:2000'],
-            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf'],
+            'attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
         $booking = WisataBooking::query()
