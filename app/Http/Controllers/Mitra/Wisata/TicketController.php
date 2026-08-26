@@ -29,7 +29,12 @@ class TicketController extends Controller
                 'price' => $ticket->price,
                 'quota' => $ticket->quota,
                 'daily_quota' => $ticket->daily_quota,
+                'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
+                'max_order_quantity' => $ticket->max_order_quantity,
                 'ticket_type' => $ticket->ticket_type,
+                'ticket_kind' => $ticket->ticket_kind ?? 'single',
+                'is_entry_ticket' => (bool) ($ticket->is_entry_ticket ?? true),
+                'package_items' => $ticket->package_items ?? [],
                 'valid_from' => $ticket->valid_from?->toDateString(),
                 'valid_until' => $ticket->valid_until?->toDateString(),
                 'refund_policy' => $ticket->refund_policy,
@@ -73,13 +78,29 @@ class TicketController extends Controller
                 'price' => $ticket->price,
                 'quota' => $ticket->quota,
                 'daily_quota' => $ticket->daily_quota,
+                'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
+                'max_order_quantity' => $ticket->max_order_quantity,
                 'ticket_type' => $ticket->ticket_type,
+                'ticket_kind' => $ticket->ticket_kind ?? 'single',
+                'package_items' => $ticket->package_items ?? [],
                 'valid_from' => $ticket->valid_from?->toDateString(),
                 'valid_until' => $ticket->valid_until?->toDateString(),
                 'refund_policy' => $ticket->refund_policy,
                 'is_active' => $ticket->is_active,
                 'is_closed' => $ticket->is_closed,
             ] : null,
+            'componentTickets' => WisataTicket::query()
+                ->where('mitra_wisata_onboarding_id', $destination->id)
+                ->where('ticket_kind', 'single')
+                ->when($ticketId, fn ($query) => $query->where('id', '!=', $ticketId))
+                ->orderBy('name')
+                ->get(['id', 'name', 'price'])
+                ->map(fn (WisataTicket $row) => [
+                    'id' => $row->id,
+                    'name' => $row->name,
+                    'price' => $row->price,
+                ])
+                ->all(),
         ]);
     }
 
@@ -95,13 +116,27 @@ class TicketController extends Controller
             'price' => ['required', 'integer', 'min:0'],
             'quota' => ['required', 'integer', 'min:0'],
             'daily_quota' => ['nullable', 'integer', 'min:0'],
+            'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'max_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20', 'gte:min_order_quantity'],
             'ticket_type' => ['required', 'in:perorangan,grup'],
+            'ticket_kind' => ['nullable', 'in:single,package'],
+            'is_entry_ticket' => ['nullable', 'boolean'],
+            'package_items' => ['nullable', 'array'],
+            'package_items.*.ticket_id' => ['required_with:package_items', 'integer'],
+            'package_items.*.quantity' => ['required_with:package_items', 'integer', 'min:1', 'max:20'],
             'valid_from' => ['nullable', 'date'],
             'valid_until' => ['nullable', 'date'],
             'refund_policy' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
             'is_closed' => ['nullable', 'boolean'],
         ]);
+
+        $ticketKind = $data['ticket_kind'] ?? 'single';
+        $packageItems = $this->normalizePackageItems(
+            $ticketKind,
+            (int) $destination->id,
+            $data['package_items'] ?? []
+        );
 
         WisataTicket::create([
             'mitra_wisata_onboarding_id' => $destination->id,
@@ -110,7 +145,12 @@ class TicketController extends Controller
             'price' => $data['price'],
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
+            'min_order_quantity' => $data['min_order_quantity'] ?? 1,
+            'max_order_quantity' => $data['max_order_quantity'] ?? null,
             'ticket_type' => $data['ticket_type'],
+            'ticket_kind' => $ticketKind,
+            'is_entry_ticket' => $request->has('is_entry_ticket') ? $request->boolean('is_entry_ticket') : true,
+            'package_items' => $packageItems,
             'valid_from' => $data['valid_from'] ?? null,
             'valid_until' => $data['valid_until'] ?? null,
             'refund_policy' => $data['refund_policy'] ?? null,
@@ -137,7 +177,14 @@ class TicketController extends Controller
             'price' => ['required', 'integer', 'min:0'],
             'quota' => ['required', 'integer', 'min:0'],
             'daily_quota' => ['nullable', 'integer', 'min:0'],
+            'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'max_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20', 'gte:min_order_quantity'],
             'ticket_type' => ['required', 'in:perorangan,grup'],
+            'ticket_kind' => ['nullable', 'in:single,package'],
+            'is_entry_ticket' => ['nullable', 'boolean'],
+            'package_items' => ['nullable', 'array'],
+            'package_items.*.ticket_id' => ['required_with:package_items', 'integer'],
+            'package_items.*.quantity' => ['required_with:package_items', 'integer', 'min:1', 'max:20'],
             'valid_from' => ['nullable', 'date'],
             'valid_until' => ['nullable', 'date'],
             'refund_policy' => ['nullable', 'string', 'max:255'],
@@ -145,13 +192,26 @@ class TicketController extends Controller
             'is_closed' => ['nullable', 'boolean'],
         ]);
 
+        $ticketKind = $data['ticket_kind'] ?? 'single';
+        $packageItems = $this->normalizePackageItems(
+            $ticketKind,
+            (int) $destination->id,
+            $data['package_items'] ?? [],
+            $ticket->id
+        );
+
         $ticket->update([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'price' => $data['price'],
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
+            'min_order_quantity' => $data['min_order_quantity'] ?? 1,
+            'max_order_quantity' => $data['max_order_quantity'] ?? null,
             'ticket_type' => $data['ticket_type'],
+            'ticket_kind' => $ticketKind,
+            'is_entry_ticket' => $request->has('is_entry_ticket') ? $request->boolean('is_entry_ticket') : (bool) ($ticket->is_entry_ticket ?? true),
+            'package_items' => $packageItems,
             'valid_from' => $data['valid_from'] ?? null,
             'valid_until' => $data['valid_until'] ?? null,
             'refund_policy' => $data['refund_policy'] ?? null,
@@ -209,5 +269,53 @@ class TicketController extends Controller
         throw ValidationException::withMessages([
             'mitra_wisata_onboarding_id' => 'Tiket hanya bisa dibuat untuk destinasi milik akun mitra yang sedang login.',
         ]);
+    }
+
+    private function normalizePackageItems(string $ticketKind, int $destinationId, array $items, ?int $ignoreTicketId = null): ?array
+    {
+        if ($ticketKind !== 'package') {
+            return null;
+        }
+
+        $normalized = collect($items)
+            ->map(fn ($item) => [
+                'ticket_id' => (int) ($item['ticket_id'] ?? 0),
+                'quantity' => (int) ($item['quantity'] ?? 0),
+            ])
+            ->filter(fn ($item) => $item['ticket_id'] > 0 && $item['quantity'] > 0)
+            ->groupBy('ticket_id')
+            ->map(fn ($rows, $ticketId) => [
+                'ticket_id' => (int) $ticketId,
+                'quantity' => (int) collect($rows)->sum('quantity'),
+            ])
+            ->values();
+
+        if ($normalized->isEmpty()) {
+            throw ValidationException::withMessages([
+                'package_items' => 'Paket wisata wajib berisi minimal satu tiket reguler.',
+            ]);
+        }
+
+        $query = WisataTicket::query()
+            ->where('mitra_wisata_onboarding_id', $destinationId)
+            ->where('ticket_kind', 'single')
+            ->whereIn('id', $normalized->pluck('ticket_id'));
+
+        if ($ignoreTicketId) {
+            $query->where('id', '!=', $ignoreTicketId);
+        }
+
+        $validTicketIds = $query
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if ($normalized->pluck('ticket_id')->diff($validTicketIds)->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'package_items' => 'Paket hanya boleh berisi tiket reguler dari destinasi yang sama.',
+            ]);
+        }
+
+        return $normalized->all();
     }
 }

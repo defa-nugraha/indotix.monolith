@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WisataTicketMail;
 use App\Models\MitraWisataOnboarding;
 use App\Models\UserNotification;
 use App\Models\WisataBooking;
@@ -19,6 +20,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -65,6 +68,21 @@ class WisataBookingController extends Controller
             'items' => $selections,
         ];
 
+        $pendingVoucherCode = $request->session()->get('pending_voucher_code');
+        if ($pendingVoucherCode) {
+            $voucher = $this->resolveVoucher($pendingVoucherCode, false, (int) $destination->id);
+            $userId = (int) ($request->user()?->id ?? 0);
+
+            if (
+                $voucher
+                && ((int) ($voucher->min_transaction ?? 0) <= 0 || (int) $summary['total'] >= (int) $voucher->min_transaction)
+                && ($userId === 0 || $this->canUseVoucherForUser($voucher, $userId))
+            ) {
+                $draft['voucher_code'] = $voucher->code;
+                $request->session()->forget('pending_voucher_code');
+            }
+        }
+
         $request->session()->put('wisata_booking_draft', $draft);
 
         if (! $request->user()) {
@@ -104,9 +122,9 @@ class WisataBookingController extends Controller
         ]);
 
         $summary = $this->buildDraftSummary($draft);
-        $voucher = $this->resolveVoucher($data['voucher_code']);
+        $voucher = $this->resolveVoucher($data['voucher_code'], false, (int) $summary['destination']->id);
         if (! $voucher) {
-            return back()->withErrors(['voucher_code' => 'Voucher tidak valid atau sudah habis.']);
+            return back()->withErrors(['voucher_code' => 'Voucher tidak valid untuk destinasi ini atau sudah habis.']);
         }
 
         if ($voucher->min_transaction > 0 && $summary['total'] < $voucher->min_transaction) {
@@ -191,10 +209,10 @@ class WisataBookingController extends Controller
             $subtotal = (int) $summary['total'];
 
             if (! empty($draft['voucher_code'])) {
-                $voucher = $this->resolveVoucher($draft['voucher_code'], true);
+                $voucher = $this->resolveVoucher($draft['voucher_code'], true, (int) $destination->id);
                 if (! $voucher) {
                     throw ValidationException::withMessages([
-                        'booking' => 'Voucher tidak valid atau sudah habis.',
+                        'booking' => 'Voucher tidak valid untuk destinasi ini atau sudah habis.',
                     ]);
                 }
 
@@ -252,6 +270,28 @@ class WisataBookingController extends Controller
 
             return $order;
         });
+
+        if ((int) $booking->total_price <= 0) {
+            $this->completeFreeBooking($booking);
+            $request->session()->forget('wisata_booking_draft');
+            $request->session()->forget('pending_voucher_code');
+            $request->session()->forget('wisata_booking_pending');
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'booking_id' => $this->encryptId($booking->id),
+                    'snap_token' => null,
+                    'redirect_url' => route('wisata.booking.show', [
+                        'booking' => $this->encryptId($booking->id),
+                    ], false),
+                    'payment_status' => 'paid',
+                ]);
+            }
+
+            return redirect()
+                ->route('wisata.booking.show', ['booking' => $this->encryptId($booking->id)])
+                ->with('status', 'wisata-booking-paid');
+        }
 
         UserNotification::create([
             'user_id' => $request->user()->id,
@@ -312,6 +352,12 @@ class WisataBookingController extends Controller
             return redirect()->route('home');
         }
 
+        if ((int) $booking->total_price <= 0) {
+            $this->completeFreeBooking($booking);
+
+            return redirect()->route('wisata.booking.show', ['booking' => $this->encryptId($booking->id)]);
+        }
+
         if ($booking->isExpired()) {
             $booking->update([
                 'status' => 'expired',
@@ -336,6 +382,13 @@ class WisataBookingController extends Controller
 
         if ((int) $booking->user_id !== (int) $request->user()->id) {
             return redirect()->route('home');
+        }
+
+        if ((int) $booking->total_price <= 0) {
+            $this->completeFreeBooking($booking);
+
+            return redirect()->route('wisata.booking.show', ['booking' => $this->encryptId($booking->id)])
+                ->with('status', 'wisata-booking-paid');
         }
 
         if ($booking->isExpired()) {
@@ -416,21 +469,9 @@ class WisataBookingController extends Controller
         $booking->load('ticket', 'destination', 'items.ticket');
 
         $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
-        $cacheAllowed = in_array($booking->status, ['paid', 'completed'], true);
-
-        $qrImage = null;
-        if ($cacheAllowed) {
-            $qrUrl = $this->buildQrUrl('WISATA', $booking->booking_code);
-            $context = stream_context_create(['http' => ['timeout' => 4]]);
-            $contents = @file_get_contents($qrUrl, false, $context);
-            if ($contents !== false) {
-                $qrImage = 'data:image/png;base64,'.base64_encode($contents);
-            }
-        }
 
         return Pdf::view('wisata-ticket', [
             'booking' => $booking,
-            'qrImage' => $qrImage,
         ])->download($filename);
     }
 
@@ -511,14 +552,32 @@ class WisataBookingController extends Controller
             }
 
             $available = $this->availableTickets($ticket, $draft['visit_date'], $lock);
-            if ($available < (int) $selection['quantity']) {
+            $quantity = (int) $selection['quantity'];
+            $minOrder = max(1, (int) ($ticket->min_order_quantity ?? 1));
+            $maxOrder = min(
+                self::MAX_TICKETS_PER_BOOKING,
+                (int) ($ticket->max_order_quantity ?: self::MAX_TICKETS_PER_BOOKING),
+            );
+
+            if ($quantity < $minOrder) {
+                throw ValidationException::withMessages([
+                    'items' => "Minimal pembelian {$ticket->name} {$minOrder} tiket.",
+                ]);
+            }
+
+            if ($quantity > $maxOrder) {
+                throw ValidationException::withMessages([
+                    'items' => "Maksimal pembelian {$ticket->name} {$maxOrder} tiket.",
+                ]);
+            }
+
+            if ($available < $quantity) {
                 throw ValidationException::withMessages([
                     'items' => "Kuota {$ticket->name} tersisa {$available}.",
                 ]);
             }
 
             $unitPrice = (int) $ticket->price;
-            $quantity = (int) $selection['quantity'];
 
             $items[] = [
                 'ticket_id' => (int) $ticket->id,
@@ -527,7 +586,23 @@ class WisataBookingController extends Controller
                 'unit_price' => $unitPrice,
                 'subtotal' => $unitPrice * $quantity,
                 'available' => $available,
+                'ticket_kind' => $ticket->ticket_kind ?? 'single',
+                'is_entry_ticket' => (bool) ($ticket->is_entry_ticket ?? true),
+                'package_items' => $ticket->package_items ?? [],
             ];
+        }
+
+        $hasContinuationTicket = collect($items)->contains(
+            fn (array $item) => ! (bool) ($item['is_entry_ticket'] ?? true),
+        );
+        $hasEntryTicket = collect($items)->contains(
+            fn (array $item) => (bool) ($item['is_entry_ticket'] ?? true),
+        );
+
+        if ($hasContinuationTicket && ! $hasEntryTicket) {
+            throw ValidationException::withMessages([
+                'items' => 'Tiket terusan hanya dapat dipesan bersama tiket masuk.',
+            ]);
         }
 
         return [
@@ -548,7 +623,7 @@ class WisataBookingController extends Controller
         $voucherPayload = null;
 
         if (! empty($draft['voucher_code'])) {
-            $voucher = $this->resolveVoucher($draft['voucher_code']);
+            $voucher = $this->resolveVoucher($draft['voucher_code'], false, (int) $destination->id);
             $userId = (int) ($request?->user()?->id ?? request()->user()?->id ?? 0);
 
             if (
@@ -578,6 +653,8 @@ class WisataBookingController extends Controller
                 'items' => array_map(fn (array $item) => [
                     'ticket_id' => (int) $item['ticket_id'],
                     'quantity' => (int) $item['quantity'],
+                    'ticket_kind' => $item['ticket_kind'] ?? 'single',
+                    'package_items' => $item['package_items'] ?? [],
                 ], $summary['items']),
             ],
             'destination' => [
@@ -646,8 +723,12 @@ class WisataBookingController extends Controller
                     'ticket_id' => (int) $item->wisata_ticket_id,
                     'name' => $item->ticket_name ?? $item->ticket?->name ?? 'Tiket Wisata',
                     'quantity' => (int) $item->quantity,
+                    'used_quantity' => (int) $item->used_quantity,
+                    'remaining_quantity' => $item->remainingQuantity(),
                     'unit_price' => (int) $item->unit_price,
                     'subtotal' => (int) $item->subtotal,
+                    'ticket_kind' => $item->ticket?->ticket_kind ?? 'single',
+                    'package_items' => $item->ticket?->package_items ?? [],
                 ])
                 ->values()
                 ->all();
@@ -657,8 +738,12 @@ class WisataBookingController extends Controller
             'ticket_id' => (int) $booking->wisata_ticket_id,
             'name' => $booking->ticket?->name ?? 'Tiket Wisata',
             'quantity' => (int) $booking->quantity,
+            'used_quantity' => 0,
+            'remaining_quantity' => (int) $booking->quantity,
             'unit_price' => (int) $booking->unit_price,
             'subtotal' => (int) $booking->total_price,
+            'ticket_kind' => $booking->ticket?->ticket_kind ?? 'single',
+            'package_items' => $booking->ticket?->package_items ?? [],
         ]];
     }
 
@@ -701,8 +786,6 @@ class WisataBookingController extends Controller
                 'payment_type' => $latestPayment->payment_type,
                 'payload' => $latestPayment->payload,
             ] : null,
-            'qr_data' => $this->buildQrData('WISATA', $booking->booking_code),
-            'qr_url' => $this->buildQrUrl('WISATA', $booking->booking_code),
         ];
     }
 
@@ -769,6 +852,65 @@ class WisataBookingController extends Controller
         return $snap;
     }
 
+    private function completeFreeBooking(WisataBooking $booking): void
+    {
+        if ($booking->status === 'paid' && $booking->payment_status === 'paid') {
+            return;
+        }
+
+        $orderId = $booking->midtrans_order_id ?: sprintf('WISATA-FREE-%s', $booking->id);
+        $payment = $booking->payments()
+            ->where('payment_type', 'free_voucher')
+            ->latest()
+            ->first();
+
+        if (! $payment) {
+            $payment = WisataPayment::create([
+                'wisata_booking_id' => $booking->id,
+                'provider' => 'internal',
+                'status' => 'paid',
+                'gross_amount' => 0,
+                'payment_type' => 'free_voucher',
+                'transaction_id' => null,
+                'order_id' => $orderId,
+                'payload' => [
+                    'reason' => 'voucher_discount_covers_total',
+                    'voucher_code' => $booking->voucher_code,
+                ],
+            ]);
+        }
+
+        $booking->update([
+            'status' => 'paid',
+            'payment_status' => 'paid',
+            'payment_deadline' => null,
+            'midtrans_order_id' => $payment->order_id,
+        ]);
+
+        UserNotification::create([
+            'user_id' => $booking->user_id,
+            'title' => 'Tiket wisata aktif',
+            'message' => 'Voucher menutup seluruh pembayaran. Tiket wisata kamu sudah aktif.',
+            'type' => 'wisata_payment_paid',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+                'type' => 'wisata',
+                'category' => 'wisata',
+            ],
+        ]);
+
+        if ($booking->guest_email) {
+            try {
+                Mail::to($booking->guest_email)->send(new WisataTicketMail($booking));
+            } catch (\Throwable $exception) {
+                Log::warning('Failed to send free wisata ticket email', [
+                    'booking_id' => $booking->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
+    }
+
     private function resolveBooking(string $booking): WisataBooking
     {
         try {
@@ -794,7 +936,7 @@ class WisataBookingController extends Controller
         return DB::table('regencies')->where('code', $cityCode)->value('name');
     }
 
-    private function resolveVoucher(?string $code, bool $lock = false): ?Voucher
+    private function resolveVoucher(?string $code, bool $lock = false, ?int $destinationId = null): ?Voucher
     {
         $normalizedCode = strtoupper(trim((string) $code));
         if ($normalizedCode === '') {
@@ -811,9 +953,15 @@ class WisataBookingController extends Controller
             $query->lockForUpdate();
         }
 
-        $voucher = $query->first();
+        $voucher = $query
+            ->with('wisataDestinations:id')
+            ->first();
 
-        return $voucher && $this->isVoucherValid($voucher) ? $voucher : null;
+        return $voucher
+            && $this->isVoucherValid($voucher)
+            && $this->voucherAppliesToDestination($voucher, $destinationId)
+                ? $voucher
+                : null;
     }
 
     private function isVoucherValid(Voucher $voucher): bool
@@ -837,6 +985,22 @@ class WisataBookingController extends Controller
         }
 
         return true;
+    }
+
+    private function voucherAppliesToDestination(Voucher $voucher, ?int $destinationId): bool
+    {
+        $voucher->loadMissing('wisataDestinations:id');
+
+        if ($voucher->wisataDestinations->isEmpty()) {
+            return true;
+        }
+
+        if (! $destinationId) {
+            return false;
+        }
+
+        return $voucher->wisataDestinations
+            ->contains(fn (MitraWisataOnboarding $destination) => (int) $destination->id === (int) $destinationId);
     }
 
     private function calculateDiscountAmount(int $subtotal, Voucher $voucher): int
@@ -976,15 +1140,4 @@ class WisataBookingController extends Controller
         return (int) $commission->value * max(1, (int) $booking->quantity);
     }
 
-    private function buildQrData(string $type, string $code): string
-    {
-        return sprintf('INDOTIX|%s|%s', $type, $code);
-    }
-
-    private function buildQrUrl(string $type, string $code): string
-    {
-        $data = rawurlencode($this->buildQrData($type, $code));
-
-        return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
-    }
 }

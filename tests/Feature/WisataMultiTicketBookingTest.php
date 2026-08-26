@@ -1,12 +1,15 @@
 <?php
 
+use App\Mail\WisataTicketMail;
 use App\Models\MitraWisataOnboarding;
 use App\Models\User;
 use App\Models\WisataBooking;
+use App\Models\WisataPayment;
 use App\Models\WisataTicket;
 use App\Models\Voucher;
 use App\Services\MidtransService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -31,6 +34,7 @@ function createWisataMultiTicketFixture(): array
         'price' => 100000,
         'quota' => 25,
         'daily_quota' => 25,
+        'is_entry_ticket' => true,
         'is_active' => true,
         'is_closed' => false,
     ]);
@@ -41,6 +45,7 @@ function createWisataMultiTicketFixture(): array
         'price' => 50000,
         'quota' => 25,
         'daily_quota' => 25,
+        'is_entry_ticket' => false,
         'is_active' => true,
         'is_closed' => false,
     ]);
@@ -138,12 +143,54 @@ test('user can book multiple wisata ticket types in one order', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('tickets.0.available', 23)
             ->where('tickets.1.available', 21)
+            ->where('tickets.0.is_entry_ticket', true)
+            ->where('tickets.1.is_entry_ticket', false)
         );
 
     $this->getJson("/api/products/wisata/{$destination->slug}?visit_date={$visitDate}")
         ->assertOk()
         ->assertJsonPath('tickets.0.available', 23)
-        ->assertJsonPath('tickets.1.available', 21);
+        ->assertJsonPath('tickets.1.available', 21)
+        ->assertJsonPath('tickets.0.is_entry_ticket', true)
+        ->assertJsonPath('tickets.1.is_entry_ticket', false);
+});
+
+test('user must include an entry ticket when booking continuation ticket', function () {
+    [$destination, $regular, $children] = createWisataMultiTicketFixture();
+    $visitDate = now()->addDays(2)->toDateString();
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+
+    $this->actingAs($user)
+        ->from("/wisata/{$destination->slug}")
+        ->post('/wisata/booking/prepare', [
+            'destination_id' => $destination->id,
+            'ticket_id' => $children->id,
+            'visit_date' => $visitDate,
+            'quantity' => 1,
+            'items' => [
+                ['ticket_id' => $children->id, 'quantity' => 1],
+            ],
+        ])
+        ->assertRedirect("/wisata/{$destination->slug}")
+        ->assertSessionHasErrors([
+            'items' => 'Tiket terusan hanya dapat dipesan bersama tiket masuk.',
+        ]);
+
+    $this->actingAs($user)
+        ->post('/wisata/booking/prepare', [
+            'destination_id' => $destination->id,
+            'ticket_id' => $regular->id,
+            'visit_date' => $visitDate,
+            'items' => [
+                ['ticket_id' => $regular->id, 'quantity' => 1],
+                ['ticket_id' => $children->id, 'quantity' => 1],
+            ],
+        ])
+        ->assertRedirect('/wisata/booking/review');
 });
 
 test('selected promo voucher prefills and discounts wisata booking', function () {
@@ -184,27 +231,11 @@ test('selected promo voucher prefills and discounts wisata booking', function ()
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('public/wisata/booking/review')
-            ->where('pendingVoucherCode', 'WISATAHEMAT10')
-            ->where('pricing.subtotal', 400000)
-            ->where('pricing.discount_amount', 0)
-            ->where('pricing.total', 400000)
-        );
-
-    $this->actingAs($user)
-        ->from('/wisata/booking/review')
-        ->post('/wisata/booking/voucher', [
-            'voucher_code' => 'wisatahemat10',
-        ])
-        ->assertRedirect('/wisata/booking/review');
-
-    $this->actingAs($user)
-        ->get('/wisata/booking/review')
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
             ->where('voucher.code', 'WISATAHEMAT10')
             ->where('pricing.subtotal', 400000)
             ->where('pricing.discount_amount', 40000)
             ->where('pricing.total', 360000)
+            ->where('pendingVoucherCode', null)
         );
 
     $this->mock(MidtransService::class, function ($mock) {
@@ -238,4 +269,128 @@ test('selected promo voucher prefills and discounts wisata booking', function ()
         ->and((int) $booking->total_price)->toBe(360000);
 
     expect((int) $voucher->fresh()->quota_used)->toBe(1);
+});
+
+test('fully discounted wisata booking is paid without calling midtrans', function () {
+    Mail::fake();
+    [$destination, $regular] = createWisataMultiTicketFixture();
+    $visitDate = now()->addDays(3)->toDateString();
+    $voucher = Voucher::query()->create([
+        'code' => 'GRATIS100',
+        'discount_type' => 'percentage',
+        'discount_value' => 100,
+        'quota_total' => 5,
+        'quota_used' => 0,
+        'is_active' => true,
+    ]);
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+
+    $this->actingAs($user)
+        ->post('/wisata/booking/prepare', [
+            'destination_id' => $destination->id,
+            'ticket_id' => $regular->id,
+            'visit_date' => $visitDate,
+            'items' => [
+                ['ticket_id' => $regular->id, 'quantity' => 1],
+            ],
+        ])
+        ->assertRedirect('/wisata/booking/review');
+
+    $this->actingAs($user)
+        ->post('/wisata/booking/voucher', ['voucher_code' => $voucher->code])
+        ->assertSessionHasNoErrors();
+
+    $this->mock(MidtransService::class, function ($mock) {
+        $mock->shouldReceive('snap')->never();
+    });
+
+    $response = $this->actingAs($user)
+        ->postJson('/wisata/booking/confirm', [
+            'guest_name' => 'User Gratis',
+            'guest_email' => 'gratis@example.test',
+        ])
+        ->assertOk()
+        ->assertJsonPath('snap_token', null)
+        ->assertJsonPath('payment_status', 'paid');
+
+    $booking = WisataBooking::query()->firstOrFail();
+
+    expect((int) $booking->subtotal_price)->toBe(100000)
+        ->and($booking->voucher_code)->toBe('GRATIS100')
+        ->and((int) $booking->discount_amount)->toBe(100000)
+        ->and((int) $booking->total_price)->toBe(0)
+        ->and($booking->status)->toBe('paid')
+        ->and($booking->payment_status)->toBe('paid');
+
+    expect((int) $voucher->fresh()->quota_used)->toBe(1)
+        ->and(WisataPayment::query()->where('wisata_booking_id', $booking->id)->value('provider'))->toBe('internal')
+        ->and(WisataPayment::query()->where('wisata_booking_id', $booking->id)->value('payment_type'))->toBe('free_voucher')
+        ->and((int) WisataPayment::query()->where('wisata_booking_id', $booking->id)->value('gross_amount'))->toBe(0);
+
+    expect(str_starts_with((string) $response->json('redirect_url'), '/wisata/booking/'))->toBeTrue();
+
+    Mail::assertSent(WisataTicketMail::class, 1);
+});
+
+test('targeted promo voucher redirects to selected destination and is blocked on other destinations', function () {
+    [$destination, $regular] = createWisataMultiTicketFixture();
+    [$otherDestination, $otherRegular] = createWisataMultiTicketFixture();
+    $otherDestination->forceFill(['destination_name' => 'Wisata Lain'])->save();
+    $visitDate = now()->addDays(3)->toDateString();
+    $voucher = Voucher::query()->create([
+        'code' => 'TARGETDEST',
+        'discount_type' => 'percentage',
+        'discount_value' => 10,
+        'quota_total' => 5,
+        'quota_used' => 0,
+        'is_active' => true,
+    ]);
+    $voucher->wisataDestinations()->sync([$destination->id]);
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+
+    $this->get("/promo/voucher/{$voucher->code}")
+        ->assertRedirect(route('wisata.show', [
+            'destination' => $destination->slug,
+            'promo' => $voucher->code,
+        ], false));
+
+    $this->actingAs($user)
+        ->post('/wisata/booking/prepare', [
+            'destination_id' => $otherDestination->id,
+            'ticket_id' => $otherRegular->id,
+            'visit_date' => $visitDate,
+            'items' => [
+                ['ticket_id' => $otherRegular->id, 'quantity' => 1],
+            ],
+        ])
+        ->assertRedirect('/wisata/booking/review');
+
+    $this->actingAs($user)
+        ->post('/wisata/booking/voucher', ['voucher_code' => $voucher->code])
+        ->assertSessionHasErrors('voucher_code');
+
+    $this->actingAs($user)
+        ->post('/wisata/booking/prepare', [
+            'destination_id' => $destination->id,
+            'ticket_id' => $regular->id,
+            'visit_date' => $visitDate,
+            'items' => [
+                ['ticket_id' => $regular->id, 'quantity' => 1],
+            ],
+        ])
+        ->assertRedirect('/wisata/booking/review');
+
+    $this->actingAs($user)
+        ->get('/wisata/booking/review')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('voucher.code', 'TARGETDEST'));
 });

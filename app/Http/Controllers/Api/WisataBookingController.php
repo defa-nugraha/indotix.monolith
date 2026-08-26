@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Mail\WisataTicketMail;
 use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\UserNotification;
@@ -19,6 +20,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use RuntimeException;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -44,21 +46,19 @@ class WisataBookingController extends Controller
     {
         $data = $request->validate([
             'destination_id' => ['required', 'string'],
-            'ticket_id' => ['required', 'string'],
+            'ticket_id' => ['nullable', 'required_without:items', 'string'],
             'visit_date' => ['required', 'date'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:20'],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'items' => ['nullable', 'array', 'min:1', 'max:20'],
+            'items.*.ticket_id' => ['required_with:items', 'string'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:1', 'max:20'],
         ]);
 
         $destinationId = $this->resolveEntityId($data['destination_id']);
         if (! $destinationId) {
             return $this->invalidIdResponse('destination_id');
         }
-        $ticketId = $this->resolveEntityId($data['ticket_id']);
-        if (! $ticketId) {
-            return $this->invalidIdResponse('ticket_id');
-        }
         $data['destination_id'] = $destinationId;
-        $data['ticket_id'] = $ticketId;
 
         $destination = MitraWisataOnboarding::query()
             ->publiclyVisible()
@@ -69,29 +69,21 @@ class WisataBookingController extends Controller
             return response()->json(['message' => 'Destinasi tidak tersedia.'], 422);
         }
 
-        $ticket = WisataTicket::query()->find($data['ticket_id']);
-        if (! $ticket) {
-            return response()->json(['message' => 'Tiket tidak tersedia.'], 422);
+        try {
+            $summary = $this->buildTicketSummary($data, $destination);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
         }
-        if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
-            return response()->json(['message' => 'Tiket tidak sesuai destinasi.'], 422);
-        }
-
-        if (! $ticket->is_active || $ticket->is_closed) {
-            return response()->json(['message' => 'Tiket belum tersedia.'], 422);
-        }
-
-        if ($this->availableTickets($ticket, $data['visit_date']) < (int) $data['quantity']) {
-            return response()->json(['message' => 'Kuota tiket tidak mencukupi.'], 422);
-        }
-
-        $total = (int) $ticket->price * (int) $data['quantity'];
+        $primaryItem = $summary['items'][0];
 
         return response()->json([
             'pricing' => [
-                'unit_price' => (int) $ticket->price,
-                'quantity' => (int) $data['quantity'],
-                'total' => $total,
+                'unit_price' => (int) $primaryItem['unit_price'],
+                'quantity' => (int) $summary['quantity'],
+                'total' => (int) $summary['total'],
+                'items' => $summary['items'],
+                'ticket_kind' => $primaryItem['ticket_kind'] ?? 'single',
+                'package_items' => $primaryItem['package_items'] ?? [],
             ],
         ]);
     }
@@ -100,9 +92,12 @@ class WisataBookingController extends Controller
     {
         $data = $request->validate([
             'destination_id' => ['required', 'string'],
-            'ticket_id' => ['required', 'string'],
+            'ticket_id' => ['nullable', 'required_without:items', 'string'],
             'visit_date' => ['required', 'date'],
-            'quantity' => ['required', 'integer', 'min:1', 'max:20'],
+            'quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'items' => ['nullable', 'array', 'min:1', 'max:20'],
+            'items.*.ticket_id' => ['required_with:items', 'string'],
+            'items.*.quantity' => ['required_with:items', 'integer', 'min:1', 'max:20'],
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
             'special_request' => ['nullable', 'string', 'max:1000'],
@@ -113,12 +108,7 @@ class WisataBookingController extends Controller
         if (! $destinationId) {
             return $this->invalidIdResponse('destination_id');
         }
-        $ticketId = $this->resolveEntityId($data['ticket_id']);
-        if (! $ticketId) {
-            return $this->invalidIdResponse('ticket_id');
-        }
         $data['destination_id'] = $destinationId;
-        $data['ticket_id'] = $ticketId;
 
         $profilePhone = $request->user()?->phone;
         if (! $profilePhone) {
@@ -139,32 +129,18 @@ class WisataBookingController extends Controller
 
         try {
             $booking = DB::transaction(function () use ($request, $data, $destination, $link) {
-                $ticket = WisataTicket::query()->lockForUpdate()->find($data['ticket_id']);
-                if (! $ticket) {
-                    throw new RuntimeException('Tiket tidak tersedia.');
-                }
-                if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
-                    throw new RuntimeException('Tiket tidak sesuai destinasi.');
-                }
-
-                if (! $ticket->is_active || $ticket->is_closed) {
-                    throw new RuntimeException('Tiket belum tersedia.');
-                }
-
-                $available = $this->availableTickets($ticket, $data['visit_date'], true);
-                if ($available < (int) $data['quantity']) {
-                    throw new RuntimeException('Kuota tiket tidak mencukupi.');
-                }
+                $summary = $this->buildTicketSummary($data, $destination, true);
+                $primaryItem = $summary['items'][0];
 
                 $order = WisataBooking::create([
                     'user_id' => $request->user()->id,
                     'mitra_wisata_onboarding_id' => $destination->id,
-                    'wisata_ticket_id' => $ticket->id,
+                    'wisata_ticket_id' => $primaryItem['ticket_id'],
                     'booking_code' => strtoupper('WISATA-'.$request->user()->id.'-'.now()->format('ymdHis')),
                     'visit_date' => $data['visit_date'],
-                    'quantity' => $data['quantity'],
-                    'unit_price' => $ticket->price,
-                    'total_price' => $ticket->price * (int) $data['quantity'],
+                    'quantity' => $summary['quantity'],
+                    'unit_price' => $primaryItem['unit_price'],
+                    'total_price' => $summary['total'],
                     'status' => 'pending_payment',
                     'payment_status' => 'pending',
                     'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
@@ -174,13 +150,15 @@ class WisataBookingController extends Controller
                     'special_request' => $data['special_request'] ?? null,
                 ]);
 
-                $order->items()->create([
-                    'wisata_ticket_id' => $ticket->id,
-                    'ticket_name' => $ticket->name,
-                    'quantity' => (int) $data['quantity'],
-                    'unit_price' => (int) $ticket->price,
-                    'subtotal' => (int) $ticket->price * (int) $data['quantity'],
-                ]);
+                foreach ($summary['items'] as $item) {
+                    $order->items()->create([
+                        'wisata_ticket_id' => $item['ticket_id'],
+                        'ticket_name' => $item['name'],
+                        'quantity' => (int) $item['quantity'],
+                        'unit_price' => (int) $item['unit_price'],
+                        'subtotal' => (int) $item['subtotal'],
+                    ]);
+                }
 
                 $this->attachAffiliateCommission($order, $link);
 
@@ -188,6 +166,15 @@ class WisataBookingController extends Controller
             });
         } catch (RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        if ((int) $booking->total_price <= 0) {
+            $this->completeFreeBooking($booking);
+            $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
+
+            return response()->json([
+                'booking' => $this->bookingPayload($booking),
+            ], 201);
         }
 
         UserNotification::create([
@@ -242,6 +229,15 @@ class WisataBookingController extends Controller
 
         if ((int) $booking->user_id !== (int) $request->user()->id) {
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
+        }
+
+        if ((int) $booking->total_price <= 0) {
+            $this->completeFreeBooking($booking);
+            $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
+
+            return response()->json([
+                'booking' => $this->bookingPayload($booking),
+            ]);
         }
 
         if ($booking->isExpired()) {
@@ -361,22 +357,125 @@ class WisataBookingController extends Controller
         $booking->load('ticket', 'destination', 'items.ticket');
 
         $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
-        $cacheAllowed = in_array($booking->status, ['paid', 'completed'], true);
-
-        $qrImage = null;
-        if ($cacheAllowed) {
-            $qrUrl = $this->buildQrUrl('WISATA', (string) $booking->booking_code);
-            $context = stream_context_create(['http' => ['timeout' => 4]]);
-            $contents = @file_get_contents($qrUrl, false, $context);
-            if ($contents !== false) {
-                $qrImage = 'data:image/png;base64,'.base64_encode($contents);
-            }
-        }
 
         return Pdf::view('wisata-ticket', [
             'booking' => $booking,
-            'qrImage' => $qrImage,
         ])->download($filename);
+    }
+
+    private function buildTicketSummary(array $data, MitraWisataOnboarding $destination, bool $lock = false): array
+    {
+        $selections = $this->normalizeTicketSelections($data);
+        $ticketIds = array_column($selections, 'ticket_id');
+        $ticketQuery = WisataTicket::query()->whereIn('id', $ticketIds);
+
+        if ($lock) {
+            $ticketQuery->lockForUpdate();
+        }
+
+        $tickets = $ticketQuery->get()->keyBy('id');
+        $items = [];
+
+        foreach ($selections as $selection) {
+            /** @var WisataTicket|null $ticket */
+            $ticket = $tickets->get($selection['ticket_id']);
+
+            if (! $ticket) {
+                throw new RuntimeException('Tiket tidak tersedia.');
+            }
+
+            if ((int) $ticket->mitra_wisata_onboarding_id !== (int) $destination->id) {
+                throw new RuntimeException('Tiket tidak sesuai destinasi.');
+            }
+
+            if (! $ticket->is_active || $ticket->is_closed) {
+                throw new RuntimeException('Tiket belum tersedia.');
+            }
+
+            $quantity = (int) $selection['quantity'];
+
+            if ($message = $this->ticketOrderLimitMessage($ticket, $quantity)) {
+                throw new RuntimeException($message);
+            }
+
+            $available = $this->availableTickets($ticket, $data['visit_date'], $lock);
+            if ($available < $quantity) {
+                throw new RuntimeException('Kuota tiket tidak mencukupi.');
+            }
+
+            $unitPrice = (int) $ticket->price;
+
+            $items[] = [
+                'ticket_id' => (int) $ticket->id,
+                'name' => $ticket->name,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'subtotal' => $unitPrice * $quantity,
+                'available' => $available,
+                'ticket_kind' => $ticket->ticket_kind ?? 'single',
+                'is_entry_ticket' => (bool) ($ticket->is_entry_ticket ?? true),
+                'package_items' => $ticket->package_items ?? [],
+            ];
+        }
+
+        $hasContinuationTicket = collect($items)->contains(
+            fn (array $item) => ! (bool) ($item['is_entry_ticket'] ?? true),
+        );
+        $hasEntryTicket = collect($items)->contains(
+            fn (array $item) => (bool) ($item['is_entry_ticket'] ?? true),
+        );
+
+        if ($hasContinuationTicket && ! $hasEntryTicket) {
+            throw new RuntimeException('Tiket terusan hanya dapat dipesan bersama tiket masuk.');
+        }
+
+        return [
+            'items' => $items,
+            'quantity' => array_sum(array_column($items, 'quantity')),
+            'total' => array_sum(array_column($items, 'subtotal')),
+        ];
+    }
+
+    private function normalizeTicketSelections(array $data): array
+    {
+        if (! empty($data['items']) && is_array($data['items'])) {
+            $items = collect($data['items'])
+                ->map(function (array $item) {
+                    $ticketId = $this->resolveEntityId((string) ($item['ticket_id'] ?? ''));
+
+                    if (! $ticketId) {
+                        throw new RuntimeException('ID tiket tidak valid.');
+                    }
+
+                    return [
+                        'ticket_id' => $ticketId,
+                        'quantity' => (int) ($item['quantity'] ?? 0),
+                    ];
+                })
+                ->filter(fn (array $item) => $item['quantity'] > 0)
+                ->groupBy('ticket_id')
+                ->map(fn ($rows, $ticketId) => [
+                    'ticket_id' => (int) $ticketId,
+                    'quantity' => (int) collect($rows)->sum('quantity'),
+                ])
+                ->values();
+
+            if ($items->isEmpty()) {
+                throw new RuntimeException('Pilih tiket terlebih dahulu.');
+            }
+
+            return $items->all();
+        }
+
+        $ticketId = $this->resolveEntityId((string) ($data['ticket_id'] ?? ''));
+        if (! $ticketId) {
+            throw new RuntimeException('ID tiket tidak valid.');
+        }
+
+        return [[
+            'ticket_id' => $ticketId,
+            'quantity' => (int) ($data['quantity'] ?? 1),
+        ]];
     }
 
     private function bookingPayload(WisataBooking $booking): array
@@ -416,9 +515,23 @@ class WisataBookingController extends Controller
                 'payment_type' => $latestPayment->payment_type,
                 'payload' => $latestPayment->payload,
             ] : null,
-            'qr_data' => $this->buildQrData('WISATA', (string) $booking->booking_code),
-            'qr_url' => $this->buildQrUrl('WISATA', (string) $booking->booking_code),
         ];
+    }
+
+    private function ticketOrderLimitMessage(WisataTicket $ticket, int $quantity): ?string
+    {
+        $minOrder = max(1, (int) ($ticket->min_order_quantity ?? 1));
+        $maxOrder = min(20, (int) ($ticket->max_order_quantity ?: 20));
+
+        if ($quantity < $minOrder) {
+            return "Minimal pembelian {$ticket->name} {$minOrder} tiket.";
+        }
+
+        if ($quantity > $maxOrder) {
+            return "Maksimal pembelian {$ticket->name} {$maxOrder} tiket.";
+        }
+
+        return null;
     }
 
     private function availableTickets(WisataTicket $ticket, string $date, bool $lock = false): int
@@ -461,8 +574,12 @@ class WisataBookingController extends Controller
                     'ticket_id' => $item->wisata_ticket_id,
                     'name' => $item->ticket_name ?: ($item->ticket?->name ?? 'Tiket Wisata'),
                     'quantity' => (int) $item->quantity,
+                    'used_quantity' => (int) $item->used_quantity,
+                    'remaining_quantity' => $item->remainingQuantity(),
                     'unit_price' => (int) $item->unit_price,
                     'subtotal' => (int) $item->subtotal,
+                    'ticket_kind' => $item->ticket?->ticket_kind ?? 'single',
+                    'package_items' => $item->ticket?->package_items ?? [],
                 ])
                 ->values()
                 ->all();
@@ -472,8 +589,12 @@ class WisataBookingController extends Controller
             'ticket_id' => $booking->wisata_ticket_id,
             'name' => $booking->ticket?->name ?? 'Tiket Wisata',
             'quantity' => (int) $booking->quantity,
+            'used_quantity' => 0,
+            'remaining_quantity' => (int) $booking->quantity,
             'unit_price' => (int) $booking->unit_price,
             'subtotal' => (int) $booking->total_price,
+            'ticket_kind' => $booking->ticket?->ticket_kind ?? 'single',
+            'package_items' => $booking->ticket?->package_items ?? [],
         ]];
     }
 
@@ -501,6 +622,65 @@ class WisataBookingController extends Controller
                 'phone' => $booking->guest_phone,
             ],
         ];
+    }
+
+    private function completeFreeBooking(WisataBooking $booking): void
+    {
+        if ($booking->status === 'paid' && $booking->payment_status === 'paid') {
+            return;
+        }
+
+        $orderId = $booking->midtrans_order_id ?: sprintf('WISATA-FREE-%s', $booking->id);
+        $payment = $booking->payments()
+            ->where('payment_type', 'free_voucher')
+            ->latest()
+            ->first();
+
+        if (! $payment) {
+            $payment = WisataPayment::create([
+                'wisata_booking_id' => $booking->id,
+                'provider' => 'internal',
+                'status' => 'paid',
+                'gross_amount' => 0,
+                'payment_type' => 'free_voucher',
+                'transaction_id' => null,
+                'order_id' => $orderId,
+                'payload' => [
+                    'reason' => 'voucher_discount_covers_total',
+                    'voucher_code' => $booking->voucher_code,
+                ],
+            ]);
+        }
+
+        $booking->update([
+            'status' => 'paid',
+            'payment_status' => 'paid',
+            'payment_deadline' => null,
+            'midtrans_order_id' => $payment->order_id,
+        ]);
+
+        UserNotification::create([
+            'user_id' => $booking->user_id,
+            'title' => 'Tiket wisata aktif',
+            'message' => 'Voucher menutup seluruh pembayaran. Tiket wisata kamu sudah aktif.',
+            'type' => 'wisata_payment_paid',
+            'data' => [
+                'booking_id' => $this->encryptId($booking->id),
+                'type' => 'wisata',
+                'category' => 'wisata',
+            ],
+        ]);
+
+        if ($booking->guest_email) {
+            try {
+                Mail::to($booking->guest_email)->send(new WisataTicketMail($booking));
+            } catch (\Throwable $exception) {
+                Log::warning('Failed to send free wisata ticket email', [
+                    'booking_id' => $booking->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+        }
     }
 
     private function resolveEntityId(string $value): ?int
@@ -645,15 +825,4 @@ class WisataBookingController extends Controller
         return (int) $commission->value * max(1, (int) $booking->quantity);
     }
 
-    private function buildQrData(string $type, string $code): string
-    {
-        return sprintf('INDOTIX|%s|%s', $type, $code);
-    }
-
-    private function buildQrUrl(string $type, string $code): string
-    {
-        $data = rawurlencode($this->buildQrData($type, $code));
-
-        return "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data={$data}";
-    }
 }

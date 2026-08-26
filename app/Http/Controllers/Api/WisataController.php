@@ -64,6 +64,11 @@ class WisataController extends Controller
                     'name' => $ticket->name,
                     'price' => $ticket->price,
                     'available' => $available,
+                    'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
+                    'max_order_quantity' => $ticket->max_order_quantity,
+                    'ticket_kind' => $ticket->ticket_kind ?? 'single',
+                    'is_entry_ticket' => (bool) ($ticket->is_entry_ticket ?? true),
+                    'package_items' => $ticket->package_items ?? [],
                 ];
             })->filter()->values();
 
@@ -139,7 +144,12 @@ class WisataController extends Controller
                     'description' => $ticket->description,
                     'price' => $ticket->price,
                     'available' => $available,
+                    'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
+                    'max_order_quantity' => $ticket->max_order_quantity,
                     'ticket_type' => $ticket->ticket_type,
+                    'ticket_kind' => $ticket->ticket_kind ?? 'single',
+                    'is_entry_ticket' => (bool) ($ticket->is_entry_ticket ?? true),
+                    'package_items' => $ticket->package_items ?? [],
                     'refund_policy' => $ticket->refund_policy,
                 ];
             });
@@ -176,6 +186,7 @@ class WisataController extends Controller
                 'open_time' => $destination->open_time,
                 'close_time' => $destination->close_time,
                 'facilities' => $destination->facilities,
+                'photo_product_url' => $destination->photo_product_path ? '/storage/'.$destination->photo_product_path : null,
                 'photo_gate_url' => $destination->photo_gate_path ? '/storage/'.$destination->photo_gate_path : null,
                 'photo_area_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
                 'photo_ticket_url' => $destination->photo_ticket_path ? '/storage/'.$destination->photo_ticket_path : null,
@@ -284,6 +295,7 @@ class WisataController extends Controller
     private function resolveCoverPhotoUrl(MitraWisataOnboarding $destination): string
     {
         $candidates = [
+            $destination->photo_product_path,
             $destination->photo_area_path,
             $destination->photo_gate_path,
             $destination->photo_ticket_path,

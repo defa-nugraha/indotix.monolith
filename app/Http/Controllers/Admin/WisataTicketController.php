@@ -16,11 +16,65 @@ class WisataTicketController extends Controller
 {
     public function index(Request $request): Response
     {
+        $destinationId = $request->integer('destination_id');
+        $search = $request->string('search')->toString();
+        $status = $request->string('status')->toString();
+
+        if (! $destinationId) {
+            $destinations = AdminDataScope::applyCreatedByOrUser(
+                MitraWisataOnboarding::query()
+                    ->with(['user:id,name,email'])
+                    ->withCount([
+                        'tickets',
+                        'tickets as active_tickets_count' => fn ($query) => $query->where('is_active', true),
+                        'tickets as inactive_tickets_count' => fn ($query) => $query->where('is_active', false),
+                    ]),
+                $request,
+            )
+                ->when($search, function ($query) use ($search) {
+                    $query->where(function ($builder) use ($search) {
+                        $builder->where('destination_name', 'like', "%{$search}%")
+                            ->orWhereHas('user', fn ($user) => $user
+                                ->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%"));
+                    });
+                })
+                ->orderBy('destination_name')
+                ->paginate(\App\Support\PaginationOptions::perPage())
+                ->withQueryString()
+                ->through(fn (MitraWisataOnboarding $destination) => $this->destinationRow($destination));
+
+            return Inertia::render('admin/wisata/tickets/index', [
+                'destinations' => $destinations,
+                'selectedDestination' => null,
+                'tickets' => [
+                    'data' => [],
+                    'links' => [],
+                ],
+                'filters' => [
+                    'destination_id' => null,
+                    'search' => $search,
+                    'status' => $status,
+                ],
+            ]);
+        }
+
+        $destination = AdminDataScope::applyCreatedByOrUser(
+            MitraWisataOnboarding::query()
+                ->with(['user:id,name,email'])
+                ->withCount([
+                    'tickets',
+                    'tickets as active_tickets_count' => fn ($query) => $query->where('is_active', true),
+                    'tickets as inactive_tickets_count' => fn ($query) => $query->where('is_active', false),
+                ]),
+            $request,
+        )->findOrFail($destinationId);
+
         $query = WisataTicket::query()
             ->with(['destination.user:id,name,email'])
-            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request));
+            ->where('mitra_wisata_onboarding_id', $destination->id);
 
-        if ($search = $request->string('search')->toString()) {
+        if ($search) {
             $query->where(function ($builder) use ($search) {
                 $builder->where('name', 'like', "%{$search}%")
                     ->orWhereHas('destination', fn ($destination) => $destination->where('destination_name', 'like', "%{$search}%"))
@@ -28,7 +82,7 @@ class WisataTicketController extends Controller
             });
         }
 
-        if ($status = $request->string('status')->toString()) {
+        if ($status) {
             $query->where('is_active', $status === 'active');
         }
 
@@ -42,6 +96,11 @@ class WisataTicketController extends Controller
                     'price' => $ticket->price,
                     'quota' => $ticket->quota,
                     'max_quota_override' => $ticket->max_quota_override,
+                    'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
+                    'max_order_quantity' => $ticket->max_order_quantity,
+                    'ticket_kind' => $ticket->ticket_kind ?? 'single',
+                    'is_entry_ticket' => (bool) ($ticket->is_entry_ticket ?? true),
+                    'package_items' => $ticket->package_items ?? [],
                     'is_active' => $ticket->is_active,
                     'destination' => [
                         'id' => $ticket->destination?->id,
@@ -56,12 +115,33 @@ class WisataTicketController extends Controller
             });
 
         return Inertia::render('admin/wisata/tickets/index', [
+            'destinations' => null,
+            'selectedDestination' => $this->destinationRow($destination),
             'tickets' => $tickets,
             'filters' => [
-                'search' => $request->string('search')->toString(),
-                'status' => $request->string('status')->toString(),
+                'destination_id' => $destination->id,
+                'search' => $search,
+                'status' => $status,
             ],
         ]);
+    }
+
+    private function destinationRow(MitraWisataOnboarding $destination): array
+    {
+        return [
+            'id' => $destination->id,
+            'destination_name' => $destination->destination_name,
+            'verification_status' => $destination->verification_status,
+            'is_live' => (bool) $destination->is_live,
+            'tickets_count' => (int) ($destination->tickets_count ?? 0),
+            'active_tickets_count' => (int) ($destination->active_tickets_count ?? 0),
+            'inactive_tickets_count' => (int) ($destination->inactive_tickets_count ?? 0),
+            'owner' => [
+                'id' => $destination->user?->id,
+                'name' => $destination->user?->name,
+                'email' => $destination->user?->email,
+            ],
+        ];
     }
 
     public function create(): Response
@@ -80,8 +160,22 @@ class WisataTicketController extends Controller
             ])
             ->all();
 
+        $componentTickets = WisataTicket::query()
+            ->whereIn('mitra_wisata_onboarding_id', collect($destinations)->pluck('id'))
+            ->where('ticket_kind', 'single')
+            ->orderBy('name')
+            ->get(['id', 'mitra_wisata_onboarding_id', 'name', 'price'])
+            ->map(fn (WisataTicket $ticket) => [
+                'id' => $ticket->id,
+                'destination_id' => $ticket->mitra_wisata_onboarding_id,
+                'name' => $ticket->name,
+                'price' => $ticket->price,
+            ])
+            ->all();
+
         return Inertia::render('admin/wisata/tickets/create', [
             'destinations' => $destinations,
+            'componentTickets' => $componentTickets,
         ]);
     }
 
@@ -102,13 +196,27 @@ class WisataTicketController extends Controller
             'price' => ['required', 'integer', 'min:0'],
             'quota' => ['required', 'integer', 'min:0'],
             'daily_quota' => ['nullable', 'integer', 'min:0'],
+            'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'max_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20', 'gte:min_order_quantity'],
             'ticket_type' => ['nullable', 'in:perorangan,grup'],
+            'ticket_kind' => ['nullable', 'in:single,package'],
+            'is_entry_ticket' => ['nullable', 'boolean'],
+            'package_items' => ['nullable', 'array'],
+            'package_items.*.ticket_id' => ['required_with:package_items', 'integer'],
+            'package_items.*.quantity' => ['required_with:package_items', 'integer', 'min:1', 'max:20'],
             'valid_from' => ['nullable', 'date'],
             'valid_until' => ['nullable', 'date'],
             'refund_policy' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
             'is_closed' => ['nullable', 'boolean'],
         ]);
+
+        $ticketKind = $data['ticket_kind'] ?? 'single';
+        $packageItems = $this->normalizePackageItems(
+            $ticketKind,
+            (int) $data['mitra_wisata_onboarding_id'],
+            $data['package_items'] ?? []
+        );
 
         WisataTicket::create([
             'mitra_wisata_onboarding_id' => $data['mitra_wisata_onboarding_id'],
@@ -117,7 +225,12 @@ class WisataTicketController extends Controller
             'price' => $data['price'],
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
+            'min_order_quantity' => $data['min_order_quantity'] ?? 1,
+            'max_order_quantity' => $data['max_order_quantity'] ?? null,
             'ticket_type' => $data['ticket_type'] ?? 'perorangan',
+            'ticket_kind' => $ticketKind,
+            'is_entry_ticket' => $request->has('is_entry_ticket') ? $request->boolean('is_entry_ticket') : true,
+            'package_items' => $packageItems,
             'valid_from' => $data['valid_from'] ?? null,
             'valid_until' => $data['valid_until'] ?? null,
             'refund_policy' => $data['refund_policy'] ?? null,
@@ -137,6 +250,8 @@ class WisataTicketController extends Controller
         $data = $request->validate([
             'is_active' => ['nullable', 'boolean'],
             'max_quota_override' => ['nullable', 'integer', 'min:0'],
+            'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
+            'max_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20', 'gte:min_order_quantity'],
             'is_closed' => ['nullable', 'boolean'],
         ]);
 
@@ -158,5 +273,47 @@ class WisataTicketController extends Controller
         $ticket->delete();
 
         return back()->with('status', 'ticket-deleted');
+    }
+
+    private function normalizePackageItems(string $ticketKind, int $destinationId, array $items): ?array
+    {
+        if ($ticketKind !== 'package') {
+            return null;
+        }
+
+        $normalized = collect($items)
+            ->map(fn ($item) => [
+                'ticket_id' => (int) ($item['ticket_id'] ?? 0),
+                'quantity' => (int) ($item['quantity'] ?? 0),
+            ])
+            ->filter(fn ($item) => $item['ticket_id'] > 0 && $item['quantity'] > 0)
+            ->groupBy('ticket_id')
+            ->map(fn ($rows, $ticketId) => [
+                'ticket_id' => (int) $ticketId,
+                'quantity' => (int) collect($rows)->sum('quantity'),
+            ])
+            ->values();
+
+        if ($normalized->isEmpty()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'package_items' => 'Paket wisata wajib berisi minimal satu tiket reguler.',
+            ]);
+        }
+
+        $validTicketIds = WisataTicket::query()
+            ->where('mitra_wisata_onboarding_id', $destinationId)
+            ->where('ticket_kind', 'single')
+            ->whereIn('id', $normalized->pluck('ticket_id'))
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        if ($normalized->pluck('ticket_id')->diff($validTicketIds)->isNotEmpty()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'package_items' => 'Paket hanya boleh berisi tiket reguler dari destinasi yang sama.',
+            ]);
+        }
+
+        return $normalized->all();
     }
 }

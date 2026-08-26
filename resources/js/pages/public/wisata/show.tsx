@@ -20,6 +20,7 @@ import { FooterDownloadSocial } from '@/components/footer-download-social';
 import { ProductDescription } from '@/components/product-description';
 import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
+import { Label } from '@/components/ui/label';
 import {
     Dialog,
     DialogContent,
@@ -35,7 +36,10 @@ type TicketItem = {
     description?: string | null;
     price: number;
     available: number;
+    min_order_quantity?: number | null;
+    max_order_quantity?: number | null;
     ticket_type?: string | null;
+    is_entry_ticket?: boolean;
     refund_policy?: string | null;
 };
 
@@ -53,6 +57,7 @@ type Destination = {
     open_time?: string | null;
     close_time?: string | null;
     facilities?: string[] | null;
+    photo_product_url?: string | null;
     photo_gate_url?: string | null;
     photo_area_url?: string | null;
     photo_ticket_url?: string | null;
@@ -136,16 +141,28 @@ export default function WisataShow({
     const role = auth?.user?.role;
     const [visitDate, setVisitDate] = useState(filters.visit_date);
     const [galleryOpen, setGalleryOpen] = useState(false);
+    const minOrderFor = (ticket: TicketItem) =>
+        Math.max(1, Number(ticket.min_order_quantity ?? 1));
+    const maxOrderFor = (ticket: TicketItem) =>
+        Math.max(
+            minOrderFor(ticket),
+            Math.min(
+                ticket.available,
+                Number(ticket.max_order_quantity ?? ticket.available),
+            ),
+        );
+    const clampTicketQuantity = (ticket: TicketItem, quantity: number) => {
+        if (quantity <= 0) return 0;
+
+        return Math.min(maxOrderFor(ticket), Math.max(minOrderFor(ticket), quantity));
+    };
     const [ticketQuantities, setTicketQuantities] = useState<TicketQuantities>(
         () =>
             Object.fromEntries(
                 tickets.map((ticket, index) => [
                     ticket.id,
                     index === 0 && ticket.available > 0
-                        ? Math.min(
-                              ticket.available,
-                              Math.max(1, filters.quantity ?? 1),
-                          )
+                        ? clampTicketQuantity(ticket, filters.quantity ?? 1)
                         : 0,
                 ]),
             ),
@@ -158,10 +175,7 @@ export default function WisataShow({
                     ticket.id,
                     current[ticket.id] ??
                         (index === 0 && ticket.available > 0
-                            ? Math.min(
-                                  ticket.available,
-                                  Math.max(1, filters.quantity ?? 1),
-                              )
+                            ? clampTicketQuantity(ticket, filters.quantity ?? 1)
                             : 0),
                 ]),
             );
@@ -171,6 +185,7 @@ export default function WisataShow({
     }, [filters.quantity, tickets]);
 
     const galleryPhotos = [
+        destination.photo_product_url,
         destination.photo_area_url,
         destination.photo_gate_url,
         destination.photo_ticket_url,
@@ -201,8 +216,17 @@ export default function WisataShow({
         (total, item) => total + item.ticket.price * item.quantity,
         0,
     );
+    const selectedHasContinuationTicket = selectedTicketItems.some(
+        (item) => item.ticket.is_entry_ticket === false,
+    );
+    const selectedHasEntryTicket = selectedTicketItems.some(
+        (item) => item.ticket.is_entry_ticket !== false,
+    );
+    const entryTicketRequired =
+        selectedHasContinuationTicket && !selectedHasEntryTicket;
     const canBook =
         selectedTicketItems.length > 0 &&
+        !entryTicketRequired &&
         selectedTicketItems.every(
             (item) => item.ticket.available >= item.quantity,
         );
@@ -210,7 +234,7 @@ export default function WisataShow({
     const updateTicketQuantity = (ticket: TicketItem, quantity: number) => {
         setTicketQuantities((current) => ({
             ...current,
-            [ticket.id]: Math.max(0, Math.min(ticket.available, quantity)),
+            [ticket.id]: clampTicketQuantity(ticket, quantity),
         }));
     };
 
@@ -285,7 +309,10 @@ export default function WisataShow({
                 }}
             />
 
-            <section className="relative h-[480px] w-full overflow-hidden bg-slate-900">
+            <section
+                className="relative h-[420px] w-full overflow-hidden bg-slate-900 sm:h-[480px]"
+                data-coach="wisata-detail-gallery"
+            >
                 <img
                     src={mainPhoto}
                     alt={destination.destination_name}
@@ -293,11 +320,11 @@ export default function WisataShow({
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-black/60" />
 
-                <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl space-y-3 px-4 pb-12 text-center text-white sm:px-6 lg:px-8">
+                <div className="absolute inset-x-0 bottom-0 mx-auto max-w-7xl space-y-3 px-4 pb-10 text-center text-white sm:px-6 sm:pb-12 lg:px-8">
                     <span className="block text-xs font-extrabold tracking-widest text-sky-300 uppercase sm:text-sm">
                         {destination.city_name ?? 'Wisata Indonesia'}
                     </span>
-                    <h1 className="font-['Space_Grotesk'] text-3xl leading-none font-black tracking-tight text-white drop-shadow-md sm:text-5xl md:text-6xl">
+                    <h1 className="mx-auto line-clamp-2 max-w-4xl font-['Space_Grotesk'] text-3xl leading-tight font-black tracking-tight text-white drop-shadow-md sm:text-5xl sm:leading-none md:text-6xl">
                         {destination.destination_name}
                     </h1>
                     <p className="text-sm font-medium text-slate-200 sm:text-lg">
@@ -305,10 +332,10 @@ export default function WisataShow({
                             'Destinasi wisata pilihan Indotix'}
                     </p>
 
-                    <div className="flex items-center justify-center gap-3 pt-2">
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-2 sm:gap-3">
                         <Link
                             href="/wisata"
-                            className="inline-flex items-center gap-1.5 rounded-full bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm backdrop-blur-xs transition-colors hover:bg-sky-700"
+                            className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-sky-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm backdrop-blur-xs transition-colors hover:bg-sky-700 sm:px-5"
                         >
                             <ChevronLeft className="h-4 w-4" />
                             Kembali ke pencarian
@@ -316,7 +343,7 @@ export default function WisataShow({
                         <button
                             type="button"
                             onClick={() => setGalleryOpen(true)}
-                            className="flex items-center gap-1.5 rounded-full bg-sky-600 px-5 py-2.5 text-xs font-semibold text-white shadow-sm backdrop-blur-xs transition-colors hover:bg-sky-700"
+                            className="flex min-h-11 items-center gap-1.5 rounded-full bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm backdrop-blur-xs transition-colors hover:bg-sky-700 sm:px-5"
                         >
                             <ImageIcon className="h-3.5 w-3.5" />
                             Lihat Semua Foto
@@ -327,7 +354,10 @@ export default function WisataShow({
 
             <main className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-8 px-4 py-10 font-sans text-slate-800 sm:px-6 lg:grid-cols-12 lg:px-8">
                 <section className="space-y-10 lg:col-span-7">
-                    <article className="space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-xs sm:p-8">
+                    <article
+                        className="space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-xs sm:p-8"
+                        data-coach="wisata-detail-info"
+                    >
                         <h2 className="font-['Space_Grotesk'] text-xl font-bold text-slate-950">
                             Tentang {destination.destination_name}
                         </h2>
@@ -419,6 +449,7 @@ export default function WisataShow({
                     <div
                         className="space-y-6 overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8"
                         id="booking-box-right"
+                        data-coach="wisata-ticket-selector"
                     >
                         <div>
                             <h3 className="font-['Space_Grotesk'] text-lg font-black tracking-tight text-slate-950">
@@ -431,7 +462,7 @@ export default function WisataShow({
                                 <span className="text-2xl font-black tracking-tight text-sky-600">
                                     {startingPrice > 0
                                         ? `Rp ${startingPrice.toLocaleString('id-ID')}`
-                                        : 'Harga tersedia'}
+                                        : 'Tiket belum tersedia'}
                                 </span>
                                 <span className="text-xs font-semibold text-slate-400">
                                     / orang
@@ -440,12 +471,13 @@ export default function WisataShow({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
+                            <Label required className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                 Pilih Tanggal
-                            </label>
+                            </Label>
                             <div className="relative flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-sky-500/50">
                                 <Calendar className="mr-2 h-4 w-4 shrink-0 text-slate-400" />
                                 <input
+                                    required
                                     type="date"
                                     value={visitDate}
                                     onChange={(event) =>
@@ -461,15 +493,17 @@ export default function WisataShow({
                         </div>
 
                         <div className="space-y-4">
-                            <label className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
+                            <Label required className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                 Pilihan Tiket
-                            </label>
+                            </Label>
                             <div className="space-y-3.5">
                                 {tickets.map((ticket) => {
                                     const quantity =
                                         ticketQuantities[ticket.id] ?? 0;
                                     const active = quantity > 0;
                                     const subtotal = ticket.price * quantity;
+                                    const minOrder = minOrderFor(ticket);
+                                    const maxOrder = maxOrderFor(ticket);
 
                                     return (
                                         <div
@@ -480,11 +514,24 @@ export default function WisataShow({
                                                     : 'border-slate-100 bg-white hover:border-slate-200 hover:bg-slate-50'
                                             }`}
                                         >
-                                            <div className="flex items-start justify-between gap-4">
+                                            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                                                 <div className="min-w-0">
                                                     <h4 className="line-clamp-1 font-bold text-slate-800">
                                                         {ticket.name}
                                                     </h4>
+                                                    <span
+                                                        className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                            ticket.is_entry_ticket ===
+                                                            false
+                                                                ? 'bg-amber-50 text-amber-700'
+                                                                : 'bg-sky-50 text-sky-700'
+                                                        }`}
+                                                    >
+                                                        {ticket.is_entry_ticket ===
+                                                        false
+                                                            ? 'Tiket terusan'
+                                                            : 'Tiket masuk'}
+                                                    </span>
                                                     <span className="mt-1 block text-xs font-bold text-slate-500">
                                                         Rp{' '}
                                                         {ticket.price.toLocaleString(
@@ -493,14 +540,24 @@ export default function WisataShow({
                                                         · Sisa{' '}
                                                         {ticket.available}
                                                     </span>
+                                                    <span className="mt-1 block text-[11px] font-semibold text-slate-500">
+                                                        Min. {minOrder} tiket
+                                                        {maxOrder
+                                                            ? ` · Maks. ${maxOrder} tiket`
+                                                            : ''}
+                                                    </span>
                                                 </div>
-                                                <div className="flex shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-xs">
+                                                <div className="flex w-fit shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-xs">
                                                     <button
                                                         type="button"
                                                         onClick={() =>
                                                             updateTicketQuantity(
                                                                 ticket,
-                                                                quantity - 1,
+                                                                quantity <=
+                                                                    minOrder
+                                                                    ? 0
+                                                                    : quantity -
+                                                                          1,
                                                             )
                                                         }
                                                         disabled={quantity <= 0}
@@ -521,7 +578,7 @@ export default function WisataShow({
                                                         }
                                                         disabled={
                                                             quantity >=
-                                                            ticket.available
+                                                            maxOrder
                                                         }
                                                         className="rounded p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
                                                     >
@@ -555,11 +612,11 @@ export default function WisataShow({
                         <hr className="border-slate-100" />
 
                         <div className="space-y-4">
-                            <div className="flex items-center justify-between">
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                                 <span className="text-xs font-bold text-slate-600 sm:text-sm">
                                     Total Harga ({totalQuantity} tiket):
                                 </span>
-                                <span className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+                                <span className="text-xl leading-tight font-black tracking-tight text-slate-900 sm:text-2xl">
                                     {totalPrice > 0
                                         ? `Rp ${totalPrice.toLocaleString('id-ID')}`
                                         : '-'}
@@ -576,8 +633,16 @@ export default function WisataShow({
                                     ? 'Pilih Tiket'
                                     : canBook
                                       ? 'Pesan Sekarang'
-                                      : 'Kuota Tidak Cukup'}
+                                      : entryTicketRequired
+                                        ? 'Pilih Tiket Masuk'
+                                        : 'Kuota Tidak Cukup'}
                             </button>
+                            {entryTicketRequired && (
+                                <p className="text-center text-xs font-semibold text-amber-700">
+                                    Tiket terusan wajib dipesan bersama tiket
+                                    masuk.
+                                </p>
+                            )}
                         </div>
 
                         <div className="grid grid-cols-2 gap-2 pt-2 text-center text-[10px] font-bold text-slate-400">

@@ -133,6 +133,123 @@ test('wisata booking quote counts pending bookings against ticket quota', functi
         ->assertJsonPath('pricing.quantity', 1);
 });
 
+test('wisata booking quote respects ticket minimum and maximum order limits', function () {
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+    $destination = createWisataVisibilityDestination(true, 'Wisata Limit Order Test');
+    $ticket = $destination->tickets()->firstOrFail();
+    $ticket->update([
+        'min_order_quantity' => 2,
+        'max_order_quantity' => 4,
+    ]);
+    $payload = [
+        'destination_id' => Crypt::encryptString((string) $destination->id),
+        'ticket_id' => Crypt::encryptString((string) $ticket->id),
+        'visit_date' => now()->addDay()->toDateString(),
+    ];
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/wisata/bookings/quote', $payload + ['quantity' => 1])
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Minimal pembelian '.$ticket->name.' 2 tiket.');
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/wisata/bookings/quote', $payload + ['quantity' => 5])
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Maksimal pembelian '.$ticket->name.' 4 tiket.');
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/wisata/bookings/quote', $payload + ['quantity' => 2])
+        ->assertOk()
+        ->assertJsonPath('pricing.quantity', 2);
+});
+
+test('wisata booking quote rejects continuation ticket without entry ticket', function () {
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+    $destination = createWisataVisibilityDestination(true, 'Wisata Terusan Test');
+    $ticket = $destination->tickets()->firstOrFail();
+    $ticket->update(['is_entry_ticket' => false]);
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/wisata/bookings/quote', [
+            'destination_id' => Crypt::encryptString((string) $destination->id),
+            'ticket_id' => Crypt::encryptString((string) $ticket->id),
+            'visit_date' => now()->addDay()->toDateString(),
+            'quantity' => 1,
+        ])
+        ->assertStatus(422)
+        ->assertJsonPath('message', 'Tiket terusan hanya dapat dipesan bersama tiket masuk.');
+});
+
+test('wisata mobile API accepts continuation ticket when entry ticket is included', function () {
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+    $destination = createWisataVisibilityDestination(true, 'Wisata Mobile Multi Ticket Test');
+    $entryTicket = $destination->tickets()->firstOrFail();
+    $entryTicket->update(['price' => 50000, 'is_entry_ticket' => true]);
+    $continuationTicket = WisataTicket::query()->create([
+        'mitra_wisata_onboarding_id' => $destination->id,
+        'name' => 'Tiket Wahana',
+        'price' => 25000,
+        'quota' => 100,
+        'daily_quota' => 100,
+        'is_entry_ticket' => false,
+        'is_active' => true,
+        'is_closed' => false,
+    ]);
+    $visitDate = now()->addDay()->toDateString();
+    $items = [
+        [
+            'ticket_id' => Crypt::encryptString((string) $entryTicket->id),
+            'quantity' => 1,
+        ],
+        [
+            'ticket_id' => Crypt::encryptString((string) $continuationTicket->id),
+            'quantity' => 2,
+        ],
+    ];
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/wisata/bookings/quote', [
+            'destination_id' => Crypt::encryptString((string) $destination->id),
+            'ticket_id' => Crypt::encryptString((string) $entryTicket->id),
+            'visit_date' => $visitDate,
+            'quantity' => 3,
+            'items' => $items,
+        ])
+        ->assertOk()
+        ->assertJsonPath('pricing.quantity', 3)
+        ->assertJsonPath('pricing.total', 100000)
+        ->assertJsonPath('pricing.items.0.is_entry_ticket', true)
+        ->assertJsonPath('pricing.items.1.is_entry_ticket', false);
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/wisata/bookings', [
+            'destination_id' => Crypt::encryptString((string) $destination->id),
+            'ticket_id' => Crypt::encryptString((string) $entryTicket->id),
+            'visit_date' => $visitDate,
+            'quantity' => 3,
+            'items' => $items,
+            'guest_name' => 'User Mobile',
+            'guest_email' => 'mobile@example.test',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('booking.quantity', 3)
+        ->assertJsonPath('booking.total', 100000)
+        ->assertJsonPath('booking.items.0.quantity', 1)
+        ->assertJsonPath('booking.items.1.quantity', 2);
+});
+
 test('wisata product cache is invalidated when booking availability changes', function () {
     $destination = createWisataVisibilityDestination(true, 'Wisata Cache Kuota Test');
     $ticket = $destination->tickets()->firstOrFail();
