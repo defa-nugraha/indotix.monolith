@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\BlogTagController;
 use App\Http\Controllers\Admin\CommissionRuleController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DatabaseCleanupController;
 use App\Http\Controllers\Admin\EventAttendeeController;
 use App\Http\Controllers\Admin\EventAuditController;
 use App\Http\Controllers\Admin\EventBookingController;
@@ -673,6 +674,9 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.system.settings.update');
     Route::post('admin/system/reset', [SystemSettingController::class, 'reset'])
         ->name('admin.system.reset');
+    Route::post('admin/system/database/cleanup', DatabaseCleanupController::class)
+        ->middleware('throttle:3,1')
+        ->name('admin.system.database.cleanup');
     Route::get('admin/system/notifications', [NotificationControlController::class, 'index'])
         ->name('admin.system.notifications.index');
     Route::post('admin/system/notifications/templates', [NotificationControlController::class, 'storeTemplate'])
