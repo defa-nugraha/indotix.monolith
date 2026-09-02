@@ -1,21 +1,126 @@
-name: deploy
+name: pipeline
 
 on:
   push:
     branches:
+      - develop
       - main
+      - master
+      - workos
+  pull_request:
+    branches:
+      - develop
+      - main
+      - master
+      - workos
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: production-deploy
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  quality:
+    name: Quality checks
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Composer Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Audit Dependencies
+        run: |
+          composer audit --locked --no-interaction
+          npm audit --audit-level=high
+
+      - name: Run Pint
+        run: composer lint
+
+      - name: Format Frontend
+        run: npm run format
+
+      - name: Lint Frontend
+        run: npm run lint
+
+      - name: Type Check
+        run: npm run types
+
+  tests:
+    name: Tests PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+    needs: quality
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php-version: ['8.4', '8.5']
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          tools: composer:v2
+          coverage: xdebug
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Node Dependencies
+        run: npm ci
+
+      - name: Install Composer Dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Copy Environment File
+        run: cp .env.example .env
+
+      - name: Generate Application Key
+        run: php artisan key:generate
+
+      - name: Build Assets
+        run: npm run build
+
+      - name: Type Check
+        run: npm run types
+
+      - name: Tests
+        run: ./vendor/bin/pest
+
+  deploy:
+    name: Deploy production
+    runs-on: ubuntu-latest
+    needs: tests
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+
+    concurrency:
+      group: production-deploy
+      cancel-in-progress: false
 
     steps:
       - name: Checkout code
@@ -145,9 +250,7 @@ jobs:
           WA_SENDER: ${{ secrets.WA_SENDER }}
           WA_NUMBER: ${{ secrets.WA_NUMBER }}
         run: |
-          message="✅ Deploy sukses: ${{ github.repository }} (${{
-            github.ref_name
-          }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          message="Deploy sukses: ${{ github.repository }} (${{ github.ref_name }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           curl -sS --connect-timeout 10 --max-time 20 -X POST "http://wa.digitalpelajar.id/send-message" \
             -H "Content-Type: application/json" \
             -d "{\"api_key\":\"${WA_API_KEY}\",\"sender\":\"${WA_SENDER}\",\"number\":\"${WA_NUMBER}\",\"message\":\"${message}\"}"
@@ -160,9 +263,7 @@ jobs:
           WA_SENDER: ${{ secrets.WA_SENDER }}
           WA_NUMBER: ${{ secrets.WA_NUMBER }}
         run: |
-          message="❌ Deploy gagal: ${{ github.repository }} (${{
-            github.ref_name
-          }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          message="Deploy gagal: ${{ github.repository }} (${{ github.ref_name }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           curl -sS --connect-timeout 10 --max-time 20 -X POST "http://wa.digitalpelajar.id/send-message" \
             -H "Content-Type: application/json" \
             -d "{\"api_key\":\"${WA_API_KEY}\",\"sender\":\"${WA_SENDER}\",\"number\":\"${WA_NUMBER}\",\"message\":\"${message}\"}"
