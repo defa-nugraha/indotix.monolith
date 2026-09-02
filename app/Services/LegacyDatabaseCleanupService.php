@@ -643,8 +643,8 @@ class LegacyDatabaseCleanupService
         AdminAuditLog::query()->create([
             'admin_id' => $adminId,
             'action' => 'Legacy database cleanup '.$mode,
-            'method' => 'POST',
-            'path' => 'admin/system/database/cleanup',
+            'method' => 'CLI',
+            'path' => 'artisan indotix:cleanup-legacy-database',
             'payload' => [
                 'mode' => $mode,
                 'environment' => app()->environment(),

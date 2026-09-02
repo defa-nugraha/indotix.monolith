@@ -4,6 +4,7 @@ use App\Models\AdminRole;
 use App\Models\User;
 use App\Services\LegacyDatabaseCleanupService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
@@ -274,9 +275,7 @@ function cleanupSeedLegacyAndWisataData(): array
     );
 }
 
-test('legacy database cleanup endpoint is restricted to super admin', function () {
-    $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
-
+test('legacy database cleanup command validates optional admin audit identity', function () {
     $role = AdminRole::query()->create([
         'name' => 'Operator',
         'slug' => 'operator',
@@ -290,33 +289,44 @@ test('legacy database cleanup endpoint is restricted to super admin', function (
     $user = User::factory()->create(['role' => 'user', 'email_verified_at' => now()]);
     $mitra = User::factory()->create(['role' => 'mitra', 'email_verified_at' => now()]);
 
-    $this->postJson('/admin/system/database/cleanup', ['mode' => 'preview'])
-        ->assertUnauthorized();
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'preview',
+        '--admin-id' => $user->id,
+        '--json' => true,
+    ]))->toBe(1)
+        ->and(Artisan::call('indotix:cleanup-legacy-database', [
+            '--mode' => 'preview',
+            '--admin-id' => $mitra->id,
+            '--json' => true,
+        ]))->toBe(1)
+        ->and(Artisan::call('indotix:cleanup-legacy-database', [
+            '--mode' => 'preview',
+            '--admin-id' => $customAdmin->id,
+            '--json' => true,
+        ]))->toBe(1);
 
-    $this->actingAs($user)
-        ->postJson('/admin/system/database/cleanup', ['mode' => 'preview'])
-        ->assertRedirect(route('dashboard'));
-
-    $this->actingAs($mitra)
-        ->postJson('/admin/system/database/cleanup', ['mode' => 'preview'])
-        ->assertRedirect(route('dashboard'));
-
-    $this->actingAs($customAdmin)
-        ->postJson('/admin/system/database/cleanup', ['mode' => 'preview'])
-        ->assertStatus(403);
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'preview',
+        '--admin-id' => cleanupAdminUser()->id,
+        '--json' => true,
+    ]))->toBe(0);
 });
 
 test('legacy database cleanup preview does not mutate data', function () {
-    $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
-
     $admin = cleanupAdminUser();
     $ids = cleanupSeedLegacyAndWisataData();
 
-    $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', ['mode' => 'preview'])
-        ->assertOk()
-        ->assertJsonPath('mode', 'preview')
-        ->assertJsonStructure(['cleanup_plan_id', 'summary', 'cleanup_plan']);
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'preview',
+        '--admin-id' => $admin->id,
+        '--json' => true,
+    ]))->toBe(0);
+
+    $result = json_decode(Artisan::output(), true);
+
+    expect($result)
+        ->toHaveKeys(['cleanup_plan_id', 'summary', 'cleanup_plan'])
+        ->and($result['mode'])->toBe('preview');
 
     expect(DB::table('hotels')->where('id', $ids['legacyHotelId'])->exists())->toBeTrue()
         ->and(DB::table('events')->where('id', $ids['legacyEventId'])->exists())->toBeTrue()
@@ -324,59 +334,67 @@ test('legacy database cleanup preview does not mutate data', function () {
 });
 
 test('legacy database cleanup execute requires confirmation plan and environment flag', function () {
-    $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
-
     $admin = cleanupAdminUser();
 
-    $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', ['mode' => 'execute'])
-        ->assertStatus(422);
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'invalid',
+        '--json' => true,
+    ]))->toBe(1);
 
-    $preview = $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', ['mode' => 'preview'])
-        ->json();
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'execute',
+        '--json' => true,
+    ]))->toBe(1);
 
-    $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', [
-            'mode' => 'execute',
-            'cleanup_plan_id' => $preview['cleanup_plan_id'],
-            'confirmation' => 'WRONG',
-        ])
-        ->assertStatus(422);
+    Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'preview',
+        '--admin-id' => $admin->id,
+        '--json' => true,
+    ]);
+    $preview = json_decode(Artisan::output(), true);
+
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'execute',
+        '--plan-id' => $preview['cleanup_plan_id'],
+        '--confirmation' => 'WRONG',
+        '--admin-id' => $admin->id,
+        '--json' => true,
+    ]))->toBe(1);
 
     config(['app.allow_database_cleanup' => false]);
-    $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', [
-            'mode' => 'execute',
-            'cleanup_plan_id' => $preview['cleanup_plan_id'],
-            'confirmation' => LegacyDatabaseCleanupService::CONFIRMATION,
-        ])
-        ->assertForbidden();
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'execute',
+        '--plan-id' => $preview['cleanup_plan_id'],
+        '--confirmation' => LegacyDatabaseCleanupService::CONFIRMATION,
+        '--admin-id' => $admin->id,
+        '--json' => true,
+    ]))->toBe(1);
 });
 
 test('legacy database cleanup executes safely and preserves wisata and financial history', function () {
-    $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
-
     Storage::fake('local');
     config(['app.allow_database_cleanup' => true]);
 
     $admin = cleanupAdminUser();
     $ids = cleanupSeedLegacyAndWisataData();
 
-    $preview = $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', ['mode' => 'preview'])
-        ->assertOk()
-        ->json();
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'preview',
+        '--admin-id' => $admin->id,
+        '--json' => true,
+    ]))->toBe(0);
+    $preview = json_decode(Artisan::output(), true);
 
-    $result = $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', [
-            'mode' => 'execute',
-            'cleanup_plan_id' => $preview['cleanup_plan_id'],
-            'confirmation' => LegacyDatabaseCleanupService::CONFIRMATION,
-        ])
-        ->assertOk()
-        ->assertJsonPath('mode', 'execute')
-        ->json();
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'execute',
+        '--plan-id' => $preview['cleanup_plan_id'],
+        '--confirmation' => LegacyDatabaseCleanupService::CONFIRMATION,
+        '--admin-id' => $admin->id,
+        '--json' => true,
+    ]))->toBe(0);
+    $result = json_decode(Artisan::output(), true);
+
+    expect($result['mode'])->toBe('execute');
 
     expect(DB::table('hotels')->where('id', $ids['legacyHotelId'])->exists())->toBeFalse()
         ->and(DB::table('hotels')->where('id', $ids['bookedHotelId'])->exists())->toBeTrue()
@@ -399,24 +417,26 @@ test('legacy database cleanup executes safely and preserves wisata and financial
 
     Storage::disk('local')->assertExists($result['summary']['backup_path']);
 
-    $secondPreview = $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', ['mode' => 'preview'])
-        ->assertOk()
-        ->json();
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'preview',
+        '--admin-id' => $admin->id,
+        '--json' => true,
+    ]))->toBe(0);
+    $secondPreview = json_decode(Artisan::output(), true);
 
-    $this->actingAs($admin)
-        ->postJson('/admin/system/database/cleanup', [
-            'mode' => 'execute',
-            'cleanup_plan_id' => $secondPreview['cleanup_plan_id'],
-            'confirmation' => LegacyDatabaseCleanupService::CONFIRMATION,
-        ])
-        ->assertOk()
-        ->assertJsonPath('summary.records_deleted', 0);
+    expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'execute',
+        '--plan-id' => $secondPreview['cleanup_plan_id'],
+        '--confirmation' => LegacyDatabaseCleanupService::CONFIRMATION,
+        '--admin-id' => $admin->id,
+        '--json' => true,
+    ]))->toBe(0);
+    $secondResult = json_decode(Artisan::output(), true);
+
+    expect($secondResult['summary']['records_deleted'])->toBe(0);
 });
 
 test('legacy database cleanup rolls back when an operation fails', function () {
-    $this->withoutMiddleware(\Illuminate\Routing\Middleware\ThrottleRequests::class);
-
     Storage::fake('local');
     config(['app.allow_database_cleanup' => true]);
 
