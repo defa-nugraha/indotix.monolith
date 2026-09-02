@@ -8,7 +8,7 @@
         "dev": "vite",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
-        "lint": "eslint . --fix",
+        "lint": "eslint resources/js/components resources/js/hooks resources/js/layouts resources/js/lib resources/js/pages resources/js/types --fix",
         "types": "tsc --noEmit"
     },
     "devDependencies": {

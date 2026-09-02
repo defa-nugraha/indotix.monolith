@@ -91,7 +91,7 @@ export default function PublicTicketScan({ lookup, scanError }: Props) {
         setIsScanning(false);
     };
 
-    const useTicket = (itemId: number) => {
+    const handleUseTicket = (itemId: number) => {
         useFormState.setData({
             qr_data: lookup?.qr_data ?? '',
             booking_item_id: itemId.toString(),
@@ -248,7 +248,9 @@ export default function PublicTicketScan({ lookup, scanError }: Props) {
                                             useFormState.processing
                                         }
                                         className="bg-sky-600 text-white hover:bg-sky-700 disabled:bg-slate-200 disabled:text-slate-500"
-                                        onClick={() => useTicket(item.item_id)}
+                                        onClick={() =>
+                                            handleUseTicket(item.item_id)
+                                        }
                                     >
                                         {useFormState.processing &&
                                         useFormState.data.booking_item_id ===
