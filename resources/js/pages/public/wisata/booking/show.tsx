@@ -12,6 +12,7 @@ import {
     MapPin,
     MapPinned,
     Phone,
+    ScanLine,
     Ticket,
     UserCircle,
     Users,
@@ -27,8 +28,6 @@ type Booking = {
     status: string;
     payment_status?: string | null;
     payment_deadline?: string | null;
-    qr_url?: string | null;
-    qr_data?: string | null;
     ticket: { name: string };
     items?: Array<{
         ticket_id: number;
@@ -125,8 +124,8 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                 />
             </Head>
             <main className="mx-auto w-full max-w-7xl px-4 py-10 md:px-8">
-                <div className="mx-auto mb-8 w-full max-w-3xl">
-                    <div className="relative z-0 flex items-center justify-between">
+                <div className="mx-auto mb-8 w-full max-w-3xl overflow-x-auto pb-2">
+                    <div className="relative z-0 flex min-w-[20rem] items-center justify-between">
                         <div className="absolute top-1/2 right-0 left-0 z-0 h-1 -translate-y-1/2 bg-slate-200" />
                         <div className="absolute top-1/2 left-0 z-0 h-1 w-full -translate-y-1/2 bg-sky-600" />
                         {[
@@ -136,7 +135,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                         ].map(([number, label], index) => (
                             <div
                                 key={label}
-                                className={`relative z-10 flex items-center gap-2 rounded-full border bg-white px-3 py-1 text-xs font-bold shadow-sm ${
+                                className={`relative z-10 flex min-h-9 items-center gap-2 rounded-full border bg-white px-2.5 py-1 text-xs font-bold shadow-sm sm:px-3 ${
                                     index === 2
                                         ? 'border-emerald-200 text-emerald-700 ring-2 ring-emerald-100'
                                         : 'border-slate-200 text-slate-500'
@@ -151,7 +150,9 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                 >
                                     {number}
                                 </span>
-                                {label}
+                                <span className="hidden min-[360px]:inline">
+                                    {label}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -176,13 +177,18 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                 </span>
                             </div>
                             <div className="mt-4 grid gap-2 text-sm text-slate-600">
-                                <div className="flex items-center gap-2">
+                                <div className="flex min-w-0 items-start gap-2">
                                     <Ticket className="h-4 w-4 text-sky-500" />
-                                    {booking.destination.name}
+                                    <span className="min-w-0 break-words">
+                                        {booking.destination.name}
+                                    </span>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex min-w-0 items-start gap-2">
                                     <MapPin className="h-4 w-4 text-sky-500" />
-                                    {booking.destination.address ?? 'Indonesia'}
+                                    <span className="min-w-0 break-words">
+                                        {booking.destination.address ??
+                                            'Indonesia'}
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <CalendarCheck className="h-4 w-4 text-sky-500" />
@@ -207,7 +213,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                 {ticketItems.map((item) => (
                                     <div
                                         key={item.ticket_id}
-                                        className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm"
+                                        className="flex flex-col gap-3 rounded-xl border border-slate-200 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between"
                                     >
                                         <div>
                                             <div className="font-semibold text-slate-900">
@@ -217,7 +223,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                                 {item.quantity} tiket
                                             </div>
                                         </div>
-                                        <div className="text-right text-sm text-slate-600">
+                                        <div className="text-left text-sm text-slate-600 sm:text-right">
                                             <div>
                                                 Rp{' '}
                                                 {item.unit_price.toLocaleString(
@@ -295,31 +301,40 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                             )}
                             {(booking.status === 'paid' ||
                                 booking.status === 'completed') && (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (isDownloading) return;
-                                        setIsDownloading(true);
-                                        window.open(
-                                            `/wisata/booking/${booking.encrypted_id}/ticket`,
-                                            '_blank',
-                                        );
-                                        window.setTimeout(
-                                            () => setIsDownloading(false),
-                                            8000,
-                                        );
-                                    }}
-                                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
-                                >
-                                    {isDownloading ? (
-                                        <>
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            Menyiapkan tiket...
-                                        </>
-                                    ) : (
-                                        'Download Tiket'
-                                    )}
-                                </button>
+                                <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (isDownloading) return;
+                                            setIsDownloading(true);
+                                            window.open(
+                                                `/wisata/booking/${booking.encrypted_id}/ticket`,
+                                                '_blank',
+                                            );
+                                            window.setTimeout(
+                                                () => setIsDownloading(false),
+                                                8000,
+                                            );
+                                        }}
+                                        className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-center text-sm font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
+                                    >
+                                        {isDownloading ? (
+                                            <>
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                Menyiapkan tiket...
+                                            </>
+                                        ) : (
+                                            'Download Tiket'
+                                        )}
+                                    </button>
+                                    <Link
+                                        href="/tickets/scan"
+                                        aria-label="Scan QR masuk mitra"
+                                        className="grid h-10 w-10 place-items-center rounded-lg bg-sky-600 text-white shadow-sm hover:bg-sky-700"
+                                    >
+                                        <ScanLine className="h-5 w-5" />
+                                    </Link>
+                                </div>
                             )}
                             {booking.review?.can_review &&
                                 booking.review?.url && (
@@ -333,28 +348,32 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                         </div>
 
                         {(booking.status === 'paid' ||
-                            booking.status === 'completed') &&
-                            booking.qr_url && (
-                                <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
-                                    <div className="text-sm font-semibold text-slate-900">
-                                        QR Validasi Tiket
-                                    </div>
-                                    <img
-                                        src={booking.qr_url}
-                                        alt="QR Tiket"
-                                        className="mx-auto mt-3 h-44 w-44"
-                                    />
-                                    {booking.qr_data && (
-                                        <div className="mt-2 text-xs text-slate-500">
-                                            Kode: {booking.qr_data}
-                                        </div>
-                                    )}
-                                    <div className="mt-2 text-xs text-slate-500">
-                                        Tunjukkan QR ini saat validasi di
-                                        lokasi.
-                                    </div>
+                            booking.status === 'completed') && (
+                            <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4 shadow-sm">
+                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                                    <ScanLine className="h-4 w-4 text-sky-600" />
+                                    Cara menggunakan tiket
                                 </div>
-                            )}
+                                <ol className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                                    <li>1. Datang sesuai tanggal kunjungan.</li>
+                                    <li>2. Buka menu Scan Tiket di Indotix.</li>
+                                    <li>
+                                        3. Scan QR masuk yang disediakan mitra
+                                        wisata.
+                                    </li>
+                                    <li>
+                                        4. Pilih tiket yang ingin digunakan.
+                                    </li>
+                                </ol>
+                                <Link
+                                    href="/tickets/scan"
+                                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700"
+                                >
+                                    <ScanLine className="h-4 w-4" />
+                                    Scan QR Masuk
+                                </Link>
+                            </div>
+                        )}
                     </aside>
                 </div>
             </main>

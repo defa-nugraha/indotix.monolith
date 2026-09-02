@@ -1,12 +1,12 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FileText, Upload } from 'lucide-react';
+import { FileText, Pencil, Trash2, Upload } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 type DocumentRow = {
-    business_type: 'hotel' | 'wisata' | 'event';
+    business_type: 'wisata';
     label: string;
     id?: number | null;
     title?: string | null;
@@ -27,11 +27,11 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function TermsDocuments({ documents }: Props) {
     const form = useForm<{
-        business_type: 'hotel' | 'wisata' | 'event';
+        business_type: 'wisata';
         title: string;
         document: File | null;
     }>({
-        business_type: 'hotel',
+        business_type: 'wisata',
         title: '',
         document: null,
     });
@@ -58,6 +58,44 @@ export default function TermsDocuments({ documents }: Props) {
         });
     };
 
+    const editDocument = (item: DocumentRow) => {
+        form.setData({
+            business_type: item.business_type,
+            title: item.title ?? '',
+            document: null,
+        });
+    };
+
+    const deleteDocument = (item: DocumentRow) => {
+        if (!item.id) {
+            return;
+        }
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Hapus dokumen?',
+            text: 'Dokumen S&K aktif akan dihapus dan mitra belum bisa menandatangani dokumen ini sampai PDF baru diunggah.',
+            showCancelButton: true,
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+        }).then((result) => {
+            if (!result.isConfirmed) {
+                return;
+            }
+
+            form.delete(`/admin/mitra-documents/${item.id}`, {
+                preserveScroll: true,
+                onSuccess: () =>
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Dokumen dihapus',
+                        text: 'Dokumen S&K mitra berhasil dihapus.',
+                    }),
+            });
+        });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dokumen S&K Mitra" />
@@ -70,11 +108,11 @@ export default function TermsDocuments({ documents }: Props) {
                         Kelola syarat dan ketentuan mitra
                     </h1>
                     <p className="mt-1 text-sm text-slate-500">
-                        Upload PDF berbeda untuk mitra hotel, wisata, dan event. Setelah pendaftaran disetujui, mitra akan diminta menandatangani dokumen yang sesuai.
+                        Upload PDF syarat dan ketentuan untuk mitra wisata. Setelah pendaftaran disetujui, mitra akan diminta menandatangani dokumen ini.
                     </p>
                 </section>
 
-                <section className="grid gap-4 lg:grid-cols-3">
+                <section className="grid gap-4 lg:grid-cols-2">
                     {documents.map((item) => (
                         <article key={item.business_type} className="rounded-3xl border border-sky-100/80 bg-white/90 p-5 shadow-sm">
                             <div className="flex items-start gap-3">
@@ -99,11 +137,30 @@ export default function TermsDocuments({ documents }: Props) {
                                 </div>
                             </dl>
                             {item.file_url && (
-                                <Button asChild variant="outline" className="mt-4 w-full">
-                                    <Link href={item.file_url} target="_blank">
-                                        Lihat PDF
-                                    </Link>
-                                </Button>
+                                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                                    <Button asChild variant="outline">
+                                        <Link href={item.file_url} target="_blank">
+                                            Lihat PDF
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => editDocument(item)}
+                                    >
+                                        <Pencil className="mr-2 size-4" />
+                                        Edit
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="border-red-200 text-red-600 hover:bg-red-50"
+                                        onClick={() => deleteDocument(item)}
+                                    >
+                                        <Trash2 className="mr-2 size-4" />
+                                        Hapus
+                                    </Button>
+                                </div>
                             )}
                         </article>
                     ))}
@@ -115,12 +172,10 @@ export default function TermsDocuments({ documents }: Props) {
                             <label className="text-xs font-semibold uppercase text-slate-400">Kategori mitra</label>
                             <select
                                 value={form.data.business_type}
-                                onChange={(event) => form.setData('business_type', event.target.value as 'hotel' | 'wisata' | 'event')}
+                                onChange={(event) => form.setData('business_type', event.target.value as 'wisata')}
                                 className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                             >
-                                <option value="hotel">Mitra Hotel</option>
                                 <option value="wisata">Mitra Wisata</option>
-                                <option value="event">Mitra Event</option>
                             </select>
                         </div>
                         <div className="grid gap-2">
@@ -128,7 +183,7 @@ export default function TermsDocuments({ documents }: Props) {
                             <input
                                 value={form.data.title}
                                 onChange={(event) => form.setData('title', event.target.value)}
-                                placeholder="Contoh: S&K Mitra Hotel 2026"
+                                placeholder="Contoh: S&K Mitra Wisata 2026"
                                 className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                             />
                         </div>

@@ -10,6 +10,7 @@ import {
     User,
 } from 'lucide-react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
@@ -231,15 +232,19 @@ export default function WisataBookingReview({
                             <ClipboardCheck className="h-6 w-6 text-sky-500" />
                         </div>
                         <div className="mt-4 grid gap-2 text-sm text-slate-600">
-                            <div className="flex items-center gap-2">
-                                <Ticket className="h-4 w-4 text-sky-500" />
-                                {destination.destination_name} ·{' '}
-                                {destination.city_name ??
-                                    destination.address_full}
+                            <div className="flex min-w-0 items-start gap-2">
+                                <Ticket className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
+                                <span className="min-w-0 break-words">
+                                    {destination.destination_name} ·{' '}
+                                    {destination.city_name ??
+                                        destination.address_full}
+                                </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <CalendarCheck className="h-4 w-4 text-sky-500" />
-                                {draft.visit_date} · {totalQuantity} tiket
+                            <div className="flex min-w-0 items-start gap-2">
+                                <CalendarCheck className="mt-0.5 h-4 w-4 shrink-0 text-sky-500" />
+                                <span className="min-w-0 break-words">
+                                    {draft.visit_date} · {totalQuantity} tiket
+                                </span>
                             </div>
                         </div>
                         <form
@@ -271,9 +276,9 @@ export default function WisataBookingReview({
                         >
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700">
+                                    <Label required className="text-slate-700">
                                         Nama Lengkap
-                                    </label>
+                                    </Label>
                                     <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
                                         <User className="h-4 w-4 text-slate-400" />
                                         <input
@@ -290,9 +295,9 @@ export default function WisataBookingReview({
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700">
+                                    <Label required className="text-slate-700">
                                         Email
-                                    </label>
+                                    </Label>
                                     <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
                                         <Mail className="h-4 w-4 text-slate-400" />
                                         <input
@@ -310,9 +315,9 @@ export default function WisataBookingReview({
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700">
+                                    <Label required className="text-slate-700">
                                         Nomor HP
-                                    </label>
+                                    </Label>
                                     <div className="mt-2 flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2">
                                         <Phone className="h-4 w-4 text-slate-400" />
                                         <input
@@ -353,12 +358,14 @@ export default function WisataBookingReview({
                             <div className="flex justify-end">
                                 <button
                                     type="submit"
-                                    className="rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-sky-700 disabled:opacity-70"
+                                    className="w-full rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-sky-700 disabled:opacity-70 sm:w-auto"
                                     disabled={loading || !hasPhone}
                                 >
                                     {loading
                                         ? 'Memproses...'
-                                        : 'Lanjutkan Pembayaran'}
+                                        : pricing.total <= 0
+                                          ? 'Konfirmasi Tiket'
+                                          : 'Lanjutkan Pembayaran'}
                                 </button>
                             </div>
                         </form>
@@ -387,10 +394,10 @@ export default function WisataBookingReview({
                                 {ticketItems.map((item) => (
                                     <div
                                         key={item.ticket_id}
-                                        className="flex items-start justify-between gap-3"
-                                    >
-                                        <div>
-                                            <div className="font-semibold text-slate-900">
+                                    className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3"
+                                >
+                                        <div className="min-w-0">
+                                            <div className="break-words font-semibold text-slate-900">
                                                 {item.name}
                                             </div>
                                             <div className="text-xs text-slate-500">
@@ -400,7 +407,7 @@ export default function WisataBookingReview({
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="text-right font-semibold text-slate-900">
+                                        <div className="shrink-0 text-left font-semibold text-slate-900 sm:text-right">
                                             Rp{' '}
                                             {item.subtotal.toLocaleString(
                                                 'id-ID',
@@ -488,6 +495,8 @@ export default function WisataBookingReview({
                                 >
                                     <input
                                         className="h-11 flex-1 rounded-xl border border-slate-200 px-3 text-sm focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
+                                        aria-label="Kode voucher"
+                                        required
                                         placeholder="Masukkan kode voucher"
                                         value={voucherForm.data.voucher_code}
                                         onChange={(event) =>

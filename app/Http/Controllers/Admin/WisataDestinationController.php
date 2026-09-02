@@ -39,7 +39,9 @@ class WisataDestinationController extends Controller
             });
         }
 
-        if ($status = $request->string('status')->toString()) {
+        if (($status = $request->string('status')->toString()) === 'suspended') {
+            $query->where('is_suspended', true);
+        } elseif ($status) {
             $query->where('verification_status', $status);
         }
 
@@ -155,6 +157,7 @@ class WisataDestinationController extends Controller
             'photo_gate_file',
             'photo_area_file',
             'photo_ticket_file',
+            'photo_product_file',
             'photo_other_files',
             'photo_other_remove',
         ]));
@@ -180,6 +183,7 @@ class WisataDestinationController extends Controller
             'photo_gate_file',
             'photo_area_file',
             'photo_ticket_file',
+            'photo_product_file',
             'photo_other_files',
             'photo_other_remove',
         ]);
@@ -199,6 +203,7 @@ class WisataDestinationController extends Controller
             'photo_gate_file' => 'photo_gate_path',
             'photo_area_file' => 'photo_area_path',
             'photo_ticket_file' => 'photo_ticket_path',
+            'photo_product_file' => 'photo_product_path',
         ];
 
         foreach ($uploads as $input => $column) {
@@ -286,6 +291,7 @@ class WisataDestinationController extends Controller
         }
 
         foreach ([
+            $destination->photo_product_path,
             $destination->photo_gate_path,
             $destination->photo_area_path,
             $destination->photo_ticket_path,
@@ -331,7 +337,7 @@ class WisataDestinationController extends Controller
         return $request->validate([
             'user_id' => [$creating ? 'required' : 'sometimes', 'integer', $mitraRule],
             'destination_name' => ['required', 'string', 'max:255'],
-            'destination_type' => ['required', 'in:alam,edukasi,budaya,wahana,event'],
+            'destination_type' => ['required', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:1000'],
             'highlights' => ['nullable', 'string', 'max:1000'],
             'province_code' => ['nullable', 'exists:provinces,code'],
@@ -350,6 +356,7 @@ class WisataDestinationController extends Controller
             'photo_gate_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'photo_area_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'photo_ticket_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_product_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'photo_other_files' => ['nullable', 'array', 'max:'.self::MAX_OTHER_PHOTO_COUNT],
             'photo_other_files.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'photo_other_remove' => ['nullable', 'array', 'max:'.self::MAX_OTHER_PHOTO_COUNT],
@@ -358,6 +365,7 @@ class WisataDestinationController extends Controller
             'photo_gate_file.max' => 'Ukuran foto gerbang maksimal 5 MB.',
             'photo_area_file.max' => 'Ukuran foto area utama maksimal 5 MB.',
             'photo_ticket_file.max' => 'Ukuran foto loket maksimal 5 MB.',
+            'photo_product_file.max' => 'Ukuran foto produk maksimal 5 MB.',
             'photo_other_files.*.max' => 'Ukuran setiap foto lainnya maksimal 5 MB.',
             '*.image' => 'File harus berupa gambar.',
             '*.mimes' => 'Foto harus berformat JPG, JPEG, PNG, atau WEBP.',

@@ -26,6 +26,10 @@ class BlockRetiredProductFeatures
             return false;
         }
 
+        if ($path === 'mitra/onboarding/type') {
+            return false;
+        }
+
         $retiredPrefixes = [
             'stay',
             'events',

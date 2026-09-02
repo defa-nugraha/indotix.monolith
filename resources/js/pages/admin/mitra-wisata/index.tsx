@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import InputError from '@/components/input-error';
@@ -78,6 +79,10 @@ export default function AdminMitraWisataIndex({
         password: '',
         destination_name: '',
         destination_type: '',
+        verification_status: 'draft',
+        payout_status: 'draft',
+        is_suspended: false,
+        suspended_reason: '',
     });
 
     const applyFilters = (event: React.FormEvent<HTMLFormElement>) => {
@@ -194,10 +199,11 @@ export default function AdminMitraWisataIndex({
                                     }}
                                 >
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
+                                        <Label required className="text-sm font-semibold text-slate-700">
                                             Nama
-                                        </label>
+                                        </Label>
                                         <input
+                                            required
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.name}
                                             onChange={(event) =>
@@ -212,11 +218,12 @@ export default function AdminMitraWisataIndex({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
+                                        <Label required className="text-sm font-semibold text-slate-700">
                                             Email
-                                        </label>
+                                        </Label>
                                         <input
                                             type="email"
+                                            required
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.email}
                                             onChange={(event) =>
@@ -332,6 +339,127 @@ export default function AdminMitraWisataIndex({
                                                     .destination_type
                                             }
                                         />
+                                    </div>
+                                    <div className="grid gap-2 md:grid-cols-2">
+                                        <div className="grid gap-2">
+                                            <Label className="text-sm font-semibold text-slate-700">
+                                                Status Verifikasi
+                                            </Label>
+                                            <select
+                                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                value={
+                                                    createForm.data
+                                                        .verification_status
+                                                }
+                                                onChange={(event) =>
+                                                    createForm.setData(
+                                                        'verification_status',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            >
+                                                {verificationStatuses.map(
+                                                    (status) => (
+                                                        <option
+                                                            key={status}
+                                                            value={status}
+                                                        >
+                                                            {status}
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </select>
+                                            <InputError
+                                                message={
+                                                    createForm.errors
+                                                        .verification_status
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label className="text-sm font-semibold text-slate-700">
+                                                Status Payout
+                                            </Label>
+                                            <select
+                                                className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
+                                                value={
+                                                    createForm.data
+                                                        .payout_status
+                                                }
+                                                onChange={(event) =>
+                                                    createForm.setData(
+                                                        'payout_status',
+                                                        event.target.value,
+                                                    )
+                                                }
+                                            >
+                                                {payoutStatuses.map(
+                                                    (status) => (
+                                                        <option
+                                                            key={status}
+                                                            value={status}
+                                                        >
+                                                            {status}
+                                                        </option>
+                                                    ),
+                                                )}
+                                            </select>
+                                            <InputError
+                                                message={
+                                                    createForm.errors
+                                                        .payout_status
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="grid gap-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                        <label className="flex items-start gap-3 text-sm font-semibold text-slate-700">
+                                            <input
+                                                type="checkbox"
+                                                checked={
+                                                    createForm.data.is_suspended
+                                                }
+                                                onChange={(event) =>
+                                                    createForm.setData(
+                                                        'is_suspended',
+                                                        event.target.checked,
+                                                    )
+                                                }
+                                                className="mt-1"
+                                            />
+                                            Suspend akun mitra setelah dibuat
+                                        </label>
+                                        {createForm.data.is_suspended && (
+                                            <div className="grid gap-2">
+                                                <Label
+                                                    required
+                                                    className="text-sm font-semibold text-slate-700"
+                                                >
+                                                    Alasan Suspend
+                                                </Label>
+                                                <textarea
+                                                    required
+                                                    maxLength={1000}
+                                                    className="min-h-[90px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                                    value={
+                                                        createForm.data
+                                                            .suspended_reason
+                                                    }
+                                                    onChange={(event) =>
+                                                        createForm.setData(
+                                                            'suspended_reason',
+                                                            event.target.value,
+                                                        )
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        createForm.errors
+                                                            .suspended_reason
+                                                    }
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                     <DialogFooter className="gap-2 sm:justify-end">
                                         <Button

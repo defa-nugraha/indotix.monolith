@@ -39,6 +39,13 @@ type WisataBooking = {
     created_at?: string | null;
     midtrans_order_id?: string | null;
     ticket_name?: string | null;
+    items?: Array<{
+        ticket_id: number;
+        name: string;
+        quantity: number;
+        unit_price: number;
+        subtotal: number;
+    }>;
     review_url?: string | null;
     can_review?: boolean;
 };
@@ -97,6 +104,12 @@ export default function WisataHistory({ bookings = [] }: { bookings: WisataBooki
             return statusMatch && queryMatch;
         });
     }, [bookings, activeStatus, query]);
+
+    const formatIdr = (value?: number | string | null) => {
+        const numeric = Number(value);
+        if (!Number.isFinite(numeric)) return '-';
+        return `Rp ${numeric.toLocaleString('id-ID')}`;
+    };
 
     return (
         <PublicLayout categories={categories} chips={chips}>
@@ -221,6 +234,26 @@ export default function WisataHistory({ bookings = [] }: { bookings: WisataBooki
                                                     <div>{booking.guest_name ?? '-'}</div>
                                                     <div>{booking.guest_email ?? '-'}</div>
                                                     <div>{booking.guest_phone ?? '-'}</div>
+                                                    {(booking.items?.length ?? 0) > 0 && (
+                                                        <div className="mt-2 space-y-1 rounded-lg border border-slate-100 bg-white p-3">
+                                                            <span className="text-xs font-semibold text-slate-800">
+                                                                Rincian tiket
+                                                            </span>
+                                                            {booking.items?.map((item) => (
+                                                                <div
+                                                                    key={`${booking.id}-${item.ticket_id}-${item.name}`}
+                                                                    className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600"
+                                                                >
+                                                                    <span>
+                                                                        {item.quantity}x {item.name}
+                                                                    </span>
+                                                                    <span className="font-semibold text-slate-700">
+                                                                        {formatIdr(item.subtotal)}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -228,7 +261,7 @@ export default function WisataHistory({ bookings = [] }: { bookings: WisataBooki
                                     <div className="flex flex-col items-end gap-3 text-right">
                                         <div className="text-sm text-slate-500">Total</div>
                                         <div className="text-xl font-semibold text-sky-600">
-                                            {booking.total ? `Rp ${booking.total.toLocaleString('id-ID')}` : '-'}
+                                            {formatIdr(booking.total)}
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             {booking.status === 'pending_payment' && (

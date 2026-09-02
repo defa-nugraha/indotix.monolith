@@ -116,8 +116,8 @@ export default function PromoVideoCreate() {
                         }}
                     >
                         <div className="grid gap-2">
-                            <Label>Judul</Label>
-                            <Input value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
+                            <Label required>Judul</Label>
+                            <Input required value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
                             <InputError message={form.errors.title} />
                         </div>
                         <div className="grid gap-2">
@@ -134,8 +134,9 @@ export default function PromoVideoCreate() {
                             <Input value={form.data.cta_url} onChange={(event) => form.setData('cta_url', event.target.value)} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Video Utama (besar)</Label>
+                            <Label required>Video Utama (besar)</Label>
                             <Input
+                                required
                                 type="file"
                                 accept="video/*"
                                 onChange={(event) =>
@@ -146,8 +147,9 @@ export default function PromoVideoCreate() {
                             <InputError message={form.errors.video} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Video Bawah</Label>
+                            <Label required>Video Bawah</Label>
                             <Input
+                                required
                                 type="file"
                                 accept="video/*"
                                 onChange={(event) =>

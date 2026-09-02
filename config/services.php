@@ -52,4 +52,20 @@ return [
         'service_account' => env('FCM_SERVICE_ACCOUNT'),
     ],
 
+    'passkeys' => [
+        'rp_id' => env('PASSKEY_RP_ID', parse_url((string) env('APP_URL', 'https://indotix.co.id'), PHP_URL_HOST) ?: 'indotix.co.id'),
+        'rp_name' => env('PASSKEY_RP_NAME', 'Indotix'),
+        'origins' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', env('PASSKEY_ALLOWED_ORIGINS', env('APP_URL', 'https://indotix.co.id')))
+        ))),
+        'android_package' => env('PASSKEY_ANDROID_PACKAGE', 'com.indotix'),
+        'android_cert_fingerprints' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', env('PASSKEY_ANDROID_CERT_FINGERPRINTS', ''))
+        ))),
+        'apple_team_id' => env('PASSKEY_APPLE_TEAM_ID'),
+        'ios_bundle_id' => env('PASSKEY_IOS_BUNDLE_ID', 'com.indotix'),
+    ],
+
 ];

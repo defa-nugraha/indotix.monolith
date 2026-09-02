@@ -93,8 +93,15 @@ class WisataExceptionController extends Controller
             'reason' => ['required', 'string', 'max:500'],
         ]);
 
+        if (! in_array($booking->status, ['pending', 'pending_payment'], true)) {
+            return back()->withErrors([
+                'booking' => 'Booking ini tidak dapat dibatalkan dari status saat ini.',
+            ]);
+        }
+
         $booking->update([
             'status' => 'cancelled',
+            'payment_status' => 'cancelled',
             'cancel_reason' => $data['reason'],
             'cancelled_at' => now(),
             'cancelled_by_admin_id' => $request->user()->id,

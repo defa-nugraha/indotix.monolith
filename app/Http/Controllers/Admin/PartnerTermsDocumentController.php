@@ -7,6 +7,7 @@ use App\Models\PartnerTermsDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -46,16 +47,25 @@ class PartnerTermsDocumentController extends Controller
         $data = $request->validate([
             'business_type' => ['required', Rule::in(PartnerTermsDocument::BUSINESS_TYPES)],
             'title' => ['required', 'string', 'max:255'],
-            'document' => ['required', 'file', 'mimes:pdf', 'max:20480'],
+            'document' => [
+                Rule::requiredIf(fn () => ! PartnerTermsDocument::query()
+                    ->where('business_type', $request->string('business_type')->toString())
+                    ->exists()),
+                File::types(['pdf'])->max(20 * 1024),
+            ],
         ]);
 
         $existing = PartnerTermsDocument::query()
             ->where('business_type', $data['business_type'])
             ->first();
 
-        $path = $request->file('document')->store('partner-terms', 'public');
+        $path = $existing?->file_path;
 
-        if ($existing?->file_path) {
+        if ($request->hasFile('document')) {
+            $path = $request->file('document')->store('partner-terms', 'public');
+        }
+
+        if ($request->hasFile('document') && $existing?->file_path) {
             Storage::disk('public')->delete($existing->file_path);
         }
 
@@ -71,12 +81,21 @@ class PartnerTermsDocumentController extends Controller
         return back()->with('status', 'partner-terms-updated');
     }
 
+    public function destroy(PartnerTermsDocument $document): RedirectResponse
+    {
+        if ($document->file_path) {
+            Storage::disk('public')->delete($document->file_path);
+        }
+
+        $document->delete();
+
+        return back()->with('status', 'partner-terms-deleted');
+    }
+
     private function label(string $type): string
     {
         return match ($type) {
-            'hotel' => 'Mitra Hotel',
             'wisata' => 'Mitra Wisata',
-            'event' => 'Mitra Event',
             default => $type,
         };
     }

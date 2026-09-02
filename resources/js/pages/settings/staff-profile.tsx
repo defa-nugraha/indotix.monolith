@@ -92,7 +92,9 @@ export default function StaffProfile() {
 
                         <div className="mt-6 grid gap-5">
                             <div className="grid gap-2">
-                                <label className="text-sm font-semibold text-slate-700">Nama Lengkap</label>
+                                <label className="text-sm font-semibold text-slate-700">
+                                    Nama Lengkap <span className="text-red-600">*</span>
+                                </label>
                                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                     <UserCircle className="h-4 w-4 text-slate-400" />
                                     <input
@@ -108,7 +110,9 @@ export default function StaffProfile() {
                             </div>
 
                             <div className="grid gap-2">
-                                <label className="text-sm font-semibold text-slate-700">Email</label>
+                                <label className="text-sm font-semibold text-slate-700">
+                                    Email <span className="text-red-600">*</span>
+                                </label>
                                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                     <Mail className="h-4 w-4 text-slate-400" />
                                     <input
@@ -126,7 +130,9 @@ export default function StaffProfile() {
 
                             <div className="grid gap-5 md:grid-cols-2">
                                 <div className="grid gap-2">
-                                    <label className="text-sm font-semibold text-slate-700">Nomor HP</label>
+                                    <label className="text-sm font-semibold text-slate-700">
+                                        Nomor HP <span className="text-red-600">*</span>
+                                    </label>
                                     <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                         <Phone className="h-4 w-4 text-slate-400" />
                                         <input
@@ -134,6 +140,7 @@ export default function StaffProfile() {
                                             onChange={(event) => profileForm.setData('phone', event.target.value)}
                                             className="h-10 w-full bg-transparent text-sm outline-none"
                                             placeholder="0812xxxxxxx"
+                                            required
                                         />
                                     </div>
                                     <InputError message={profileForm.errors.phone} />
@@ -192,7 +199,9 @@ export default function StaffProfile() {
 
                     <div className="mt-6 grid gap-5 md:grid-cols-3">
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Password Saat Ini</label>
+                            <label className="text-sm font-semibold text-slate-700">
+                                Password Saat Ini <span className="text-red-600">*</span>
+                            </label>
                             <input
                                 type="password"
                                 value={passwordForm.data.current_password}
@@ -200,11 +209,14 @@ export default function StaffProfile() {
                                 className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
                                 placeholder="Password lama"
                                 autoComplete="current-password"
+                                required
                             />
                             <InputError message={passwordForm.errors.current_password} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Password Baru</label>
+                            <label className="text-sm font-semibold text-slate-700">
+                                Password Baru <span className="text-red-600">*</span>
+                            </label>
                             <input
                                 type="password"
                                 value={passwordForm.data.password}
@@ -212,11 +224,14 @@ export default function StaffProfile() {
                                 className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
                                 placeholder="Minimal 8 karakter"
                                 autoComplete="new-password"
+                                required
                             />
                             <InputError message={passwordForm.errors.password} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-semibold text-slate-700">Konfirmasi Password</label>
+                            <label className="text-sm font-semibold text-slate-700">
+                                Konfirmasi Password <span className="text-red-600">*</span>
+                            </label>
                             <input
                                 type="password"
                                 value={passwordForm.data.password_confirmation}
@@ -224,6 +239,7 @@ export default function StaffProfile() {
                                 className="h-11 rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-sky-400"
                                 placeholder="Ulangi password baru"
                                 autoComplete="new-password"
+                                required
                             />
                             <InputError message={passwordForm.errors.password_confirmation} />
                         </div>

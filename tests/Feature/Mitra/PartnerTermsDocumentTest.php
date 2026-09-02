@@ -2,6 +2,7 @@
 
 use App\Mail\PartnerTermsSignedMail;
 use App\Models\MitraOnboarding;
+use App\Models\MitraWisataOnboarding;
 use App\Models\PartnerTermsDocument;
 use App\Models\PartnerTermsSignature;
 use App\Models\User;
@@ -23,16 +24,16 @@ test('admin can upload partner terms pdf per business category', function () {
 
     $this->actingAs($admin)
         ->post('/admin/mitra-documents', [
-            'business_type' => 'hotel',
-            'title' => 'S&K Mitra Hotel',
+            'business_type' => 'wisata',
+            'title' => 'S&K Mitra Wisata',
             'document' => UploadedFile::fake()->create('terms.pdf', 128, 'application/pdf'),
         ])
         ->assertRedirect()
         ->assertSessionHasNoErrors();
 
-    $document = PartnerTermsDocument::query()->where('business_type', 'hotel')->firstOrFail();
+    $document = PartnerTermsDocument::query()->where('business_type', 'wisata')->firstOrFail();
 
-    expect($document->title)->toBe('S&K Mitra Hotel')
+    expect($document->title)->toBe('S&K Mitra Wisata')
         ->and($document->uploaded_by)->toBe($admin->id)
         ->and($document->file_path)->toEndWith('.pdf');
 
@@ -49,9 +50,9 @@ test('admin terms document upload only accepts pdf', function () {
 
     $this->actingAs($admin)
         ->post('/admin/mitra-documents', [
-            'business_type' => 'hotel',
-            'title' => 'S&K Mitra Hotel',
-            'document' => UploadedFile::fake()->image('terms.jpg'),
+            'business_type' => 'wisata',
+            'title' => 'S&K Mitra Wisata',
+            'document' => fakeTestImage('terms.png'),
         ])
         ->assertSessionHasErrors('document');
 });
@@ -62,11 +63,11 @@ test('verified partner sees terms requirement and can sign it', function () {
 
     $mitra = User::factory()->create([
         'role' => 'mitra',
-        'mitra_onboarding_type' => 'hotel',
+        'mitra_onboarding_type' => 'wisata',
         'email_verified_at' => now(),
     ]);
 
-    MitraOnboarding::query()->create([
+    MitraWisataOnboarding::query()->create([
         'user_id' => $mitra->id,
         'current_step' => 3,
         'verification_status' => 'verified',
@@ -78,8 +79,8 @@ test('verified partner sees terms requirement and can sign it', function () {
         ->store('partner-terms', 'public');
 
     $document = PartnerTermsDocument::query()->create([
-        'business_type' => 'hotel',
-        'title' => 'S&K Mitra Hotel',
+        'business_type' => 'wisata',
+        'title' => 'S&K Mitra Wisata',
         'file_path' => $path,
     ]);
 
@@ -88,8 +89,8 @@ test('verified partner sees terms requirement and can sign it', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('termsRequirement.required', true)
-            ->where('termsRequirement.business_type', 'hotel')
-            ->where('termsRequirement.title', 'S&K Mitra Hotel'));
+            ->where('termsRequirement.business_type', 'wisata')
+            ->where('termsRequirement.title', 'S&K Mitra Wisata'));
 
     $this->actingAs($mitra)
         ->post('/mitra/terms/sign', [

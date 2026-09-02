@@ -9,6 +9,7 @@ use App\Support\CommissionInfo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,26 +21,15 @@ class MitraOnboardingController extends Controller
     {
         $user = $request->user();
         $data = $request->validate([
-            'type' => ['required', 'in:hotel,wisata,event'],
+            'type' => ['required', Rule::in(['wisata'])],
+        ], [
+            'type.in' => 'Pendaftaran mitra saat ini hanya tersedia untuk pengelola wisata.',
         ]);
-
-        if ($user->mitra_onboarding_type && $user->mitra_onboarding_type !== $data['type']) {
-            return back()->withErrors([
-                'type' => 'Jenis mitra sudah dipilih dan tidak bisa diubah.',
-            ]);
-        }
 
         $user->mitra_onboarding_type = $data['type'];
         $user->save();
 
-        if ($data['type'] === 'wisata') {
-            return redirect()->route('mitra.wisata.onboarding');
-        }
-        if ($data['type'] === 'event') {
-            return redirect()->route('mitra.event.onboarding');
-        }
-
-        return redirect()->route('mitra.onboarding');
+        return redirect()->route('mitra.wisata.onboarding');
     }
 
     public function show(Request $request): Response

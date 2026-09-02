@@ -39,9 +39,7 @@ class PublicBannerController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120', 'dimensions:width=1200,height=450'],
-        ], [
-            'image.dimensions' => 'Ukuran banner harus 1200 x 450 px.',
+            'image' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ]);
 
         $path = $mediaCompression->store($request->file('image'), 'public-banners', 'public');
@@ -80,9 +78,7 @@ class PublicBannerController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120', 'dimensions:width=1200,height=450'],
-        ], [
-            'image.dimensions' => 'Ukuran banner harus 1200 x 450 px.',
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ]);
 
         $oldImagePath = $banner->image_path;

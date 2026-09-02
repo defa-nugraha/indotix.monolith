@@ -78,7 +78,7 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                             </p>
                             <p className="text-xs text-slate-500">
                                 Banner aktif akan tampil otomatis sesuai urutan.
-                                Ukuran banner: 1200 × 450 px.
+                                Rekomendasi tampilan utama: 1600 × 449 px.
                             </p>
                         </div>
                         <Button

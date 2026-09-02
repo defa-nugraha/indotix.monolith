@@ -8,6 +8,7 @@ import {
     LogOut,
     Menu,
     MessageCircle,
+    ScanLine,
     Search,
     UserCircle,
 } from 'lucide-react';
@@ -121,6 +122,7 @@ export default function PublicHeader({
             show: Boolean(affiliate_menu),
         },
         { label: 'Riwayat', href: '/history', icon: History, show: true },
+        { label: 'Scan Tiket', href: '/tickets/scan', icon: ScanLine, show: true },
         { label: 'Chat', href: '/chat', icon: MessageCircle, show: true },
         { label: 'Notifikasi', href: '/notifications', icon: Bell, show: true },
     ];

@@ -12,10 +12,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { PublicSeo } from '@/components/public-seo';
 import {
     PublicFooter,
-    PublicPartnerSection,
     PublicTrustSection,
     type PublicContact,
-    type PublicPartner,
     type PublicTrustContent,
 } from '@/components/public-page-sections';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -106,7 +104,6 @@ export default function WisataSearch({
     destinations,
     homeContent,
     contact,
-    partners = [],
 }: {
     filters: Filters;
     destinations: Destination[];
@@ -114,7 +111,6 @@ export default function WisataSearch({
     meta?: { total?: number; applied_filters?: Record<string, unknown> } | null;
     homeContent?: PublicTrustContent | null;
     contact?: PublicContact | null;
-    partners?: PublicPartner[];
 }) {
     const [isReady, setIsReady] = useState(false);
     const [form, setForm] = useState({
@@ -125,6 +121,7 @@ export default function WisataSearch({
     const [sort, setSort] = useState(filters.sort ?? 'recommended');
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [selectedCities, setSelectedCities] = useState<string[]>([]);
+    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
     const highestPrice = maxTicketPrice(destinations);
     const [maxPrice, setMaxPrice] = useState(highestPrice);
 
@@ -286,30 +283,47 @@ export default function WisataSearch({
                                 </p>
                             </div>
 
-                            <form
-                                onSubmit={submitSearch}
-                                className="relative flex w-full items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-800 shadow-xs focus-within:ring-2 focus-within:ring-sky-500/50 sm:w-80"
-                            >
-                                <Search className="mr-2 h-4 w-4 text-slate-400" />
-                                <input
-                                    type="search"
-                                    placeholder="Cari kota, destinasi..."
-                                    className="w-full border-none bg-transparent text-xs font-medium focus:outline-none"
-                                    value={form.q}
-                                    onChange={(event) =>
-                                        setForm((prev) => ({
-                                            ...prev,
-                                            q: event.target.value,
-                                        }))
+                            <div className="flex w-full gap-2 sm:w-auto">
+                                <form
+                                    onSubmit={submitSearch}
+                                    className="relative flex min-w-0 flex-1 items-center rounded-full border border-slate-200 bg-white px-4 py-2 text-slate-800 shadow-xs focus-within:ring-2 focus-within:ring-sky-500/50 sm:w-80 sm:flex-none"
+                                    data-coach="public-search"
+                                >
+                                    <Search className="mr-2 h-4 w-4 shrink-0 text-slate-400" />
+                                    <input
+                                        type="search"
+                                        placeholder="Cari kota, destinasi..."
+                                        className="min-w-0 w-full border-none bg-transparent text-xs font-medium focus:outline-none"
+                                        value={form.q}
+                                        onChange={(event) =>
+                                            setForm((prev) => ({
+                                                ...prev,
+                                                q: event.target.value,
+                                            }))
+                                        }
+                                    />
+                                </form>
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setMobileFiltersOpen((open) => !open)
                                     }
-                                />
-                            </form>
+                                    aria-expanded={mobileFiltersOpen}
+                                    className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-sky-600 px-4 text-xs font-bold text-white shadow-sm transition hover:bg-sky-700 lg:hidden"
+                                >
+                                    <SlidersHorizontal className="h-4 w-4" />
+                                    Filter
+                                </button>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-12">
                             <aside
-                                className="space-y-6 rounded-3xl border border-slate-100 bg-white p-6 shadow-sm lg:col-span-4"
+                                className={`space-y-6 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-6 lg:col-span-4 lg:block ${
+                                    mobileFiltersOpen ? 'block' : 'hidden'
+                                }`}
                                 id="filters-sidebar"
+                                data-coach="public-categories"
                             >
                                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                                     <span className="flex items-center gap-2 text-base font-bold text-slate-900">
@@ -511,6 +525,7 @@ export default function WisataSearch({
                             <section
                                 className="lg:col-span-8"
                                 id="listings-container"
+                                data-coach="wisata-results"
                             >
                                 {filtered.length === 0 ? (
                                     <div className="rounded-3xl border border-slate-100 bg-white p-12 text-center text-slate-500">
@@ -598,7 +613,7 @@ export default function WisataSearch({
                                                                 <span className="text-base font-black tracking-tight text-sky-600">
                                                                     {price > 0
                                                                         ? `Rp ${price.toLocaleString('id-ID')}`
-                                                                        : 'Harga tersedia'}
+                                                                        : 'Tiket belum tersedia'}
                                                                     <span className="text-[10px] font-normal text-slate-400">
                                                                         {' '}
                                                                         / orang
@@ -624,7 +639,6 @@ export default function WisataSearch({
                     </>
                 )}
             </div>
-            <PublicPartnerSection partners={partners} />
             <PublicTrustSection homeContent={homeContent} contact={contact} />
             <PublicFooter contact={contact} />
         </PublicLayout>

@@ -46,12 +46,7 @@ class SystemSettingController extends Controller
 
         return Inertia::render('admin/system/settings/index', [
             'settings' => [
-                'hotel_booking_timeout_minutes' => (int) ($settings['hotel_booking_timeout_minutes'] ?? $settings['booking_timeout_minutes'] ?? self::DEFAULTS['hotel_booking_timeout_minutes']),
                 'wisata_booking_timeout_minutes' => (int) ($settings['wisata_booking_timeout_minutes'] ?? self::DEFAULTS['wisata_booking_timeout_minutes']),
-                'event_booking_timeout_minutes' => (int) ($settings['event_booking_timeout_minutes'] ?? self::DEFAULTS['event_booking_timeout_minutes']),
-                'academy_booking_timeout_minutes' => (int) ($settings['academy_booking_timeout_minutes'] ?? self::DEFAULTS['academy_booking_timeout_minutes']),
-                'special_program_booking_timeout_minutes' => (int) ($settings['special_program_booking_timeout_minutes'] ?? self::DEFAULTS['special_program_booking_timeout_minutes']),
-                'retail_shop_booking_timeout_minutes' => (int) ($settings['retail_shop_booking_timeout_minutes'] ?? self::DEFAULTS['retail_shop_booking_timeout_minutes']),
                 'public_whatsapp_number' => (string) ($settings['public_whatsapp_number'] ?? self::DEFAULTS['public_whatsapp_number']),
                 MaintenanceMode::ENABLED_KEY => filter_var($settings[MaintenanceMode::ENABLED_KEY] ?? self::DEFAULTS[MaintenanceMode::ENABLED_KEY], FILTER_VALIDATE_BOOL),
                 MaintenanceMode::MESSAGE_KEY => (string) ($settings[MaintenanceMode::MESSAGE_KEY] ?? self::DEFAULTS[MaintenanceMode::MESSAGE_KEY]),
@@ -64,18 +59,13 @@ class SystemSettingController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'hotel_booking_timeout_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
             'wisata_booking_timeout_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
-            'event_booking_timeout_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
-            'academy_booking_timeout_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
-            'special_program_booking_timeout_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
-            'retail_shop_booking_timeout_minutes' => ['required', 'integer', 'min:1', 'max:1440'],
             'public_whatsapp_number' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+().\\s-]*$/'],
             MaintenanceMode::ENABLED_KEY => ['required', 'boolean'],
             MaintenanceMode::MESSAGE_KEY => ['required', 'string', 'max:500'],
         ]);
 
-        $data['booking_timeout_minutes'] = $data['hotel_booking_timeout_minutes'];
+        $data['booking_timeout_minutes'] = $data['wisata_booking_timeout_minutes'];
 
         foreach ($data as $key => $value) {
             SystemSetting::query()->updateOrCreate(

@@ -137,12 +137,15 @@ class TicketController extends Controller
             (int) $destination->id,
             $data['package_items'] ?? []
         );
+        $price = $ticketKind === 'package'
+            ? $this->calculatePackagePrice($packageItems)
+            : (int) $data['price'];
 
         WisataTicket::create([
             'mitra_wisata_onboarding_id' => $destination->id,
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'price' => $data['price'],
+            'price' => $price,
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
             'min_order_quantity' => $data['min_order_quantity'] ?? 1,
@@ -199,11 +202,14 @@ class TicketController extends Controller
             $data['package_items'] ?? [],
             $ticket->id
         );
+        $price = $ticketKind === 'package'
+            ? $this->calculatePackagePrice($packageItems)
+            : (int) $data['price'];
 
         $ticket->update([
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'price' => $data['price'],
+            'price' => $price,
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
             'min_order_quantity' => $data['min_order_quantity'] ?? 1,
@@ -317,5 +323,20 @@ class TicketController extends Controller
         }
 
         return $normalized->all();
+    }
+
+    private function calculatePackagePrice(?array $packageItems): int
+    {
+        if (! $packageItems) {
+            return 0;
+        }
+
+        $prices = WisataTicket::query()
+            ->whereIn('id', collect($packageItems)->pluck('ticket_id'))
+            ->pluck('price', 'id');
+
+        return collect($packageItems)->sum(
+            fn (array $item) => (int) ($prices[$item['ticket_id']] ?? 0) * (int) $item['quantity']
+        );
     }
 }

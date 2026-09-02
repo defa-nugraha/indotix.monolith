@@ -360,6 +360,7 @@ export default function MitraWisataOnboarding({
         fileName,
         previewUrl,
         onChange,
+        required = false,
     }: {
         id: string;
         label: string;
@@ -368,6 +369,7 @@ export default function MitraWisataOnboarding({
         fileName?: string;
         previewUrl?: string | null;
         onChange: (file: File | null) => void;
+        required?: boolean;
     }) => {
         const hasPreview = Boolean(previewUrl);
         const isPdf =
@@ -410,6 +412,11 @@ export default function MitraWisataOnboarding({
                         <>
                             <p className="text-sm font-semibold text-slate-900">
                                 {label}
+                                {required ? (
+                                    <span aria-hidden="true" className="ml-0.5 text-red-600">
+                                        *
+                                    </span>
+                                ) : null}
                             </p>
                             <p className="mt-1 text-xs text-slate-500">
                                 {helper}
@@ -597,7 +604,7 @@ export default function MitraWisataOnboarding({
                             }}
                         >
                             <div className="grid gap-2">
-                                <Label>Nama Lengkap Penanggung Jawab</Label>
+                                <Label required>Nama Lengkap Penanggung Jawab</Label>
                                 <Input
                                     value={step1Form.data.responsible_name}
                                     onChange={(event) =>
@@ -613,7 +620,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Nomor HP</Label>
+                                <Label required>Nomor HP</Label>
                                 <Input
                                     value={step1Form.data.responsible_phone}
                                     onChange={(event) =>
@@ -629,7 +636,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
-                                <Label>Jabatan Penanggung Jawab</Label>
+                                <Label required>Jabatan Penanggung Jawab</Label>
                                 <UiSelect
                                     value={step1Form.data.responsible_role}
                                     onValueChange={(value) =>
@@ -703,7 +710,7 @@ export default function MitraWisataOnboarding({
                             }}
                         >
                             <div className="grid gap-2">
-                                <Label>Nama Destinasi Wisata</Label>
+                                <Label required>Nama Destinasi Wisata</Label>
                                 <Input
                                     value={step2Form.data.destination_name}
                                     onChange={(event) =>
@@ -719,7 +726,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Jenis Wisata</Label>
+                                <Label required>Jenis Wisata</Label>
                                 <UiSelect
                                     value={step2Form.data.destination_type}
                                     onValueChange={(value) =>
@@ -748,7 +755,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
-                                <Label>Deskripsi Singkat</Label>
+                                <Label required>Deskripsi Singkat</Label>
                                 <textarea
                                     className="min-h-[120px] rounded-md border border-input bg-transparent px-3 py-2 text-sm"
                                     value={step2Form.data.description}
@@ -782,7 +789,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Provinsi</Label>
+                                <Label required>Provinsi</Label>
                                 <UiSelect
                                     value={step2Form.data.province_code}
                                     onValueChange={(value) =>
@@ -804,7 +811,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Kota/Kabupaten</Label>
+                                <Label required>Kota/Kabupaten</Label>
                                 <Select
                                     inputId="city_code"
                                     instanceId="city_code"
@@ -824,7 +831,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
-                                <Label>Alamat Lengkap</Label>
+                                <Label required>Alamat Lengkap</Label>
                                 <Input
                                     value={step2Form.data.address_full}
                                     onChange={(event) =>
@@ -840,7 +847,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
-                                <Label>Titik Google Maps</Label>
+                                <Label required>Titik Google Maps</Label>
                                 <Input
                                     value={step2Form.data.maps_pin_url}
                                     onChange={(event) =>
@@ -857,7 +864,7 @@ export default function MitraWisataOnboarding({
                             </div>
 
                             <div className="grid gap-2 md:col-span-2">
-                                <Label>Hari Buka</Label>
+                                <Label required>Hari Buka</Label>
                                 <div className="flex flex-wrap gap-3">
                                     {dayOptions.map((day) => (
                                         <label
@@ -898,7 +905,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Jam Buka</Label>
+                                <Label required>Jam Buka</Label>
                                 <Input
                                     value={step2Form.data.open_time}
                                     onChange={(event) =>
@@ -914,7 +921,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Jam Tutup</Label>
+                                <Label required>Jam Tutup</Label>
                                 <Input
                                     value={step2Form.data.close_time}
                                     onChange={(event) =>
@@ -1020,6 +1027,7 @@ export default function MitraWisataOnboarding({
                                     label="Foto Gerbang/Pintu Masuk"
                                     helper={`Wajib, jpg/png/webp, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*"
+                                    required
                                     fileName={
                                         step2Form.data.photo_gate_file?.name
                                     }
@@ -1040,6 +1048,7 @@ export default function MitraWisataOnboarding({
                                     label="Foto Area Utama"
                                     helper={`Wajib, jpg/png/webp, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*"
+                                    required
                                     fileName={
                                         step2Form.data.photo_area_file?.name
                                     }
@@ -1060,6 +1069,7 @@ export default function MitraWisataOnboarding({
                                     label="Foto Loket/Validasi"
                                     helper={`Wajib, jpg/png/webp, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*"
+                                    required
                                     fileName={
                                         step2Form.data.photo_ticket_file?.name
                                     }
@@ -1133,6 +1143,7 @@ export default function MitraWisataOnboarding({
                                     label="KTP Penanggung Jawab"
                                     helper={`Wajib, jpg/png/webp/pdf, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*,application/pdf"
+                                    required
                                     fileName={step3Form.data.ktp_file?.name}
                                     previewUrl={
                                         filePreviews.ktp ??
@@ -1168,7 +1179,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Jenis Dokumen Legalitas</Label>
+                                <Label required>Jenis Dokumen Legalitas</Label>
                                 <UiSelect
                                     value={step3Form.data.legal_doc_type}
                                     onValueChange={(value) =>
@@ -1202,7 +1213,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Nomor Dokumen</Label>
+                                <Label required>Nomor Dokumen</Label>
                                 <Input
                                     value={step3Form.data.legal_doc_number}
                                     onChange={(event) =>
@@ -1223,6 +1234,7 @@ export default function MitraWisataOnboarding({
                                     label="Upload Dokumen Legalitas"
                                     helper={`Wajib, jpg/png/webp/pdf, maksimal ${maxUploadSizeLabel}`}
                                     accept="image/*,application/pdf"
+                                    required
                                     fileName={
                                         step3Form.data.legal_doc_file?.name
                                     }
@@ -1241,7 +1253,7 @@ export default function MitraWisataOnboarding({
                             </div>
 
                             <div className="grid gap-2">
-                                <Label>Nama Bank</Label>
+                                <Label required>Nama Bank</Label>
                                 <Input
                                     value={step3Form.data.bank_name}
                                     onChange={(event) =>
@@ -1257,7 +1269,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2">
-                                <Label>Nomor Rekening</Label>
+                                <Label required>Nomor Rekening</Label>
                                 <Input
                                     value={step3Form.data.bank_account_number}
                                     onChange={(event) =>
@@ -1275,7 +1287,7 @@ export default function MitraWisataOnboarding({
                                 />
                             </div>
                             <div className="grid gap-2 md:col-span-2">
-                                <Label>Nama Pemilik Rekening</Label>
+                                <Label required>Nama Pemilik Rekening</Label>
                                 <Input
                                     value={step3Form.data.bank_account_name}
                                     onChange={(event) =>

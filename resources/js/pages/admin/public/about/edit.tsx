@@ -62,12 +62,12 @@ export default function AboutEdit({ about }: { about: AboutPage }) {
                         }}
                     >
                         <div className="grid gap-2">
-                            <Label>Judul</Label>
-                            <Input value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
+                            <Label required>Judul</Label>
+                            <Input required value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
                             <InputError message={form.errors.title} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Konten</Label>
+                            <Label required>Konten</Label>
                             <CkeditorField
                                 value={form.data.content}
                                 onChange={(value) => form.setData('content', value)}

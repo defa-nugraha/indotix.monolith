@@ -18,3 +18,12 @@ test('html sanitizer removes executable html but keeps safe formatting', functio
         ->not->toContain('onclick')
         ->not->toContain('javascript:');
 });
+
+test('html sanitizer keeps utf8 content without latin1 artifacts', function () {
+    $clean = HtmlSanitizer::clean('<p>Tentang wisata Indonesia&nbsp;</p><p>Aman &amp; nyaman</p>');
+
+    expect($clean)
+        ->toContain('Tentang wisata Indonesia')
+        ->toContain('Aman &amp; nyaman')
+        ->not->toContain('Â');
+});

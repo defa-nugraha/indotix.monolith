@@ -22,6 +22,9 @@ type CitySelectOption = { value: string; label: string };
 
 type Destination = {
     id: number;
+    responsible_name: string | null;
+    responsible_phone: string | null;
+    responsible_role: string | null;
     destination_name: string | null;
     destination_type: string | null;
     description: string | null;
@@ -40,7 +43,16 @@ type Destination = {
     photo_gate_path: string | null;
     photo_area_path: string | null;
     photo_ticket_path: string | null;
+    photo_product_path: string | null;
     photo_other_paths?: string[] | null;
+    ktp_path: string | null;
+    selfie_ktp_path: string | null;
+    legal_doc_type: string | null;
+    legal_doc_number: string | null;
+    legal_doc_path: string | null;
+    bank_name: string | null;
+    bank_account_number: string | null;
+    bank_account_name: string | null;
     is_temporarily_closed: boolean;
     closure_note: string | null;
 };
@@ -56,6 +68,22 @@ const destinationTypes = [
     { id: 'budaya', label: 'Budaya' },
     { id: 'wahana', label: 'Wahana' },
     { id: 'event', label: 'Event / Atraksi' },
+];
+
+const responsibleRoles = [
+    { id: 'owner', label: 'Pemilik / Owner' },
+    { id: 'manager', label: 'Manajer Operasional' },
+    { id: 'pokdarwis', label: 'Pokdarwis' },
+    { id: 'staff', label: 'Staf' },
+];
+const otherOptionValue = '__other';
+
+const legalDocTypes = [
+    { id: 'nib', label: 'NIB' },
+    { id: 'sk_desa', label: 'SK Desa' },
+    { id: 'surat_pokdarwis', label: 'Surat Pokdarwis' },
+    { id: 'izin_wisata', label: 'Izin Wisata' },
+    { id: 'dokumen_kawasan', label: 'Dokumen Kawasan' },
 ];
 
 const facilityOptions = [
@@ -92,6 +120,9 @@ export default function MitraWisataDestination({
 }) {
     const form = useForm({
         _method: 'put',
+        responsible_name: destination.responsible_name ?? '',
+        responsible_phone: destination.responsible_phone ?? '',
+        responsible_role: destination.responsible_role ?? '',
         destination_name: destination.destination_name ?? '',
         destination_type: destination.destination_type ?? '',
         description: destination.description ?? '',
@@ -107,17 +138,52 @@ export default function MitraWisataDestination({
         facilities: destination.facilities ?? ([] as string[]),
         contact_phone: destination.contact_phone ?? '',
         contact_hours: destination.contact_hours ?? '',
+        legal_doc_type: destination.legal_doc_type ?? '',
+        legal_doc_number: destination.legal_doc_number ?? '',
+        bank_name: destination.bank_name ?? '',
+        bank_account_number: destination.bank_account_number ?? '',
+        bank_account_name: destination.bank_account_name ?? '',
         is_temporarily_closed: destination.is_temporarily_closed ?? false,
         closure_note: destination.closure_note ?? '',
         photo_gate_file: null as File | null,
         photo_area_file: null as File | null,
         photo_ticket_file: null as File | null,
+        photo_product_file: null as File | null,
+        ktp_file: null as File | null,
+        selfie_ktp_file: null as File | null,
+        legal_doc_file: null as File | null,
         photo_other_files: [] as File[],
         photo_other_remove: [] as string[],
     });
 
     const [otherPhotos, setOtherPhotos] = useState<string[]>(
         (destination.photo_other_paths ?? []).filter(Boolean) as string[],
+    );
+    const initialResponsibleRole = destination.responsible_role ?? '';
+    const initialDestinationType = destination.destination_type ?? '';
+    const [responsibleRoleMode, setResponsibleRoleMode] = useState(
+        initialResponsibleRole &&
+            !responsibleRoles.some((item) => item.id === initialResponsibleRole)
+            ? otherOptionValue
+            : initialResponsibleRole,
+    );
+    const [customResponsibleRole, setCustomResponsibleRole] = useState(
+        initialResponsibleRole &&
+            !responsibleRoles.some((item) => item.id === initialResponsibleRole)
+            ? initialResponsibleRole
+            : '',
+    );
+    const [destinationTypeMode, setDestinationTypeMode] = useState(
+        initialDestinationType &&
+            !destinationTypes.some((item) => item.id === initialDestinationType)
+            ? otherOptionValue
+            : initialDestinationType,
+    );
+    const [customDestinationType, setCustomDestinationType] = useState(
+        initialDestinationType &&
+            !destinationTypes.some((item) => item.id === initialDestinationType)
+            ? initialDestinationType
+            : '',
     );
 
     const handleRemoveOtherPhoto = (path: string) => {
@@ -140,7 +206,8 @@ export default function MitraWisataDestination({
         field:
             | 'photo_gate_file'
             | 'photo_area_file'
-            | 'photo_ticket_file',
+            | 'photo_ticket_file'
+            | 'photo_product_file',
         event: ChangeEvent<HTMLInputElement>,
     ) => {
         const file = event.target.files?.[0] ?? null;
@@ -148,6 +215,21 @@ export default function MitraWisataDestination({
             event.target.value = '';
             form.setData(field, null);
             showFileWarning(`Ukuran setiap foto maksimal ${maxImageSizeLabel}.`);
+            return;
+        }
+
+        form.setData(field, file);
+    };
+
+    const handleDocumentChange = (
+        field: 'ktp_file' | 'selfie_ktp_file' | 'legal_doc_file',
+        event: ChangeEvent<HTMLInputElement>,
+    ) => {
+        const file = event.target.files?.[0] ?? null;
+        if (file && file.size > maxImageSize) {
+            event.target.value = '';
+            form.setData(field, null);
+            showFileWarning(`Ukuran setiap dokumen maksimal ${maxImageSizeLabel}.`);
             return;
         }
 
@@ -218,6 +300,20 @@ export default function MitraWisataDestination({
 
     const getPublicUrl = (path?: string | null) =>
         path ? `/storage/${path}` : null;
+    const renderExistingDocument = (path?: string | null) => {
+        const url = getPublicUrl(path);
+
+        return url ? (
+            <a
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 inline-flex text-xs font-semibold text-sky-700 hover:text-sky-800"
+            >
+                Lihat dokumen saat ini
+            </a>
+        ) : null;
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -246,9 +342,112 @@ export default function MitraWisataDestination({
                             submit();
                         }}
                     >
+                        <div
+                            className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:col-span-2 md:grid-cols-3"
+                            data-coach="mitra-destination-responsible"
+                        >
+                            <div className="grid gap-2 md:col-span-3">
+                                <h2 className="text-base font-semibold text-slate-900">
+                                    Penanggung Jawab
+                                </h2>
+                                <p className="text-sm text-slate-500">
+                                    Data kontak internal untuk validasi dan komunikasi operasional mitra.
+                                </p>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Nama Penanggung Jawab</Label>
+                                <Input
+                                    value={form.data.responsible_name}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'responsible_name',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Nama sesuai dokumen"
+                                />
+                                <InputError message={form.errors.responsible_name} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Nomor HP/WhatsApp</Label>
+                                <Input
+                                    value={form.data.responsible_phone}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'responsible_phone',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="08xxxxxxxxxx"
+                                />
+                                <InputError message={form.errors.responsible_phone} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Jabatan</Label>
+                                <UiSelect
+                                    value={responsibleRoleMode}
+                                    onValueChange={(value) => {
+                                        setResponsibleRoleMode(value);
+                                        form.setData(
+                                            'responsible_role',
+                                            value === otherOptionValue
+                                                ? customResponsibleRole
+                                                : value,
+                                        );
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih jabatan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {responsibleRoles.map((item) => (
+                                            <SelectItem
+                                                key={item.id}
+                                                value={item.id}
+                                            >
+                                                {item.label}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value={otherOptionValue}>
+                                            Lainnya
+                                        </SelectItem>
+                                    </SelectContent>
+                                </UiSelect>
+                                {responsibleRoleMode === otherOptionValue && (
+                                    <Input
+                                        aria-label="Jabatan lainnya"
+                                        maxLength={80}
+                                        value={customResponsibleRole}
+                                        onChange={(event) => {
+                                            setCustomResponsibleRole(
+                                                event.target.value,
+                                            );
+                                            form.setData(
+                                                'responsible_role',
+                                                event.target.value,
+                                            );
+                                        }}
+                                        placeholder="Tulis jabatan"
+                                    />
+                                )}
+                                <InputError message={form.errors.responsible_role} />
+                            </div>
+                        </div>
+                        <div
+                            className="grid gap-1 md:col-span-2"
+                            data-coach="mitra-destination-info"
+                        >
+                            <h2 className="text-base font-semibold text-slate-900">
+                                Informasi Destinasi
+                            </h2>
+                            <p className="text-sm text-slate-500">
+                                Informasi yang tampil di halaman publik destinasi wisata.
+                            </p>
+                        </div>
                         <div className="grid gap-2">
-                            <Label>Nama Destinasi</Label>
+                            <Label required>Nama Destinasi</Label>
                             <Input
+                                required
                                 value={form.data.destination_name}
                                 onChange={(event) =>
                                     form.setData(
@@ -263,14 +462,20 @@ export default function MitraWisataDestination({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Jenis Wisata</Label>
+                            <Label required>Jenis Wisata</Label>
                             <UiSelect
-                                value={form.data.destination_type}
-                                onValueChange={(value) =>
-                                    form.setData('destination_type', value)
-                                }
+                                value={destinationTypeMode}
+                                onValueChange={(value) => {
+                                    setDestinationTypeMode(value);
+                                    form.setData(
+                                        'destination_type',
+                                        value === otherOptionValue
+                                            ? customDestinationType
+                                            : value,
+                                    );
+                                }}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger aria-required="true">
                                     <SelectValue placeholder="Pilih jenis" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -282,8 +487,29 @@ export default function MitraWisataDestination({
                                             {item.label}
                                         </SelectItem>
                                     ))}
+                                    <SelectItem value={otherOptionValue}>
+                                        Lainnya
+                                    </SelectItem>
                                 </SelectContent>
                             </UiSelect>
+                            {destinationTypeMode === otherOptionValue && (
+                                <Input
+                                    required
+                                    aria-label="Jenis wisata lainnya"
+                                    maxLength={80}
+                                    value={customDestinationType}
+                                    onChange={(event) => {
+                                        setCustomDestinationType(
+                                            event.target.value,
+                                        );
+                                        form.setData(
+                                            'destination_type',
+                                            event.target.value,
+                                        );
+                                    }}
+                                    placeholder="Tulis jenis wisata"
+                                />
+                            )}
                             <InputError
                                 message={form.errors.destination_type}
                             />
@@ -315,14 +541,14 @@ export default function MitraWisataDestination({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Provinsi</Label>
+                            <Label required>Provinsi</Label>
                             <UiSelect
                                 value={form.data.province_code}
                                 onValueChange={(value) =>
                                     form.setData('province_code', value)
                                 }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger aria-required="true">
                                     <SelectValue placeholder="Pilih provinsi" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -339,10 +565,11 @@ export default function MitraWisataDestination({
                             <InputError message={form.errors.province_code} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Kota/Kabupaten</Label>
+                            <Label required>Kota/Kabupaten</Label>
                             <Select
                                 inputId="city_code"
                                 instanceId="city_code"
+                                aria-required="true"
                                 options={citySelectOptions}
                                 value={selectedCity}
                                 placeholder="Pilih kota/kabupaten"
@@ -357,8 +584,10 @@ export default function MitraWisataDestination({
                             <InputError message={form.errors.city_code} />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
-                            <Label>Alamat Lengkap</Label>
-                            <Input
+                            <Label required>Alamat Lengkap</Label>
+                            <textarea
+                                required
+                                className="min-h-[110px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.address_full}
                                 onChange={(event) =>
                                     form.setData(
@@ -554,7 +783,186 @@ export default function MitraWisataDestination({
                                 </label>
                             )}
                         </div>
-                        <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
+                        <div className="grid gap-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 md:col-span-2 md:grid-cols-3">
+                            <div className="grid gap-2 md:col-span-3">
+                                <h2 className="text-base font-semibold text-slate-900">
+                                    Dokumen Legal & Rekening
+                                </h2>
+                                <p className="text-sm text-slate-500">
+                                    Lengkapi dokumen dan rekening untuk kebutuhan verifikasi serta pencairan dana.
+                                </p>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Jenis Dokumen Legal</Label>
+                                <UiSelect
+                                    value={form.data.legal_doc_type}
+                                    onValueChange={(value) =>
+                                        form.setData('legal_doc_type', value)
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Pilih dokumen" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {legalDocTypes.map((item) => (
+                                            <SelectItem
+                                                key={item.id}
+                                                value={item.id}
+                                            >
+                                                {item.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </UiSelect>
+                                <InputError message={form.errors.legal_doc_type} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Nomor Dokumen Legal</Label>
+                                <Input
+                                    value={form.data.legal_doc_number}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'legal_doc_number',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Nomor dokumen"
+                                />
+                                <InputError message={form.errors.legal_doc_number} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Upload Dokumen Legal</Label>
+                                {renderExistingDocument(destination.legal_doc_path)}
+                                <Input
+                                    aria-label="Dokumen legal"
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,.webp,.pdf"
+                                    onChange={(event) =>
+                                        handleDocumentChange(
+                                            'legal_doc_file',
+                                            event,
+                                        )
+                                    }
+                                />
+                                <InputError message={form.errors.legal_doc_file} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Upload KTP</Label>
+                                {renderExistingDocument(destination.ktp_path)}
+                                <Input
+                                    aria-label="KTP penanggung jawab"
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png,.webp,.pdf"
+                                    onChange={(event) =>
+                                        handleDocumentChange('ktp_file', event)
+                                    }
+                                />
+                                <InputError message={form.errors.ktp_file} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Selfie + KTP</Label>
+                                {renderExistingDocument(destination.selfie_ktp_path)}
+                                <Input
+                                    aria-label="Selfie dengan KTP"
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(event) =>
+                                        handleDocumentChange(
+                                            'selfie_ktp_file',
+                                            event,
+                                        )
+                                    }
+                                />
+                                <InputError message={form.errors.selfie_ktp_file} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Nama Bank</Label>
+                                <Input
+                                    value={form.data.bank_name}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'bank_name',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Contoh: BCA"
+                                />
+                                <InputError message={form.errors.bank_name} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Nomor Rekening</Label>
+                                <Input
+                                    value={form.data.bank_account_number}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'bank_account_number',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Nomor rekening"
+                                />
+                                <InputError
+                                    message={form.errors.bank_account_number}
+                                />
+                            </div>
+                            <div className="grid gap-2 md:col-span-2">
+                                <Label>Nama Pemilik Rekening</Label>
+                                <Input
+                                    value={form.data.bank_account_name}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'bank_account_name',
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Nama sesuai rekening"
+                                />
+                                <InputError
+                                    message={form.errors.bank_account_name}
+                                />
+                            </div>
+                        </div>
+                        <div className="grid gap-1 md:col-span-2">
+                            <h2 className="text-base font-semibold text-slate-900">
+                                Galeri Destinasi
+                            </h2>
+                            <p className="text-sm text-slate-500">
+                                Foto yang digunakan untuk halaman publik dan kebutuhan validasi tiket.
+                            </p>
+                        </div>
+                        <div
+                            className="grid gap-4 md:col-span-2 md:grid-cols-3"
+                            data-coach="mitra-destination-photo"
+                        >
+                            <div>
+                                <Label>Foto Produk</Label>
+                                {destination.photo_product_path && (
+                                    <img
+                                        src={
+                                            getPublicUrl(
+                                                destination.photo_product_path,
+                                            ) ?? ''
+                                        }
+                                        alt="Foto produk wisata"
+                                        className="mt-2 h-24 w-full rounded-lg object-cover"
+                                    />
+                                )}
+                                <Input
+                                    aria-label="Foto produk"
+                                    type="file"
+                                    accept="image/*"
+                                    className="mt-2"
+                                    onChange={(event) =>
+                                        handleSinglePhotoChange(
+                                            'photo_product_file',
+                                            event,
+                                        )
+                                    }
+                                />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Gambar utama untuk halaman publik. Maksimal {maxImageSizeLabel}.
+                                </p>
+                            </div>
                             <div>
                                 <Label>Foto Gerbang</Label>
                                 {destination.photo_gate_path && (
@@ -683,7 +1091,10 @@ export default function MitraWisataDestination({
                                 message={form.errors.photo_other_files}
                             />
                         </div>
-                        <div className="flex justify-end md:col-span-2">
+                        <div
+                            className="flex justify-end md:col-span-2"
+                            data-coach="mitra-destination-save"
+                        >
                             <Button
                                 type="submit"
                                 className="bg-sky-600 text-white hover:bg-sky-700"

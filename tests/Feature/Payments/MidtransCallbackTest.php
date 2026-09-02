@@ -90,6 +90,27 @@ function createHotelBookingFixture(string $orderId = 'HOTEL-ORDER-1'): array
     return [$user, $hotel, $roomType, $booking];
 }
 
+test('midtrans callback works through normal middleware stack without csrf token', function () {
+    [$user, , , $booking] = createHotelBookingFixture('HOTEL-CSRF-OK-1');
+
+    $this->post('/payments/midtrans/callback', midtransPayload('HOTEL-CSRF-OK-1', 'settlement'))
+        ->assertOk()
+        ->assertSee('OK');
+
+    $booking->refresh();
+    $payment = Payment::query()->where('booking_id', $booking->id)->firstOrFail();
+
+    expect($booking->status)->toBe('paid');
+    expect($booking->payment_status)->toBe('settlement');
+    expect($payment->status)->toBe('settlement');
+
+    $this->assertDatabaseHas('user_notifications', [
+        'user_id' => $user->id,
+        'type' => 'payment_paid',
+        'title' => 'Pembayaran berhasil',
+    ]);
+});
+
 test('midtrans callback rejects invalid signature without mutating booking', function () {
     [, , , $booking] = createHotelBookingFixture('HOTEL-BAD-SIGNATURE');
 
@@ -104,6 +125,23 @@ test('midtrans callback rejects invalid signature without mutating booking', fun
     $booking->refresh();
     expect($booking->status)->toBe('pending_payment');
     expect(UserNotification::query()->count())->toBe(0);
+});
+
+test('midtrans callback rejects gross amount mismatch without mutating booking', function () {
+    [, , , $booking] = createHotelBookingFixture('HOTEL-AMOUNT-MISMATCH');
+
+    $this->withoutMiddleware()
+        ->post('/payments/midtrans/callback', midtransPayload('HOTEL-AMOUNT-MISMATCH', 'settlement', '1.00'))
+        ->assertStatus(422)
+        ->assertSee('Amount mismatch');
+
+    $booking->refresh();
+    $payment = Payment::query()->where('booking_id', $booking->id)->firstOrFail();
+
+    expect($booking->status)->toBe('pending_payment')
+        ->and($booking->payment_status)->toBe('pending')
+        ->and($payment->status)->toBe('pending')
+        ->and(UserNotification::query()->count())->toBe(0);
 });
 
 test('midtrans settlement marks hotel booking paid and creates notification', function () {
@@ -127,6 +165,27 @@ test('midtrans settlement marks hotel booking paid and creates notification', fu
         'type' => 'payment_paid',
         'title' => 'Pembayaran berhasil',
     ]);
+});
+
+test('late non success callback does not downgrade paid hotel booking', function () {
+    [$user, , , $booking] = createHotelBookingFixture('HOTEL-LATE-EXPIRE');
+
+    $this->withoutMiddleware()
+        ->post('/payments/midtrans/callback', midtransPayload('HOTEL-LATE-EXPIRE', 'settlement'))
+        ->assertOk();
+
+    $this->withoutMiddleware()
+        ->post('/payments/midtrans/callback', midtransPayload('HOTEL-LATE-EXPIRE', 'expire'))
+        ->assertOk();
+
+    $booking->refresh();
+    $payment = Payment::query()->where('booking_id', $booking->id)->firstOrFail();
+
+    expect($booking->status)->toBe('paid')
+        ->and($booking->payment_status)->toBe('settlement')
+        ->and($payment->status)->toBe('settlement')
+        ->and(UserNotification::query()->where('user_id', $user->id)->where('type', 'payment_paid')->count())->toBe(1)
+        ->and(UserNotification::query()->where('user_id', $user->id)->where('type', 'booking_expired')->count())->toBe(0);
 });
 
 test('midtrans expired hotel booking releases room inventory and notifies user', function () {
@@ -211,4 +270,5 @@ test('event settlement increments sold counters only once on duplicate callbacks
     expect($booking->status)->toBe('paid');
     expect($ticket->sold_count)->toBe(2);
     expect($event->capacity_sold)->toBe(2);
+    expect(UserNotification::query()->where('user_id', $user->id)->where('type', 'event_payment_paid')->count())->toBe(1);
 });

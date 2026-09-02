@@ -211,8 +211,8 @@ export default function PromoVideoEdit({ promoVideo }: { promoVideo: PromoVideo 
                         }}
                     >
                         <div className="grid gap-2">
-                            <Label>Judul</Label>
-                            <Input value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
+                            <Label required>Judul</Label>
+                            <Input required value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
                             <InputError message={form.errors.title} />
                         </div>
                         <div className="grid gap-2">

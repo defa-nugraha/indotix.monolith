@@ -15,6 +15,19 @@ class User extends Authenticatable implements MustVerifyEmail
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, TwoFactorAuthenticatable;
 
+    protected static function booted(): void
+    {
+        static::saving(function (User $user): void {
+            if ($user->role !== 'admin_custom') {
+                $user->admin_role_id = null;
+            }
+
+            if ($user->role !== 'mitra') {
+                $user->mitra_onboarding_type = null;
+            }
+        });
+    }
+
     /**
      * The attributes that are mass assignable.
      *
@@ -69,6 +82,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function addresses()
     {
         return $this->hasMany(\App\Models\UserAddress::class);
+    }
+
+    public function passkeys()
+    {
+        return $this->hasMany(\App\Models\UserPasskey::class);
     }
 
     public function defaultAddress()

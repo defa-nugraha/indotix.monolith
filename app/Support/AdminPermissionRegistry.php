@@ -33,6 +33,7 @@ class AdminPermissionRegistry
             'public_home',
             'public_banners',
             'public_promo_items',
+            'public_entry_qr',
             'public_contacts',
             'public_partners',
             'public_pages',

@@ -2232,7 +2232,8 @@ class DiscoveryService
 
     private function wisataImage(MitraWisataOnboarding $destination): ?string
     {
-        $path = $destination->photo_gate_path ?: ($destination->photo_area_path ?: $destination->photo_ticket_path);
+        $path = $destination->photo_product_path
+            ?: ($destination->photo_gate_path ?: ($destination->photo_area_path ?: $destination->photo_ticket_path));
 
         return $this->storageUrl($path);
     }

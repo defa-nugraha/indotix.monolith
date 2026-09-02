@@ -42,6 +42,7 @@ use App\Http\Controllers\Admin\PromoItemController;
 use App\Http\Controllers\Admin\PublicBannerController;
 use App\Http\Controllers\Admin\PublicContactController;
 use App\Http\Controllers\Admin\PublicPartnerController;
+use App\Http\Controllers\Admin\PublicPartOfLogoController;
 use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\SouvenirAuditController;
 use App\Http\Controllers\Admin\SouvenirCategoryController;
@@ -69,6 +70,7 @@ use App\Http\Controllers\Admin\WisataAffiliate\ExceptionController;
 use App\Http\Controllers\Admin\WisataAffiliate\PerformanceController;
 use App\Http\Controllers\Admin\WisataContentController;
 use App\Http\Controllers\Admin\WisataDestinationController;
+use App\Http\Controllers\Admin\WisataEntryQrTemplateController;
 use App\Http\Controllers\Admin\WisataExceptionController;
 use App\Http\Controllers\Admin\WisataFinanceController;
 use App\Http\Controllers\Admin\WisataScanController;
@@ -82,6 +84,7 @@ use App\Http\Controllers\Affiliate\ReferralController;
 use App\Http\Controllers\Affiliate\RegisterController;
 use App\Http\Controllers\Affiliate\SupportController;
 use App\Http\Controllers\Affiliate\TermsController;
+use App\Http\Controllers\PasskeyAssociationController;
 use App\Http\Controllers\Auth\MobileEmailVerificationController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\BookingController;
@@ -109,6 +112,7 @@ use App\Http\Controllers\PublicHistoryController;
 use App\Http\Controllers\PublicHomeController;
 use App\Http\Controllers\PublicHotelController;
 use App\Http\Controllers\PublicNotificationController;
+use App\Http\Controllers\PublicWisataTicketScanController;
 use App\Http\Controllers\PublicPrivacyPolicyController;
 use App\Http\Controllers\PublicPromoController;
 use App\Http\Controllers\PublicReviewController;
@@ -125,6 +129,9 @@ use App\Http\Controllers\SpecialProgramBookingController;
 use App\Http\Controllers\WisataBookingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/.well-known/assetlinks.json', [PasskeyAssociationController::class, 'assetLinks']);
+Route::get('/.well-known/apple-app-site-association', [PasskeyAssociationController::class, 'appleAppSiteAssociation']);
 
 Route::get('/', [PublicHomeController::class, 'index'])
     ->name('home');
@@ -291,13 +298,13 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::delete('admin/blog/posts/{post}', [BlogPostController::class, 'destroy'])
         ->name('admin.blog.posts.destroy');
 
-    Route::get('admin/blog/categories', [BlogCategoryController::class, 'index'])
+    Route::get('admin/blog/categories', fn () => abort(404))
         ->name('admin.blog.categories.index');
-    Route::post('admin/blog/categories', [BlogCategoryController::class, 'store'])
+    Route::post('admin/blog/categories', fn () => abort(404))
         ->name('admin.blog.categories.store');
-    Route::put('admin/blog/categories/{category}', [BlogCategoryController::class, 'update'])
+    Route::put('admin/blog/categories/{category}', fn () => abort(404))
         ->name('admin.blog.categories.update');
-    Route::delete('admin/blog/categories/{category}', [BlogCategoryController::class, 'destroy'])
+    Route::delete('admin/blog/categories/{category}', fn () => abort(404))
         ->name('admin.blog.categories.destroy');
 
     Route::get('admin/blog/tags', [BlogTagController::class, 'index'])
@@ -475,6 +482,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra-documents.index');
     Route::post('admin/mitra-documents', [PartnerTermsDocumentController::class, 'store'])
         ->name('admin.mitra-documents.store');
+    Route::delete('admin/mitra-documents/{document}', [PartnerTermsDocumentController::class, 'destroy'])
+        ->name('admin.mitra-documents.destroy');
     Route::get('admin/users', [UserController::class, 'index'])
         ->name('admin.users.index');
     Route::post('admin/users', [UserController::class, 'store'])
@@ -564,6 +573,15 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.wisata.content.update');
     Route::post('admin/wisata/reviews/{review}', [WisataContentController::class, 'updateReview'])
         ->name('admin.wisata.reviews.update');
+
+    Route::get('admin/wisata/vouchers', [VoucherController::class, 'index'])
+        ->name('admin.wisata.vouchers.index');
+    Route::post('admin/wisata/vouchers', [VoucherController::class, 'store'])
+        ->name('admin.wisata.vouchers.store');
+    Route::put('admin/wisata/vouchers/{voucher}', [VoucherController::class, 'update'])
+        ->name('admin.wisata.vouchers.update');
+    Route::delete('admin/wisata/vouchers/{voucher}', [VoucherController::class, 'destroy'])
+        ->name('admin.wisata.vouchers.destroy');
 
     Route::get('admin/wisata/affiliates', [AffiliateController::class, 'index'])
         ->name('admin.wisata.affiliates.index');
@@ -685,23 +703,23 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.system.notifications.triggers.update');
     Route::post('admin/system/notifications/broadcast', [NotificationControlController::class, 'broadcast'])
         ->name('admin.system.notifications.broadcast');
-    Route::get('admin/system/roles', [RoleManagementController::class, 'index'])
+    Route::get('admin/system/roles', fn () => abort(404))
         ->name('admin.system.roles.index');
-    Route::post('admin/system/roles', [RoleManagementController::class, 'store'])
+    Route::post('admin/system/roles', fn () => abort(404))
         ->name('admin.system.roles.store');
-    Route::put('admin/system/roles/{role}', [RoleManagementController::class, 'update'])
+    Route::put('admin/system/roles/{role}', fn () => abort(404))
         ->name('admin.system.roles.update');
-    Route::delete('admin/system/roles/{role}', [RoleManagementController::class, 'destroy'])
+    Route::delete('admin/system/roles/{role}', fn () => abort(404))
         ->name('admin.system.roles.destroy');
-    Route::put('admin/system/roles/users/{user}', [RoleManagementController::class, 'assign'])
+    Route::put('admin/system/roles/users/{user}', fn () => abort(404))
         ->name('admin.system.roles.users.assign');
-    Route::get('admin/system/special-admins', [SpecialAdminController::class, 'index'])
+    Route::get('admin/system/special-admins', fn () => abort(404))
         ->name('admin.system.special-admins.index');
-    Route::post('admin/system/special-admins', [SpecialAdminController::class, 'store'])
+    Route::post('admin/system/special-admins', fn () => abort(404))
         ->name('admin.system.special-admins.store');
-    Route::put('admin/system/special-admins/{user}', [SpecialAdminController::class, 'update'])
+    Route::put('admin/system/special-admins/{user}', fn () => abort(404))
         ->name('admin.system.special-admins.update');
-    Route::delete('admin/system/special-admins/{user}', [SpecialAdminController::class, 'destroy'])
+    Route::delete('admin/system/special-admins/{user}', fn () => abort(404))
         ->name('admin.system.special-admins.destroy');
 
     Route::get('admin/public/banners', [PublicBannerController::class, 'index'])
@@ -721,6 +739,10 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.public.home.edit');
     Route::put('admin/public/home', [HomeContentController::class, 'update'])
         ->name('admin.public.home.update');
+    Route::get('admin/public/entry-qr', [WisataEntryQrTemplateController::class, 'edit'])
+        ->name('admin.public.entry-qr.edit');
+    Route::put('admin/public/entry-qr', [WisataEntryQrTemplateController::class, 'update'])
+        ->name('admin.public.entry-qr.update');
 
     Route::get('admin/public/promo-items', [PromoItemController::class, 'index'])
         ->name('admin.public.promo-items.index');
@@ -773,6 +795,13 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.public.partners.update');
     Route::delete('admin/public/partners/{partner}', [PublicPartnerController::class, 'destroy'])
         ->name('admin.public.partners.destroy');
+
+    Route::post('admin/public/home/part-of-logos', [PublicPartOfLogoController::class, 'store'])
+        ->name('admin.public.home.part-of-logos.store');
+    Route::put('admin/public/home/part-of-logos/{logo}', [PublicPartOfLogoController::class, 'update'])
+        ->name('admin.public.home.part-of-logos.update');
+    Route::delete('admin/public/home/part-of-logos/{logo}', [PublicPartOfLogoController::class, 'destroy'])
+        ->name('admin.public.home.part-of-logos.destroy');
 });
 
 Route::get('mitra/dashboard', [App\Http\Controllers\Mitra\DashboardController::class, 'index'])
@@ -790,16 +819,22 @@ Route::middleware(['auth', 'verified', 'mitra', 'user.activity'])->group(functio
     Route::post('mitra/onboarding/type', [MitraOnboardingController::class, 'selectType'])
         ->name('mitra.onboarding.type');
     Route::get('mitra/onboarding', [MitraOnboardingController::class, 'show'])
+        ->middleware('mitra.hotel')
         ->name('mitra.onboarding');
     Route::match(['patch', 'post'], 'mitra/onboarding/step-1', [MitraOnboardingController::class, 'updateStepOne'])
+        ->middleware('mitra.hotel')
         ->name('mitra.onboarding.step1');
     Route::match(['patch', 'post'], 'mitra/onboarding/step-2', [MitraOnboardingController::class, 'updateStepTwo'])
+        ->middleware('mitra.hotel')
         ->name('mitra.onboarding.step2');
     Route::match(['patch', 'post'], 'mitra/onboarding/step-3', [MitraOnboardingController::class, 'updateStepThree'])
+        ->middleware('mitra.hotel')
         ->name('mitra.onboarding.step3');
     Route::post('mitra/onboarding/submit-verification', [MitraOnboardingController::class, 'submitVerification'])
+        ->middleware('mitra.hotel')
         ->name('mitra.onboarding.submitVerification');
     Route::post('mitra/onboarding/submit-payout', [MitraOnboardingController::class, 'submitPayout'])
+        ->middleware('mitra.hotel')
         ->name('mitra.onboarding.submitPayout');
 
     Route::get('mitra/wisata/onboarding', [MitraWisataOnboardingController::class, 'show'])
@@ -816,16 +851,22 @@ Route::middleware(['auth', 'verified', 'mitra', 'user.activity'])->group(functio
         ->name('mitra.wisata.onboarding.submitPayout');
 
     Route::get('mitra/event/onboarding', [MitraEventOnboardingController::class, 'show'])
+        ->middleware('mitra.event')
         ->name('mitra.event.onboarding');
     Route::match(['patch', 'post'], 'mitra/event/onboarding/step-1', [MitraEventOnboardingController::class, 'updateStepOne'])
+        ->middleware('mitra.event')
         ->name('mitra.event.onboarding.step1');
     Route::match(['patch', 'post'], 'mitra/event/onboarding/step-2', [MitraEventOnboardingController::class, 'updateStepTwo'])
+        ->middleware('mitra.event')
         ->name('mitra.event.onboarding.step2');
     Route::match(['patch', 'post'], 'mitra/event/onboarding/step-3', [MitraEventOnboardingController::class, 'updateStepThree'])
+        ->middleware('mitra.event')
         ->name('mitra.event.onboarding.step3');
     Route::match(['patch', 'post'], 'mitra/event/onboarding/step-4', [MitraEventOnboardingController::class, 'updateStepFour'])
+        ->middleware('mitra.event')
         ->name('mitra.event.onboarding.step4');
     Route::post('mitra/event/onboarding/submit-verification', [MitraEventOnboardingController::class, 'submitVerification'])
+        ->middleware('mitra.event')
         ->name('mitra.event.onboarding.submitVerification');
     Route::post('mitra/terms/sign', [PartnerTermsSignatureController::class, 'store'])
         ->name('mitra.terms.sign');
@@ -906,6 +947,8 @@ Route::prefix('mitra/wisata')
 
         Route::get('scans', [App\Http\Controllers\Mitra\Wisata\ScanController::class, 'index'])
             ->name('scans.index');
+        Route::get('scans/qr.pdf', [App\Http\Controllers\Mitra\Wisata\ScanController::class, 'download'])
+            ->name('scans.pdf');
         Route::post('scans', [App\Http\Controllers\Mitra\Wisata\ScanController::class, 'store'])
             ->name('scans.store');
 
@@ -1181,6 +1224,12 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
         ->name('public.history');
     Route::get('/wisata/history', [PublicWisataHistoryController::class, 'index'])
         ->name('public.wisata.history');
+    Route::get('/tickets/scan', [PublicWisataTicketScanController::class, 'index'])
+        ->name('tickets.scan.index');
+    Route::post('/tickets/scan/use', [PublicWisataTicketScanController::class, 'use'])
+        ->name('tickets.scan.use');
+    Route::get('/tickets/scan/result/{status}', [PublicWisataTicketScanController::class, 'result'])
+        ->name('tickets.scan.result');
     Route::get('/booking/review', [BookingController::class, 'review'])
         ->middleware('maintenance.transactions')
         ->name('booking.review');

@@ -19,6 +19,7 @@ test('web registration sends verification link and does not create email otp', f
     $this->post(route('register'), [
         'name' => 'Verify Link Web User',
         'email' => $email,
+        'phone' => '081234567890',
         'password' => 'password123',
         'password_confirmation' => 'password123',
         'role' => 'user',
@@ -121,6 +122,7 @@ test('api registration sends verification link for a new unverified account', fu
     $this->postJson('/api/auth/register', [
         'name' => 'Verify Link API User',
         'email' => 'verify-link-api@example.com',
+        'phone' => '081234567890',
         'password' => 'password123',
         'role' => 'user',
         'device_name' => 'test-device',
@@ -159,6 +161,7 @@ test('api registration for existing unverified email sends a new verification li
     $this->postJson('/api/auth/register', [
         'name' => 'Verify Link Existing User',
         'email' => $user->email,
+        'phone' => '081234567891',
         'password' => 'password123',
         'role' => 'user',
         'device_name' => 'test-device',
@@ -166,6 +169,8 @@ test('api registration for existing unverified email sends a new verification li
         ->assertCreated()
         ->assertJsonPath('requires_email_verification', true)
         ->assertJsonPath('verification_method', 'link');
+
+    expect($user->fresh()->phone)->toBe('081234567891');
 
     Notification::assertSentTo(
         $user,

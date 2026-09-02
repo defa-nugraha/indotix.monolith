@@ -37,7 +37,7 @@ class BankAccountController extends Controller
 
         $data = $request->validate([
             'bank_name' => ['required', 'string', 'max:255'],
-            'bank_account_number' => ['required', 'string', 'max:64'],
+            'bank_account_number' => ['required', 'string', 'regex:/^[0-9]{6,30}$/'],
             'bank_account_name' => ['required', 'string', 'max:255'],
         ]);
 

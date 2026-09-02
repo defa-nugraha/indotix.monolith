@@ -63,9 +63,9 @@ export default function PartnerCreate() {
                             <InputError message={form.errors.sort_order} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Logo</Label>
-                            <Input type="file" accept="image/*" onChange={(event) => form.setData('image', event.target.files?.[0] ?? null)} />
-                            <p className="text-xs text-slate-500">Ukuran rekomendasi: 300 × 180 px (rasio 5:3).</p>
+                            <Label required>Logo</Label>
+                            <Input required type="file" accept="image/*" onChange={(event) => form.setData('image', event.target.files?.[0] ?? null)} />
+                            <p className="text-xs text-slate-500">Gunakan logo JPG, PNG, atau WebP yang jelas, maksimal 2 MB.</p>
                             <InputError message={form.errors.image} />
                         </div>
                         <label className="flex items-center gap-2 text-sm text-slate-600">

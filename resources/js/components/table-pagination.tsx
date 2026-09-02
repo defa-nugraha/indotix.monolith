@@ -206,10 +206,10 @@ export default function TablePagination() {
                                 aria-label="Ke halaman pertama"
                                 disabled={!canPrevious}
                                 onClick={() => navigate({ page: 1 })}
-                                className="shrink-0"
+                                className="shrink-0 px-2 sm:px-3"
                             >
-                                <ChevronFirst className="mr-1 size-4" />
-                                Awal
+                                <ChevronFirst className="size-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Awal</span>
                             </Button>
                             <Button
                                 type="button"
@@ -220,10 +220,12 @@ export default function TablePagination() {
                                 onClick={() =>
                                     navigate({ page: currentPage - 1 })
                                 }
-                                className="shrink-0"
+                                className="shrink-0 px-2 sm:px-3"
                             >
-                                <ChevronLeft className="mr-1 size-4" />
-                                Sebelumnya
+                                <ChevronLeft className="size-4 sm:mr-1" />
+                                <span className="hidden sm:inline">
+                                    Sebelumnya
+                                </span>
                             </Button>
                             {lastPage > 1 &&
                                 pageNumbers(currentPage, lastPage).map(
@@ -261,10 +263,12 @@ export default function TablePagination() {
                                 onClick={() =>
                                     navigate({ page: currentPage + 1 })
                                 }
-                                className="shrink-0"
+                                className="shrink-0 px-2 sm:px-3"
                             >
-                                Berikutnya
-                                <ChevronRight className="ml-1 size-4" />
+                                <span className="hidden sm:inline">
+                                    Berikutnya
+                                </span>
+                                <ChevronRight className="size-4 sm:ml-1" />
                             </Button>
                             <Button
                                 type="button"
@@ -273,10 +277,10 @@ export default function TablePagination() {
                                 aria-label="Ke halaman terakhir"
                                 disabled={!canNext}
                                 onClick={() => navigate({ page: lastPage })}
-                                className="shrink-0"
+                                className="shrink-0 px-2 sm:px-3"
                             >
-                                Akhir
-                                <ChevronLast className="ml-1 size-4" />
+                                <span className="hidden sm:inline">Akhir</span>
+                                <ChevronLast className="size-4 sm:ml-1" />
                             </Button>
                         </Fragment>
                     );

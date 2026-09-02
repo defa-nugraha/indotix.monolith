@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Voucher extends Model
 {
@@ -30,5 +31,15 @@ class Voucher extends Model
     public function hotel(): BelongsTo
     {
         return $this->belongsTo(Hotel::class);
+    }
+
+    public function wisataDestinations(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            MitraWisataOnboarding::class,
+            'voucher_wisata_destination',
+            'voucher_id',
+            'mitra_wisata_onboarding_id',
+        )->withTimestamps();
     }
 }

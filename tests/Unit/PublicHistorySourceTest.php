@@ -1,15 +1,14 @@
 <?php
 
-test('public history combines booking arrays with base collection concat', function () {
+test('public history returns wisata bookings only after product retirement', function () {
     $controller = file_get_contents(__DIR__.'/../../app/Http/Controllers/PublicHistoryController.php');
 
     expect($controller)
-        ->toContain('$bookings = collect()')
-        ->toContain('->concat($hotelBookings)')
-        ->toContain('->concat($wisataBookings)')
-        ->toContain('->concat($eventBookings)')
-        ->toContain('->concat($specialProgramBookings)')
-        ->toContain('->concat($souvenirOrders)')
-        ->toContain('->concat($academyBookings)')
-        ->not->toContain('$bookings = $hotelBookings'.PHP_EOL.'            ->merge($wisataBookings)');
+        ->toContain('$bookings = $wisataBookings->sortByDesc')
+        ->toContain("'type' => 'wisata'")
+        ->not->toContain('->concat($hotelBookings)')
+        ->not->toContain('->concat($eventBookings)')
+        ->not->toContain('->concat($specialProgramBookings)')
+        ->not->toContain('->concat($souvenirOrders)')
+        ->not->toContain('->concat($academyBookings)');
 });

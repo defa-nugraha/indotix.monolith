@@ -162,20 +162,30 @@ class WisataFinanceController extends Controller
         return back()->with('status', 'payout-updated');
     }
 
-    public function reports(): Response
+    public function reports(Request $request): Response
     {
-        $gmv = WisataBooking::query()
-            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, request()))
+        $filters = $request->validate([
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        $bookingScope = fn () => WisataBooking::query()
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request))
+            ->when($filters['start_date'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '>=', $date))
+            ->when($filters['end_date'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
+
+        $gmv = $bookingScope()
             ->whereIn('status', ['paid', 'completed'])
             ->sum('total_price');
 
-        $refund = WisataBooking::query()
-            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, request()))
+        $refund = $bookingScope()
             ->where('refund_status', 'processed')
             ->sum('refund_amount');
 
         $outstanding = WisataPayout::query()
-            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, request()))
+            ->whereHas('destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request))
+            ->when($filters['start_date'] ?? null, fn ($query, $date) => $query->whereDate('period_end', '>=', $date))
+            ->when($filters['end_date'] ?? null, fn ($query, $date) => $query->whereDate('period_start', '<=', $date))
             ->whereIn('status', ['pending', 'approved'])
             ->sum('net_payout');
 
@@ -187,6 +197,10 @@ class WisataFinanceController extends Controller
                 'revenue' => $revenue,
                 'refund' => $refund,
                 'outstanding' => $outstanding,
+            ],
+            'filters' => [
+                'start_date' => $filters['start_date'] ?? '',
+                'end_date' => $filters['end_date'] ?? '',
             ],
         ]);
     }

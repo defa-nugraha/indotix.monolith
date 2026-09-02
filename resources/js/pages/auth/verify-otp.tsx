@@ -97,6 +97,7 @@ export default function VerifyOtp({
                     <div className="grid gap-2">
                         <Label
                             htmlFor="code"
+                            required
                             className="text-xs font-semibold uppercase text-sky-600"
                         >
                             Kode OTP

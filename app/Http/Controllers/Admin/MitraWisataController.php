@@ -9,6 +9,7 @@ use App\Services\MitraDeletionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -104,7 +105,11 @@ class MitraWisataController extends Controller
             'phone' => ['nullable', 'string', 'max:30'],
             'password' => ['nullable', 'string', 'min:8', 'max:255'],
             'destination_name' => ['nullable', 'string', 'max:255'],
-            'destination_type' => ['nullable', 'in:alam,edukasi,budaya,wahana,event'],
+            'destination_type' => ['nullable', 'string', 'max:80'],
+            'verification_status' => ['nullable', 'in:draft,pending,verified,rejected'],
+            'payout_status' => ['nullable', 'in:draft,pending,verified,rejected'],
+            'is_suspended' => ['nullable', 'boolean'],
+            'suspended_reason' => [Rule::requiredIf($request->boolean('is_suspended')), 'nullable', 'string', 'max:1000'],
         ]);
 
         $password = $data['password'] ?? Str::random(12);
@@ -116,6 +121,9 @@ class MitraWisataController extends Controller
             'password' => $password,
             'role' => 'mitra',
             'mitra_onboarding_type' => 'wisata',
+            'is_suspended' => (bool) ($data['is_suspended'] ?? false),
+            'suspended_at' => ! empty($data['is_suspended']) ? now() : null,
+            'suspended_reason' => ! empty($data['is_suspended']) ? ($data['suspended_reason'] ?? null) : null,
         ]);
 
         MitraWisataOnboarding::query()->updateOrCreate(
@@ -125,6 +133,8 @@ class MitraWisataController extends Controller
                 'destination_type' => $data['destination_type'] ?? null,
                 'responsible_name' => $data['name'],
                 'responsible_phone' => $data['phone'] ?? null,
+                'verification_status' => $data['verification_status'] ?? 'draft',
+                'payout_status' => $data['payout_status'] ?? 'draft',
             ]
         );
 

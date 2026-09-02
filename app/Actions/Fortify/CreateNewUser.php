@@ -27,22 +27,26 @@ class CreateNewUser implements CreatesNewUsers
             'terms_accepted.accepted' => 'Anda perlu membaca dan menyetujui Syarat dan Ketentuan serta Kebijakan Privasi Indotix sebelum membuat akun.',
         ])->validate();
 
+        Validator::make($input, [
+            ...$this->profileRules(),
+            'password' => $this->passwordRules(),
+            'role' => ['nullable', 'string', Rule::in(['user', 'mitra'])],
+            'phone' => ['required', 'string', 'max:50'],
+        ])->validate();
+
         $existingUser = User::query()
             ->where('email', $input['email'] ?? null)
             ->first();
 
         if ($existingUser && ! $existingUser->hasVerifiedEmail()) {
+            $existingUser->forceFill([
+                'phone' => $input['phone'],
+            ])->save();
+
             $this->clearPendingEmailVerificationOtp($existingUser);
 
             return $existingUser;
         }
-
-        Validator::make($input, [
-            ...$this->profileRules(),
-            'password' => $this->passwordRules(),
-            'role' => ['nullable', 'string', Rule::in(['user', 'mitra'])],
-            'phone' => ['nullable', 'string', 'max:50'],
-        ])->validate();
 
         $user = User::create([
             'name' => $input['name'],

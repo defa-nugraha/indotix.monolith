@@ -107,12 +107,13 @@ export function AppSidebarAdmin() {
             'mitra_all',
         ]);
     const hasBlogPermission = () =>
-        hasAnyPermission(['blog_posts', 'blog_categories', 'blog_tags']);
+        hasAnyPermission(['blog_posts', 'blog_tags']);
     const hasPublicPermission = () =>
         hasAnyPermission([
             'public_home',
             'public_banners',
             'public_promo_items',
+            'public_entry_qr',
             'public_contacts',
             'public_partners',
             'public_pages',
@@ -122,8 +123,6 @@ export function AppSidebarAdmin() {
             'system_audit',
             'system_settings',
             'system_notifications',
-            'system_roles',
-            'system_special_admins',
         ]);
     const hasSpecialProgramPermission = () =>
         hasAnyPermission([
@@ -200,6 +199,7 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/public/home') ||
         isCurrentUrl('/admin/public/banners') ||
         isCurrentUrl('/admin/public/promo-items') ||
+        isCurrentUrl('/admin/public/entry-qr') ||
         isCurrentUrl('/admin/public/contacts') ||
         isCurrentUrl('/admin/public/partners') ||
         isCurrentUrl('/admin/public/about') ||
@@ -212,14 +212,9 @@ export function AppSidebarAdmin() {
             label: 'Halaman Home',
         },
         {
-            feature: 'public_banners',
-            href: '/admin/public/banners',
-            label: 'Banner',
-        },
-        {
-            feature: 'public_promo_items',
-            href: '/admin/public/promo-items',
-            label: 'Promo Spesial',
+            feature: 'public_entry_qr',
+            href: '/admin/public/entry-qr',
+            label: 'QR Masuk Mitra',
         },
         {
             feature: 'public_contacts',
@@ -247,6 +242,9 @@ export function AppSidebarAdmin() {
             label: 'Dokumen Legal',
         },
     ];
+    const visiblePublicMenuItems = publicMenuItems.filter((item) =>
+        hasAnyPermission([item.feature]),
+    );
     const isWisataSectionActive =
         isCurrentUrl('/admin/wisata/destinations') ||
         isCurrentUrl('/admin/wisata/tickets') ||
@@ -256,7 +254,8 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/wisata/finance/commissions') ||
         isCurrentUrl('/admin/wisata/finance/payouts') ||
         isCurrentUrl('/admin/wisata/finance/reports') ||
-        isCurrentUrl('/admin/wisata/content');
+        isCurrentUrl('/admin/wisata/content') ||
+        isCurrentUrl('/admin/wisata/vouchers');
     const isAffiliateSectionActive =
         isCurrentUrl('/admin/wisata/affiliates') ||
         isCurrentUrl('/admin/wisata/affiliates/commissions') ||
@@ -271,9 +270,7 @@ export function AppSidebarAdmin() {
     const isSystemSectionActive =
         isCurrentUrl('/admin/system/audit-logs') ||
         isCurrentUrl('/admin/system/settings') ||
-        isCurrentUrl('/admin/system/notifications') ||
-        isCurrentUrl('/admin/system/roles') ||
-        isCurrentUrl('/admin/system/special-admins');
+        isCurrentUrl('/admin/system/notifications');
     const isMitraSectionActive =
         isCurrentUrl('/admin/mitra') ||
         isCurrentUrl('/admin/mitra-wisata') ||
@@ -282,7 +279,6 @@ export function AppSidebarAdmin() {
     const isBlogSectionActive =
         isCurrentUrl('/admin/blog/posts') ||
         isCurrentUrl('/admin/blog/posts/create') ||
-        isCurrentUrl('/admin/blog/categories') ||
         isCurrentUrl('/admin/blog/tags');
     const isSpecialProgramSectionActive =
         isCurrentUrl('/admin/special-programs') ||
@@ -331,9 +327,9 @@ export function AppSidebarAdmin() {
     const showHotelSection = false;
     const showBlogSection = hasBlogPermission();
     const showWisataSection = hasWisataPermission();
-    const showAffiliateSection = hasFeaturePermission('wisata_affiliates');
+    const showAffiliateSection = false;
     const showEventSection = false;
-    const showPublicSection = hasPublicPermission();
+    const showPublicSection = visiblePublicMenuItems.length > 0;
     const showSystemSection = hasSystemPermission();
     const showSpecialProgramSection = false;
     const showSouvenirSection = false;
@@ -725,18 +721,6 @@ export function AppSidebarAdmin() {
                                             <SidebarMenuSubButton
                                                 asChild
                                                 isActive={isCurrentUrl(
-                                                    '/admin/blog/categories',
-                                                )}
-                                            >
-                                                <Link href="/admin/blog/categories">
-                                                    Kategori
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
                                                     '/admin/blog/tags',
                                                 )}
                                             >
@@ -870,6 +854,20 @@ export function AppSidebarAdmin() {
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
+                                        {isFullAdmin && (
+                                            <SidebarMenuSubItem>
+                                                <SidebarMenuSubButton
+                                                    asChild
+                                                    isActive={isCurrentUrl(
+                                                        '/admin/wisata/vouchers',
+                                                    )}
+                                                >
+                                                    <Link href="/admin/wisata/vouchers">
+                                                        Voucher Wisata
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                        )}
                                         <SidebarMenuSubItem>
                                             <SidebarMenuSubButton
                                                 asChild
@@ -1564,12 +1562,7 @@ export function AppSidebarAdmin() {
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
-                                        {publicMenuItems
-                                            .filter((item) =>
-                                                hasAnyPermission([
-                                                    item.feature,
-                                                ]),
-                                            )
+                                        {visiblePublicMenuItems
                                             .map((item) => (
                                                 <SidebarMenuSubItem
                                                     key={item.href}
@@ -1636,30 +1629,6 @@ export function AppSidebarAdmin() {
                                             >
                                                 <Link href="/admin/system/notifications">
                                                     Notification Control
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/system/roles',
-                                                )}
-                                            >
-                                                <Link href="/admin/system/roles">
-                                                    Manajemen Role
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl(
-                                                    '/admin/system/special-admins',
-                                                )}
-                                            >
-                                                <Link href="/admin/system/special-admins">
-                                                    Admin Spesialis
                                                 </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>

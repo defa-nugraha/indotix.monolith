@@ -55,7 +55,7 @@ export default function Password() {
                         {({ errors, processing, recentlySuccessful }) => (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="current_password">
+                                    <Label htmlFor="current_password" required>
                                         Current password
                                     </Label>
 
@@ -67,6 +67,7 @@ export default function Password() {
                                         className="mt-1 block w-full"
                                         autoComplete="current-password"
                                         placeholder="Current password"
+                                        required
                                     />
 
                                     <InputError
@@ -75,7 +76,7 @@ export default function Password() {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="password">
+                                    <Label htmlFor="password" required>
                                         New password
                                     </Label>
 
@@ -87,13 +88,14 @@ export default function Password() {
                                         className="mt-1 block w-full"
                                         autoComplete="new-password"
                                         placeholder="New password"
+                                        required
                                     />
 
                                     <InputError message={errors.password} />
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="password_confirmation">
+                                    <Label htmlFor="password_confirmation" required>
                                         Confirm password
                                     </Label>
 
@@ -104,6 +106,7 @@ export default function Password() {
                                         className="mt-1 block w-full"
                                         autoComplete="new-password"
                                         placeholder="Confirm password"
+                                        required
                                     />
 
                                     <InputError

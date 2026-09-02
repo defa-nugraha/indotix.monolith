@@ -59,7 +59,7 @@ test('mobile error endpoint redacts sensitive payload before storage', function 
     Log::shouldReceive('warning')->once();
 
     $this->postJson('/api/mobile/errors', [
-        'message' => 'HTTP 500 token=plain-secret Authorization: Bearer abc.def',
+        'message' => 'HTTP 500 token=plain-secret Authorization: Bearer abc.def user@example.test 081234567890',
         'exception_type' => 'String',
         'context' => 'AuthService.http',
         'source' => 'flutter',
@@ -78,6 +78,10 @@ test('mobile error endpoint redacts sensitive payload before storage', function 
 
     expect($log->message)->not->toContain('plain-secret')
         ->and($log->message)->not->toContain('abc.def')
+        ->and($log->message)->not->toContain('user@example.test')
+        ->and($log->message)->not->toContain('081234567890')
+        ->and($log->message)->toContain('[redacted-email]')
+        ->and($log->message)->toContain('[redacted-phone]')
         ->and($log->extra['email'])->toBe('[redacted]')
         ->and($log->extra['response_body'])->not->toContain('secret')
         ->and($log->extra['nested']['refresh_token'])->toBe('[redacted]')

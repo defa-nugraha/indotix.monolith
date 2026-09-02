@@ -158,6 +158,7 @@ class MitraDeletionService
             'photo_gate_path',
             'photo_area_path',
             'photo_ticket_path',
+            'photo_product_path',
             'photo_other_paths',
             'ktp_path',
             'selfie_ktp_path',

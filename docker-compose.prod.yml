@@ -1,0 +1,108 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: indotix-app:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - indotix_storage:/var/www/html/storage
+      - indotix_cache:/var/www/html/bootstrap/cache
+
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+      - reverb
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    volumes:
+      - .:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - indotix_storage:/var/www/html/storage:ro
+      - indotix_cache:/var/www/html/bootstrap/cache:ro
+
+  queue:
+    image: indotix-app:latest
+    restart: unless-stopped
+    command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=120
+    env_file:
+      - .env
+    depends_on:
+      app:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    volumes:
+      - indotix_storage:/var/www/html/storage
+      - indotix_cache:/var/www/html/bootstrap/cache
+
+  scheduler:
+    image: indotix-app:latest
+    restart: unless-stopped
+    command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
+    env_file:
+      - .env
+    depends_on:
+      app:
+        condition: service_started
+    volumes:
+      - indotix_storage:/var/www/html/storage
+      - indotix_cache:/var/www/html/bootstrap/cache
+
+  reverb:
+    image: indotix-app:latest
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    env_file:
+      - .env
+    depends_on:
+      app:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    volumes:
+      - indotix_storage:/var/www/html/storage
+      - indotix_cache:/var/www/html/bootstrap/cache
+
+  mariadb:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-indotix}
+      MYSQL_USER: ${DB_USERNAME:-indotix}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - indotix_db:/var/lib/mysql
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - indotix_redis:/data
+
+volumes:
+  indotix_storage:
+  indotix_cache:
+  indotix_db:
+  indotix_redis:

@@ -93,23 +93,28 @@ export default function MitraWisataStaffIndex({ destination, staff }: Props) {
                             handleSubmit();
                         }}
                     >
-                        <FormField label="Nama staff">
+                        <FormField label="Nama staff" required>
                             <input
+                                required
                                 value={form.data.name}
                                 onChange={(event) => form.setData('name', event.target.value)}
                                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
                             <InputError message={form.errors.name} />
                         </FormField>
-                        <FormField label="Email">
+                        <FormField label="Email" required>
                             <input
+                                required
+                                type="email"
                                 value={form.data.email}
                                 onChange={(event) => form.setData('email', event.target.value)}
                                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
+                            <InputError message={form.errors.email} />
                         </FormField>
-                        <FormField label="Role akses">
+                        <FormField label="Role akses" required>
                             <select
+                                required
                                 value={form.data.role}
                                 onChange={(event) => form.setData('role', event.target.value)}
                                 className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"

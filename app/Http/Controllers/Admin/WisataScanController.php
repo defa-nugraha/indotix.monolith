@@ -14,7 +14,7 @@ class WisataScanController extends Controller
     public function index(Request $request): Response
     {
         $query = WisataTicketScan::query()
-            ->with(['booking.destination', 'booking.ticket'])
+            ->with(['booking.destination', 'booking.ticket', 'item'])
             ->whereHas('booking.destination', fn ($builder) => AdminDataScope::applyCreatedByOrUser($builder, $request));
 
         if ($destination = $request->string('destination')->toString()) {
@@ -27,24 +27,16 @@ class WisataScanController extends Controller
             $query->where('is_anomaly', $anomaly === 'yes');
         }
 
-        $doubleScanBookingIds = \App\Models\WisataTicketScan::query()
-            ->select('wisata_booking_id')
-            ->groupBy('wisata_booking_id')
-            ->havingRaw('COUNT(*) > 1')
-            ->pluck('wisata_booking_id')
-            ->all();
-
         $scans = $query->latest('scanned_at')
             ->paginate(\App\Support\PaginationOptions::perPage())
             ->withQueryString()
             ->through(function (WisataTicketScan $scan) {
-                $isDouble = in_array($scan->wisata_booking_id, $doubleScanBookingIds, true);
                 return [
                     'id' => $scan->id,
                     'scanned_at' => $scan->scanned_at?->toDateTimeString(),
                     'officer_name' => $scan->officer_name,
                     'location' => $scan->location,
-                    'is_anomaly' => $scan->is_anomaly || $isDouble,
+                    'is_anomaly' => $scan->is_anomaly,
                     'booking' => [
                         'id' => $scan->booking?->id,
                         'booking_code' => $scan->booking?->booking_code,
@@ -54,8 +46,8 @@ class WisataScanController extends Controller
                         'name' => $scan->booking?->destination?->destination_name,
                     ],
                     'ticket' => [
-                        'id' => $scan->booking?->ticket?->id,
-                        'name' => $scan->booking?->ticket?->name,
+                        'id' => $scan->item?->wisata_ticket_id ?? $scan->booking?->ticket?->id,
+                        'name' => $scan->item?->ticket_name ?? $scan->booking?->ticket?->name,
                     ],
                 ];
             });

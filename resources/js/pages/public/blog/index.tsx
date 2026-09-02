@@ -3,10 +3,8 @@ import PublicLayout from '@/layouts/public-layout';
 import { PublicSeo } from '@/components/public-seo';
 import {
     PublicFooter,
-    PublicPartnerSection,
     PublicTrustSection,
     type PublicContact,
-    type PublicPartner,
     type PublicTrustContent,
 } from '@/components/public-page-sections';
 
@@ -37,7 +35,6 @@ export default function BlogIndex({
     posts,
     homeContent,
     contact,
-    partners = [],
 }: {
     posts: {
         data: Post[];
@@ -45,7 +42,6 @@ export default function BlogIndex({
     };
     homeContent?: PublicTrustContent | null;
     contact?: PublicContact | null;
-    partners?: PublicPartner[];
 }) {
     return (
         <PublicLayout>
@@ -180,7 +176,6 @@ export default function BlogIndex({
                     </nav>
                 )}
             </main>
-            <PublicPartnerSection partners={partners} />
             <PublicTrustSection homeContent={homeContent} contact={contact} />
             <PublicFooter contact={contact} />
         </PublicLayout>

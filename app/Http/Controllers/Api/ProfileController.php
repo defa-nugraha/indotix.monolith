@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Concerns\PasswordValidationRules;
+use App\Concerns\ProfileValidationRules;
 use App\Http\Controllers\Controller;
 use App\Mail\EmailOtpMail;
 use App\Models\AcademyBooking;
@@ -33,6 +34,7 @@ use Throwable;
 class ProfileController extends Controller
 {
     use PasswordValidationRules;
+    use ProfileValidationRules;
 
     private const OTP_TTL_MINUTES = 10;
     private const OTP_MAX_ATTEMPTS = 5;
@@ -43,19 +45,7 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $data = $request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => [
-                'sometimes',
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique(User::class)->ignore($user->id),
-            ],
-            'phone' => ['sometimes', 'nullable', 'string', 'max:30'],
-            'gender' => ['sometimes', 'nullable', Rule::in(['male', 'female', 'other'])],
-        ]);
+        $data = $request->validate($this->profileRules($user->id));
 
         $user->fill($data);
 

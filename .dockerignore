@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+node_modules
+vendor
+storage
+bootstrap/cache/*.php
+database/database.sqlite
+tests
+docs
+npm-debug.log
+yarn-error.log
+.DS_Store

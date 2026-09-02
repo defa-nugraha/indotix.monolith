@@ -15,8 +15,7 @@ class NotificationController extends Controller
         $perPage = (int) $request->query('per_page', 20);
         $perPage = max(1, min($perPage, 100));
 
-        $query = UserNotification::query()
-            ->where('user_id', $user->id);
+        $query = $this->tourismNotificationQuery((int) $user->id);
 
         $status = $request->query('status');
         if ($status === 'unread') {
@@ -46,10 +45,7 @@ class NotificationController extends Controller
             ->orderByDesc('id')
             ->paginate($perPage);
 
-        $unreadCount = UserNotification::query()
-            ->where('user_id', $user->id)
-            ->where('is_read', false)
-            ->count();
+        $unreadCount = $this->unreadCountForUser((int) $user->id);
 
         return response()->json([
             'filters' => [
@@ -106,18 +102,50 @@ class NotificationController extends Controller
 
         return response()->json([
             'updated' => $updated,
+            'unread_count' => 0,
         ]);
     }
 
     public function unreadCount(Request $request): JsonResponse
     {
-        $count = UserNotification::query()
-            ->where('user_id', $request->user()->id)
-            ->where('is_read', false)
-            ->count();
+        $count = $this->unreadCountForUser((int) $request->user()->id);
 
         return response()->json([
             'unread_count' => $count,
         ]);
+    }
+
+    private function unreadCountForUser(int $userId): int
+    {
+        return UserNotification::query()
+            ->where('user_id', $userId)
+            ->where(function ($query) {
+                $query->where('type', 'like', 'wisata_%')
+                    ->orWhere(function ($query) {
+                        $query->where('type', 'not like', 'event_%')
+                            ->where('type', 'not like', 'hotel_%')
+                            ->where('type', 'not like', 'souvenir_%')
+                            ->where('type', 'not like', 'academy_%')
+                            ->where('type', 'not like', 'special_program_%');
+                    });
+            })
+            ->where('is_read', false)
+            ->count();
+    }
+
+    private function tourismNotificationQuery(int $userId)
+    {
+        return UserNotification::query()
+            ->where('user_id', $userId)
+            ->where(function ($query) {
+                $query->where('type', 'like', 'wisata_%')
+                    ->orWhere(function ($query) {
+                        $query->where('type', 'not like', 'event_%')
+                            ->where('type', 'not like', 'hotel_%')
+                            ->where('type', 'not like', 'souvenir_%')
+                            ->where('type', 'not like', 'academy_%')
+                            ->where('type', 'not like', 'special_program_%');
+                    });
+            });
     }
 }

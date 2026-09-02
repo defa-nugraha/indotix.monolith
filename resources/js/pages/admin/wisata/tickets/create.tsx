@@ -65,6 +65,29 @@ export default function AdminWisataTicketCreate({
     const availablePackageTickets = componentTickets.filter(
         (ticket) => ticket.destination_id === selectedDestinationId,
     );
+    const packageTotalFor = (
+        items: PackageItemInput[],
+        destinationId = selectedDestinationId,
+    ) => {
+        const prices = new Map(
+            componentTickets
+                .filter((ticket) => ticket.destination_id === destinationId)
+                .map((ticket) => [ticket.id.toString(), ticket.price]),
+        );
+
+        return items.reduce((total, item) => {
+            const quantity = Number(item.quantity || 0);
+            return total + (prices.get(item.ticket_id) ?? 0) * quantity;
+        }, 0);
+    };
+    const syncPackagePrice = (
+        items: PackageItemInput[],
+        destinationId = selectedDestinationId,
+    ) => {
+        const total = packageTotalFor(items, destinationId);
+        form.setData('price', total.toString());
+        setPriceDisplay(formatCurrencyInput(total.toString()));
+    };
 
     const updatePackageItem = (
         index: number,
@@ -74,22 +97,30 @@ export default function AdminWisataTicketCreate({
         const next = [...form.data.package_items];
         next[index] = { ...next[index], [key]: value };
         form.setData('package_items', next);
+        if (form.data.ticket_kind === 'package') {
+            syncPackagePrice(next);
+        }
     };
 
     const addPackageItem = () => {
-        form.setData('package_items', [
+        const next = [
             ...form.data.package_items,
             { ticket_id: '', quantity: '1' },
-        ]);
+        ];
+        form.setData('package_items', next);
+        if (form.data.ticket_kind === 'package') {
+            syncPackagePrice(next);
+        }
     };
 
     const removePackageItem = (index: number) => {
-        form.setData(
-            'package_items',
-            form.data.package_items.filter(
-                (_, itemIndex) => itemIndex !== index,
-            ),
+        const next = form.data.package_items.filter(
+            (_, itemIndex) => itemIndex !== index,
         );
+        form.setData('package_items', next);
+        if (form.data.ticket_kind === 'package') {
+            syncPackagePrice(next);
+        }
     };
 
     return (
@@ -144,13 +175,23 @@ export default function AdminWisataTicketCreate({
                                 required
                                 value={form.data.mitra_wisata_onboarding_id}
                                 onChange={(event) => {
+                                    const nextItems = [
+                                        { ticket_id: '', quantity: '1' },
+                                    ];
+                                    const nextDestinationId = Number(
+                                        event.target.value || 0,
+                                    );
                                     form.setData(
                                         'mitra_wisata_onboarding_id',
                                         event.target.value,
                                     );
-                                    form.setData('package_items', [
-                                        { ticket_id: '', quantity: '1' },
-                                    ]);
+                                    form.setData('package_items', nextItems);
+                                    if (form.data.ticket_kind === 'package') {
+                                        syncPackagePrice(
+                                            nextItems,
+                                            nextDestinationId,
+                                        );
+                                    }
                                 }}
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             >
@@ -202,8 +243,20 @@ export default function AdminWisataTicketCreate({
                                 onChange={(event) =>
                                     handlePriceChange(event.target.value)
                                 }
+                                readOnly={form.data.ticket_kind === 'package'}
+                                className={
+                                    form.data.ticket_kind === 'package'
+                                        ? 'bg-slate-50'
+                                        : undefined
+                                }
                                 placeholder="10.000"
                             />
+                            {form.data.ticket_kind === 'package' && (
+                                <p className="text-xs text-slate-500">
+                                    Harga paket otomatis dijumlahkan dari tiket
+                                    satuan yang dipilih.
+                                </p>
+                            )}
                             <InputError message={form.errors.price} />
                         </div>
                         <div className="grid gap-2">
@@ -323,12 +376,20 @@ export default function AdminWisataTicketCreate({
                                                 form.data.ticket_kind ===
                                                 option.value
                                             }
-                                            onChange={() =>
+                                            onChange={() => {
                                                 form.setData(
                                                     'ticket_kind',
                                                     option.value,
-                                                )
-                                            }
+                                                );
+                                                if (
+                                                    option.value === 'package'
+                                                ) {
+                                                    syncPackagePrice(
+                                                        form.data
+                                                            .package_items,
+                                                    );
+                                                }
+                                            }}
                                         />
                                         <span className="block font-semibold">
                                             {option.title}

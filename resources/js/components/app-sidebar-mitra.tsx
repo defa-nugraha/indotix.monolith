@@ -1,19 +1,26 @@
 import { Link, usePage } from '@inertiajs/react';
-import { AlertCircle, Banknote, Bell, Building2, CalendarDays, ChevronDown, LayoutGrid, MapPinned, QrCode, Ticket, Users, MessageCircle, Star, UserCircle } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+    AlertCircle,
+    Banknote,
+    Bell,
+    CalendarDays,
+    LayoutGrid,
+    MapPinned,
+    MessageCircle,
+    QrCode,
+    Star,
+    Ticket,
+    UserCircle,
+} from 'lucide-react';
 import { NavMain } from '@/components/nav-main';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
-    SidebarMenuSub,
-    SidebarMenuSubButton,
-    SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import type { NavItem, SharedData } from '@/types';
 import AppLogo from './app-logo';
@@ -36,24 +43,67 @@ const mainNavItems: NavItem[] = [
     },
 ];
 
+const wisataNavItems = [
+    {
+        title: 'Profil Destinasi',
+        href: '/mitra/wisata/destination',
+        icon: MapPinned,
+        activePaths: ['/mitra/wisata/destination'],
+    },
+    {
+        title: 'Produk Tiket',
+        href: '/mitra/wisata/tickets',
+        icon: Ticket,
+        activePaths: ['/mitra/wisata/tickets', '/mitra/wisata/tickets/create'],
+    },
+    {
+        title: 'Booking Wisata',
+        href: '/mitra/wisata/bookings',
+        icon: CalendarDays,
+        activePaths: ['/mitra/wisata/bookings'],
+    },
+    {
+        title: 'QR Masuk',
+        href: '/mitra/wisata/scans',
+        icon: QrCode,
+        activePaths: ['/mitra/wisata/scans'],
+    },
+    {
+        title: 'Ringkasan Pendapatan',
+        href: '/mitra/wisata/finance/summary',
+        icon: Banknote,
+        activePaths: ['/mitra/wisata/finance/summary'],
+    },
+    {
+        title: 'Riwayat Payout',
+        href: '/mitra/wisata/finance/payouts',
+        icon: Banknote,
+        activePaths: ['/mitra/wisata/finance/payouts'],
+    },
+    {
+        title: 'Notifikasi',
+        href: '/mitra/wisata/notifications',
+        icon: Bell,
+        activePaths: ['/mitra/wisata/notifications'],
+    },
+    {
+        title: 'Ulasan Wisata',
+        href: '/mitra/wisata/reviews',
+        icon: Star,
+        activePaths: ['/mitra/wisata/reviews'],
+    },
+    {
+        title: 'Laporan Masalah',
+        href: '/mitra/wisata/disputes',
+        icon: AlertCircle,
+        activePaths: ['/mitra/wisata/disputes'],
+    },
+];
+
 export function AppSidebarMitra() {
     const { auth } = usePage<SharedData>().props;
     const { isCurrentUrl } = useCurrentUrl();
-    const onboardingType = auth?.user?.mitra_onboarding_type ?? null;
-    const showHotelMenus = onboardingType === 'hotel';
-    const showWisataMenus = onboardingType === 'wisata';
-    const showEventMenus = onboardingType === 'event';
-    const isHotelSectionActive =
-        isCurrentUrl('/mitra/hotels') ||
-        isCurrentUrl('/mitra/room-types') ||
-        isCurrentUrl('/mitra/room-inventories') ||
-        isCurrentUrl('/mitra/bookings') ||
-        isCurrentUrl('/mitra/reviews');
-    const isOperationalActive = isCurrentUrl('/mitra/occupancy');
-    const isFinanceActive =
-        isCurrentUrl('/mitra/finance/summary') ||
-        isCurrentUrl('/mitra/finance/payouts') ||
-        isCurrentUrl('/mitra/finance/bank');
+    const showWisataMenus = auth?.user?.mitra_onboarding_type === 'wisata';
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -71,312 +121,28 @@ export function AppSidebarMitra() {
 
             <SidebarContent>
                 <NavMain items={mainNavItems} />
-                <SidebarMenu className="px-2">
-                    {showHotelMenus && (
-                        <SidebarMenuItem>
-                            <Collapsible defaultOpen={isHotelSectionActive}>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton>
-                                        <Building2 />
-                                        <span>Hotel</span>
-                                        <ChevronDown className="ml-auto size-4" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/hotels')}
-                                            >
-                                                <Link href="/mitra/hotels">Data Hotel</Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/room-types')}
-                                            >
-                                                <Link href="/mitra/room-types">
-                                                    Tipe Kamar
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/room-inventories')}
-                                            >
-                                                <Link href="/mitra/room-inventories">
-                                                    Inventory per Tanggal
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/bookings')}
-                                            >
-                                                <Link href="/mitra/bookings">
-                                                    Booking & Transaksi
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/reviews')}
-                                            >
-                                                <Link href="/mitra/reviews">
-                                                    Ulasan Hotel
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
-                            </Collapsible>
-                        </SidebarMenuItem>
-                    )}
-                    {showHotelMenus && (
-                        <SidebarMenuItem>
-                            <Collapsible defaultOpen={isOperationalActive}>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton>
-                                        <CalendarDays />
-                                        <span>Operasional</span>
-                                        <ChevronDown className="ml-auto size-4" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/occupancy')}
-                                            >
-                                                <Link href="/mitra/occupancy">
-                                                    Kalender Okupansi
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
-                            </Collapsible>
-                        </SidebarMenuItem>
-                    )}
-                    {showHotelMenus && (
-                        <SidebarMenuItem>
-                            <Collapsible defaultOpen={isFinanceActive}>
-                                <CollapsibleTrigger asChild>
-                                    <SidebarMenuButton>
-                                        <Banknote />
-                                        <span>Keuangan</span>
-                                        <ChevronDown className="ml-auto size-4" />
-                                    </SidebarMenuButton>
-                                </CollapsibleTrigger>
-                                <CollapsibleContent>
-                                    <SidebarMenuSub>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/finance/summary')}
-                                            >
-                                                <Link href="/mitra/finance/summary">
-                                                    Ringkasan Pendapatan
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/finance/payouts')}
-                                            >
-                                                <Link href="/mitra/finance/payouts">
-                                                    Riwayat Payout
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                        <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton
-                                                asChild
-                                                isActive={isCurrentUrl('/mitra/finance/bank')}
-                                            >
-                                                <Link href="/mitra/finance/bank">
-                                                    Pengaturan Rekening
-                                                </Link>
-                                            </SidebarMenuSubButton>
-                                        </SidebarMenuSubItem>
-                                    </SidebarMenuSub>
-                                </CollapsibleContent>
-                            </Collapsible>
-                        </SidebarMenuItem>
-                    )}
-                    {showWisataMenus && (
-                        <>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/destination')}>
-                                    <Link href="/mitra/wisata/destination">
-                                        <MapPinned />
-                                        <span>Profil Destinasi</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/tickets') || isCurrentUrl('/mitra/wisata/tickets/create')}>
-                                    <Link href="/mitra/wisata/tickets">
-                                        <Ticket />
-                                        <span>Produk Tiket</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/bookings')}>
-                                    <Link href="/mitra/wisata/bookings">
-                                        <CalendarDays />
-                                        <span>Booking</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/scans')}>
-                                    <Link href="/mitra/wisata/scans">
-                                        <QrCode />
-                                        <span>Validasi QR</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/finance/summary')}>
-                                    <Link href="/mitra/wisata/finance/summary">
-                                        <Banknote />
-                                        <span>Ringkasan Pendapatan</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/finance/payouts')}>
-                                    <Link href="/mitra/wisata/finance/payouts">
-                                        <Banknote />
-                                        <span>Riwayat Payout</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/notifications')}>
-                                    <Link href="/mitra/wisata/notifications">
-                                        <Bell />
-                                        <span>Notifikasi</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/reviews')}>
-                                    <Link href="/mitra/wisata/reviews">
-                                        <Star />
-                                        <span>Ulasan Wisata</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/wisata/disputes')}>
-                                    <Link href="/mitra/wisata/disputes">
-                                        <AlertCircle />
-                                        <span>Laporan Masalah</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </>
-                    )}
-                    {showEventMenus && (
-                        <>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events')}>
-                                    <Link href="/mitra/events">
-                                        <CalendarDays />
-                                        <span>Event</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    asChild
-                                    isActive={isCurrentUrl('/mitra/events/tickets') || isCurrentUrl('/mitra/events/tickets/create')}
-                                >
-                                    <Link href="/mitra/events/tickets">
-                                        <Ticket />
-                                        <span>Produk Tiket</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/bookings')}>
-                                    <Link href="/mitra/events/bookings">
-                                        <CalendarDays />
-                                        <span>Booking</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/attendees')}>
-                                    <Link href="/mitra/events/attendees">
-                                        <Users />
-                                        <span>Peserta</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/scans')}>
-                                    <Link href="/mitra/events/scans">
-                                        <QrCode />
-                                        <span>Validasi QR</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/finance/summary')}>
-                                    <Link href="/mitra/events/finance/summary">
-                                        <Banknote />
-                                        <span>Ringkasan Pendapatan</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/finance/payouts')}>
-                                    <Link href="/mitra/events/finance/payouts">
-                                        <Banknote />
-                                        <span>Riwayat Payout</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/notifications')}>
-                                    <Link href="/mitra/events/notifications">
-                                        <Bell />
-                                        <span>Notifikasi</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/reviews')}>
-                                    <Link href="/mitra/events/reviews">
-                                        <Star />
-                                        <span>Ulasan Event</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton asChild isActive={isCurrentUrl('/mitra/events/disputes')}>
-                                    <Link href="/mitra/events/disputes">
-                                        <AlertCircle />
-                                        <span>Laporan Masalah</span>
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </>
-                    )}
-                </SidebarMenu>
-            </SidebarContent>
+                {showWisataMenus && (
+                    <SidebarMenu className="px-2">
+                        {wisataNavItems.map((item) => {
+                            const Icon = item.icon;
+                            const active = item.activePaths.some((path) =>
+                                isCurrentUrl(path),
+                            );
 
+                            return (
+                                <SidebarMenuItem key={item.href}>
+                                    <SidebarMenuButton asChild isActive={active}>
+                                        <Link href={item.href}>
+                                            <Icon />
+                                            <span>{item.title}</span>
+                                        </Link>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            );
+                        })}
+                    </SidebarMenu>
+                )}
+            </SidebarContent>
         </Sidebar>
     );
 }

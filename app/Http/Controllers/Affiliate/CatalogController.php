@@ -73,7 +73,9 @@ class CatalogController extends Controller
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
                 'address_full' => $destination->address_full,
-                'photo_area_url' => $destination->photo_area_path ? '/storage/'.$destination->photo_area_path : null,
+                'photo_area_url' => ($destination->photo_product_path ?: $destination->photo_area_path)
+                    ? '/storage/'.($destination->photo_product_path ?: $destination->photo_area_path)
+                    : null,
             ] : null,
             'tickets' => $tickets,
             'commission' => $commission ? [

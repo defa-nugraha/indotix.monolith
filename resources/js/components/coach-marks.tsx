@@ -10,6 +10,13 @@ type CoachStep = {
     description: string;
 };
 
+type TourDefinition = {
+    id: string;
+    context: CoachContext;
+    match: (path: string, role?: string) => boolean;
+    steps: (path: string, role?: string) => CoachStep[];
+};
+
 type Props = {
     context: CoachContext;
 };
@@ -31,8 +38,13 @@ const guideStoragePrefix = 'indotix.coach-mark.v4.seen';
 
 const pathWithoutQuery = (url: string) => url.split('?')[0] || '/';
 
-const quoteSelectorValue = (value: string) =>
-    value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+const normalizeGuidePath = (path: string) =>
+    path
+        .replace(/\/\d+(?=\/|$)/g, '/:id')
+        .replace(
+            /\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}(?=\/|$)/gi,
+            '/:id',
+        );
 
 const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max);
@@ -92,251 +104,26 @@ const restoreScrollSnapshot = (snapshots: ScrollSnapshot[]) => {
 };
 
 const roleLabel = (role?: string) => {
-    if (role === 'admin') return 'Admin Utama';
-    if (role === 'admin_academy') return 'Admin Academy';
-    if (role === 'admin_retail') return 'Admin Retail Shop';
-    if (role === 'admin_special_program') return 'Admin Special Program';
+    if (role?.startsWith('admin')) return 'Admin';
     if (role === 'mitra') return 'Mitra';
     if (role === 'user') return 'User';
     return 'Pengguna';
 };
 
-const adminSectionLabel = (path: string) => {
-    if (path.startsWith('/admin/academy')) return 'Eljohn Academy';
-    if (path.startsWith('/admin/retail-shop')) return 'Retail Shop';
-    if (path.startsWith('/admin/special-programs')) return 'Special Program';
-    if (path.startsWith('/admin/events')) return 'Event';
-    if (path.startsWith('/admin/wisata')) return 'Wisata';
-    if (
-        path.startsWith('/hotels') ||
-        path.startsWith('/room-types') ||
-        path.startsWith('/room-inventories')
-    )
-        return 'Hotel';
-    if (path.startsWith('/admin/public')) return 'Konten Publik';
-    if (path.startsWith('/admin/system')) return 'Sistem, Audit & Kontrol';
-    if (path.startsWith('/admin/mitra')) return 'Kelola Mitra';
-    if (path.startsWith('/admin/users')) return 'Kelola User';
-    return 'Panel Admin';
-};
-
-const mitraSectionLabel = (path: string) => {
-    if (path.startsWith('/mitra/events')) return 'Event';
-    if (path.startsWith('/mitra/wisata')) return 'Wisata';
-    if (path.startsWith('/mitra/hotels') || path.startsWith('/mitra/room'))
-        return 'Hotel';
-    if (path.startsWith('/mitra/finance')) return 'Keuangan';
-    return 'Panel Mitra';
-};
-
-const publicSectionLabel = (path: string) => {
-    if (path.startsWith('/events')) return 'Event';
-    if (path.startsWith('/stay')) return 'Hotel';
-    if (path.startsWith('/wisata')) return 'Wisata';
-    if (path.startsWith('/academy')) return 'Academy';
-    if (path.startsWith('/special-programs')) return 'Special Program';
-    if (path.startsWith('/retail-shop')) return 'Retail Shop';
-    if (path.startsWith('/history')) return 'Riwayat';
-    return 'INDOTIX';
-};
-
-const adminPagePurpose = (path: string) => {
-    if (path.startsWith('/admin/chat')) {
-        return {
-            title: 'Pantau percakapan pengguna',
-            description:
-                'Gunakan halaman ini untuk membaca pesan masuk, melihat konteks percakapan, dan merespons kebutuhan pengguna dengan cepat.',
-            list: 'Daftar percakapan menampilkan user yang menghubungi admin. Buka salah satu percakapan untuk melihat isi chat dan membalas pesan.',
-        };
-    }
-    if (path.startsWith('/admin/users')) {
-        return {
-            title: 'Kelola akun pengguna',
-            description:
-                'Periksa status, verifikasi, detail akun, dan aktivitas pengguna dari halaman ini.',
-            list: 'Tabel user menampilkan akun yang terdaftar. Gunakan tombol Detail untuk melihat profil user dan tombol Hapus hanya jika akun memang perlu dihapus.',
-        };
-    }
-    if (path.startsWith('/admin/reviews')) {
-        return {
-            title: 'Moderasi ulasan produk',
-            description:
-                'Pantau ulasan dari pengguna agar kualitas informasi produk tetap terjaga.',
-            list: 'Tabel ulasan menampilkan rating, komentar, dan produk terkait. Gunakan aksi balas, sembunyikan, atau hapus sesuai kebutuhan moderasi.',
-        };
-    }
-    if (path.startsWith('/admin/events')) {
-        return {
-            title: 'Kelola operasional event',
-            description:
-                'Atur event, tiket, booking, peserta, QR scan, review, hingga laporan event dari modul ini.',
-            list: 'Tabel event/transaksi menampilkan data operasional. Gunakan Tambah Event untuk membuat event baru, Detail untuk mengecek data, Edit untuk memperbarui, dan Hapus hanya jika data belum dipakai transaksi.',
-        };
-    }
-    if (path.startsWith('/admin/wisata')) {
-        return {
-            title: 'Kelola produk wisata',
-            description:
-                'Gunakan modul ini untuk mengelola destinasi, tiket, booking, validasi QR, dan operasional wisata.',
-            list: 'Tabel wisata/tiket/booking membantu admin memantau operasional. Gunakan Tambah untuk membuat data baru, Detail/Edit untuk koreksi data, dan Hapus secara hati-hati.',
-        };
-    }
-    if (path.startsWith('/admin/special-programs')) {
-        return {
-            title: 'Kelola special program',
-            description:
-                'Atur program, tiket, booking, peserta, QR scan, serta ulasan special program dari halaman ini.',
-            list: 'Tabel program menampilkan paket dan statusnya. Gunakan Buat Paket untuk menambah program, Detail/Edit untuk meninjau isi paket, dan Hapus jika program tidak lagi digunakan.',
-        };
-    }
-    if (path.startsWith('/admin/academy')) {
-        return {
-            title: 'Kelola kelas academy',
-            description:
-                'Atur kelas, tiket, booking, peserta, scan kehadiran, dan laporan academy dari modul ini.',
-            list: 'Tabel kelas/tiket/booking membantu admin memantau jadwal dan kapasitas. Gunakan Buat Kelas atau Tambah Tiket bila tersedia, lalu pakai Detail/Edit untuk memastikan data sudah benar.',
-        };
-    }
-    if (path.startsWith('/admin/retail-shop')) {
-        return {
-            title: 'Kelola retail shop',
-            description:
-                'Atur produk, kategori, stok, order, pengiriman, refund, promo, dan laporan retail dari modul ini.',
-            list: 'Tabel produk/order menampilkan stok dan status transaksi. Gunakan Tambah Produk untuk menambah item, Edit untuk memperbarui katalog, dan aksi order untuk memproses pesanan.',
-        };
-    }
-    if (path.startsWith('/admin/public')) {
-        return {
-            title: 'Kelola konten publik',
-            description:
-                'Gunakan halaman ini untuk memperbarui banner, promo, FAQ, kontak, partner, dan informasi publik.',
-            list: 'Tabel konten menampilkan materi yang tampil di sisi pengguna. Gunakan Tambah untuk membuat konten baru, Edit untuk memperbarui, dan Hapus untuk konten yang tidak perlu tampil lagi.',
-        };
-    }
-    if (path.startsWith('/admin/system')) {
-        return {
-            title: 'Kelola sistem dan akses',
-            description:
-                'Pantau audit, konfigurasi, notifikasi, role, dan akun admin spesialis dari modul ini.',
-            list: 'Tabel sistem membantu admin mengelola role, admin spesialis, audit, dan konfigurasi. Gunakan Edit/Simpan untuk perubahan akses dan Hapus hanya jika akun atau data sudah tidak diperlukan.',
-        };
-    }
-
-    return {
-        title: 'Pantau ringkasan operasional',
-        description:
-            'Gunakan halaman ini untuk melihat kondisi terbaru sistem dan memilih modul yang perlu ditindaklanjuti.',
-        list: 'Area ini menampilkan ringkasan atau tabel utama. Gunakan tombol Detail untuk meninjau data dan tombol aksi untuk memproses pekerjaan yang tersedia.',
-    };
-};
-
-const mitraPagePurpose = (path: string) => {
-    if (path.startsWith('/mitra/events')) {
-        return {
-            title: 'Kelola event Anda',
-            description:
-                'Atur informasi event, tiket, booking, peserta, QR scan, ulasan, dan laporan dari menu event.',
-            list: 'Tabel event dan booking membantu Anda memantau transaksi. Gunakan tombol tambah untuk membuat data, Detail/Edit untuk koreksi, dan scan QR untuk validasi peserta.',
-        };
-    }
-    if (path.startsWith('/mitra/wisata')) {
-        return {
-            title: 'Kelola destinasi wisata',
-            description:
-                'Atur profil destinasi, tiket, booking, validasi QR, ulasan, dan laporan wisata dari modul ini.',
-            list: 'Tabel wisata menampilkan tiket, booking, dan aktivitas kunjungan. Gunakan Detail/Edit untuk memperbarui data dan QR scan untuk validasi tiket.',
-        };
-    }
-    if (path.startsWith('/mitra/hotels') || path.startsWith('/mitra/room')) {
-        return {
-            title: 'Kelola hotel dan kamar',
-            description:
-                'Atur profil hotel, tipe kamar, ketersediaan, booking, ulasan, dan pendapatan dari modul hotel.',
-            list: 'Tabel hotel/kamar/inventory membantu Anda mengatur ketersediaan. Gunakan Tambah untuk membuat tipe kamar, Edit untuk memperbarui data, dan Detail untuk melihat transaksi.',
-        };
-    }
-    if (path.startsWith('/mitra/finance')) {
-        return {
-            title: 'Pantau keuangan mitra',
-            description:
-                'Lihat ringkasan pendapatan, payout, dan rekening agar proses pencairan tetap jelas.',
-            list: 'Tabel keuangan menampilkan transaksi dan payout. Gunakan detail status untuk mencocokkan pendapatan dan proses pencairan.',
-        };
-    }
-
-    return {
-        title: 'Pantau operasional mitra',
-        description:
-            'Gunakan halaman ini untuk melihat data penting dan memilih pekerjaan yang perlu diproses.',
-        list: 'Area ini menampilkan tabel atau kartu operasional. Gunakan tombol Detail/Edit/Simpan untuk memproses data yang tersedia.',
-    };
-};
-
 const adminDashboardCopy = (role?: string) => {
-    if (role === 'admin_academy') {
-        return {
-            heroTitle: 'Ringkasan operasional Academy',
-            heroDescription:
-                'Bagian ini menunjukkan fokus dashboard Academy: booking kelas, tiket kelas, dan kelas aktif yang perlu dipantau hari ini.',
-            metricsTitle: 'Angka penting Academy',
-            metricsDescription:
-                'Gunakan kartu ini untuk melihat booking hari ini, tiket kelas terjual, dan jumlah kelas aktif sebelum membuka modul detail.',
-            activityTitle: 'Aktivitas kelas terbaru',
-            activityDescription:
-                'Pantau aktivitas terbaru seperti booking, pembayaran, atau perubahan data kelas agar tindak lanjut tidak tertunda.',
-            statusTitle: 'Status yang perlu ditindaklanjuti',
-            statusDescription:
-                'Area ini menampilkan pembayaran, review, atau refund yang perlu dicek oleh admin Academy.',
-        };
-    }
-
-    if (role === 'admin_retail') {
-        return {
-            heroTitle: 'Ringkasan operasional Retail Shop',
-            heroDescription:
-                'Bagian ini merangkum order, item terjual, dan produk aktif untuk membantu admin retail menentukan prioritas kerja.',
-            metricsTitle: 'Angka penting Retail Shop',
-            metricsDescription:
-                'Gunakan kartu ini untuk memantau order hari ini, item terjual, dan produk aktif sebelum membuka modul produk atau order.',
-            activityTitle: 'Aktivitas order terbaru',
-            activityDescription:
-                'Pantau order, stok, refund, atau pengiriman terbaru agar proses fulfillment tetap lancar.',
-            statusTitle: 'Status order dan refund',
-            statusDescription:
-                'Area ini membantu menemukan pembayaran, refund, atau pekerjaan retail yang membutuhkan tindak lanjut cepat.',
-        };
-    }
-
-    if (role === 'admin_special_program') {
-        return {
-            heroTitle: 'Ringkasan Special Program',
-            heroDescription:
-                'Bagian ini merangkum booking, tiket terjual, dan program aktif yang sedang berjalan.',
-            metricsTitle: 'Angka penting Special Program',
-            metricsDescription:
-                'Gunakan kartu ini untuk melihat booking hari ini, tiket terjual, dan jumlah program aktif.',
-            activityTitle: 'Aktivitas program terbaru',
-            activityDescription:
-                'Pantau booking, peserta, scan QR, atau perubahan status program terbaru dari area ini.',
-            statusTitle: 'Status booking dan review',
-            statusDescription:
-                'Area ini menampilkan pembayaran, review, atau refund yang perlu ditindaklanjuti admin Special Program.',
-        };
-    }
-
     return {
-        heroTitle: 'Pusat kontrol Admin Utama',
+        heroTitle: 'Pusat kontrol wisata',
         heroDescription:
-            'Bagian ini merangkum kondisi operasional INDOTIX lintas produk: transaksi, tiket, mitra, pembayaran, payout, dan review.',
-        metricsTitle: 'Angka operasional utama',
+            'Bagian ini merangkum operasional wisata INDOTIX: destinasi, tiket, booking, pembayaran, payout, dan review yang perlu dipantau.',
+        metricsTitle: 'Angka operasional wisata',
         metricsDescription:
-            'Gunakan kartu metrik untuk melihat transaksi hari ini, tiket terjual, dan mitra aktif sebelum membuka modul detail.',
-        activityTitle: 'Aktivitas platform terbaru',
+            'Gunakan kartu metrik untuk melihat transaksi hari ini, tiket terjual, dan mitra wisata aktif sebelum membuka modul detail.',
+        activityTitle: 'Aktivitas wisata terbaru',
         activityDescription:
-            'Area ini membantu admin melihat aktivitas terbaru agar perubahan penting tidak terlewat.',
+            'Area ini membantu admin melihat aktivitas destinasi, booking, pembayaran, atau update mitra wisata terbaru.',
         statusTitle: 'Status sistem yang perlu dicek',
         statusDescription:
-            'Pantau review mitra, pembayaran pending, dan payout pending untuk menentukan pekerjaan prioritas.',
+            'Pantau verifikasi mitra wisata, pembayaran pending, dan payout pending untuk menentukan pekerjaan prioritas.',
     };
 };
 
@@ -382,9 +169,9 @@ const mitraDashboardSteps = (): CoachStep[] => [
     },
     {
         selector: '[data-coach="dashboard-hero"]',
-        title: 'Ringkasan performa mitra',
+        title: 'Ringkasan destinasi Anda',
         description:
-            'Bagian ini menyesuaikan isi dashboard dengan jenis mitra: hotel, wisata, atau event.',
+            'Bagian ini merangkum status operasional destinasi wisata yang Anda kelola di INDOTIX.',
     },
     {
         selector: '[data-coach="dashboard-onboarding"]',
@@ -400,15 +187,15 @@ const mitraDashboardSteps = (): CoachStep[] => [
     },
     {
         selector: '[data-coach="dashboard-metrics"]',
-        title: 'Metrik bisnis utama',
+        title: 'Metrik penjualan wisata',
         description:
-            'Kartu ini menampilkan angka penting seperti booking, penjualan tiket, pendapatan, atau kapasitas sesuai jenis mitra.',
+            'Kartu ini menampilkan booking, tiket terjual, pendapatan, dan status destinasi agar prioritas kerja cepat terlihat.',
     },
     {
         selector: '[data-coach="dashboard-activity"]',
-        title: 'Aktivitas terbaru',
+        title: 'Aktivitas tiket terbaru',
         description:
-            'Gunakan area ini untuk mengecek booking, pembayaran, validasi QR, atau perubahan terbaru pada produk Anda.',
+            'Gunakan area ini untuk mengecek booking, pembayaran, validasi QR, atau perubahan terbaru pada destinasi wisata Anda.',
     },
     {
         selector: '[data-coach="dashboard-status"]',
@@ -417,6 +204,10 @@ const mitraDashboardSteps = (): CoachStep[] => [
             'Pantau kondisi yang perlu ditindaklanjuti, seperti verifikasi, pembayaran, payout, atau pekerjaan operasional lain.',
     },
 ];
+
+const exactPath = (targetPath: string) => (path: string) => path === targetPath;
+const startsWithPath = (targetPath: string) => (path: string) =>
+    path === targetPath || path.startsWith(`${targetPath}/`);
 
 const affiliateDashboardSteps = (): CoachStep[] => [
     {
@@ -445,194 +236,425 @@ const affiliateDashboardSteps = (): CoachStep[] => [
     },
 ];
 
+const publicHomeSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="public-search"]',
+        title: 'Cari tiket wisata',
+        description:
+            'Masukkan nama destinasi, kota, atau kata kunci wisata untuk langsung menuju pilihan tiket yang relevan.',
+    },
+    {
+        selector: '[data-coach="public-categories"]',
+        title: 'Pilih kategori wisata',
+        description:
+            'Gunakan kategori untuk mempercepat pencarian destinasi seperti alam, budaya, religi, pantai, atau pilihan wisata lain.',
+    },
+    {
+        selector: '[data-coach="home-special-promo"]',
+        title: 'Promo Spesial Untukmu',
+        description:
+            'Video dan gambar promo di bagian ini dapat membawa voucher otomatis ke alur pemesanan ketika pengguna membuka promonya.',
+    },
+    {
+        selector: '[data-coach="home-category-products"]',
+        title: 'Produk per kategori',
+        description:
+            'Destinasi dikelompokkan berdasarkan kategori supaya pengguna bisa membandingkan pilihan wisata tanpa menelusuri semua produk.',
+    },
+];
+
+const publicWisataSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="public-search"]',
+        title: 'Cari destinasi wisata',
+        description:
+            'Gunakan pencarian untuk menemukan destinasi berdasarkan nama, kota, atau aktivitas yang ingin dikunjungi.',
+    },
+    {
+        selector: '[data-coach="public-categories"]',
+        title: 'Saring berdasarkan kategori',
+        description:
+            'Kategori membantu mempersempit daftar destinasi agar pengguna cepat menemukan tiket wisata yang sesuai minatnya.',
+    },
+    {
+        selector: 'main [data-coach-list], [data-coach="wisata-results"]',
+        title: 'Bandingkan pilihan wisata',
+        description:
+            'Area daftar menampilkan destinasi yang tersedia beserta ringkasan harga atau status tiket sebelum pengguna membuka detail.',
+    },
+];
+
+const publicWisataDetailSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="wisata-detail-gallery"]',
+        title: 'Lihat suasana destinasi',
+        description:
+            'Galeri membantu calon pengunjung memahami kondisi tempat sebelum memilih tiket.',
+    },
+    {
+        selector: '[data-coach="wisata-detail-info"]',
+        title: 'Informasi kunjungan',
+        description:
+            'Bagian ini memuat deskripsi, alamat, fasilitas, dan informasi penting yang dibutuhkan sebelum memesan.',
+    },
+    {
+        selector: '[data-coach="wisata-ticket-selector"]',
+        title: 'Pilih tiket wisata',
+        description:
+            'Pilih jenis tiket, jumlah, dan tanggal kunjungan dari panel ini sebelum melanjutkan ke checkout.',
+    },
+];
+
+const publicPromoSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="promo-voucher-list"]',
+        title: 'Temukan voucher wisata',
+        description:
+            'Daftar ini berisi promo yang dapat dipakai untuk mengurangi total pembayaran tiket wisata.',
+    },
+    {
+        selector: '[data-coach="promo-filter"]',
+        title: 'Cari promo aktif',
+        description:
+            'Gunakan pencarian atau filter untuk menemukan kode promo berdasarkan destinasi, kuota, atau masa berlaku.',
+    },
+];
+
+const publicHistorySteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="history-filter"]',
+        title: 'Filter status pesanan',
+        description:
+            'Gunakan filter untuk memisahkan tiket yang masih menunggu pembayaran, sudah lunas, kedaluwarsa, atau dibatalkan.',
+    },
+    {
+        selector: '[data-coach="history-list"]',
+        title: 'Riwayat tiket wisata',
+        description:
+            'Gunakan daftar ini untuk membuka tiket yang sudah dibeli, mengecek status pembayaran, atau melihat detail kunjungan.',
+    },
+    {
+        selector: '[data-coach="public-user-menu"]',
+        title: 'Akses akun dan notifikasi',
+        description:
+            'Menu akun menyimpan akses cepat ke profil, notifikasi, dan riwayat setelah pengguna login.',
+    },
+];
+
+const adminPublicHomeSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="public-home-tabs"]',
+        title: 'Pilih section beranda',
+        description:
+            'Tab ini memisahkan pengaturan banner mobile, promo spesial, destinasi unggulan, Part of, dan section lain agar konten tidak tercampur.',
+    },
+    {
+        selector: '[data-coach="public-home-active-section"]',
+        title: 'Edit konten section aktif',
+        description:
+            'Area ini hanya menampilkan field untuk tab yang sedang dipilih, sehingga admin bisa fokus mengubah satu bagian beranda.',
+    },
+    {
+        selector: '[data-coach="public-home-special-promo"]',
+        title: 'Atur Promo Spesial',
+        description:
+            'Susun dua video dan tiga gambar promo yang tampil di beranda. Gambar promo bisa diarahkan ke voucher tertentu.',
+    },
+    {
+        selector: '[data-coach="public-home-part-of-logos"]',
+        title: 'Kelola logo Part of',
+        description:
+            'Logo Part of dikelola terpisah dari Partner Kami dan akan berjalan otomatis dalam dua baris pada halaman beranda.',
+    },
+    {
+        selector: '[data-coach="public-home-save"]',
+        title: 'Simpan perubahan beranda',
+        description:
+            'Tekan tombol ini setelah konten, media, atau pengaturan section selesai diubah.',
+    },
+];
+
+const adminEntryQrSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="entry-qr-text"]',
+        title: 'Atur teks poster QR',
+        description:
+            'Teks di bagian ini digunakan pada poster QR milik mitra. Batas karakter menjaga nama wisata dan instruksi tetap rapi saat dicetak.',
+    },
+    {
+        selector: '[data-coach="entry-qr-images"]',
+        title: 'Atur aset visual QR',
+        description:
+            'Upload logo, background, dan aset pendukung yang akan dipakai pada poster QR masuk seluruh mitra wisata.',
+    },
+    {
+        selector: '[data-coach="entry-qr-save"]',
+        title: 'Simpan template QR',
+        description:
+            'Perubahan template akan dipakai saat mitra membuka preview, mengunduh, atau mencetak QR masuk destinasi.',
+    },
+];
+
+const adminWisataDestinationSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="admin-wisata-destination-filters"]',
+        title: 'Cari destinasi mitra',
+        description:
+            'Gunakan pencarian, status, dan kota untuk menemukan destinasi yang perlu diverifikasi, dipublish, atau ditinjau.',
+    },
+    {
+        selector: '[data-coach="admin-wisata-destination-table"]',
+        title: 'Pantau status destinasi',
+        description:
+            'Tabel ini memperlihatkan pemilik destinasi, status verifikasi, status live, dan akses detail untuk tindakan admin.',
+    },
+    {
+        selector: '[data-coach="admin-wisata-destination-create"]',
+        title: 'Tambahkan destinasi wisata',
+        description:
+            'Gunakan tombol ini bila admin perlu mendaftarkan destinasi baru atas nama mitra wisata.',
+    },
+];
+
+const adminWisataTicketSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="admin-wisata-ticket-filters"]',
+        title: 'Pilih konteks tiket',
+        description:
+            'Cari destinasi atau tiket dari sini. Jika destinasi dipilih, halaman berubah menjadi daftar tiket milik destinasi tersebut.',
+    },
+    {
+        selector: '[data-coach="admin-wisata-ticket-destinations"]',
+        title: 'Mulai dari destinasi',
+        description:
+            'Admin memilih destinasi lebih dulu agar pengelolaan tiket tidak tercampur antar mitra wisata.',
+    },
+    {
+        selector: '[data-coach="admin-wisata-ticket-table"]',
+        title: 'Kelola tiket destinasi',
+        description:
+            'Daftar tiket menampilkan harga, kuota, status aktif, dan aksi edit atau hapus untuk destinasi yang sedang dipilih.',
+    },
+    {
+        selector: '[data-coach="admin-wisata-ticket-create"]',
+        title: 'Buat tiket wisata',
+        description:
+            'Gunakan tombol ini untuk menambah tiket biasa atau paket wisata bagi destinasi yang sesuai.',
+    },
+];
+
+const adminWisataVoucherSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="voucher-create"]',
+        title: 'Buat voucher wisata',
+        description:
+            'Admin dapat membuat voucher untuk semua destinasi atau membatasi pemakaiannya pada produk wisata tertentu.',
+    },
+    {
+        selector: '[data-coach="voucher-list"]',
+        title: 'Pantau kuota promo',
+        description:
+            'Daftar voucher memperlihatkan kode, masa berlaku, kuota, dan status sehingga promo yang tampil di beranda tetap valid.',
+    },
+];
+
+const mitraDestinationSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="mitra-destination-responsible"]',
+        title: 'Kontak operasional',
+        description:
+            'Isi data penanggung jawab agar admin bisa menghubungi mitra jika ada kebutuhan verifikasi atau kendala tiket.',
+    },
+    {
+        selector: '[data-coach="mitra-destination-info"]',
+        title: 'Profil destinasi publik',
+        description:
+            'Informasi di bagian ini akan dipakai pada halaman destinasi yang dilihat calon pengunjung.',
+    },
+    {
+        selector: '[data-coach="mitra-destination-photo"]',
+        title: 'Foto produk wisata',
+        description:
+            'Foto produk menjadi gambar utama pada kartu wisata di halaman publik, katalog, dan rekomendasi.',
+    },
+    {
+        selector: '[data-coach="mitra-destination-save"]',
+        title: 'Ajukan pembaruan',
+        description:
+            'Simpan perubahan setelah data lengkap. Jika workflow verifikasi aktif, admin akan meninjau data sebelum tampil live.',
+    },
+];
+
+const mitraTicketSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="mitra-ticket-create"]',
+        title: 'Tambah tiket destinasi',
+        description:
+            'Gunakan tombol ini untuk membuat jenis tiket yang dapat dibeli pengunjung untuk destinasi Anda.',
+    },
+    {
+        selector: '[data-coach="mitra-ticket-table"]',
+        title: 'Atur penjualan tiket',
+        description:
+            'Tabel tiket memuat harga, kuota, batas minimum-maksimum order, dan status aktif untuk setiap produk tiket.',
+    },
+];
+
+const mitraScanSteps = (): CoachStep[] => [
+    {
+        selector: '[data-coach="mitra-scan-tabs"]',
+        title: 'Pilih QR atau riwayat',
+        description:
+            'Tab QR dipakai untuk mencetak kode masuk destinasi, sedangkan Data Scan dipakai untuk memantau tiket yang sudah divalidasi pengunjung.',
+    },
+    {
+        selector: '[data-coach="mitra-entry-qr-preview"]',
+        title: 'Poster QR masuk',
+        description:
+            'Cetak dan tempel QR ini di loket atau pintu masuk. Pengunjung akan scan dari aplikasi atau web INDOTIX dan memilih tiket paid miliknya.',
+    },
+    {
+        selector: '[data-coach="mitra-entry-qr-actions"]',
+        title: 'Unduh atau cetak QR',
+        description:
+            'Gunakan tombol PDF atau cetak untuk mendapatkan poster dengan tampilan yang sama seperti preview.',
+    },
+    {
+        selector: '[data-coach="mitra-scan-history-filter"]',
+        title: 'Cari riwayat validasi',
+        description:
+            'Filter riwayat berdasarkan kode booking, nama tamu, tiket, petugas, lokasi, atau tanggal scan.',
+    },
+    {
+        selector: '[data-coach="mitra-scan-history-table"]',
+        title: 'Audit scan tiket',
+        description:
+            'Riwayat scan membantu mitra membedakan tiket yang berhasil divalidasi dan percobaan scan yang gagal atau anomali.',
+    },
+];
+
+const tourDefinitions: TourDefinition[] = [
+    {
+        id: 'public.home.v1',
+        context: 'public',
+        match: exactPath('/'),
+        steps: publicHomeSteps,
+    },
+    {
+        id: 'public.wisata.index.v1',
+        context: 'public',
+        match: exactPath('/wisata'),
+        steps: publicWisataSteps,
+    },
+    {
+        id: 'public.wisata.show.v1',
+        context: 'public',
+        match: (path) =>
+            path.startsWith('/wisata/') &&
+            !path.startsWith('/wisata/booking'),
+        steps: publicWisataDetailSteps,
+    },
+    {
+        id: 'public.promo.v1',
+        context: 'public',
+        match: startsWithPath('/promo'),
+        steps: publicPromoSteps,
+    },
+    {
+        id: 'public.history.v1',
+        context: 'public',
+        match: startsWithPath('/history'),
+        steps: publicHistorySteps,
+    },
+    {
+        id: 'admin.dashboard.v1',
+        context: 'admin',
+        match: exactPath('/dashboard'),
+        steps: (_path, role) => adminDashboardSteps(role),
+    },
+    {
+        id: 'admin.public.home.v1',
+        context: 'admin',
+        match: exactPath('/admin/public/home'),
+        steps: adminPublicHomeSteps,
+    },
+    {
+        id: 'admin.public.entry-qr.v1',
+        context: 'admin',
+        match: exactPath('/admin/public/entry-qr'),
+        steps: adminEntryQrSteps,
+    },
+    {
+        id: 'admin.wisata.destinations.v1',
+        context: 'admin',
+        match: startsWithPath('/admin/wisata/destinations'),
+        steps: adminWisataDestinationSteps,
+    },
+    {
+        id: 'admin.wisata.tickets.v1',
+        context: 'admin',
+        match: startsWithPath('/admin/wisata/tickets'),
+        steps: adminWisataTicketSteps,
+    },
+    {
+        id: 'admin.wisata.vouchers.v1',
+        context: 'admin',
+        match: exactPath('/admin/wisata/vouchers'),
+        steps: adminWisataVoucherSteps,
+    },
+    {
+        id: 'mitra.dashboard.v1',
+        context: 'mitra',
+        match: exactPath('/mitra/dashboard'),
+        steps: mitraDashboardSteps,
+    },
+    {
+        id: 'mitra.wisata.destination.v1',
+        context: 'mitra',
+        match: exactPath('/mitra/wisata/destination'),
+        steps: mitraDestinationSteps,
+    },
+    {
+        id: 'mitra.wisata.tickets.v1',
+        context: 'mitra',
+        match: startsWithPath('/mitra/wisata/tickets'),
+        steps: mitraTicketSteps,
+    },
+    {
+        id: 'mitra.wisata.scans.v1',
+        context: 'mitra',
+        match: exactPath('/mitra/wisata/scans'),
+        steps: mitraScanSteps,
+    },
+    {
+        id: 'affiliate.dashboard.v1',
+        context: 'affiliate',
+        match: exactPath('/affiliate'),
+        steps: affiliateDashboardSteps,
+    },
+];
+
+const findTourDefinition = (
+    context: CoachContext,
+    path: string,
+    role?: string,
+): TourDefinition | undefined => {
+    const normalizedPath = normalizeGuidePath(path);
+    return tourDefinitions.find(
+        (tour) =>
+            tour.context === context &&
+            (tour.match(path, role) || tour.match(normalizedPath, role)),
+    );
+};
+
 const buildSteps = (
     context: CoachContext,
     path: string,
     role?: string,
 ): CoachStep[] => {
-    const quotedPath = quoteSelectorValue(path);
-    const currentMenuSelector = `aside a[href="${quotedPath}"], a[data-coach-current="true"]`;
+    const definition = findTourDefinition(context, path, role);
 
-    if (context === 'admin' && path === '/dashboard') {
-        return adminDashboardSteps(role);
-    }
-
-    if (context === 'mitra' && path === '/mitra/dashboard') {
-        return mitraDashboardSteps();
-    }
-
-    if (context === 'affiliate' && path === '/affiliate') {
-        return affiliateDashboardSteps();
-    }
-
-    if (context === 'public') {
-        const label = publicSectionLabel(path);
-
-        return [
-            {
-                selector: '[data-coach="public-search"]',
-                title: 'Cari produk lebih cepat',
-                description:
-                    'Gunakan kolom ini untuk mencari event, hotel, wisata, academy, special program, atau produk retail.',
-            },
-            {
-                selector: '[data-coach="public-categories"]',
-                title: 'Jelajahi kategori',
-                description: `Pilih kategori untuk mulai menemukan produk ${label} tanpa harus mengetik kata kunci.`,
-            },
-            {
-                selector: 'main [data-coach-list], main table',
-                title: 'Lihat rekomendasi dan daftar produk',
-                description:
-                    'Area ini menampilkan produk, rekomendasi, atau riwayat yang bisa langsung dibuka untuk melihat detail.',
-            },
-            {
-                selector:
-                    '[data-coach="public-cart"], [data-coach="public-user-menu"]',
-                title: 'Akses transaksi dan akun',
-                description:
-                    'Gunakan menu ini untuk membuka keranjang, riwayat, notifikasi, chat, atau profil akun.',
-            },
-        ];
-    }
-
-    if (context === 'affiliate') {
-        return [
-            {
-                selector: 'aside',
-                title: 'Menu Affiliate',
-                description:
-                    'Gunakan menu samping untuk membuka katalog, link promosi, komisi, payout, dan bantuan.',
-            },
-            {
-                selector: 'main h1, main h2, main h3',
-                title: 'Fokus halaman affiliate',
-                description:
-                    'Bagian ini menjelaskan konteks pekerjaan, seperti membuat link promosi, melihat komisi, atau mengajukan payout.',
-            },
-            {
-                selector: 'main section, main [class*="grid"]',
-                title: 'Ringkasan affiliate',
-                description:
-                    'Kartu informasi menampilkan status, angka penting, atau ringkasan aktivitas affiliate yang perlu dipantau.',
-            },
-            {
-                selector: 'main table, main form',
-                title: 'Data dan pekerjaan utama',
-                description:
-                    'Area ini berisi katalog, link promosi, riwayat komisi, atau form yang perlu Anda isi.',
-            },
-        ];
-    }
-
-    if (context === 'mitra') {
-        const label = mitraSectionLabel(path);
-        const purpose = mitraPagePurpose(path);
-
-        return [
-            {
-                selector: currentMenuSelector,
-                title: `Menu ${label}`,
-                description:
-                    'Gunakan menu yang sedang aktif ini untuk memahami posisi Anda di panel mitra dan berpindah ke pekerjaan terkait.',
-            },
-            {
-                selector: 'main h1, [role="main"] h1, h1',
-                title: purpose.title,
-                description: purpose.description,
-            },
-            {
-                selector: 'main section, main [class*="grid"]',
-                title: 'Ringkasan dan kartu informasi',
-                description:
-                    'Kartu di halaman ini menampilkan status, angka penting, atau informasi operasional yang perlu dipantau sebelum membuka detail.',
-            },
-            {
-                selector:
-                    'main form, input[placeholder*="Cari"], input[name="search"], select[name="status"]',
-                title: 'Temukan data yang perlu diproses',
-                description:
-                    'Gunakan pencarian dan filter untuk mempersempit data berdasarkan status, tanggal, nama produk, atau transaksi.',
-            },
-            {
-                selector: 'main table, main [data-coach-list]',
-                title: 'Tabel dan aksi data',
-                description: purpose.list,
-            },
-            {
-                selector: 'main a[href$="/create"], main button[type="submit"]',
-                title: 'Tambah atau simpan data',
-                description:
-                    'Gunakan tombol ini untuk membuat data baru atau menyimpan perubahan setelah form diisi dengan benar.',
-            },
-            {
-                selector: 'main table a, main table button',
-                title: 'Detail dan aksi baris',
-                description:
-                    'Tombol pada setiap baris digunakan untuk membuka detail, mengedit, memproses, atau menghapus data sesuai kebutuhan.',
-            },
-            {
-                selector:
-                    'main table button[class*="rose"], main table button[class*="red"], main button[class*="rose"], main button[class*="red"]',
-                title: 'Aksi hapus atau batal',
-                description:
-                    'Tombol berwarna merah biasanya untuk menghapus, membatalkan, atau menolak data. Pastikan data sudah benar sebelum melanjutkan aksi ini.',
-            },
-        ];
-    }
-
-    const adminLabel = adminSectionLabel(path);
-    const purpose = adminPagePurpose(path);
-
-    return [
-        {
-            selector: currentMenuSelector,
-            title: `Navigasi ${roleLabel(role)}`,
-            description: `Anda sedang berada di area ${adminLabel}. Gunakan menu ini untuk memahami konteks modul yang sedang dikelola.`,
-        },
-        {
-            selector: 'main h1, [role="main"] h1, h1',
-            title: purpose.title,
-            description: purpose.description,
-        },
-        {
-            selector: 'main section, main [class*="grid"]',
-            title: 'Ringkasan dan kartu informasi',
-            description:
-                'Kartu di halaman ini menampilkan status, jumlah data, atau informasi penting. Gunakan ringkasan ini untuk menentukan bagian mana yang perlu dicek lebih dulu.',
-        },
-        {
-            selector:
-                'main form, input[placeholder*="Cari"], input[name="search"], select[name="status"]',
-            title: 'Saring data sebelum diproses',
-            description:
-                'Gunakan pencarian dan filter untuk menemukan data tertentu tanpa harus menelusuri semua baris.',
-        },
-        {
-            selector: 'main table, main [data-coach-list]',
-            title: 'Tabel dan aksi data',
-            description: purpose.list,
-        },
-        {
-            selector: 'main a[href$="/create"], main button[type="submit"]',
-            title: 'Tambah atau simpan data',
-            description:
-                'Gunakan tombol ini untuk membuat data baru atau menyimpan perubahan. Pastikan field wajib sudah terisi sebelum menyimpan.',
-        },
-        {
-            selector: 'main table a, main table button',
-            title: 'Detail, edit, dan proses data',
-            description:
-                'Tombol pada baris tabel digunakan untuk membuka detail, mengedit data, memproses booking/order, mengubah status, atau menjalankan aksi operasional lainnya.',
-        },
-        {
-            selector:
-                'main table button[class*="rose"], main table button[class*="red"], main button[class*="rose"], main button[class*="red"]',
-            title: 'Hapus atau aksi berisiko',
-            description:
-                'Tombol berwarna merah biasanya berdampak besar seperti hapus, batal, refund, atau tolak. Gunakan hanya setelah data benar-benar dipastikan.',
-        },
-    ];
+    return definition?.steps(path, role) ?? [];
 };
 
 export default function CoachMarks({ context }: Props) {
@@ -640,10 +662,15 @@ export default function CoachMarks({ context }: Props) {
     const path = pathWithoutQuery(page.url ?? window.location.pathname);
     const role = (page.props as { auth?: { user?: { role?: string } } }).auth
         ?.user?.role;
+    const guidePath = normalizeGuidePath(path);
+    const tourDefinition = useMemo(
+        () => findTourDefinition(context, path, role),
+        [context, path, role],
+    );
     const [open, setOpen] = useState(false);
     const [activeIndex, setActiveIndex] = useState(0);
     const [rect, setRect] = useState<TargetRect | null>(null);
-    const seenKey = `${guideStoragePrefix}.${context}.${role ?? 'guest'}.${path}`;
+    const seenKey = `${guideStoragePrefix}.${context}.${role ?? 'guest'}.${tourDefinition?.id ?? guidePath}`;
     const availableStepsRef = useRef<CoachStep[]>([]);
     const targetUpdateTokenRef = useRef(0);
     const scrollSnapshotRef = useRef<ScrollSnapshot[] | null>(null);
@@ -891,6 +918,10 @@ export default function CoachMarks({ context }: Props) {
             ? 'h-10 w-10 justify-center p-0 md:h-auto md:w-auto md:px-4 md:py-3'
             : 'px-4 py-3';
     const launcherZIndexClass = context === 'public' ? 'z-[40]' : 'z-[110]';
+
+    if (steps.length === 0) {
+        return null;
+    }
 
     return (
         <>

@@ -93,8 +93,9 @@ export default function BannerCreate() {
                             <InputError message={form.errors.sort_order} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Banner (gambar)</Label>
+                            <Label required>Banner (gambar)</Label>
                             <Input
+                                required
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
                                 disabled={form.processing}
@@ -106,8 +107,8 @@ export default function BannerCreate() {
                                 }
                             />
                             <p className="text-xs text-slate-500">
-                                Gunakan JPG, PNG, atau WebP berukuran tepat 1200
-                                × 450 px, maksimal 5 MB.
+                                Gunakan JPG, PNG, atau WebP. Rekomendasi
+                                tampilan utama 1600 × 449 px, maksimal 5 MB.
                             </p>
                             <InputError message={form.errors.image} />
                         </div>

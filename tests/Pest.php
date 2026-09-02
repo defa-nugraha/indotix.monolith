@@ -45,3 +45,27 @@ function something()
 {
     // ..
 }
+
+function fakeTestImage(
+    string $name = 'image.png',
+    int $width = 1,
+    int $height = 1,
+    string $mime = 'image/png',
+): Illuminate\Http\UploadedFile
+{
+    $path = tempnam(sys_get_temp_dir(), 'indotix-test-image-');
+
+    $chunk = static function (string $type, string $data): string {
+        return pack('N', strlen($data)).$type.$data.pack('N', crc32($type.$data));
+    };
+
+    $scanline = "\0".str_repeat("\0", $width * 3);
+    $pixels = str_repeat($scanline, $height);
+
+    file_put_contents($path, "\x89PNG\r\n\x1a\n"
+        .$chunk('IHDR', pack('NNCCCCC', $width, $height, 8, 2, 0, 0, 0))
+        .$chunk('IDAT', gzcompress($pixels))
+        .$chunk('IEND', ''));
+
+    return new Illuminate\Http\UploadedFile($path, $name, $mime, null, true);
+}

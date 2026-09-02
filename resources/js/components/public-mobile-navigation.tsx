@@ -8,6 +8,7 @@ import {
     Info,
     LoaderCircle,
     Map as MapIcon,
+    ScanLine,
     UserCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -52,10 +53,11 @@ export default function PublicMobileNavigation() {
                   active: isActivePath(['/wisata']),
               },
               {
-                  label: 'Promo',
-                  href: '/promo',
-                  icon: BadgePercent,
-                  active: isActivePath(['/promo']),
+                  label: 'Scan',
+                  href: '/tickets/scan',
+                  icon: ScanLine,
+                  active: isActivePath(['/tickets/scan']),
+                  prominent: true,
               },
               {
                   label: 'Riwayat',
@@ -124,6 +126,7 @@ export default function PublicMobileNavigation() {
                     className={cn(
                         'public-mobile-navigation__item',
                         item.active && 'is-active',
+                        'prominent' in item && item.prominent && 'is-prominent',
                     )}
                 >
                     {loadingHref === item.href ? (

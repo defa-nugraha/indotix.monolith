@@ -1,4 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -22,6 +24,8 @@ export default function Login({
     canResetPassword,
     canRegister,
 }: Props) {
+    const [showPassword, setShowPassword] = useState(false);
+
     return (
         <div className="relative min-h-svh overflow-hidden bg-[#f6fbff] font-['Plus_Jakarta_Sans'] text-slate-900">
             <Head title="Masuk">
@@ -81,7 +85,7 @@ export default function Login({
                                         <span className="h-px flex-1 bg-slate-200" />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email">
+                                        <Label htmlFor="email" required>
                                             Email terdaftar
                                         </Label>
                                         <Input
@@ -99,7 +103,7 @@ export default function Login({
 
                                     <div className="grid gap-2">
                                         <div className="flex items-center">
-                                            <Label htmlFor="password">
+                                            <Label htmlFor="password" required>
                                                 Password
                                             </Label>
                                             {canResetPassword && (
@@ -111,15 +115,41 @@ export default function Login({
                                                 </TextLink>
                                             )}
                                         </div>
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            name="password"
-                                            required
-                                            autoComplete="current-password"
-                                            placeholder="Masukkan password"
-                                            className="bg-white"
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                id="password"
+                                                type={
+                                                    showPassword
+                                                        ? 'text'
+                                                        : 'password'
+                                                }
+                                                name="password"
+                                                required
+                                                autoComplete="current-password"
+                                                placeholder="Masukkan password"
+                                                className="bg-white pr-11"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setShowPassword(
+                                                        (current) => !current,
+                                                    )
+                                                }
+                                                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-slate-400 transition hover:text-sky-600 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
+                                                aria-label={
+                                                    showPassword
+                                                        ? 'Sembunyikan password'
+                                                        : 'Lihat password'
+                                                }
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff className="h-4 w-4" />
+                                                ) : (
+                                                    <Eye className="h-4 w-4" />
+                                                )}
+                                            </button>
+                                        </div>
                                         <InputError message={errors.password} />
                                     </div>
 

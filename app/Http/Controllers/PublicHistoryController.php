@@ -61,7 +61,7 @@ class PublicHistoryController extends Controller
 
         $wisataBookings = WisataBooking::query()
             ->where('user_id', $request->user()->id)
-            ->with(['destination', 'ticket'])
+            ->with(['destination', 'ticket', 'items.ticket'])
             ->latest()
             ->get()
             ->map(function (WisataBooking $booking) use ($userId) {
@@ -99,6 +99,7 @@ class PublicHistoryController extends Controller
                         ? ProductReviewService::hasUsedBooking($userId, 'wisata', (int) $booking->mitra_wisata_onboarding_id)
                         : false,
                     'ticket_name' => $booking->ticket?->name,
+                    'items' => $this->wisataLineItems($booking),
                 ];
             });
 
@@ -266,15 +267,7 @@ class PublicHistoryController extends Controller
                 ];
             });
 
-        $bookings = collect()
-            ->concat($hotelBookings)
-            ->concat($wisataBookings)
-            ->concat($eventBookings)
-            ->concat($specialProgramBookings)
-            ->concat($souvenirOrders)
-            ->concat($academyBookings)
-            ->sortByDesc('created_at')
-            ->values();
+        $bookings = $wisataBookings->sortByDesc('created_at')->values();
 
         return Inertia::render('public/history', [
             'bookings' => $bookings,
@@ -288,5 +281,31 @@ class PublicHistoryController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function wisataLineItems(WisataBooking $booking): array
+    {
+        $booking->loadMissing(['ticket', 'items.ticket']);
+
+        if ($booking->items->isEmpty()) {
+            return [[
+                'ticket_id' => (int) $booking->wisata_ticket_id,
+                'name' => $booking->ticket?->name ?? 'Tiket Wisata',
+                'quantity' => (int) $booking->quantity,
+                'unit_price' => (int) $booking->unit_price,
+                'subtotal' => (int) ($booking->subtotal_price ?: $booking->total_price),
+            ]];
+        }
+
+        return $booking->items
+            ->map(fn ($item) => [
+                'ticket_id' => (int) $item->wisata_ticket_id,
+                'name' => $item->ticket_name ?? $item->ticket?->name ?? 'Tiket Wisata',
+                'quantity' => (int) $item->quantity,
+                'unit_price' => (int) $item->unit_price,
+                'subtotal' => (int) $item->subtotal,
+            ])
+            ->values()
+            ->all();
     }
 }

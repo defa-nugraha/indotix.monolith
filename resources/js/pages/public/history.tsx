@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
-import { CalendarCheck, MapPinned, ShoppingBag, Star, Ticket, Bell, MessageCircle, History as HistoryIcon, UserCircle, MapPin, Clock, Users, CreditCard, Filter, ShoppingCart, BookOpen } from 'lucide-react';
+import { CalendarCheck, MapPinned, Ticket, History as HistoryIcon, MapPin, Clock, Users, CreditCard, Filter } from 'lucide-react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
@@ -8,7 +8,7 @@ import { guardPurchaseByRole } from '@/lib/purchase-guard';
 type Booking = {
     id: number;
     encrypted_id: string;
-    type?: 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir' | 'academy';
+    type?: 'wisata';
     title?: string | null;
     city_name?: string | null;
     address?: string | null;
@@ -33,22 +33,23 @@ type Booking = {
     review_url?: string | null;
     can_review?: boolean;
     ticket_name?: string | null;
+    items?: Array<{
+        ticket_id: number;
+        name: string;
+        quantity: number;
+        unit_price: number;
+        subtotal: number;
+    }>;
 };
 
 export default function History({ bookings = [] }: { bookings: Booking[] }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage().props as { auth?: { user?: any }; unread_notifications?: number; souvenir_cart_count?: number };
+    const { auth } = usePage().props as { auth?: { user?: any } };
     const role = (auth?.user as any)?.role as string | undefined;
     const [activeStatus, setActiveStatus] = useState<'all' | 'pending_payment' | 'paid' | 'expired' | 'cancelled'>('all');
-    const [activeType, setActiveType] = useState<'all' | 'hotel' | 'wisata' | 'event' | 'special_program' | 'souvenir' | 'academy'>('all');
     const [query, setQuery] = useState('');
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop' },
-        { label: 'Spesial Program', icon: Star, href: '/special-programs' },
-        { label: 'Academy', icon: BookOpen, href: '/academy' },
-        { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
     const chips = ['Alam', 'Budaya', 'Edukasi', 'Kuliner', 'Desa Wisata', 'Religi', 'Pantai', 'Gunung', 'Taman Nasional', 'Air Terjun', 'Danau'];
@@ -86,12 +87,12 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
     const filteredBookings = useMemo(() => {
         return bookings.filter((booking) => {
             const statusMatch = activeStatus === 'all' ? true : booking.status === activeStatus;
-            const typeMatch = activeType === 'all' ? true : booking.type === activeType;
+            const typeMatch = !booking.type || booking.type === 'wisata';
             const haystack = `${booking.title ?? ''} ${booking.city_name ?? ''} ${booking.address ?? ''}`.toLowerCase();
             const queryMatch = query.trim().length === 0 ? true : haystack.includes(query.toLowerCase());
             return statusMatch && typeMatch && queryMatch;
         });
-    }, [bookings, activeStatus, activeType, query]);
+    }, [bookings, activeStatus, query]);
 
     const formatIdr = (value?: number | string | null) => {
         const numeric = Number(value);
@@ -105,7 +106,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                 <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
             </Head>
 
-                        <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="rounded-2xl bg-white p-6 shadow-sm">
                     <div className="flex items-start justify-between gap-6">
                         <div>
@@ -119,34 +120,14 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                     </div>
                 </div>
 
-                <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm">
+                <div
+                    className="mt-6 rounded-2xl bg-white p-5 shadow-sm"
+                    data-coach="history-filter"
+                >
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                             <Filter className="h-4 w-4 text-sky-500" />
                             Filter Riwayat
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { id: 'all', label: 'Semua' },
-                                { id: 'hotel', label: 'Hotel' },
-                                { id: 'wisata', label: 'Wisata' },
-                                { id: 'event', label: 'Event' },
-                                { id: 'souvenir', label: 'Retail Shop' },
-                                { id: 'special_program', label: 'Special Program' },
-                                { id: 'academy', label: 'Academy' },
-                            ].map((item) => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => setActiveType(item.id as any)}
-                                    className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                                        activeType === item.id
-                                            ? 'bg-sky-600 text-white'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    }`}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
                         </div>
                         <div className="flex flex-wrap gap-2">
                             {[
@@ -173,7 +154,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                             <input
                                 value={query}
                                 onChange={(event) => setQuery(event.target.value)}
-                                placeholder="Cari hotel atau kota"
+                                placeholder="Cari wisata atau kota"
                                 className="w-full bg-transparent outline-none"
                             />
                         </div>
@@ -186,15 +167,15 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                             <HistoryIcon className="h-6 w-6" />
                         </div>
                         <h2 className="mt-4 text-lg font-semibold text-slate-900">Belum ada riwayat</h2>
-                        <p className="mt-2 text-sm text-slate-500">Yuk mulai jelajah hotel favoritmu di INDOTIX.</p>
-                        <Link href="/stay" className="mt-4 inline-block rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white">
-                            Cari Hotel
+                        <p className="mt-2 text-sm text-slate-500">Yuk mulai jelajah destinasi wisata favoritmu di Indotix.</p>
+                        <Link href="/wisata" className="mt-4 inline-block rounded-lg bg-sky-600 px-5 py-2 text-sm font-semibold text-white">
+                            Cari Wisata
                         </Link>
                     </div>
                 )}
 
                 {filteredBookings.length > 0 && (
-                    <div className="mt-6 grid gap-5">
+                    <div className="mt-6 grid gap-5" data-coach="history-list">
                         {filteredBookings.map((booking) => (
                             <div key={booking.id} className="rounded-2xl bg-white p-6 shadow-sm">
                                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
@@ -208,69 +189,25 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                 <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusBadge(booking.status)}`}>
                                                     {statusLabel(booking.status)}
                                                 </span>
-                                                {booking.type && (
-                                                    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                                        {booking.type === 'hotel'
-                                                            ? 'Hotel'
-                                                            : booking.type === 'event'
-                                                                ? 'Event'
-                                                                : booking.type === 'souvenir'
-                                                                    ? 'Retail Shop'
-                                                                    : booking.type === 'special_program'
-                                                                        ? 'Special Program'
-                                                                        : booking.type === 'academy'
-                                                                            ? 'Academy'
-                                                                        : 'Wisata'}
-                                                    </span>
-                                                )}
+                                                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                                    Wisata
+                                                </span>
                                             </div>
                                             <div className="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-500">
                                                 <span className="flex items-center gap-1">
                                                     <MapPin className="h-4 w-4 text-sky-500" />
                                                     {booking.city_name ?? booking.address ?? 'Indonesia'}
                                                 </span>
-                                                {booking.type === 'hotel' ? (
-                                                    <>
-                                                        <span className="flex items-center gap-1">
-                                                            <CalendarCheck className="h-4 w-4 text-sky-500" />
-                                                            {booking.check_in} → {booking.check_out}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4 text-sky-500" />
-                                                            {booking.rooms_count} kamar · {booking.guests_count} tamu
-                                                        </span>
-                                                    </>
-                                                ) : booking.type === 'souvenir' ? (
-                                                    <>
-                                                        <span className="flex items-center gap-1">
-                                                            <CalendarCheck className="h-4 w-4 text-sky-500" />
-                                                            Retail Shop
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4 text-sky-500" />
-                                                            {booking.quantity ?? 0} item
-                                                        </span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <span className="flex items-center gap-1">
-                                                            <CalendarCheck className="h-4 w-4 text-sky-500" />
-                                                            {booking.visit_date}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Users className="h-4 w-4 text-sky-500" />
-                                                            {booking.quantity} tiket
-                                                        </span>
-                                                    </>
-                                                )}
+                                                <span className="flex items-center gap-1">
+                                                    <CalendarCheck className="h-4 w-4 text-sky-500" />
+                                                    {booking.visit_date}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Users className="h-4 w-4 text-sky-500" />
+                                                    {booking.quantity} tiket
+                                                </span>
                                             </div>
                                             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                                                {booking.type === 'hotel' && (
-                                                    <span className="flex items-center gap-1">
-                                                        <Clock className="h-4 w-4 text-slate-400" />
-                                                        {booking.nights} malam
-                                                    </span>
-                                                )}
                                                 <span className="flex items-center gap-1">
                                                     <CreditCard className="h-4 w-4 text-slate-400" />
                                                     Status pembayaran: {booking.payment_status ?? 'pending'}
@@ -292,8 +229,28 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                                                     <div>{booking.guest_name ?? '-'}</div>
                                                     <div>{booking.guest_email ?? '-'}</div>
                                                     <div>{booking.guest_phone ?? '-'}</div>
-                                                    {(booking.type === 'wisata' || booking.type === 'event' || booking.type === 'special_program' || booking.type === 'academy') && booking.ticket_name && (
+                                                    {booking.ticket_name && (
                                                         <div className="text-slate-500">Tiket: {booking.ticket_name}</div>
+                                                    )}
+                                                    {(booking.items?.length ?? 0) > 0 && (
+                                                        <div className="mt-2 space-y-1 rounded-lg border border-slate-100 bg-white p-3">
+                                                            <span className="text-xs font-semibold text-slate-800">
+                                                                Rincian tiket
+                                                            </span>
+                                                            {booking.items?.map((item) => (
+                                                                <div
+                                                                    key={`${booking.id}-${item.ticket_id}-${item.name}`}
+                                                                    className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600"
+                                                                >
+                                                                    <span>
+                                                                        {item.quantity}x {item.name}
+                                                                    </span>
+                                                                    <span className="font-semibold text-slate-700">
+                                                                        {formatIdr(item.subtotal)}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -362,10 +319,6 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
                         <h4 className="text-sm font-semibold text-slate-900">Layanan</h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>Wisata</li>
-                            <li>Special Program</li>
-                            <li>Event</li>
-                            <li>Hotel</li>
-                            <li>Retail Shop</li>
                         </ul>
                     </div>
                     <div>

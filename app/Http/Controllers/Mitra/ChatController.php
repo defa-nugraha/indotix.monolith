@@ -15,15 +15,13 @@ use Inertia\Response;
 
 class ChatController extends Controller
 {
+    private const ALLOWED_SUBJECT_TYPES = ['wisata', 'admin'];
+
     public function index(Request $request): Response
     {
         $mitra = $request->user();
 
-        $conversations = ChatConversation::query()
-            ->with(['user:id,name,role'])
-            ->where('partner_id', $mitra->id)
-            ->orderByDesc('last_message_at')
-            ->get();
+        $conversations = $this->mitraConversations($mitra->id)->get();
 
         return $this->render($request, $conversations);
     }
@@ -31,13 +29,9 @@ class ChatController extends Controller
     public function show(Request $request, ChatConversation $conversation): Response
     {
         $mitra = $request->user();
-        abort_unless($conversation->partner_id === $mitra->id, 404);
+        $this->authorizeConversation($conversation, $mitra->id);
 
-        $conversations = ChatConversation::query()
-            ->with(['user:id,name,role'])
-            ->where('partner_id', $mitra->id)
-            ->orderByDesc('last_message_at')
-            ->get();
+        $conversations = $this->mitraConversations($mitra->id)->get();
 
         return $this->render($request, $conversations, $conversation);
     }
@@ -45,7 +39,7 @@ class ChatController extends Controller
     public function store(Request $request, ChatConversation $conversation): RedirectResponse
     {
         $mitra = $request->user();
-        abort_unless($conversation->partner_id === $mitra->id, 404);
+        $this->authorizeConversation($conversation, $mitra->id);
 
         $data = $request->validate([
             'message' => ['required', 'string', 'max:2000'],
@@ -74,6 +68,21 @@ class ChatController extends Controller
         ]);
 
         return back();
+    }
+
+    private function mitraConversations(int $mitraId)
+    {
+        return ChatConversation::query()
+            ->with(['user:id,name,role'])
+            ->where('partner_id', $mitraId)
+            ->whereIn('subject_type', self::ALLOWED_SUBJECT_TYPES)
+            ->orderByDesc('last_message_at');
+    }
+
+    private function authorizeConversation(ChatConversation $conversation, int $mitraId): void
+    {
+        abort_unless((int) $conversation->partner_id === $mitraId, 404);
+        abort_unless(in_array($conversation->subject_type, self::ALLOWED_SUBJECT_TYPES, true), 404);
     }
 
     private function render(Request $request, $conversations, ?ChatConversation $activeConversation = null): Response

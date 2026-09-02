@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import Swal from 'sweetalert2';
 
@@ -69,8 +70,9 @@ export default function MitraWisataDisputes({ destination, disputes, bookings }:
                         }}
                     >
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium text-slate-700">Booking</label>
+                            <Label required className="text-slate-700">Booking</Label>
                             <select
+                                required
                                 value={form.data.wisata_booking_id}
                                 onChange={(event) => form.setData('wisata_booking_id', event.target.value)}
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
@@ -85,8 +87,9 @@ export default function MitraWisataDisputes({ destination, disputes, bookings }:
                             <InputError message={form.errors.wisata_booking_id} />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium text-slate-700">Subjek</label>
+                            <Label required className="text-slate-700">Subjek</Label>
                             <input
+                                required
                                 value={form.data.subject}
                                 onChange={(event) => form.setData('subject', event.target.value)}
                                 placeholder="Contoh: Validasi gagal"
@@ -95,8 +98,9 @@ export default function MitraWisataDisputes({ destination, disputes, bookings }:
                             <InputError message={form.errors.subject} />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
-                            <label className="text-sm font-medium text-slate-700">Deskripsi</label>
+                            <Label required className="text-slate-700">Deskripsi</Label>
                             <textarea
+                                required
                                 className="min-h-[100px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 value={form.data.description}
                                 onChange={(event) => form.setData('description', event.target.value)}

@@ -3,6 +3,7 @@ import { Form, Head, Link, useForm, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import InputError from '@/components/input-error';
+import { Label } from '@/components/ui/label';
 import { Mail, Phone, UserCircle } from 'lucide-react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 import PublicLayout from '@/layouts/public-layout';
@@ -84,9 +85,9 @@ export default function Profile({
                                 }) => (
                                     <>
                                         <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">
+                                            <Label required className="text-sm font-semibold text-slate-700">
                                                 Nama Lengkap
-                                            </label>
+                                            </Label>
                                             <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                                 <UserCircle className="h-4 w-4 text-slate-400" />
                                                 <input
@@ -104,9 +105,9 @@ export default function Profile({
                                         </div>
 
                                         <div className="grid gap-2">
-                                            <label className="text-sm font-semibold text-slate-700">
+                                            <Label required className="text-sm font-semibold text-slate-700">
                                                 Email
-                                            </label>
+                                            </Label>
                                             <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                                 <Mail className="h-4 w-4 text-slate-400" />
                                                 <input
@@ -128,13 +129,14 @@ export default function Profile({
 
                                         <div className="grid gap-2 md:grid-cols-2">
                                             <div className="grid gap-2">
-                                                <label className="text-sm font-semibold text-slate-700">
+                                                <Label required className="text-sm font-semibold text-slate-700">
                                                     Nomor HP
-                                                </label>
+                                                </Label>
                                                 <div className="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2">
                                                     <Phone className="h-4 w-4 text-slate-400" />
                                                     <input
                                                         name="phone"
+                                                        required
                                                         defaultValue={
                                                             auth?.user?.phone ??
                                                             ''
@@ -370,11 +372,12 @@ export default function Profile({
                                 }}
                             >
                                 <div className="grid gap-2">
-                                    <label className="text-sm font-semibold text-slate-700">
+                                    <Label required className="text-sm font-semibold text-slate-700">
                                         Password Saat Ini
-                                    </label>
+                                    </Label>
                                     <input
                                         type="password"
+                                        required
                                         value={
                                             passwordForm.data.current_password
                                         }
@@ -394,11 +397,12 @@ export default function Profile({
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <label className="text-sm font-semibold text-slate-700">
+                                    <Label required className="text-sm font-semibold text-slate-700">
                                         Password Baru
-                                    </label>
+                                    </Label>
                                     <input
                                         type="password"
+                                        required
                                         value={passwordForm.data.password}
                                         onChange={(event) =>
                                             passwordForm.setData(
@@ -414,11 +418,12 @@ export default function Profile({
                                     />
                                 </div>
                                 <div className="grid gap-2">
-                                    <label className="text-sm font-semibold text-slate-700">
+                                    <Label required className="text-sm font-semibold text-slate-700">
                                         Konfirmasi Password
-                                    </label>
+                                    </Label>
                                     <input
                                         type="password"
+                                        required
                                         value={
                                             passwordForm.data
                                                 .password_confirmation
@@ -509,11 +514,12 @@ export default function Profile({
                                     selesai sebelum melanjutkan.
                                 </div>
                                 <div className="grid gap-2">
-                                    <label className="text-sm font-semibold text-slate-700">
+                                    <Label required className="text-sm font-semibold text-slate-700">
                                         Password Saat Ini
-                                    </label>
+                                    </Label>
                                     <input
                                         type="password"
+                                        required
                                         value={deleteForm.data.password}
                                         onChange={(event) =>
                                             deleteForm.setData(

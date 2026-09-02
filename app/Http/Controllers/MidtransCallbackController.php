@@ -75,6 +75,40 @@ class MidtransCallbackController extends Controller
 
         $status = $payload['transaction_status'] ?? null;
 
+        if (! $this->callbackAmountMatches(
+            $grossAmount,
+            $payment,
+            $booking,
+            $wisataPayment,
+            $wisataBooking,
+            $eventPayment,
+            $eventBooking,
+            $academyPayment,
+            $academyBooking,
+            $specialPayment,
+            $specialBooking,
+            $souvenirOrder
+        )) {
+            Log::warning('Midtrans callback gross amount mismatch', [
+                'order_id' => $orderId,
+                'status' => $status,
+            ]);
+
+            return response('Amount mismatch', 422);
+        }
+
+        if (
+            ! in_array($status, ['settlement', 'capture', 'success'], true)
+            && $this->bookingAlreadyPaid($booking, $wisataBooking, $eventBooking, $academyBooking, $specialBooking, $souvenirOrder)
+        ) {
+            Log::info('Ignoring non-success Midtrans callback for paid booking', [
+                'order_id' => $orderId,
+                'status' => $status,
+            ]);
+
+            return response('OK', 200);
+        }
+
         if ($payment) {
             $payment->update([
                 'status' => $status ?? $payment->status,
@@ -127,66 +161,84 @@ class MidtransCallbackController extends Controller
         }
 
         if ($booking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $wasPaid = $booking->status === 'paid';
             $booking->update([
                 'status' => 'paid',
                 'payment_status' => $status,
             ]);
 
-            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $booking->id);
-            UserNotification::create([
-                'user_id' => $booking->user_id,
-                'title' => 'Pembayaran berhasil',
-                'message' => 'Pembayaran kamu sudah diterima. Booking sudah aktif.',
-                'type' => 'payment_paid',
-                'data' => [
-                    'booking_id' => $encryptedId,
-                    'category' => 'hotel',
-                ],
-            ]);
+            if (! $wasPaid) {
+                $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $booking->id);
+                UserNotification::create([
+                    'user_id' => $booking->user_id,
+                    'title' => 'Pembayaran berhasil',
+                    'message' => 'Pembayaran kamu sudah diterima. Booking sudah aktif.',
+                    'type' => 'payment_paid',
+                    'data' => [
+                        'booking_id' => $encryptedId,
+                        'category' => 'hotel',
+                    ],
+                ]);
 
-            $this->sendPaymentPush(
-                $booking->user_id,
-                'Pembayaran berhasil',
-                'Pembayaran kamu sudah diterima. Booking sudah aktif.',
-                [
-                    'booking_id' => $encryptedId,
-                    'type' => 'hotel',
-                    'category' => 'hotel',
-                    'notification_type' => 'payment_paid',
-                ]
-            );
+                $this->sendPaymentPush(
+                    $booking->user_id,
+                    'Pembayaran berhasil',
+                    'Pembayaran kamu sudah diterima. Booking sudah aktif.',
+                    [
+                        'booking_id' => $encryptedId,
+                        'type' => 'hotel',
+                        'category' => 'hotel',
+                        'notification_type' => 'payment_paid',
+                    ]
+                );
+            }
         }
 
         if ($wisataBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $wasPaid = $wisataBooking->status === 'paid';
             $wisataBooking->update([
                 'status' => 'paid',
                 'payment_status' => $status,
             ]);
 
-            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id);
-            UserNotification::create([
-                'user_id' => $wisataBooking->user_id,
-                'title' => 'Pembayaran tiket berhasil',
-                'message' => 'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
-                'type' => 'wisata_payment_paid',
-                'data' => [
-                    'booking_id' => $encryptedId,
-                    'type' => 'wisata',
-                    'category' => 'wisata',
-                ],
-            ]);
+            if (! $wasPaid) {
+                $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $wisataBooking->id);
+                UserNotification::create([
+                    'user_id' => $wisataBooking->user_id,
+                    'title' => 'Pembayaran tiket berhasil',
+                    'message' => 'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
+                    'type' => 'wisata_payment_paid',
+                    'data' => [
+                        'booking_id' => $encryptedId,
+                        'type' => 'wisata',
+                        'category' => 'wisata',
+                    ],
+                ]);
 
-            $this->sendPaymentPush(
-                $wisataBooking->user_id,
-                'Pembayaran tiket berhasil',
-                'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
-                [
-                    'booking_id' => $encryptedId,
-                    'type' => 'wisata',
-                    'category' => 'wisata',
-                    'notification_type' => 'wisata_payment_paid',
-                ]
-            );
+                $this->sendPaymentPush(
+                    $wisataBooking->user_id,
+                    'Pembayaran tiket berhasil',
+                    'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
+                    [
+                        'booking_id' => $encryptedId,
+                        'type' => 'wisata',
+                        'category' => 'wisata',
+                        'notification_type' => 'wisata_payment_paid',
+                    ]
+                );
+
+                if ($wisataBooking->guest_email) {
+                    try {
+                        \Illuminate\Support\Facades\Mail::to($wisataBooking->guest_email)
+                            ->send(new \App\Mail\WisataTicketMail($wisataBooking));
+                    } catch (\Throwable $exception) {
+                        \Illuminate\Support\Facades\Log::warning('Failed to send wisata ticket email', [
+                            'booking_id' => $wisataBooking->id,
+                            'message' => $exception->getMessage(),
+                        ]);
+                    }
+                }
+            }
 
             $commissionItems = WisataAffiliateCommissionItem::query()
                 ->where('wisata_booking_id', $wisataBooking->id)
@@ -221,41 +273,41 @@ class MidtransCallbackController extends Controller
             if (! $wasPaid) {
                 $eventBooking->ticket?->increment('sold_count', $eventBooking->quantity);
                 $eventBooking->event?->increment('capacity_sold', $eventBooking->quantity);
+
+                $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id);
+                $isSpecial = $eventBooking->event?->event_type === 'special_program';
+                $notificationType = $isSpecial ? 'special_program_payment_paid' : 'event_payment_paid';
+                $notificationTitle = $isSpecial
+                    ? 'Pembayaran special program berhasil'
+                    : 'Pembayaran event berhasil';
+                $notificationMessage = $isSpecial
+                    ? 'Pembayaran kamu sudah diterima. Pesanan special program aktif.'
+                    : 'Pembayaran kamu sudah diterima. Tiket event aktif.';
+                $category = $isSpecial ? 'special_program' : 'event';
+                UserNotification::create([
+                    'user_id' => $eventBooking->user_id,
+                    'title' => $notificationTitle,
+                    'message' => $notificationMessage,
+                    'type' => $notificationType,
+                    'data' => [
+                        'booking_id' => $encryptedId,
+                        'type' => $category,
+                        'category' => $category,
+                    ],
+                ]);
+
+                $this->sendPaymentPush(
+                    $eventBooking->user_id,
+                    $notificationTitle,
+                    $notificationMessage,
+                    [
+                        'booking_id' => $encryptedId,
+                        'type' => $category,
+                        'category' => $category,
+                        'notification_type' => $notificationType,
+                    ]
+                );
             }
-
-            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $eventBooking->id);
-            $isSpecial = $eventBooking->event?->event_type === 'special_program';
-            $notificationType = $isSpecial ? 'special_program_payment_paid' : 'event_payment_paid';
-            $notificationTitle = $isSpecial
-                ? 'Pembayaran special program berhasil'
-                : 'Pembayaran event berhasil';
-            $notificationMessage = $isSpecial
-                ? 'Pembayaran kamu sudah diterima. Pesanan special program aktif.'
-                : 'Pembayaran kamu sudah diterima. Tiket event aktif.';
-            $category = $isSpecial ? 'special_program' : 'event';
-            UserNotification::create([
-                'user_id' => $eventBooking->user_id,
-                'title' => $notificationTitle,
-                'message' => $notificationMessage,
-                'type' => $notificationType,
-                'data' => [
-                    'booking_id' => $encryptedId,
-                    'type' => $category,
-                    'category' => $category,
-                ],
-            ]);
-
-            $this->sendPaymentPush(
-                $eventBooking->user_id,
-                $notificationTitle,
-                $notificationMessage,
-                [
-                    'booking_id' => $encryptedId,
-                    'type' => $category,
-                    'category' => $category,
-                    'notification_type' => $notificationType,
-                ]
-            );
         }
 
         if ($academyBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
@@ -267,95 +319,101 @@ class MidtransCallbackController extends Controller
             if (! $wasPaid) {
                 $academyBooking->ticket?->increment('sold_count', $academyBooking->quantity);
                 $academyBooking->academyClass?->increment('capacity_sold', $academyBooking->quantity);
+
+                $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $academyBooking->id);
+                UserNotification::create([
+                    'user_id' => $academyBooking->user_id,
+                    'title' => 'Pembayaran kelas berhasil',
+                    'message' => 'Pembayaran kamu sudah diterima. Tiket kelas aktif.',
+                    'type' => 'academy_payment_paid',
+                    'data' => [
+                        'booking_id' => $encryptedId,
+                        'type' => 'academy',
+                        'category' => 'academy',
+                    ],
+                ]);
+
+                $this->sendPaymentPush(
+                    $academyBooking->user_id,
+                    'Pembayaran kelas berhasil',
+                    'Pembayaran kamu sudah diterima. Tiket kelas aktif.',
+                    [
+                        'booking_id' => $encryptedId,
+                        'type' => 'academy',
+                        'category' => 'academy',
+                        'notification_type' => 'academy_payment_paid',
+                    ]
+                );
             }
-
-            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $academyBooking->id);
-            UserNotification::create([
-                'user_id' => $academyBooking->user_id,
-                'title' => 'Pembayaran kelas berhasil',
-                'message' => 'Pembayaran kamu sudah diterima. Tiket kelas aktif.',
-                'type' => 'academy_payment_paid',
-                'data' => [
-                    'booking_id' => $encryptedId,
-                    'type' => 'academy',
-                    'category' => 'academy',
-                ],
-            ]);
-
-            $this->sendPaymentPush(
-                $academyBooking->user_id,
-                'Pembayaran kelas berhasil',
-                'Pembayaran kamu sudah diterima. Tiket kelas aktif.',
-                [
-                    'booking_id' => $encryptedId,
-                    'type' => 'academy',
-                    'category' => 'academy',
-                    'notification_type' => 'academy_payment_paid',
-                ]
-            );
         }
 
         if ($specialBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $wasPaid = $specialBooking->status === 'paid';
             $specialBooking->update([
                 'status' => 'paid',
                 'payment_status' => $status,
             ]);
 
-            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id);
-            UserNotification::create([
-                'user_id' => $specialBooking->user_id,
-                'title' => 'Pembayaran special program berhasil',
-                'message' => 'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
-                'type' => 'special_program_payment_paid',
-                'data' => [
-                    'booking_id' => $encryptedId,
-                    'type' => 'special_program',
-                    'category' => 'special_program',
-                ],
-            ]);
+            if (! $wasPaid) {
+                $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $specialBooking->id);
+                UserNotification::create([
+                    'user_id' => $specialBooking->user_id,
+                    'title' => 'Pembayaran special program berhasil',
+                    'message' => 'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
+                    'type' => 'special_program_payment_paid',
+                    'data' => [
+                        'booking_id' => $encryptedId,
+                        'type' => 'special_program',
+                        'category' => 'special_program',
+                    ],
+                ]);
 
-            $this->sendPaymentPush(
-                $specialBooking->user_id,
-                'Pembayaran special program berhasil',
-                'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
-                [
-                    'booking_id' => $encryptedId,
-                    'type' => 'special_program',
-                    'category' => 'special_program',
-                    'notification_type' => 'special_program_payment_paid',
-                ]
-            );
+                $this->sendPaymentPush(
+                    $specialBooking->user_id,
+                    'Pembayaran special program berhasil',
+                    'Pembayaran kamu sudah diterima. Pesanan special program aktif.',
+                    [
+                        'booking_id' => $encryptedId,
+                        'type' => 'special_program',
+                        'category' => 'special_program',
+                        'notification_type' => 'special_program_payment_paid',
+                    ]
+                );
+            }
         }
 
         if ($souvenirOrder && in_array($status, ['settlement', 'capture', 'success'], true)) {
+            $wasPaid = $souvenirOrder->status === 'paid';
             $souvenirOrder->update([
                 'status' => 'paid',
                 'payment_status' => $status,
             ]);
 
-            $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $souvenirOrder->id);
-            UserNotification::create([
-                'user_id' => $souvenirOrder->user_id,
-                'title' => 'Pembayaran souvenir berhasil',
-                'message' => 'Pembayaran kamu sudah diterima. Pesanan souvenir diproses.',
-                'type' => 'souvenir_payment_paid',
-                'data' => [
-                    'booking_id' => $encryptedId,
-                    'category' => 'souvenir',
-                ],
-            ]);
+            if (! $wasPaid) {
+                $encryptedId = \Illuminate\Support\Facades\Crypt::encryptString((string) $souvenirOrder->id);
+                UserNotification::create([
+                    'user_id' => $souvenirOrder->user_id,
+                    'title' => 'Pembayaran souvenir berhasil',
+                    'message' => 'Pembayaran kamu sudah diterima. Pesanan souvenir diproses.',
+                    'type' => 'souvenir_payment_paid',
+                    'data' => [
+                        'booking_id' => $encryptedId,
+                        'category' => 'souvenir',
+                    ],
+                ]);
 
-            $this->sendPaymentPush(
-                $souvenirOrder->user_id,
-                'Pembayaran souvenir berhasil',
-                'Pembayaran kamu sudah diterima. Pesanan souvenir diproses.',
-                [
-                    'booking_id' => $encryptedId,
-                    'type' => 'souvenir',
-                    'category' => 'souvenir',
-                    'notification_type' => 'souvenir_payment_paid',
-                ]
-            );
+                $this->sendPaymentPush(
+                    $souvenirOrder->user_id,
+                    'Pembayaran souvenir berhasil',
+                    'Pembayaran kamu sudah diterima. Pesanan souvenir diproses.',
+                    [
+                        'booking_id' => $encryptedId,
+                        'type' => 'souvenir',
+                        'category' => 'souvenir',
+                        'notification_type' => 'souvenir_payment_paid',
+                    ]
+                );
+            }
         }
 
         if ($booking && in_array($status, ['cancel', 'expire', 'deny'], true)) {
@@ -539,5 +597,55 @@ class MidtransCallbackController extends Controller
                 'error' => $exception->getMessage(),
             ]);
         }
+    }
+
+    private function callbackAmountMatches(
+        string $grossAmount,
+        ?Payment $payment,
+        ?Booking $booking,
+        ?WisataPayment $wisataPayment,
+        ?WisataBooking $wisataBooking,
+        ?EventPayment $eventPayment,
+        ?EventBooking $eventBooking,
+        ?AcademyPayment $academyPayment,
+        ?AcademyBooking $academyBooking,
+        ?SpecialProgramPayment $specialPayment,
+        ?SpecialProgramBooking $specialBooking,
+        ?SouvenirOrder $souvenirOrder
+    ): bool {
+        $expected = $payment?->gross_amount
+            ?? $booking?->total
+            ?? $wisataPayment?->gross_amount
+            ?? $wisataBooking?->total_price
+            ?? $eventPayment?->gross_amount
+            ?? $eventBooking?->total_price
+            ?? $academyPayment?->gross_amount
+            ?? $academyBooking?->total_price
+            ?? $specialPayment?->gross_amount
+            ?? $specialBooking?->total_price
+            ?? $souvenirOrder?->total_price;
+
+        if ($expected === null) {
+            return false;
+        }
+
+        return (int) round((float) $grossAmount) === (int) round((float) $expected);
+    }
+
+    private function bookingAlreadyPaid(
+        ?Booking $booking,
+        ?WisataBooking $wisataBooking,
+        ?EventBooking $eventBooking,
+        ?AcademyBooking $academyBooking,
+        ?SpecialProgramBooking $specialBooking,
+        ?SouvenirOrder $souvenirOrder
+    ): bool {
+        foreach ([$booking, $wisataBooking, $eventBooking, $academyBooking, $specialBooking, $souvenirOrder] as $record) {
+            if ($record && (string) $record->status === 'paid') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

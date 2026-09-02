@@ -15,9 +15,9 @@ class PartnerTermsSignatureController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $user = $request->user();
-        $businessType = $user?->mitra_onboarding_type ?: 'hotel';
+        $businessType = $user?->mitra_onboarding_type;
 
-        abort_unless(in_array($businessType, PartnerTermsDocument::BUSINESS_TYPES, true), 403);
+        abort_unless($businessType === 'wisata', 403);
         abort_unless($this->isVerified($request), 403);
 
         $data = $request->validate([
@@ -53,8 +53,7 @@ class PartnerTermsSignatureController extends Controller
 
         return match ($user?->mitra_onboarding_type) {
             'wisata' => $user->mitraWisataOnboarding?->verification_status === 'verified',
-            'event' => $user->mitraEventOnboarding?->verification_status === 'verified',
-            default => $user?->mitraOnboarding?->verification_status === 'verified',
+            default => false,
         };
     }
 }

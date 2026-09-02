@@ -107,9 +107,21 @@ class MobileErrorLogController extends Controller
 
         $value = preg_replace('/Bearer\s+[A-Za-z0-9._~+\-\/]+=*/i', 'Bearer [redacted]', $value) ?? $value;
 
-        return preg_replace(
+        $value = preg_replace(
             '/("?((access_)?token|id_token|refresh_token|password|otp|pin|authorization|signature|email|phone|account(_number)?)"?\s*[:=]\s*)("[^"]+"|[^,\s}]+)/i',
             '$1[redacted]',
+            $value
+        ) ?? $value;
+
+        $value = preg_replace(
+            '/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i',
+            '[redacted-email]',
+            $value
+        ) ?? $value;
+
+        return preg_replace(
+            '/(?<!\d)(\+?62|0)8\d{7,13}(?!\d)/',
+            '[redacted-phone]',
             $value
         ) ?? $value;
     }

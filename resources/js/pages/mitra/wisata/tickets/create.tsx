@@ -98,6 +98,25 @@ export default function MitraWisataTicketCreate({
         form.setData('price', parseCurrencyToDigits(value));
     };
 
+    const packageTotalFor = (items: PackageItemInput[]) => {
+        const prices = new Map(
+            componentTickets.map((ticket) => [
+                ticket.id.toString(),
+                ticket.price,
+            ]),
+        );
+
+        return items.reduce((total, item) => {
+            const quantity = Number(item.quantity || 0);
+            return total + (prices.get(item.ticket_id) ?? 0) * quantity;
+        }, 0);
+    };
+    const syncPackagePrice = (items: PackageItemInput[]) => {
+        const total = packageTotalFor(items);
+        form.setData('price', total.toString());
+        setPriceDisplay(formatCurrencyInput(total.toString()));
+    };
+
     const handleSubmit = () => {
         form.transform((data) => ({
             ...data,
@@ -168,22 +187,30 @@ export default function MitraWisataTicketCreate({
         const next = [...form.data.package_items];
         next[index] = { ...next[index], [key]: value };
         form.setData('package_items', next);
+        if (form.data.ticket_kind === 'package') {
+            syncPackagePrice(next);
+        }
     };
 
     const addPackageItem = () => {
-        form.setData('package_items', [
+        const next = [
             ...form.data.package_items,
             { ticket_id: '', quantity: '1' },
-        ]);
+        ];
+        form.setData('package_items', next);
+        if (form.data.ticket_kind === 'package') {
+            syncPackagePrice(next);
+        }
     };
 
     const removePackageItem = (index: number) => {
-        form.setData(
-            'package_items',
-            form.data.package_items.filter(
-                (_, itemIndex) => itemIndex !== index,
-            ),
+        const next = form.data.package_items.filter(
+            (_, itemIndex) => itemIndex !== index,
         );
+        form.setData('package_items', next);
+        if (form.data.ticket_kind === 'package') {
+            syncPackagePrice(next);
+        }
     };
 
     return (
@@ -236,8 +263,20 @@ export default function MitraWisataTicketCreate({
                                 onChange={(e) =>
                                     handlePriceChange(e.target.value)
                                 }
+                                readOnly={form.data.ticket_kind === 'package'}
+                                className={
+                                    form.data.ticket_kind === 'package'
+                                        ? 'bg-slate-50'
+                                        : undefined
+                                }
                                 placeholder="10.000"
                             />
+                            {form.data.ticket_kind === 'package' && (
+                                <p className="text-xs text-slate-500">
+                                    Harga paket otomatis dijumlahkan dari tiket
+                                    satuan yang dipilih.
+                                </p>
+                            )}
                             <InputError message={form.errors.price} />
                         </div>
                         <div className="grid gap-2">
@@ -355,12 +394,20 @@ export default function MitraWisataTicketCreate({
                                                 form.data.ticket_kind ===
                                                 option.value
                                             }
-                                            onChange={() =>
+                                            onChange={() => {
                                                 form.setData(
                                                     'ticket_kind',
                                                     option.value,
-                                                )
-                                            }
+                                                );
+                                                if (
+                                                    option.value === 'package'
+                                                ) {
+                                                    syncPackagePrice(
+                                                        form.data
+                                                            .package_items,
+                                                    );
+                                                }
+                                            }}
                                         />
                                         <span className="block font-semibold">
                                             {option.title}

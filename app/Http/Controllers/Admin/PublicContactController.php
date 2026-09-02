@@ -26,15 +26,15 @@ class PublicContactController extends Controller
 
         $data = $request->validate([
             'company_name' => ['nullable', 'string', 'max:255'],
-            'address' => ['nullable', 'string'],
+            'address' => ['nullable', 'string', 'max:1000'],
             'phone' => ['nullable', 'string', 'max:100'],
-            'email' => ['nullable', 'string', 'max:255'],
-            'download_url' => ['nullable', 'string', 'max:500'],
-            'instagram_url' => ['nullable', 'string', 'max:500'],
-            'facebook_url' => ['nullable', 'string', 'max:500'],
-            'twitter_url' => ['nullable', 'string', 'max:500'],
-            'tiktok_url' => ['nullable', 'string', 'max:500'],
-            'youtube_url' => ['nullable', 'string', 'max:500'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'download_url' => ['nullable', 'url', 'max:500'],
+            'instagram_url' => ['nullable', 'url', 'max:500'],
+            'facebook_url' => ['nullable', 'url', 'max:500'],
+            'twitter_url' => ['nullable', 'url', 'max:500'],
+            'tiktok_url' => ['nullable', 'url', 'max:500'],
+            'youtube_url' => ['nullable', 'url', 'max:500'],
         ]);
 
         $contact->update($data);

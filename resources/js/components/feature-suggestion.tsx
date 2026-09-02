@@ -142,12 +142,12 @@ const adminSuggestions: Suggestion[] = [
     },
     {
         key: 'admin-vouchers',
-        match: ['/admin/marketing/vouchers'],
+        match: ['/admin/marketing/vouchers', '/admin/wisata/vouchers'],
         title: 'Voucher perlu batas yang jelas',
         message:
             'Tambahkan periode, kuota, dan syarat voucher supaya promo tetap terkendali.',
-        actionLabel: 'Lihat laporan',
-        actionHref: '/admin/finance/reports',
+        actionLabel: 'Pantau booking',
+        actionHref: '/admin/wisata/bookings',
     },
     {
         key: 'admin-academy',

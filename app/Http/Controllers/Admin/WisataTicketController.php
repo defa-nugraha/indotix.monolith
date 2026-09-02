@@ -217,12 +217,15 @@ class WisataTicketController extends Controller
             (int) $data['mitra_wisata_onboarding_id'],
             $data['package_items'] ?? []
         );
+        $price = $ticketKind === 'package'
+            ? $this->calculatePackagePrice($packageItems)
+            : (int) $data['price'];
 
         WisataTicket::create([
             'mitra_wisata_onboarding_id' => $data['mitra_wisata_onboarding_id'],
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
-            'price' => $data['price'],
+            'price' => $price,
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
             'min_order_quantity' => $data['min_order_quantity'] ?? 1,
@@ -248,12 +251,22 @@ class WisataTicketController extends Controller
         }
 
         $data = $request->validate([
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'price' => ['sometimes', 'required', 'integer', 'min:0'],
+            'quota' => ['sometimes', 'required', 'integer', 'min:0'],
+            'daily_quota' => ['sometimes', 'nullable', 'integer', 'min:0'],
+            'ticket_type' => ['sometimes', 'nullable', 'in:perorangan,grup'],
             'is_active' => ['nullable', 'boolean'],
             'max_quota_override' => ['nullable', 'integer', 'min:0'],
             'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
             'max_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20', 'gte:min_order_quantity'],
             'is_closed' => ['nullable', 'boolean'],
         ]);
+
+        if (array_key_exists('price', $data) && ($ticket->ticket_kind ?? 'single') === 'package') {
+            $data['price'] = $this->calculatePackagePrice($ticket->package_items ?? []);
+        }
 
         $ticket->update($data);
 
@@ -315,5 +328,20 @@ class WisataTicketController extends Controller
         }
 
         return $normalized->all();
+    }
+
+    private function calculatePackagePrice(?array $packageItems): int
+    {
+        if (! $packageItems) {
+            return 0;
+        }
+
+        $prices = WisataTicket::query()
+            ->whereIn('id', collect($packageItems)->pluck('ticket_id'))
+            ->pluck('price', 'id');
+
+        return collect($packageItems)->sum(
+            fn (array $item) => (int) ($prices[$item['ticket_id']] ?? 0) * (int) $item['quantity']
+        );
     }
 }

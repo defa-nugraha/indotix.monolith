@@ -20,7 +20,9 @@ export default function ConfirmPassword() {
                 {({ processing, errors }) => (
                     <div className="space-y-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="password">Password</Label>
+                            <Label htmlFor="password" required>
+                                Password
+                            </Label>
                             <Input
                                 id="password"
                                 type="password"
@@ -28,6 +30,7 @@ export default function ConfirmPassword() {
                                 placeholder="Password"
                                 autoComplete="current-password"
                                 autoFocus
+                                required
                             />
 
                             <InputError message={errors.password} />

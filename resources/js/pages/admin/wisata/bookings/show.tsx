@@ -1,7 +1,9 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Swal from 'sweetalert2';
 
 type Booking = {
     id: number;
@@ -73,6 +75,44 @@ export default function AdminWisataBookingShow({ booking, cityName }: Props) {
                       subtotal: booking.total_price,
                   },
               ];
+    const canCancel = ['pending', 'pending_payment'].includes(booking.status);
+    const cancelBooking = async () => {
+        const result = await Swal.fire({
+            title: 'Batalkan booking?',
+            input: 'textarea',
+            inputLabel: 'Alasan pembatalan',
+            inputPlaceholder: 'Tulis alasan pembatalan...',
+            showCancelButton: true,
+            confirmButtonText: 'Batalkan booking',
+            cancelButtonText: 'Tutup',
+            inputValidator: (value) => {
+                if (!value) return 'Alasan pembatalan wajib diisi.';
+                return null;
+            },
+        });
+
+        if (!result.isConfirmed) return;
+
+        router.post(
+            `/admin/wisata/bookings/${booking.id}/cancel`,
+            { reason: result.value },
+            {
+                preserveScroll: true,
+                onSuccess: () =>
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: 'Booking dibatalkan.',
+                        icon: 'success',
+                    }),
+                onError: () =>
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: 'Booking tidak dapat dibatalkan.',
+                        icon: 'error',
+                    }),
+            },
+        );
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -92,9 +132,21 @@ export default function AdminWisataBookingShow({ booking, cityName }: Props) {
                                 {booking.user?.email ?? '-'}
                             </p>
                         </div>
-                        <Badge className={statusTone(booking.status)}>
-                            {booking.status}
-                        </Badge>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Badge className={statusTone(booking.status)}>
+                                {booking.status}
+                            </Badge>
+                            {canCancel && (
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                    onClick={cancelBooking}
+                                >
+                                    Cancel Booking
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </section>
 

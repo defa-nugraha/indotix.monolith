@@ -1,5 +1,6 @@
 import { Form, Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,9 @@ export default function Register() {
     const [mode, setMode] = useState<'user' | 'mitra'>('user');
     const [legalAccepted, setLegalAccepted] = useState(false);
     const [legalError, setLegalError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showPasswordConfirmation, setShowPasswordConfirmation] =
+        useState(false);
     const isMitra = mode === 'mitra';
 
     return (
@@ -138,7 +142,7 @@ export default function Register() {
                                         value={mode}
                                     />
                                     <div className="grid gap-2">
-                                        <Label htmlFor="name">
+                                        <Label htmlFor="name" required>
                                             {isMitra
                                                 ? 'Nama PIC'
                                                 : 'Nama lengkap'}
@@ -164,7 +168,7 @@ export default function Register() {
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email">
+                                        <Label htmlFor="email" required>
                                             Email aktif
                                         </Label>
                                         <Input
@@ -179,69 +183,124 @@ export default function Register() {
                                         <InputError message={errors.email} />
                                     </div>
 
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="phone" required>
+                                            Nomor HP/WhatsApp
+                                        </Label>
+                                        <Input
+                                            id="phone"
+                                            type="tel"
+                                            required
+                                            autoComplete="tel"
+                                            name="phone"
+                                            placeholder="08xxxxxxxxxx"
+                                            className="bg-white"
+                                        />
+                                        <InputError message={errors.phone} />
+                                    </div>
+
                                     {isMitra && (
                                         <>
                                             <div className="grid gap-2">
                                                 <Label htmlFor="company_name">
-                                                    Nama usaha / event
+                                                    Nama usaha wisata
                                                 </Label>
                                                 <Input
                                                     id="company_name"
                                                     type="text"
                                                     autoComplete="organization"
                                                     name="company_name"
-                                                    placeholder="Nama brand atau event"
+                                                    placeholder="Nama brand atau destinasi wisata"
                                                     className="bg-white"
-                                                />
-                                            </div>
-                                            <div className="grid gap-2">
-                                                <Label htmlFor="phone">
-                                                    Nomor WhatsApp
-                                                </Label>
-                                                <Input
-                                                    id="phone"
-                                                    type="tel"
-                                                    autoComplete="tel"
-                                                    name="phone"
-                                                    placeholder="08xxxxxxxxxx"
-                                                    className="bg-white"
-                                                />
-                                                <InputError
-                                                    message={errors.phone}
                                                 />
                                             </div>
                                         </>
                                     )}
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="password">
+                                        <Label htmlFor="password" required>
                                             Password
                                         </Label>
-                                        <Input
-                                            id="password"
-                                            type="password"
-                                            required
-                                            autoComplete="new-password"
-                                            name="password"
-                                            placeholder="Buat password"
-                                            className="bg-white"
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                id="password"
+                                                type={
+                                                    showPassword
+                                                        ? 'text'
+                                                        : 'password'
+                                                }
+                                                required
+                                                autoComplete="new-password"
+                                                name="password"
+                                                placeholder="Buat password"
+                                                className="bg-white pr-11"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setShowPassword(
+                                                        (current) => !current,
+                                                    )
+                                                }
+                                                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-slate-400 transition hover:text-sky-600 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
+                                                aria-label={
+                                                    showPassword
+                                                        ? 'Sembunyikan password'
+                                                        : 'Lihat password'
+                                                }
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff className="h-4 w-4" />
+                                                ) : (
+                                                    <Eye className="h-4 w-4" />
+                                                )}
+                                            </button>
+                                        </div>
                                         <InputError message={errors.password} />
                                     </div>
 
                                     <div className="grid gap-2">
-                                        <Label htmlFor="password_confirmation">
+                                        <Label
+                                            htmlFor="password_confirmation"
+                                            required
+                                        >
                                             Konfirmasi password
                                         </Label>
-                                        <Input
-                                            id="password_confirmation"
-                                            type="password"
-                                            required
-                                            autoComplete="new-password"
-                                            name="password_confirmation"
-                                            placeholder="Ulangi password"
-                                            className="bg-white"
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                id="password_confirmation"
+                                                type={
+                                                    showPasswordConfirmation
+                                                        ? 'text'
+                                                        : 'password'
+                                                }
+                                                required
+                                                autoComplete="new-password"
+                                                name="password_confirmation"
+                                                placeholder="Ulangi password"
+                                                className="bg-white pr-11"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    setShowPasswordConfirmation(
+                                                        (current) => !current,
+                                                    )
+                                                }
+                                                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-slate-400 transition hover:text-sky-600 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
+                                                aria-label={
+                                                    showPasswordConfirmation
+                                                        ? 'Sembunyikan konfirmasi password'
+                                                        : 'Lihat konfirmasi password'
+                                                }
+                                            >
+                                                {showPasswordConfirmation ? (
+                                                    <EyeOff className="h-4 w-4" />
+                                                ) : (
+                                                    <Eye className="h-4 w-4" />
+                                                )}
+                                            </button>
+                                        </div>
                                         <InputError
                                             message={
                                                 errors.password_confirmation
@@ -270,6 +329,7 @@ export default function Register() {
                                             />
                                             <Label
                                                 htmlFor="terms_accepted"
+                                                required
                                                 className="text-sm leading-6 text-slate-600"
                                             >
                                                 Saya telah membaca, memahami,

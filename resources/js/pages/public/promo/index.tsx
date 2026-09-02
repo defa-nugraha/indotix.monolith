@@ -14,10 +14,8 @@ import {
 import { PublicSeo } from '@/components/public-seo';
 import {
     PublicFooter,
-    PublicPartnerSection,
     PublicTrustSection,
     type PublicContact,
-    type PublicPartner,
     type PublicTrustContent,
 } from '@/components/public-page-sections';
 import PublicLayout from '@/layouts/public-layout';
@@ -33,6 +31,12 @@ type Voucher = {
     max_per_user_per_day?: number;
     starts_at?: string | null;
     ends_at?: string | null;
+    use_url?: string;
+    target_destinations?: Array<{
+        id: number;
+        name?: string | null;
+        slug?: string | null;
+    }>;
 };
 
 type PromoItem = {
@@ -137,14 +141,12 @@ export default function PromoIndex({
     categoryOptions = {},
     homeContent,
     contact,
-    partners = [],
 }: {
     vouchers: Voucher[];
     promoItems: PromoItem[];
     categoryOptions?: Record<string, string>;
     homeContent?: PublicTrustContent | null;
     contact?: PublicContact | null;
-    partners?: PublicPartner[];
 }) {
     const [activeTab, setActiveTab] = useState<PromoTab>('all');
     const [activeCategory, setActiveCategory] = useState('all');
@@ -340,6 +342,7 @@ export default function PromoIndex({
                 <section
                     id="daftar-promo"
                     className="relative z-10 mx-auto -mt-16 max-w-5xl px-4 sm:px-6 lg:px-8"
+                    data-coach="promo-filter"
                 >
                     <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_20px_45px_-28px_rgba(15,23,42,0.45)] sm:rounded-[1.35rem]">
                         <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -399,7 +402,10 @@ export default function PromoIndex({
                     </div>
                 </section>
 
-                <section className="mx-auto max-w-7xl space-y-8 px-4 pt-10 sm:px-6 lg:px-8">
+                <section
+                    className="mx-auto max-w-7xl space-y-8 px-4 pt-10 sm:px-6 lg:px-8"
+                    data-coach="promo-voucher-list"
+                >
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
                             <p className="flex items-center gap-2 text-xs font-black tracking-wider text-sky-600 uppercase">
@@ -503,8 +509,11 @@ export default function PromoIndex({
                                                     </li>
                                                 </ul>
                                                 <Link
-                                                    href={`/wisata?promo=${encodeURIComponent(voucher.code)}`}
-                                                    className="mt-4 hidden items-center gap-1.5 rounded-full bg-sky-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-sky-700 lg:mt-5 lg:inline-flex"
+                                                    href={
+                                                        voucher.use_url ??
+                                                        `/promo/voucher/${encodeURIComponent(voucher.code)}`
+                                                    }
+                                                    className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-sky-600 px-4 py-2.5 text-xs font-black text-white transition hover:bg-sky-700 lg:mt-5"
                                                 >
                                                     Gunakan sekarang
                                                     <ChevronRight className="h-4 w-4" />
@@ -631,7 +640,6 @@ export default function PromoIndex({
                     </div>
                 </section>
             </main>
-            <PublicPartnerSection partners={partners} />
             <PublicTrustSection homeContent={homeContent} contact={contact} />
             <PublicFooter contact={contact} />
         </PublicLayout>

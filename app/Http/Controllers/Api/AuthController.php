@@ -19,6 +19,7 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
+            'phone' => ['required', 'string', 'max:50'],
             'password' => ['required', 'string', 'min:8'],
             'role' => ['nullable', Rule::in(['user', 'mitra'])],
             'device_name' => ['nullable', 'string', 'max:255'],
@@ -32,6 +33,7 @@ class AuthController extends Controller
             }
 
             $this->clearPendingEmailVerificationOtp($existingUser);
+            $existingUser->forceFill(['phone' => $data['phone']])->save();
             $existingUser->notify(new VerifyEmailLinkNotification(forMobileApp: true));
 
             $token = $existingUser->createToken($data['device_name'] ?? 'mobile')->plainTextToken;
@@ -49,6 +51,7 @@ class AuthController extends Controller
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
+            'phone' => $data['phone'],
             'password' => $data['password'],
             'role' => $data['role'] ?? 'user',
         ]);

@@ -127,15 +127,44 @@ class PublicWisataController extends Controller
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
         ])->validate();
 
-        $tickets = WisataTicket::query()
+        $ticketModels = WisataTicket::query()
             ->where('mitra_wisata_onboarding_id', $destination->id)
             ->where('is_active', true)
             ->where('is_closed', false)
-            ->get()
-            ->map(function (WisataTicket $ticket) use ($data) {
+            ->get();
+
+        $packageTicketIds = $ticketModels
+            ->flatMap(fn (WisataTicket $ticket) => collect($ticket->package_items ?? [])->pluck('ticket_id'))
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
+        $packageTicketLookup = $packageTicketIds->isNotEmpty()
+            ? WisataTicket::query()
+                ->whereIn('id', $packageTicketIds)
+                ->get(['id', 'name', 'price'])
+                ->keyBy('id')
+            : collect();
+
+        $tickets = $ticketModels
+            ->map(function (WisataTicket $ticket) use ($data, $packageTicketLookup) {
                 $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);
+                $packageItems = collect($ticket->package_items ?? [])
+                    ->map(function (array $item) use ($packageTicketLookup) {
+                        $component = $packageTicketLookup->get((int) ($item['ticket_id'] ?? 0));
+
+                        return [
+                            'ticket_id' => (int) ($item['ticket_id'] ?? 0),
+                            'quantity' => (int) ($item['quantity'] ?? 0),
+                            'name' => $component?->name,
+                            'price' => (int) ($component?->price ?? 0),
+                        ];
+                    })
+                    ->filter(fn (array $item) => $item['ticket_id'] > 0 && $item['quantity'] > 0)
+                    ->values()
+                    ->all();
 
                 return [
                     'id' => $ticket->id,
@@ -148,7 +177,7 @@ class PublicWisataController extends Controller
                     'ticket_type' => $ticket->ticket_type,
                     'ticket_kind' => $ticket->ticket_kind ?? 'single',
                     'is_entry_ticket' => (bool) ($ticket->is_entry_ticket ?? true),
-                    'package_items' => $ticket->package_items ?? [],
+                    'package_items' => $packageItems,
                     'refund_policy' => $ticket->refund_policy,
                 ];
             });

@@ -37,9 +37,7 @@ class PublicPartnerController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:width=300,height=180'],
-        ], [
-            'image.dimensions' => 'Ukuran logo partner harus 300 x 180 px.',
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         $path = $mediaCompression->store($request->file('image'), 'public-partners', 'public');
@@ -69,9 +67,7 @@ class PublicPartnerController extends Controller
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048', 'dimensions:width=300,height=180'],
-        ], [
-            'image.dimensions' => 'Ukuran logo partner harus 300 x 180 px.',
+            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         if ($request->hasFile('image')) {

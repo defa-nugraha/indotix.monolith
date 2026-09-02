@@ -70,8 +70,8 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
                         }}
                     >
                         <div className="grid gap-2">
-                            <Label>Judul dokumen</Label>
-                            <Input value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
+                            <Label required>Judul dokumen</Label>
+                            <Input required value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
                             <InputError message={form.errors.title} />
                         </div>
                         <div className="grid gap-2">
@@ -89,7 +89,7 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
                             <InputError message={form.errors.effective_at} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Kebijakan Privasi</Label>
+                            <Label required>Kebijakan Privasi</Label>
                             <CkeditorField
                                 value={form.data.content}
                                 onChange={(value) => form.setData('content', value)}
@@ -98,7 +98,7 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
                             <InputError message={form.errors.content} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Syarat dan Ketentuan</Label>
+                            <Label required>Syarat dan Ketentuan</Label>
                             <CkeditorField
                                 value={form.data.terms_content}
                                 onChange={(value) => form.setData('terms_content', value)}

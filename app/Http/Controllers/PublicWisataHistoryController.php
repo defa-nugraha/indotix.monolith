@@ -18,7 +18,7 @@ class PublicWisataHistoryController extends Controller
 
         $bookings = WisataBooking::query()
             ->where('user_id', $request->user()->id)
-            ->with(['destination', 'ticket'])
+            ->with(['destination', 'ticket', 'items.ticket'])
             ->latest()
             ->get()
             ->map(function (WisataBooking $booking) use ($userId) {
@@ -43,6 +43,7 @@ class PublicWisataHistoryController extends Controller
                     'created_at' => $booking->created_at?->toIso8601String(),
                     'midtrans_order_id' => $booking->midtrans_order_id,
                     'ticket_name' => $booking->ticket?->name,
+                    'items' => $this->lineItems($booking),
                     'review_url' => $booking->mitra_wisata_onboarding_id
                         ? '/wisata/'.Crypt::encryptString((string) $booking->mitra_wisata_onboarding_id)
                         : null,
@@ -64,5 +65,31 @@ class PublicWisataHistoryController extends Controller
         }
 
         return DB::table('regencies')->where('code', $cityCode)->value('name');
+    }
+
+    private function lineItems(WisataBooking $booking): array
+    {
+        $booking->loadMissing(['ticket', 'items.ticket']);
+
+        if ($booking->items->isEmpty()) {
+            return [[
+                'ticket_id' => (int) $booking->wisata_ticket_id,
+                'name' => $booking->ticket?->name ?? 'Tiket Wisata',
+                'quantity' => (int) $booking->quantity,
+                'unit_price' => (int) $booking->unit_price,
+                'subtotal' => (int) ($booking->subtotal_price ?: $booking->total_price),
+            ]];
+        }
+
+        return $booking->items
+            ->map(fn ($item) => [
+                'ticket_id' => (int) $item->wisata_ticket_id,
+                'name' => $item->ticket_name ?? $item->ticket?->name ?? 'Tiket Wisata',
+                'quantity' => (int) $item->quantity,
+                'unit_price' => (int) $item->unit_price,
+                'subtotal' => (int) $item->subtotal,
+            ])
+            ->values()
+            ->all();
     }
 }

@@ -4,6 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import Swal from 'sweetalert2';
 import Select from 'react-select';
 
@@ -31,6 +32,7 @@ type Destination = {
     photo_gate_path?: string | null;
     photo_area_path?: string | null;
     photo_ticket_path?: string | null;
+    photo_product_path?: string | null;
     photo_other_paths?: string[] | null;
     is_live: boolean;
     is_suspended: boolean;
@@ -64,6 +66,14 @@ const statusTone = (status?: string | null) => {
 const maxImageSize = 5 * 1024 * 1024;
 const maxOtherPhotoCount = 5;
 const maxImageSizeLabel = '5 MB';
+const otherOptionValue = '__other';
+const destinationTypeOptions = [
+    { value: 'alam', label: 'Alam' },
+    { value: 'edukasi', label: 'Edukasi' },
+    { value: 'budaya', label: 'Budaya' },
+    { value: 'wahana', label: 'Wahana' },
+    { value: 'event', label: 'Event' },
+];
 
 export default function AdminWisataDestinationShow({
     destination,
@@ -96,6 +106,18 @@ export default function AdminWisataDestinationShow({
     };
     const getPublicUrl = (path?: string | null) =>
         path ? `/storage/${path}` : null;
+    const initialDestinationType = destination.destination_type ?? '';
+    const hasCustomDestinationType =
+        initialDestinationType !== '' &&
+        !destinationTypeOptions.some(
+            (option) => option.value === initialDestinationType,
+        );
+    const [destinationTypeMode, setDestinationTypeMode] = useState(
+        hasCustomDestinationType ? otherOptionValue : initialDestinationType,
+    );
+    const [customDestinationType, setCustomDestinationType] = useState(
+        hasCustomDestinationType ? initialDestinationType : '',
+    );
     const [otherPhotos, setOtherPhotos] = useState<string[]>(
         (destination.photo_other_paths ?? []).filter(Boolean) as string[],
     );
@@ -122,6 +144,7 @@ export default function AdminWisataDestinationShow({
             'photo_gate_file',
             'photo_area_file',
             'photo_ticket_file',
+            'photo_product_file',
         ];
 
         for (const field of singlePhotoFields) {
@@ -302,10 +325,11 @@ export default function AdminWisataDestinationShow({
                     >
                         {isCreate && (
                             <div className="grid gap-2 md:col-span-2">
-                                <label className="text-sm font-medium text-slate-700">
+                                <Label required className="text-slate-700">
                                     Mitra Wisata
-                                </label>
+                                </Label>
                                 <select
+                                    required
                                     name="user_id"
                                     defaultValue={destination.user_id ?? ''}
                                     className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
@@ -320,10 +344,11 @@ export default function AdminWisataDestinationShow({
                             </div>
                         )}
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium text-slate-700">
+                            <Label required className="text-slate-700">
                                 Nama destinasi
-                            </label>
+                            </Label>
                             <input
+                                required
                                 name="destination_name"
                                 defaultValue={
                                     destination.destination_name ?? ''
@@ -332,22 +357,53 @@ export default function AdminWisataDestinationShow({
                             />
                         </div>
                         <div className="grid gap-2">
-                            <label className="text-sm font-medium text-slate-700">
+                            <Label required className="text-slate-700">
                                 Jenis wisata
-                            </label>
+                            </Label>
                             <select
-                                name="destination_type"
-                                defaultValue={
-                                    destination.destination_type ?? ''
+                                required
+                                value={destinationTypeMode}
+                                onChange={(event) =>
+                                    setDestinationTypeMode(event.target.value)
                                 }
                                 className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             >
-                                <option value="alam">Alam</option>
-                                <option value="edukasi">Edukasi</option>
-                                <option value="budaya">Budaya</option>
-                                <option value="wahana">Wahana</option>
-                                <option value="event">Event</option>
+                                {destinationTypeOptions.map((option) => (
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                    >
+                                        {option.label}
+                                    </option>
+                                ))}
+                                <option value={otherOptionValue}>
+                                    Lainnya
+                                </option>
                             </select>
+                            <input
+                                type="hidden"
+                                name="destination_type"
+                                value={
+                                    destinationTypeMode === otherOptionValue
+                                        ? customDestinationType
+                                        : destinationTypeMode
+                                }
+                            />
+                            {destinationTypeMode === otherOptionValue && (
+                                <input
+                                    required
+                                    aria-label="Jenis wisata lainnya"
+                                    maxLength={80}
+                                    value={customDestinationType}
+                                    onChange={(event) =>
+                                        setCustomDestinationType(
+                                            event.target.value,
+                                        )
+                                    }
+                                    placeholder="Tulis jenis wisata"
+                                    className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                            )}
                         </div>
                         <div className="grid gap-2">
                             <label className="text-sm font-medium text-slate-700">
@@ -391,10 +447,10 @@ export default function AdminWisataDestinationShow({
                             <label className="text-sm font-medium text-slate-700">
                                 Alamat lengkap
                             </label>
-                            <input
+                            <textarea
                                 name="address_full"
                                 defaultValue={destination.address_full ?? ''}
-                                className="rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                className="min-h-[110px] rounded-lg border border-slate-200 px-3 py-2 text-sm"
                             />
                         </div>
                         <div className="grid gap-2 md:col-span-2">
@@ -428,6 +484,32 @@ export default function AdminWisataDestinationShow({
                             />
                         </div>
                         <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
+                            <div>
+                                <label className="text-sm font-medium text-slate-700">
+                                    Foto Produk
+                                </label>
+                                {destination.photo_product_path && (
+                                    <img
+                                        src={
+                                            getPublicUrl(
+                                                destination.photo_product_path,
+                                            ) ?? ''
+                                        }
+                                        alt="Foto produk wisata"
+                                        className="mt-2 h-24 w-full rounded-lg object-cover"
+                                    />
+                                )}
+                                <input
+                                    aria-label="Photo Product File"
+                                    type="file"
+                                    name="photo_product_file"
+                                    accept="image/*"
+                                    className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                />
+                                <p className="mt-1 text-xs text-slate-500">
+                                    Gambar utama di halaman publik. Maksimal {maxImageSizeLabel}.
+                                </p>
+                            </div>
                             <div>
                                 <label className="text-sm font-medium text-slate-700">
                                     Foto Gerbang

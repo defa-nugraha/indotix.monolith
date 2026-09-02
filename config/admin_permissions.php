@@ -311,6 +311,12 @@ return [
             'patterns' => ['admin.public.promo-items.*'],
             'paths' => ['admin/public/promo-items*'],
         ],
+        'public_entry_qr' => [
+            'label' => 'Konten Publik - QR Masuk Mitra',
+            'parent' => 'Konten Publik',
+            'patterns' => ['admin.public.entry-qr.*'],
+            'paths' => ['admin/public/entry-qr*'],
+        ],
         'public_contacts' => [
             'label' => 'Konten Publik - Kontak & WhatsApp',
             'parent' => 'Konten Publik',

@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
  * @property string|null $destination_name
  * @property string|null $destination_type
  * @property string|null $city_code
+ * @property string|null $photo_product_path
  * @property string|null $photo_area_path
  * @property string|null $maps_pin_url
  */
@@ -43,6 +44,7 @@ class MitraWisataOnboarding extends Model
         'photo_gate_path',
         'photo_area_path',
         'photo_ticket_path',
+        'photo_product_path',
         'photo_other_paths',
         'contact_phone',
         'contact_hours',

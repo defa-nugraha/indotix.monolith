@@ -1,21 +1,13 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import {
     Bell,
-    CalendarCheck,
     MapPinned,
-    MessageCircle,
-    ShoppingBag,
-    Star,
     Ticket,
-    UserCircle,
-    History as HistoryIcon,
     CheckCircle,
     CreditCard,
     Clock,
     Filter,
-    ShoppingCart,
-    BookOpen,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
@@ -36,31 +28,11 @@ export default function Notifications({
 }: {
     notifications: NotificationItem[];
 }) {
-    const { auth, unread_notifications, souvenir_cart_count } = usePage()
-        .props as {
-        auth?: { user?: any };
-        unread_notifications?: number;
-        souvenir_cart_count?: number;
-    };
     const [activeFilter, setActiveFilter] = useState<'all' | 'unread'>('all');
-    const [categoryFilter, setCategoryFilter] = useState<
-        | 'all'
-        | 'hotel'
-        | 'wisata'
-        | 'event'
-        | 'special_program'
-        | 'souvenir'
-        | 'academy'
-    >('all');
     const [query, setQuery] = useState('');
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop' },
-        { label: 'Spesial Program', icon: Star, href: '/special-programs' },
-        { label: 'Academy', icon: BookOpen, href: '/academy' },
-        { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
     const chips = [
@@ -83,22 +55,10 @@ export default function Notifications({
         payment_paid: CheckCircle,
         booking_cancelled: Bell,
         booking_expired: Clock,
-        event_booking_created: Ticket,
-        event_payment_pending: CreditCard,
-        event_payment_paid: CheckCircle,
-        event_booking_expired: Clock,
-        academy_booking_created: Ticket,
-        academy_payment_pending: CreditCard,
-        academy_payment_paid: CheckCircle,
-        academy_booking_expired: Clock,
-        souvenir_booking_created: Ticket,
-        souvenir_payment_pending: CreditCard,
-        souvenir_payment_paid: CheckCircle,
-        souvenir_booking_expired: Clock,
-        special_program_booking_created: Ticket,
-        special_program_payment_pending: CreditCard,
-        special_program_payment_paid: CheckCircle,
-        special_program_booking_expired: Clock,
+        wisata_booking_created: Ticket,
+        wisata_payment_pending: CreditCard,
+        wisata_payment_paid: CheckCircle,
+        wisata_booking_expired: Clock,
     };
 
     const filteredNotifications = useMemo(() => {
@@ -108,23 +68,20 @@ export default function Notifications({
                 item.data?.category ??
                 (item.type?.startsWith('wisata_')
                     ? 'wisata'
-                    : item.type?.startsWith('event_')
-                      ? 'event'
-                      : item.type?.startsWith('souvenir_')
-                        ? 'souvenir'
-                        : item.type?.startsWith('academy_')
-                          ? 'academy'
-                          : item.type?.startsWith('special_program_')
-                            ? 'special_program'
-                            : 'hotel');
-            if (categoryFilter !== 'all' && category !== categoryFilter)
-                return false;
+                    : item.type?.startsWith('event_') ||
+                        item.type?.startsWith('hotel_') ||
+                        item.type?.startsWith('souvenir_') ||
+                        item.type?.startsWith('academy_') ||
+                        item.type?.startsWith('special_program_')
+                      ? 'non_wisata'
+                      : 'wisata');
+            if (category !== 'wisata') return false;
             const haystack = `${item.title} ${item.message}`.toLowerCase();
             return query.trim().length === 0
                 ? true
                 : haystack.includes(query.toLowerCase());
         });
-    }, [notifications, activeFilter, categoryFilter, query]);
+    }, [notifications, activeFilter, query]);
 
     return (
         <PublicLayout categories={categories} chips={chips}>
@@ -156,6 +113,10 @@ export default function Notifications({
                                     {},
                                     {
                                         onSuccess: () =>
+                                            router.reload({
+                                                only: ['notifications'],
+                                            }),
+                                        onFinish: () =>
                                             Swal.fire({
                                                 title: 'Berhasil',
                                                 text: 'Semua notifikasi dibaca.',
@@ -189,34 +150,6 @@ export default function Notifications({
                                     className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                                         activeFilter === item.id
                                             ? 'bg-sky-600 text-white'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                    }`}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { id: 'all', label: 'Semua' },
-                                { id: 'hotel', label: 'Hotel' },
-                                { id: 'wisata', label: 'Wisata' },
-                                { id: 'event', label: 'Event' },
-                                { id: 'souvenir', label: 'Retail Shop' },
-                                {
-                                    id: 'special_program',
-                                    label: 'Special Program',
-                                },
-                                { id: 'academy', label: 'Academy' },
-                            ].map((item) => (
-                                <button
-                                    key={item.id}
-                                    onClick={() =>
-                                        setCategoryFilter(item.id as any)
-                                    }
-                                    className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                                        categoryFilter === item.id
-                                            ? 'bg-emerald-500 text-white'
                                             : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                                     }`}
                                 >
@@ -295,24 +228,7 @@ export default function Notifications({
                                         <div className="flex flex-wrap items-center gap-2">
                                             {item.data?.booking_id && (
                                                 <Link
-                                                    href={
-                                                        item.data?.category ===
-                                                        'wisata'
-                                                            ? `/wisata/booking/${item.data.booking_id}`
-                                                            : item.data
-                                                                    ?.category ===
-                                                                'event'
-                                                              ? `/events/booking/${item.data.booking_id}`
-                                                              : item.data
-                                                                      ?.category ===
-                                                                  'souvenir'
-                                                                ? `/retail-shop/booking/${item.data.booking_id}`
-                                                                : item.data
-                                                                        ?.category ===
-                                                                    'special_program'
-                                                                  ? `/special-programs/booking/${item.data.booking_id}`
-                                                                  : `/booking/${item.data.booking_id}`
-                                                    }
+                                                    href={`/wisata/booking/${item.data.booking_id}`}
                                                     className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 hover:border-sky-300 hover:text-sky-600"
                                                 >
                                                     Lihat Detail
@@ -327,6 +243,12 @@ export default function Notifications({
                                                             {},
                                                             {
                                                                 onSuccess: () =>
+                                                                    router.reload({
+                                                                        only: [
+                                                                            'notifications',
+                                                                        ],
+                                                                    }),
+                                                                onFinish: () =>
                                                                     Swal.fire({
                                                                         title: 'Berhasil',
                                                                         text: 'Notifikasi ditandai dibaca.',
@@ -378,10 +300,6 @@ export default function Notifications({
                         </h4>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>Wisata</li>
-                            <li>Special Program</li>
-                            <li>Event</li>
-                            <li>Hotel</li>
-                            <li>Retail Shop</li>
                         </ul>
                     </div>
                     <div>

@@ -54,7 +54,6 @@ it('renders representative admin feature pages for a super admin', function (str
     'public banners' => '/admin/public/banners',
     'blog posts' => '/admin/blog/posts',
     'reviews' => '/admin/reviews',
-    'system roles' => '/admin/system/roles',
     'system settings' => '/admin/system/settings',
 ]);
 

@@ -138,6 +138,8 @@ class HistoryDetailController extends Controller
                             'ticket_id' => $item->wisata_ticket_id,
                             'name' => $item->ticket_name ?: ($item->ticket?->name ?? 'Tiket Wisata'),
                             'quantity' => (int) $item->quantity,
+                            'used_quantity' => (int) $item->used_quantity,
+                            'remaining_quantity' => $item->remainingQuantity(),
                             'unit_price' => (int) $item->unit_price,
                             'subtotal' => (int) $item->subtotal,
                         ])
@@ -147,6 +149,8 @@ class HistoryDetailController extends Controller
                         'ticket_id' => $booking->wisata_ticket_id,
                         'name' => $booking->ticket?->name ?? 'Tiket Wisata',
                         'quantity' => (int) $booking->quantity,
+                        'used_quantity' => 0,
+                        'remaining_quantity' => (int) $booking->quantity,
                         'unit_price' => (int) $booking->unit_price,
                         'subtotal' => (int) $booking->total_price,
                     ]],
@@ -165,8 +169,6 @@ class HistoryDetailController extends Controller
                     'payment_type' => $latestPayment->payment_type,
                     'payload' => $latestPayment->payload,
                 ] : null,
-                'qr_data' => $this->buildQrData('WISATA', (string) $booking->booking_code),
-                'qr_url' => $this->buildQrUrl('WISATA', (string) $booking->booking_code),
             ],
         ]);
     }

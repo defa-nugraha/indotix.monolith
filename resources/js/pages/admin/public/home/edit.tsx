@@ -1,5 +1,6 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
 import Swal from 'sweetalert2';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ import {
     Droplets,
     FerrisWheel,
     Gift,
+    Globe,
     GraduationCap,
     Home as HomeIcon,
     Image as ImageIcon,
@@ -48,6 +50,7 @@ import {
     ShieldCheck,
     Ship,
     ShipWheel,
+    Smartphone,
     Sparkles,
     Sprout,
     Sun,
@@ -62,6 +65,8 @@ import {
     Trees,
     Umbrella,
     Utensils,
+    Award,
+    Users,
     Volleyball,
     Waves,
 } from 'lucide-react';
@@ -75,6 +80,28 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type HomeContentValues = Record<string, string>;
 type HomeContentFormData = Record<string, string | File | null>;
+type VoucherOption = {
+    id: number;
+    code: string;
+    discount_type: 'percentage' | 'fixed';
+    discount_value: number;
+    min_transaction: number;
+    quota_total: number;
+    quota_used: number;
+    remaining_quota?: number | null;
+    starts_at?: string | null;
+    ends_at?: string | null;
+    is_active: boolean;
+    select_url: string;
+};
+type PartOfLogo = {
+    id: number;
+    name: string | null;
+    image_path: string;
+    image_url: string | null;
+    sort_order: number;
+    is_active: boolean;
+};
 
 type Props = {
     content: {
@@ -84,15 +111,20 @@ type Props = {
         image_upload_fields: Record<string, string>;
         video_upload_fields: Record<string, string>;
     };
+    partOfLogos?: PartOfLogo[];
+    voucherOptions?: VoucherOption[];
 };
 
 type Field = {
     key: string;
     label: string;
-    type?: 'text' | 'icon' | 'url' | 'image' | 'video';
+    type?: 'text' | 'icon' | 'url' | 'image' | 'video' | 'media';
     placeholder?: string;
     hint?: string;
 };
+
+const isVideoMediaUrl = (url: string) =>
+    /^data:video\//i.test(url) || /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(url);
 
 const categoryFields: Field[] = Array.from({ length: 10 }, (_, index) => {
     const number = index + 1;
@@ -112,6 +144,69 @@ const categoryFields: Field[] = Array.from({ length: 10 }, (_, index) => {
 
 const sections: { title: string; description: string; fields: Field[] }[] = [
     {
+        title: 'Banner Mobile Apps',
+        description:
+            'Mengatur banner khusus yang tampil di halaman home aplikasi mobile.',
+        fields: [
+            {
+                key: 'mobile_top_banner_title',
+                label: 'Judul banner atas',
+                hint: 'Maksimal 255 karakter. Gunakan kalimat singkat agar layout mobile tetap rapi.',
+            },
+            {
+                key: 'mobile_top_banner_subtitle',
+                label: 'Deskripsi banner atas',
+                hint: 'Maksimal 255 karakter.',
+            },
+            {
+                key: 'mobile_top_banner_cta_label',
+                label: 'Teks tombol banner atas',
+            },
+            {
+                key: 'mobile_top_banner_media_url',
+                label: 'Media banner atas',
+                type: 'media',
+                hint: 'Format JPG, PNG, WebP, GIF, MP4, WebM, atau OGG. Maksimal 100 MB.',
+            },
+            {
+                key: 'mobile_top_banner_link_url',
+                label: 'Link tujuan banner atas',
+                type: 'url',
+                placeholder: '/wisata',
+            },
+            {
+                key: 'mobile_promo_banner_title',
+                label: 'Judul banner promo',
+                hint: 'Maksimal 255 karakter.',
+            },
+            {
+                key: 'mobile_promo_banner_subtitle',
+                label: 'Teks kecil banner promo',
+            },
+            {
+                key: 'mobile_promo_banner_highlight',
+                label: 'Teks highlight promo',
+                placeholder: '30%',
+            },
+            {
+                key: 'mobile_promo_banner_cta_label',
+                label: 'Teks tombol banner promo',
+            },
+            {
+                key: 'mobile_promo_banner_media_url',
+                label: 'Media banner promo',
+                type: 'media',
+                hint: 'Format JPG, PNG, WebP, GIF, MP4, WebM, atau OGG. Maksimal 100 MB.',
+            },
+            {
+                key: 'mobile_promo_banner_link_url',
+                label: 'Link tujuan banner promo',
+                type: 'url',
+                placeholder: '/promo',
+            },
+        ],
+    },
+    {
         title: 'Kategori wisata',
         description:
             'Mengatur menu kategori wisata yang muncul di bawah banner halaman home.',
@@ -120,16 +215,16 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
     {
         title: 'Promo Spesial Untukmu',
         description:
-            'Mengatur video utama dan empat gambar promo yang tampil di section Promo Spesial pada halaman depan.',
+            'Mengatur video utama dan tiga gambar promo yang tampil di section Promo Spesial pada halaman depan.',
         fields: [
             { key: 'special_promo_title', label: 'Judul section' },
             {
                 key: 'special_promo_video_title',
-                label: 'Judul video utama',
+                label: 'Judul video (opsional)',
             },
             {
                 key: 'special_promo_video_subtitle',
-                label: 'Label kecil video utama',
+                label: 'Label kecil video (opsional)',
             },
             {
                 key: 'special_promo_video_url',
@@ -139,11 +234,31 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
             },
             {
                 key: 'special_promo_video_poster_url',
-                label: 'Poster video',
-                type: 'image',
-                hint: 'Format JPG, PNG, atau WebP. Maksimal 5 MB.',
+                label: 'Poster / preview video',
+                type: 'media',
+                hint: 'Format JPG, PNG, WebP, GIF, MP4, WebM, atau OGG. Maksimal 100 MB.',
             },
-            ...Array.from({ length: 4 }, (_, index) => {
+            {
+                key: 'special_promo_video_2_title',
+                label: 'Judul video kedua (opsional)',
+            },
+            {
+                key: 'special_promo_video_2_subtitle',
+                label: 'Label kecil video kedua (opsional)',
+            },
+            {
+                key: 'special_promo_video_2_url',
+                label: 'Video kedua',
+                type: 'video',
+                hint: 'Format MP4, WebM, atau OGG. Maksimal 100 MB.',
+            },
+            {
+                key: 'special_promo_video_2_poster_url',
+                label: 'Poster / preview video kedua',
+                type: 'media',
+                hint: 'Format JPG, PNG, WebP, GIF, MP4, WebM, atau OGG. Maksimal 100 MB.',
+            },
+            ...Array.from({ length: 3 }, (_, index) => {
                 const number = index + 1;
 
                 return [
@@ -163,9 +278,9 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
                     },
                     {
                         key: `special_promo_card_${number}_link_url`,
-                        label: `Link tujuan gambar promo ${number}`,
+                        label: `Voucher tujuan gambar promo ${number}`,
                         type: 'url' as const,
-                        placeholder: '/promo/nama-promo atau https://...',
+                        placeholder: 'Pilih voucher yang akan digunakan',
                     },
                 ];
             }).flat(),
@@ -256,6 +371,16 @@ const sections: { title: string; description: string; fields: Field[] }[] = [
             },
         ],
     },
+    {
+        title: 'Part of',
+        description:
+            'Mengatur section Part of yang tampil setelah Partner Kami di halaman beranda. Logo diatur khusus dari tab ini dan berjalan otomatis secara infinity loop.',
+        fields: [
+            { key: 'part_of_eyebrow', label: 'Label kecil' },
+            { key: 'part_of_title', label: 'Judul section' },
+            { key: 'part_of_description', label: 'Deskripsi section' },
+        ],
+    },
 ];
 
 const adminHomeIconMap = {
@@ -291,6 +416,7 @@ const adminHomeIconMap = {
     Sailboat,
     Ship,
     ShipWheel,
+    Smartphone,
     Sprout,
     Sun,
     Sunrise,
@@ -302,12 +428,19 @@ const adminHomeIconMap = {
     TreePine,
     Umbrella,
     Volleyball,
+    Users,
+    Globe,
+    Award,
 } satisfies Record<string, LucideIcon>;
 
 const resolveAdminHomeIcon = (value: string | undefined | null) =>
     adminHomeIconMap[value as keyof typeof adminHomeIconMap] ?? Sparkles;
 
-export default function HomeContentEdit({ content }: Props) {
+export default function HomeContentEdit({
+    content,
+    partOfLogos = [],
+    voucherOptions = [],
+}: Props) {
     const imageUploadDefaults = Object.fromEntries(
         Object.values(content.image_upload_fields).map((fileKey) => [
             fileKey,
@@ -327,8 +460,19 @@ export default function HomeContentEdit({ content }: Props) {
         ...videoUploadDefaults,
     });
     const [activeIconField, setActiveIconField] = useState<string | null>(null);
+    const [activeVoucherField, setActiveVoucherField] = useState<string | null>(
+        null,
+    );
+    const [logoModalOpen, setLogoModalOpen] = useState(false);
+    const [editingLogo, setEditingLogo] = useState<PartOfLogo | null>(null);
     const [activeSectionIndex, setActiveSectionIndex] = useState(0);
     const [fileInputVersion, setFileInputVersion] = useState(0);
+    const partOfLogoForm = useForm({
+        name: '',
+        sort_order: 0,
+        is_active: true,
+        image: null as File | null,
+    });
     const iconOptions = useMemo(
         () => Object.entries(content.icon_options),
         [content.icon_options],
@@ -345,11 +489,136 @@ export default function HomeContentEdit({ content }: Props) {
     const activeSection = sections[activeSectionIndex] ?? sections[0];
     const activeIconFieldLabel =
         fieldsByKey.get(activeIconField ?? '')?.label ?? 'Icon';
+    const activeVoucherFieldLabel =
+        fieldsByKey.get(activeVoucherField ?? '')?.label ?? 'Voucher tujuan';
 
     const fieldValue = (key: string) => {
         const value = form.data[key];
 
         return typeof value === 'string' ? value : '';
+    };
+
+    const formatVoucherDiscount = (voucher: VoucherOption) =>
+        voucher.discount_type === 'percentage'
+            ? `${voucher.discount_value}%`
+            : `Rp ${voucher.discount_value.toLocaleString('id-ID')}`;
+
+    const selectedVoucherForField = (fieldKey: string) => {
+        const value = fieldValue(fieldKey);
+
+        return (
+            voucherOptions.find((voucher) => voucher.select_url === value) ??
+            voucherOptions.find((voucher) =>
+                value.endsWith(`/promo/voucher/${voucher.code}`),
+            ) ??
+            null
+        );
+    };
+
+    const isVoucherOptionDisabled = (voucher: VoucherOption) => {
+        const today = new Date().toISOString().slice(0, 10);
+
+        return (
+            !voucher.is_active ||
+            voucher.remaining_quota === 0 ||
+            Boolean(voucher.starts_at && voucher.starts_at > today) ||
+            Boolean(voucher.ends_at && voucher.ends_at < today)
+        );
+    };
+
+    const openCreatePartOfLogo = () => {
+        setEditingLogo(null);
+        partOfLogoForm.clearErrors();
+        partOfLogoForm.setData({
+            name: '',
+            sort_order: 0,
+            is_active: true,
+            image: null,
+        });
+        setLogoModalOpen(true);
+    };
+
+    const openEditPartOfLogo = (logo: PartOfLogo) => {
+        setEditingLogo(logo);
+        partOfLogoForm.clearErrors();
+        partOfLogoForm.setData({
+            name: logo.name ?? '',
+            sort_order: logo.sort_order ?? 0,
+            is_active: logo.is_active,
+            image: null,
+        });
+        setLogoModalOpen(true);
+    };
+
+    const submitPartOfLogo = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const options = {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                setLogoModalOpen(false);
+                setEditingLogo(null);
+                partOfLogoForm.reset();
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: editingLogo
+                        ? 'Logo Part of diperbarui.'
+                        : 'Logo Part of ditambahkan.',
+                    icon: 'success',
+                });
+            },
+            onError: () =>
+                Swal.fire({
+                    title: 'Gagal',
+                    text: 'Periksa nama, urutan, dan file logo yang dipilih.',
+                    icon: 'error',
+                }),
+        };
+
+        if (editingLogo) {
+            partOfLogoForm.put(
+                `/admin/public/home/part-of-logos/${editingLogo.id}`,
+                options,
+            );
+            return;
+        }
+
+        partOfLogoForm.post('/admin/public/home/part-of-logos', options);
+    };
+
+    const deletePartOfLogo = async (logo: PartOfLogo) => {
+        const result = await Swal.fire({
+            title: 'Hapus logo Part of?',
+            text: logo.name
+                ? `Logo ${logo.name} akan dihapus permanen.`
+                : 'Logo akan dihapus permanen.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        router.delete(`/admin/public/home/part-of-logos/${logo.id}`, {
+            preserveScroll: true,
+            onSuccess: () =>
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Logo Part of dihapus.',
+                    icon: 'success',
+                }),
+            onError: () =>
+                Swal.fire({
+                    title: 'Gagal',
+                    text: 'Logo Part of gagal dihapus.',
+                    icon: 'error',
+                }),
+        });
     };
 
     const resetToDefault = (key: string) => {
@@ -377,10 +646,13 @@ export default function HomeContentEdit({ content }: Props) {
                 : null;
         const uploadError = uploadFileKey ? form.errors[uploadFileKey] : undefined;
         const isImageUpload = field.type === 'image' && imageFileKey;
+        const isMediaUpload = field.type === 'media' && imageFileKey;
         const isVideoUpload = field.type === 'video' && videoFileKey;
         const inputId = isImageUpload
             ? imageFileKey
-            : isVideoUpload
+            : isMediaUpload
+              ? imageFileKey
+              : isVideoUpload
               ? videoFileKey
               : field.key;
 
@@ -425,9 +697,16 @@ export default function HomeContentEdit({ content }: Props) {
                         </span>
                         <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
                     </button>
-                ) : isImageUpload ? (
+                ) : isImageUpload || isMediaUpload ? (
                     <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
-                        {fieldValue(field.key) ? (
+                        {isMediaUpload && isVideoMediaUrl(fieldValue(field.key)) ? (
+                            <video
+                                src={fieldValue(field.key)}
+                                className={previewClassName}
+                                controls
+                                preload="metadata"
+                            />
+                        ) : fieldValue(field.key) ? (
                             <img
                                 src={fieldValue(field.key)}
                                 alt={field.label}
@@ -435,7 +714,9 @@ export default function HomeContentEdit({ content }: Props) {
                             />
                         ) : (
                             <div className="flex h-32 w-full items-center justify-center rounded-xl border border-dashed border-slate-300 bg-white text-sm text-slate-500">
-                                Belum ada gambar
+                                {isMediaUpload
+                                    ? 'Belum ada preview'
+                                    : 'Belum ada gambar'}
                             </div>
                         )}
 
@@ -444,7 +725,11 @@ export default function HomeContentEdit({ content }: Props) {
                             id={imageFileKey}
                             aria-label={field.label}
                             type="file"
-                            accept="image/jpeg,image/png,image/webp"
+                            accept={
+                                isMediaUpload
+                                    ? 'image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/ogg'
+                                    : 'image/jpeg,image/png,image/webp'
+                            }
                             onChange={(event) =>
                                 form.setData(
                                     imageFileKey,
@@ -529,123 +814,592 @@ export default function HomeContentEdit({ content }: Props) {
         return field ? renderField(field, className, previewClassName) : null;
     };
 
-    const renderPromoSpecialSection = () => (
+    const renderVoucherLinkPicker = (key: string) => {
+        const field = fieldsByKey.get(key);
+        const selectedVoucher = selectedVoucherForField(key);
+        const value = fieldValue(key);
+
+        return (
+            <div className="grid gap-2">
+                <div className="flex items-center justify-between gap-3">
+                    <Label htmlFor={key}>{field?.label ?? 'Voucher tujuan'}</Label>
+                    <button
+                        type="button"
+                        onClick={() => resetToDefault(key)}
+                        className="text-xs font-semibold text-sky-600 hover:text-sky-700"
+                    >
+                        Reset
+                    </button>
+                </div>
+
+                <button
+                    id={key}
+                    type="button"
+                    onClick={() => setActiveVoucherField(key)}
+                    disabled={form.processing}
+                    className="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm shadow-xs transition hover:border-sky-300 hover:bg-sky-50/60 focus-visible:ring-[3px] focus-visible:ring-sky-500/20 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                    <span className="min-w-0">
+                        <span className="block truncate font-semibold text-slate-800">
+                            {selectedVoucher
+                                ? selectedVoucher.code
+                                : 'Pilih voucher'}
+                        </span>
+                        <span className="block truncate text-xs text-slate-500">
+                            {selectedVoucher
+                                ? `${formatVoucherDiscount(selectedVoucher)} diskon · ${selectedVoucher.remaining_quota === null || selectedVoucher.remaining_quota === undefined ? 'Kuota tidak dibatasi' : `${selectedVoucher.remaining_quota} tersisa`}`
+                                : 'User akan diarahkan ke halaman wisata dan kode voucher otomatis dibawa ke checkout.'}
+                        </span>
+                    </span>
+                    <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
+                </button>
+
+                {value && !selectedVoucher && (
+                    <p className="text-xs text-amber-600">
+                        Link saat ini belum terhubung ke voucher aktif.
+                    </p>
+                )}
+                <InputError message={form.errors[key]} />
+            </div>
+        );
+    };
+
+    const renderMobileBannerSection = () => (
         <div className="space-y-6">
-            <div className="rounded-3xl border border-sky-100 bg-sky-50/60 p-5">
-                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-start gap-3">
+            <section className="rounded-3xl border border-sky-100 bg-sky-50/70 p-5">
+                <div className="flex items-start gap-3">
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
+                        <Smartphone className="h-5 w-5" />
+                    </span>
+                    <div>
+                        <h3 className="text-base font-semibold text-slate-950">
+                            Banner khusus aplikasi mobile
+                        </h3>
+                        <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                            Banner ini hanya dipakai oleh mobile apps. Banner
+                            atas tampil setelah kolom pencarian, sedangkan
+                            banner promo tampil setelah kategori wisata. Media
+                            dapat berupa foto, GIF, atau video pendek.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <div className="grid gap-5 xl:grid-cols-2">
+                <section className="rounded-3xl border border-slate-200 bg-white p-5">
+                    <div className="mb-5 flex items-start gap-3">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
-                            <Clapperboard className="h-5 w-5" />
+                            <ImageIcon className="h-5 w-5" />
                         </span>
                         <div>
                             <p className="text-xs font-semibold tracking-wide text-sky-700 uppercase">
-                                Langkah 1
+                                Banner 1
                             </p>
                             <h3 className="text-base font-semibold text-slate-950">
-                                Atur video utama
+                                Banner atas aplikasi
                             </h3>
-                            <p className="mt-1 max-w-2xl text-sm text-slate-600">
-                                Video utama tampil paling besar di section Promo
-                                Spesial. Isi judul singkat, upload video, lalu
-                                tambahkan poster agar tampil rapi sebelum video
-                                diputar.
+                            <p className="mt-1 text-sm text-slate-600">
+                                Gunakan gambar/video yang kuat sebagai hero
+                                utama di halaman home mobile.
                             </p>
                         </div>
                     </div>
-                </div>
 
-                <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
                     <div className="space-y-4">
-                        {renderFieldByKey('special_promo_title')}
+                        {renderFieldByKey(
+                            'mobile_top_banner_media_url',
+                            'grid gap-2',
+                            'aspect-[16/9] w-full rounded-2xl object-cover',
+                        )}
                         <div className="grid gap-4 md:grid-cols-2">
-                            {renderFieldByKey('special_promo_video_title')}
-                            {renderFieldByKey('special_promo_video_subtitle')}
+                            {renderFieldByKey('mobile_top_banner_title')}
+                            {renderFieldByKey('mobile_top_banner_cta_label')}
                         </div>
-                        {renderFieldByKey('special_promo_video_url')}
+                        {renderFieldByKey('mobile_top_banner_subtitle')}
+                        {renderFieldByKey('mobile_top_banner_link_url')}
                     </div>
-                    {renderFieldByKey(
-                        'special_promo_video_poster_url',
-                        'grid gap-2',
-                        'aspect-video w-full rounded-xl object-cover',
-                    )}
-                </div>
-            </div>
+                </section>
 
-            <div className="rounded-3xl border border-slate-200 bg-white p-5">
-                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="flex items-start gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
-                            <LayoutGrid className="h-5 w-5" />
+                <section className="rounded-3xl border border-slate-200 bg-white p-5">
+                    <div className="mb-5 flex items-start gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-600 text-white shadow-sm">
+                            <BadgePercent className="h-5 w-5" />
                         </span>
                         <div>
-                            <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
-                                Langkah 2
+                            <p className="text-xs font-semibold tracking-wide text-cyan-700 uppercase">
+                                Banner 2
                             </p>
                             <h3 className="text-base font-semibold text-slate-950">
-                                Atur empat kartu promo
+                                Banner promo setelah kategori
                             </h3>
-                            <p className="mt-1 max-w-2xl text-sm text-slate-600">
-                                Setiap kartu berisi gambar, judul, label kecil,
-                                dan link tujuan. Gunakan link internal seperti
-                                /promo/nama-promo bila promo tersedia di
-                                Indotix.
+                            <p className="mt-1 text-sm text-slate-600">
+                                Dipakai untuk highlight promo cepat seperti
+                                diskon akhir pekan atau campaign wisata.
                             </p>
                         </div>
                     </div>
-                </div>
 
-                <div className="grid gap-4 xl:grid-cols-2">
-                    {Array.from({ length: 4 }, (_, index) => {
-                        const number = index + 1;
+                    <div className="space-y-4">
+                        {renderFieldByKey(
+                            'mobile_promo_banner_media_url',
+                            'grid gap-2',
+                            'aspect-[16/7] w-full rounded-2xl object-cover',
+                        )}
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {renderFieldByKey('mobile_promo_banner_title')}
+                            {renderFieldByKey('mobile_promo_banner_highlight')}
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {renderFieldByKey('mobile_promo_banner_subtitle')}
+                            {renderFieldByKey('mobile_promo_banner_cta_label')}
+                        </div>
+                        {renderFieldByKey('mobile_promo_banner_link_url')}
+                    </div>
+                </section>
+            </div>
+        </div>
+    );
 
-                        return (
-                            <section
-                                key={number}
-                                className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
-                            >
-                                <div className="mb-4 flex items-center justify-between gap-3">
-                                    <div>
+    const renderPromoSpecialSection = () => {
+        const promoCards = [
+            {
+                number: 1,
+                title: 'Gambar kanan atas kiri',
+                description: 'Tampil di kolase kanan, baris atas sebelah kiri.',
+                fieldPreviewClassName: 'h-52 w-full rounded-xl object-cover',
+            },
+            {
+                number: 2,
+                title: 'Gambar kanan atas kanan',
+                description: 'Tampil di kolase kanan, baris atas sebelah kanan.',
+                fieldPreviewClassName: 'h-52 w-full rounded-xl object-cover',
+            },
+            {
+                number: 3,
+                title: 'Gambar kanan bawah',
+                description:
+                    'Tampil melebar di bawah dua gambar pertama.',
+                fieldPreviewClassName: 'h-48 w-full rounded-xl object-cover',
+            },
+        ];
+
+        return (
+            <div className="space-y-6">
+                <section
+                    className="rounded-3xl border border-sky-100 bg-sky-50/70 p-5"
+                    data-coach="public-home-special-promo"
+                >
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex items-start gap-3">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
+                                <BadgePercent className="h-5 w-5" />
+                            </span>
+                            <div>
+                                <h3 className="text-base font-semibold text-slate-950">
+                                    Alur edit Promo Spesial
+                                </h3>
+                                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                                    Isi judul section, upload video, lalu atur
+                                    tiga gambar promo sesuai posisinya. Voucher
+                                    tujuan dipilih dari modal agar kode promo
+                                    otomatis terbawa ke checkout user.
+                                </p>
+                            </div>
+                        </div>
+                        <div className="grid gap-2 text-xs font-semibold text-slate-600 sm:grid-cols-3 lg:min-w-[420px]">
+                            {['Judul section', 'Media video', 'Gambar + voucher'].map(
+                                (label, index) => (
+                                    <div
+                                        key={label}
+                                        className="rounded-2xl border border-sky-100 bg-white px-3 py-2 shadow-xs"
+                                    >
+                                        <span className="mr-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-sky-100 text-sky-700">
+                                            {index + 1}
+                                        </span>
+                                        {label}
+                                    </div>
+                                ),
+                            )}
+                        </div>
+                    </div>
+                </section>
+
+                <div className="space-y-6">
+                        <section className="rounded-3xl border border-slate-200 bg-white p-5">
+                            <div className="mb-4 flex items-center gap-3">
+                                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-900 text-white">
+                                    <LayoutGrid className="h-5 w-5" />
+                                </span>
+                                <div>
+                                    <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                        Langkah 1
+                                    </p>
+                                    <h3 className="text-base font-semibold text-slate-950">
+                                        Judul section di halaman depan
+                                    </h3>
+                                </div>
+                            </div>
+                            {renderFieldByKey('special_promo_title')}
+                        </section>
+
+                        <section className="rounded-3xl border border-slate-200 bg-white p-5">
+                            <div className="mb-5 flex items-start gap-3">
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
+                                    <Clapperboard className="h-5 w-5" />
+                                </span>
+                                <div>
+                                    <p className="text-xs font-semibold tracking-wide text-sky-700 uppercase">
+                                        Langkah 2
+                                    </p>
+                                    <h3 className="text-base font-semibold text-slate-950">
+                                        Media video promo
+                                    </h3>
+                                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                                        Upload video utama dan poster/preview.
+                                        Teks video bersifat opsional karena
+                                        tampilan homepage memakai media tanpa
+                                        overlay teks.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-5 xl:grid-cols-2">
+                                <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                    <div className="mb-4">
                                         <p className="text-sm font-semibold text-slate-900">
-                                            Kartu promo {number}
+                                            Video pertama
                                         </p>
                                         <p className="text-xs text-slate-500">
-                                            Posisi {number} di kolase promo.
+                                            Tampil di kartu video bagian atas
+                                            pada halaman beranda.
                                         </p>
                                     </div>
-                                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sky-700 shadow-xs">
-                                        <ImageIcon className="h-4 w-4" />
-                                    </span>
-                                </div>
-
-                                <div className="space-y-4">
-                                    {renderFieldByKey(
-                                        `special_promo_card_${number}_image_url`,
-                                        'grid gap-2',
-                                        'h-44 w-full rounded-xl object-cover',
-                                    )}
-                                    <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-4">
                                         {renderFieldByKey(
-                                            `special_promo_card_${number}_title`,
+                                            'special_promo_video_url',
                                         )}
                                         {renderFieldByKey(
-                                            `special_promo_card_${number}_subtitle`,
+                                            'special_promo_video_poster_url',
+                                            'grid gap-2',
+                                            'aspect-video w-full rounded-xl object-cover',
                                         )}
-                                    </div>
-                                    <div className="rounded-2xl border border-slate-200 bg-white p-3">
-                                        <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-slate-500">
-                                            <Link2 className="h-4 w-4 text-sky-600" />
-                                            Link tujuan
+                                        <div className="grid gap-4 md:grid-cols-2">
+                                            {renderFieldByKey(
+                                                'special_promo_video_title',
+                                            )}
+                                            {renderFieldByKey(
+                                                'special_promo_video_subtitle',
+                                            )}
                                         </div>
-                                        {renderFieldByKey(
-                                            `special_promo_card_${number}_link_url`,
-                                        )}
                                     </div>
+                                </section>
+
+                                <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                                    <div className="mb-4">
+                                        <p className="text-sm font-semibold text-slate-900">
+                                            Video kedua
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                            Tampil di kartu video bagian bawah.
+                                            Gunakan file berbeda agar video tidak
+                                            sama dengan video pertama.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        {renderFieldByKey(
+                                            'special_promo_video_2_url',
+                                        )}
+                                        {renderFieldByKey(
+                                            'special_promo_video_2_poster_url',
+                                            'grid gap-2',
+                                            'aspect-video w-full rounded-xl object-cover',
+                                        )}
+                                        <div className="grid gap-4 md:grid-cols-2">
+                                            {renderFieldByKey(
+                                                'special_promo_video_2_title',
+                                            )}
+                                            {renderFieldByKey(
+                                                'special_promo_video_2_subtitle',
+                                            )}
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <div className="mt-5 rounded-2xl border border-dashed border-sky-200 bg-sky-50/70 p-4">
+                                <div>
+                                    <p className="text-sm font-semibold text-sky-950">
+                                        Susunan di halaman beranda
+                                    </p>
+                                    <p className="mt-1 text-xs text-sky-700">
+                                        Kolom kiri berisi dua video berurutan.
+                                        Kolom kanan berisi dua gambar promo di
+                                        atas dan satu gambar landscape di bawah.
+                                    </p>
                                 </div>
-                            </section>
-                        );
-                    })}
+                            </div>
+                        </section>
+
+                        <section className="rounded-3xl border border-slate-200 bg-white p-5">
+                            <div className="mb-5 flex items-start gap-3">
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                                    <ImageIcon className="h-5 w-5" />
+                                </span>
+                                <div>
+                                    <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                        Langkah 3
+                                    </p>
+                                    <h3 className="text-base font-semibold text-slate-950">
+                                        Tiga gambar promo dan voucher tujuan
+                                    </h3>
+                                    <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                                        Setiap gambar dapat diarahkan ke voucher.
+                                        Saat user membuka promo tersebut, voucher
+                                        akan otomatis disiapkan untuk checkout.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                {promoCards.map((card) => (
+                                    <section
+                                        key={card.number}
+                                        className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4"
+                                    >
+                                        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-900">
+                                                    {card.title}
+                                                </p>
+                                                <p className="text-xs text-slate-500">
+                                                    {card.description}
+                                                </p>
+                                            </div>
+                                            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-sky-700 shadow-xs">
+                                                <ImageIcon className="h-3.5 w-3.5" />
+                                                Promo {card.number}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid gap-5 xl:grid-cols-[minmax(240px,0.85fr)_minmax(0,1fr)]">
+                                            {renderFieldByKey(
+                                                `special_promo_card_${card.number}_image_url`,
+                                                'grid gap-2',
+                                                card.fieldPreviewClassName,
+                                            )}
+                                            <div className="space-y-4">
+                                                <div className="grid gap-4 md:grid-cols-2">
+                                                    {renderFieldByKey(
+                                                        `special_promo_card_${card.number}_title`,
+                                                    )}
+                                                    {renderFieldByKey(
+                                                        `special_promo_card_${card.number}_subtitle`,
+                                                    )}
+                                                </div>
+                                                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                                                    <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-slate-500">
+                                                        <Link2 className="h-4 w-4 text-sky-600" />
+                                                        Voucher tujuan gambar ini
+                                                    </div>
+                                                    {renderVoucherLinkPicker(
+                                                        `special_promo_card_${card.number}_link_url`,
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+                                ))}
+                            </div>
+                        </section>
                 </div>
             </div>
+        );
+    };
+
+    const renderPartOfSection = () => (
+        <div className="space-y-6">
+            <section className="rounded-3xl border border-sky-100 bg-sky-50/70 p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-start gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
+                            <Globe className="h-5 w-5" />
+                        </span>
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-950">
+                                Konten Part of
+                            </h3>
+                            <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                                Atur judul, deskripsi, dan logo yang berjalan
+                                khusus untuk section Part of. Logo di sini
+                                terpisah dari Partner Kami.
+                            </p>
+                        </div>
+                    </div>
+                    <Button
+                        type="button"
+                        onClick={openCreatePartOfLogo}
+                        className="bg-sky-600 text-white hover:bg-sky-700"
+                    >
+                        Tambah Logo
+                    </Button>
+                </div>
+            </section>
+
+            <section
+                className="rounded-3xl border border-slate-200 bg-white p-5"
+                data-coach="public-home-part-of-logos"
+            >
+                <div className="mb-5 flex items-start gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-sm">
+                        <LayoutGrid className="h-5 w-5" />
+                    </span>
+                    <div>
+                        <h3 className="text-base font-semibold text-slate-950">
+                            Teks section
+                        </h3>
+                        <p className="mt-1 text-sm text-slate-600">
+                            Field ini disimpan bersama konten home utama.
+                        </p>
+                    </div>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                    {activeSection.fields.map((field) => renderField(field))}
+                </div>
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-5">
+                <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h3 className="text-base font-semibold text-slate-950">
+                            Logo Part of
+                        </h3>
+                        <p className="mt-1 text-sm text-slate-600">
+                            Tambahkan logo sebanyak yang dibutuhkan. Logo aktif
+                            akan dibagi otomatis menjadi dua baris berjalan di
+                            beranda.
+                        </p>
+                    </div>
+                    <Button
+                        type="button"
+                        onClick={openCreatePartOfLogo}
+                        variant="outline"
+                        className="border-sky-200 text-sky-700 hover:bg-sky-50"
+                    >
+                        Tambah Logo
+                    </Button>
+                </div>
+
+                <div className="overflow-hidden rounded-2xl border border-slate-200">
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[720px] text-sm">
+                            <thead className="bg-slate-50 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+                                <tr>
+                                    <th className="px-4 py-3 text-left">
+                                        Logo
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Nama
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Urutan
+                                    </th>
+                                    <th className="px-4 py-3 text-left">
+                                        Status
+                                    </th>
+                                    <th className="px-4 py-3 text-right">
+                                        Aksi
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 bg-white">
+                                {partOfLogos.map((logo) => (
+                                    <tr key={logo.id}>
+                                        <td className="px-4 py-3">
+                                            <div className="flex h-14 w-24 items-center justify-center rounded-xl bg-slate-50 p-2 ring-1 ring-slate-100">
+                                                {logo.image_url ? (
+                                                    <img
+                                                        src={logo.image_url}
+                                                        alt={
+                                                            logo.name ??
+                                                            'Logo Part of'
+                                                        }
+                                                        className="max-h-10 w-auto max-w-full object-contain"
+                                                    />
+                                                ) : (
+                                                    <ImageIcon className="h-6 w-6 text-slate-300" />
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="max-w-xs truncate font-semibold text-slate-950">
+                                                {logo.name || 'Tanpa nama'}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-slate-600">
+                                            {logo.sort_order}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span
+                                                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                    logo.is_active
+                                                        ? 'bg-emerald-50 text-emerald-700'
+                                                        : 'bg-slate-100 text-slate-500'
+                                                }`}
+                                            >
+                                                {logo.is_active
+                                                    ? 'Aktif'
+                                                    : 'Nonaktif'}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="border-sky-200 text-slate-700 hover:bg-sky-50"
+                                                    onClick={() =>
+                                                        openEditPartOfLogo(logo)
+                                                    }
+                                                >
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className="border-red-200 text-red-600 hover:bg-red-50"
+                                                    onClick={() =>
+                                                        deletePartOfLogo(logo)
+                                                    }
+                                                >
+                                                    Hapus
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                                {partOfLogos.length === 0 && (
+                                    <tr>
+                                        <td
+                                            colSpan={5}
+                                            className="px-4 py-10 text-center"
+                                        >
+                                            <ImageIcon className="mx-auto h-10 w-10 text-slate-300" />
+                                            <p className="mt-3 text-sm font-semibold text-slate-700">
+                                                Belum ada logo Part of.
+                                            </p>
+                                            <p className="mt-1 text-sm text-slate-500">
+                                                Klik Tambah Logo untuk
+                                                menampilkan section Part of di
+                                                halaman beranda.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
         </div>
     );
 
@@ -693,11 +1447,15 @@ export default function HomeContentEdit({ content }: Props) {
                         });
                     }}
                 >
-                    <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
+                    <section
+                        className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm"
+                        data-coach="public-home-active-section"
+                    >
                         <div
-                            className="flex gap-2 overflow-x-auto border-b border-slate-100 p-3"
+                            className="flex gap-2 overflow-x-auto border-b border-slate-100 p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
                             role="tablist"
                             aria-label="Section konten halaman home"
+                            data-coach="public-home-tabs"
                         >
                             {sections.map((section, index) => {
                                 const active = index === activeSectionIndex;
@@ -733,8 +1491,12 @@ export default function HomeContentEdit({ content }: Props) {
                                 </p>
                             </div>
 
-                            {activeSection.title === 'Promo Spesial Untukmu' ? (
+                            {activeSection.title === 'Banner Mobile Apps' ? (
+                                renderMobileBannerSection()
+                            ) : activeSection.title === 'Promo Spesial Untukmu' ? (
                                 renderPromoSpecialSection()
+                            ) : activeSection.title === 'Part of' ? (
+                                renderPartOfSection()
                             ) : (
                                 <div className="grid gap-4 md:grid-cols-2">
                                     {activeSection.fields.map((field) =>
@@ -745,7 +1507,10 @@ export default function HomeContentEdit({ content }: Props) {
                         </div>
                     </section>
 
-                    <div className="sticky bottom-4 z-10 flex justify-end rounded-2xl border border-sky-100 bg-white/95 p-4 shadow-lg backdrop-blur">
+                    <div
+                        className="sticky bottom-4 z-10 flex justify-end rounded-2xl border border-sky-100 bg-white/95 p-4 shadow-lg backdrop-blur"
+                        data-coach="public-home-save"
+                    >
                         <Button
                             type="submit"
                             disabled={form.processing}
@@ -757,6 +1522,159 @@ export default function HomeContentEdit({ content }: Props) {
                         </Button>
                     </div>
                 </form>
+
+                <Dialog
+                    open={logoModalOpen}
+                    onOpenChange={(open) => {
+                        setLogoModalOpen(open);
+                        if (!open) {
+                            setEditingLogo(null);
+                            partOfLogoForm.clearErrors();
+                        }
+                    }}
+                >
+                    <DialogContent className="sm:max-w-lg">
+                        <DialogHeader>
+                            <DialogTitle>
+                                {editingLogo
+                                    ? 'Edit logo Part of'
+                                    : 'Tambah logo Part of'}
+                            </DialogTitle>
+                            <DialogDescription>
+                                Logo ini khusus untuk section Part of di
+                                halaman beranda dan tidak tercampur dengan
+                                Partner Kami.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <form
+                            className="space-y-4"
+                            onSubmit={submitPartOfLogo}
+                        >
+                            {editingLogo?.image_url && (
+                                <div className="flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                                    <img
+                                        src={editingLogo.image_url}
+                                        alt={
+                                            editingLogo.name ??
+                                            'Logo Part of saat ini'
+                                        }
+                                        className="max-h-20 w-auto max-w-full object-contain"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="part-of-logo-name">
+                                    Nama logo
+                                </Label>
+                                <Input
+                                    id="part-of-logo-name"
+                                    value={partOfLogoForm.data.name}
+                                    maxLength={80}
+                                    onChange={(event) =>
+                                        partOfLogoForm.setData(
+                                            'name',
+                                            event.target.value,
+                                        )
+                                    }
+                                    disabled={partOfLogoForm.processing}
+                                />
+                                <InputError
+                                    message={partOfLogoForm.errors.name}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="part-of-logo-sort-order">
+                                    Urutan
+                                </Label>
+                                <Input
+                                    id="part-of-logo-sort-order"
+                                    type="number"
+                                    min={0}
+                                    value={partOfLogoForm.data.sort_order}
+                                    onChange={(event) =>
+                                        partOfLogoForm.setData(
+                                            'sort_order',
+                                            Number(event.target.value),
+                                        )
+                                    }
+                                    disabled={partOfLogoForm.processing}
+                                />
+                                <InputError
+                                    message={partOfLogoForm.errors.sort_order}
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label
+                                    htmlFor="part-of-logo-image"
+                                    required={!editingLogo}
+                                >
+                                    {editingLogo
+                                        ? 'Ganti logo'
+                                        : 'Logo'}
+                                </Label>
+                                <Input
+                                    id="part-of-logo-image"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp"
+                                    required={!editingLogo}
+                                    onChange={(event) =>
+                                        partOfLogoForm.setData(
+                                            'image',
+                                            event.target.files?.[0] ?? null,
+                                        )
+                                    }
+                                    disabled={partOfLogoForm.processing}
+                                />
+                                <p className="text-xs text-slate-500">
+                                    Format JPG, PNG, atau WebP. Logo aktif akan
+                                    tampil dalam marquee Part of.
+                                </p>
+                                <InputError
+                                    message={partOfLogoForm.errors.image}
+                                />
+                            </div>
+
+                            <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                                <input
+                                    type="checkbox"
+                                    checked={partOfLogoForm.data.is_active}
+                                    onChange={(event) =>
+                                        partOfLogoForm.setData(
+                                            'is_active',
+                                            event.target.checked,
+                                        )
+                                    }
+                                    disabled={partOfLogoForm.processing}
+                                />
+                                Aktif
+                            </label>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setLogoModalOpen(false)}
+                                    disabled={partOfLogoForm.processing}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    className="bg-sky-600 text-white hover:bg-sky-700"
+                                    disabled={partOfLogoForm.processing}
+                                >
+                                    {partOfLogoForm.processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Logo'}
+                                </Button>
+                            </div>
+                        </form>
+                    </DialogContent>
+                </Dialog>
 
                 <Dialog
                     open={Boolean(activeIconField)}
@@ -827,6 +1745,126 @@ export default function HomeContentEdit({ content }: Props) {
                                 );
                             })}
                         </div>
+                    </DialogContent>
+                </Dialog>
+
+                <Dialog
+                    open={Boolean(activeVoucherField)}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setActiveVoucherField(null);
+                        }
+                    }}
+                >
+                    <DialogContent className="max-h-[85vh] overflow-hidden sm:max-w-3xl">
+                        <DialogHeader>
+                            <DialogTitle>Pilih voucher promo</DialogTitle>
+                            <DialogDescription>
+                                Pilih voucher untuk {activeVoucherFieldLabel.toLowerCase()}.
+                                Saat gambar promo diklik, user diarahkan ke
+                                daftar wisata dan voucher ini otomatis dibawa ke
+                                checkout.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="max-h-[62vh] space-y-3 overflow-y-auto pr-1">
+                            {voucherOptions.length === 0 && (
+                                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-5 text-sm text-slate-500">
+                                    Belum ada voucher wisata. Buat voucher dari
+                                    menu Wisata - Voucher terlebih dahulu.
+                                </div>
+                            )}
+
+                            {voucherOptions.map((voucher) => {
+                                const selected =
+                                    activeVoucherField !== null &&
+                                    selectedVoucherForField(activeVoucherField)
+                                        ?.id === voucher.id;
+                                const disabled =
+                                    isVoucherOptionDisabled(voucher);
+
+                                return (
+                                    <button
+                                        key={voucher.id}
+                                        type="button"
+                                        disabled={disabled}
+                                        onClick={() => {
+                                            if (activeVoucherField) {
+                                                form.setData(
+                                                    activeVoucherField,
+                                                    voucher.select_url,
+                                                );
+                                            }
+                                            setActiveVoucherField(null);
+                                        }}
+                                        className={`flex w-full items-center justify-between gap-4 rounded-2xl border p-4 text-left transition ${
+                                            selected
+                                                ? 'border-sky-400 bg-sky-50 text-sky-900 shadow-sm'
+                                                : 'border-slate-200 bg-white text-slate-700 hover:border-sky-200 hover:bg-sky-50/60'
+                                        } ${
+                                            disabled
+                                                ? 'cursor-not-allowed opacity-50'
+                                                : ''
+                                        }`}
+                                    >
+                                        <span className="min-w-0">
+                                            <span className="flex flex-wrap items-center gap-2">
+                                                <span className="font-semibold text-slate-950">
+                                                    {voucher.code}
+                                                </span>
+                                                <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
+                                                    {formatVoucherDiscount(
+                                                        voucher,
+                                                    )}
+                                                </span>
+                                            </span>
+                                            <span className="mt-1 block text-xs text-slate-500">
+                                                Min. transaksi{' '}
+                                                {voucher.min_transaction > 0
+                                                    ? `Rp ${voucher.min_transaction.toLocaleString('id-ID')}`
+                                                    : 'tidak dibatasi'}{' '}
+                                                · Kuota{' '}
+                                                {voucher.remaining_quota ===
+                                                    null ||
+                                                voucher.remaining_quota ===
+                                                    undefined
+                                                    ? 'tidak dibatasi'
+                                                    : `${voucher.remaining_quota} tersisa`}
+                                            </span>
+                                            {(voucher.starts_at ||
+                                                voucher.ends_at) && (
+                                                <span className="mt-1 block text-xs text-slate-400">
+                                                    Berlaku{' '}
+                                                    {voucher.starts_at ?? '-'} -{' '}
+                                                    {voucher.ends_at ?? '-'}
+                                                </span>
+                                            )}
+                                        </span>
+                                        {selected && (
+                                            <Check className="h-5 w-5 shrink-0 text-sky-600" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {activeVoucherField && fieldValue(activeVoucherField) && (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => {
+                                    const fieldKey = activeVoucherField;
+                                    if (!fieldKey) {
+                                        return;
+                                    }
+
+                                    form.setData(fieldKey, '');
+                                    setActiveVoucherField(null);
+                                }}
+                            >
+                                Kosongkan voucher tujuan
+                            </Button>
+                        )}
                     </DialogContent>
                 </Dialog>
             </div>

@@ -86,6 +86,8 @@ class WisataBookingController extends Controller
         $request->session()->put('wisata_booking_draft', $draft);
 
         if (! $request->user()) {
+            $request->session()->put('url.intended', route('wisata.booking.review'));
+
             return redirect()->route('login');
         }
 
@@ -621,10 +623,10 @@ class WisataBookingController extends Controller
         $subtotal = (int) $summary['total'];
         $discountAmount = 0;
         $voucherPayload = null;
+        $userId = (int) ($request?->user()?->id ?? request()->user()?->id ?? 0);
 
         if (! empty($draft['voucher_code'])) {
             $voucher = $this->resolveVoucher($draft['voucher_code'], false, (int) $destination->id);
-            $userId = (int) ($request?->user()?->id ?? request()->user()?->id ?? 0);
 
             if (
                 $voucher
@@ -641,6 +643,20 @@ class WisataBookingController extends Controller
             } else {
                 unset($draft['voucher_code']);
                 ($request ?? request())->session()->put('wisata_booking_draft', $draft);
+            }
+        }
+
+        $pendingVoucherCode = null;
+        if (empty($draft['voucher_code'])) {
+            $sessionVoucherCode = ($request ?? request())->session()->get('pending_voucher_code');
+            $sessionVoucher = $this->resolveVoucher($sessionVoucherCode, false, (int) $destination->id);
+
+            if (
+                $sessionVoucher
+                && ($sessionVoucher->min_transaction <= 0 || $subtotal >= $sessionVoucher->min_transaction)
+                && ($userId === 0 || $this->canUseVoucherForUser($sessionVoucher, $userId))
+            ) {
+                $pendingVoucherCode = $sessionVoucher->code;
             }
         }
 
@@ -676,9 +692,7 @@ class WisataBookingController extends Controller
                 'quantity' => $summary['quantity'],
             ],
             'voucher' => $voucherPayload,
-            'pendingVoucherCode' => empty($draft['voucher_code'])
-                ? ($request ?? request())->session()->get('pending_voucher_code')
-                : null,
+            'pendingVoucherCode' => $pendingVoucherCode,
             'snapClientKey' => (string) config('services.midtrans.client_key', ''),
             'snapScriptUrl' => config('services.midtrans.is_production')
                 ? 'https://app.midtrans.com/snap/snap.js'

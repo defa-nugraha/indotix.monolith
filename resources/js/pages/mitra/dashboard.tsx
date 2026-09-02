@@ -1,13 +1,10 @@
 import { Head } from '@inertiajs/react';
 import {
-    CalendarCheck,
     CheckCircle2,
     CreditCard,
     FileText,
     MapPin,
-    ShieldCheck,
     Ticket,
-    Users,
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -30,18 +27,15 @@ type OnboardingStatus = {
 };
 
 export default function MitraDashboard({
-    onboarding,
     wisataOnboarding,
-    eventOnboarding,
     onboardingType,
     metrics,
     activities,
     statusCards,
     termsRequirement,
 }: {
-    onboarding: OnboardingStatus | null;
     wisataOnboarding: OnboardingStatus | null;
-    onboardingType?: 'hotel' | 'wisata' | 'event' | null;
+    onboardingType?: 'wisata' | null;
     metrics: {
         title: string;
         value: string | number;
@@ -55,23 +49,17 @@ export default function MitraDashboard({
         note: string;
         accent: string;
     }[];
-    eventOnboarding: OnboardingStatus | null;
     termsRequirement?: {
         required: boolean;
         signed_at?: string | null;
-        business_type: 'hotel' | 'wisata' | 'event';
+        business_type: 'wisata';
         title: string;
         file_url: string;
     } | null;
 }) {
     const [acceptedTerms, setAcceptedTerms] = useState(false);
-    const isChoosingType = !onboardingType;
-    const activeOnboarding =
-        onboardingType === 'wisata'
-            ? wisataOnboarding
-            : onboardingType === 'event'
-              ? eventOnboarding
-              : onboarding;
+    const isChoosingType = onboardingType !== 'wisata';
+    const activeOnboarding = wisataOnboarding;
     const safeOnboarding: Required<OnboardingStatus> = {
         verification_status: 'draft',
         verification_reason: null,
@@ -83,9 +71,6 @@ export default function MitraDashboard({
         ticket: Ticket,
         credit: CreditCard,
         map: MapPin,
-        users: Users,
-        calendar: CalendarCheck,
-        shield: ShieldCheck,
     };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -111,18 +96,12 @@ export default function MitraDashboard({
                                 Mitra Indotix
                             </p>
                             <h1 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
-                                {onboardingType === 'wisata'
-                                    ? 'Ringkasan performa destinasi Anda'
-                                    : onboardingType === 'event'
-                                      ? 'Ringkasan performa event Anda'
-                                      : 'Ringkasan performa properti Anda'}
+                                {isChoosingType
+                                    ? 'Mulai kelola destinasi wisata Anda'
+                                    : 'Ringkasan performa destinasi Anda'}
                             </h1>
                             <p className="text-sm text-slate-600">
-                                {onboardingType === 'wisata'
-                                    ? 'Pantau penjualan tiket, kuota, dan pendapatan wisata.'
-                                    : onboardingType === 'event'
-                                      ? 'Pantau penjualan tiket, booking, dan check-in event.'
-                                      : 'Pantau pemesanan, pendapatan, dan ketersediaan kamar.'}
+                                Pantau penjualan tiket, kuota, pendapatan, dan operasional wisata dalam satu dashboard.
                             </p>
                         </div>
                         {!isChoosingType && (
@@ -132,28 +111,16 @@ export default function MitraDashboard({
                                     className="bg-sky-600 text-white hover:bg-sky-700"
                                 >
                                     <Link
-                                        href={
-                                            onboardingType === 'wisata'
-                                                ? '/mitra/wisata/onboarding'
-                                                : onboardingType === 'event'
-                                                  ? '/mitra/event/onboarding'
-                                                  : '/mitra/onboarding'
-                                        }
+                                        href="/mitra/wisata/onboarding"
                                     >
                                         Lengkapi dokumen
                                     </Link>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="border-sky-200 text-slate-700 hover:bg-sky-50"
-                                >
-                                    Lihat laporan
                                 </Button>
                             </div>
                         )}
                     </div>
 
-                    {safeOnboarding.verification_status !== 'verified' && (
+                    {!isChoosingType && safeOnboarding.verification_status !== 'verified' && (
                         <div className="mt-6 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-700">
                             Dokumen pendaftaran Anda belum terverifikasi. Fitur
                             dashboard terbatas sampai proses review selesai.
@@ -292,44 +259,23 @@ export default function MitraDashboard({
                     >
                         <div className="flex flex-col gap-2">
                             <p className="text-xs font-semibold text-sky-600 uppercase">
-                                Pilih Jenis Mitra
+                                Pendaftaran Mitra Wisata
                             </p>
                             <h2 className="text-lg font-semibold text-slate-900">
-                                Kamu ingin mendaftar sebagai mitra apa?
+                                Fokuskan akun Mitra untuk operasional wisata
                             </h2>
                             <p className="text-sm text-slate-500">
-                                Pilih salah satu agar kami tampilkan form
-                                pendaftaran yang sesuai.
+                                Indotix saat ini memprioritaskan pengelolaan destinasi wisata. Mulai lengkapi data destinasi, dokumen, tiket, dan payout wisata Anda.
                             </p>
                         </div>
-                        <div className="mt-6 grid gap-4 md:grid-cols-3">
-                            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                                <div className="text-sm font-semibold text-slate-900">
-                                    Mitra Hotel
-                                </div>
-                                <p className="mt-2 text-sm text-slate-500">
-                                    Cocok untuk hotel, guest house, homestay,
-                                    kost harian.
-                                </p>
-                                <Button
-                                    type="button"
-                                    className="mt-4 bg-sky-600 text-white hover:bg-sky-700"
-                                    onClick={() =>
-                                        router.post('/mitra/onboarding/type', {
-                                            type: 'hotel',
-                                        })
-                                    }
-                                >
-                                    Daftar Hotel
-                                </Button>
-                            </div>
+                        <div className="mt-6 grid gap-4 md:grid-cols-2">
                             <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
                                 <div className="text-sm font-semibold text-slate-900">
                                     Mitra Wisata
                                 </div>
                                 <p className="mt-2 text-sm text-slate-500">
-                                    Cocok untuk destinasi wisata, atraksi,
-                                    event, atau wahana.
+                                    Cocok untuk destinasi wisata, atraksi, atau
+                                    wahana.
                                 </p>
                                 <Button
                                     type="button"
@@ -343,25 +289,8 @@ export default function MitraDashboard({
                                     Daftar Wisata
                                 </Button>
                             </div>
-                            <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                                <div className="text-sm font-semibold text-slate-900">
-                                    Mitra Event
-                                </div>
-                                <p className="mt-2 text-sm text-slate-500">
-                                    Cocok untuk EO, komunitas, kampus, atau
-                                    individu penyelenggara event.
-                                </p>
-                                <Button
-                                    type="button"
-                                    className="mt-4 bg-sky-600 text-white hover:bg-sky-700"
-                                    onClick={() =>
-                                        router.post('/mitra/onboarding/type', {
-                                            type: 'event',
-                                        })
-                                    }
-                                >
-                                    Daftar Event
-                                </Button>
+                            <div className="rounded-2xl border border-sky-100 bg-sky-50 p-5 text-sm leading-6 text-slate-600">
+                                Setelah pendaftaran wisata diverifikasi, menu tiket, booking, QR masuk, ulasan, laporan masalah, dan pendapatan wisata akan tersedia sesuai data destinasi Anda.
                             </div>
                         </div>
                     </section>
@@ -430,47 +359,6 @@ export default function MitraDashboard({
                         </div>
                     </section>
                 )}
-                {onboardingType === 'event' && (
-                    <section
-                        data-coach="dashboard-verification"
-                        className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
-                    >
-                        <div className="flex flex-col gap-2">
-                            <p className="text-xs font-semibold text-sky-600 uppercase">
-                                Status Pendaftaran Event
-                            </p>
-                            <h2 className="text-lg font-semibold text-slate-900">
-                                Pantau status verifikasi EO kamu
-                            </h2>
-                        </div>
-                        <div className="mt-4 grid gap-4 md:grid-cols-2">
-                            <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-                                <p className="text-xs font-semibold text-slate-400 uppercase">
-                                    Verifikasi
-                                </p>
-                                <div className="mt-2">
-                                    <span
-                                        className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                            safeOnboarding.verification_status ===
-                                            'verified'
-                                                ? 'bg-emerald-50 text-emerald-700'
-                                                : safeOnboarding.verification_status ===
-                                                    'pending'
-                                                  ? 'bg-amber-50 text-amber-700'
-                                                  : safeOnboarding.verification_status ===
-                                                      'rejected'
-                                                    ? 'bg-red-50 text-red-700'
-                                                    : 'bg-slate-100 text-slate-600'
-                                        }`}
-                                    >
-                                        {safeOnboarding.verification_status}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                )}
-
                 <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
                     <section
                         data-coach="dashboard-activity"
@@ -479,18 +367,10 @@ export default function MitraDashboard({
                         <div className="flex items-start justify-between gap-4">
                             <div>
                                 <p className="text-xs font-semibold text-sky-600 uppercase">
-                                    {onboardingType === 'wisata'
-                                        ? 'Aktivitas Destinasi'
-                                        : onboardingType === 'event'
-                                          ? 'Aktivitas Event'
-                                          : 'Aktivitas Properti'}
+                                    Aktivitas Destinasi
                                 </p>
                                 <h2 className="mt-2 text-lg font-semibold text-slate-900">
-                                    {onboardingType === 'wisata'
-                                        ? 'Aktivitas terbaru di destinasi kamu'
-                                        : onboardingType === 'event'
-                                          ? 'Aktivitas terbaru di event kamu'
-                                          : 'Aktivitas terbaru di properti Anda'}
+                                    Aktivitas terbaru di destinasi kamu
                                 </h2>
                             </div>
                             <Button

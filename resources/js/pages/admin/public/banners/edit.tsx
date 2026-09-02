@@ -124,8 +124,8 @@ export default function BannerEdit({ banner }: { banner: Banner }) {
                                 }
                             />
                             <p className="text-xs text-slate-500">
-                                Gunakan JPG, PNG, atau WebP berukuran tepat 1200
-                                × 450 px, maksimal 5 MB.
+                                Gunakan JPG, PNG, atau WebP. Rekomendasi
+                                tampilan utama 1600 × 449 px, maksimal 5 MB.
                             </p>
                             <InputError message={form.errors.image} />
                         </div>

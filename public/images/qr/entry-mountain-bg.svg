@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" role="img" aria-label="Latar pegunungan biru Indotix">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0757c8"/>
+      <stop offset="0.48" stop-color="#0794df"/>
+      <stop offset="1" stop-color="#25d9e3"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.86" cy="0.46" r="0.38">
+      <stop offset="0" stop-color="#d8fbff" stop-opacity="0.46"/>
+      <stop offset="0.56" stop-color="#85e8f4" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mountain" x1="0.25" y1="0.25" x2="1" y2="1">
+      <stop offset="0" stop-color="#c2f3ff" stop-opacity="0.84"/>
+      <stop offset="0.55" stop-color="#7acff0" stop-opacity="0.58"/>
+      <stop offset="1" stop-color="#1374cd" stop-opacity="0.46"/>
+    </linearGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0560c8" stop-opacity="0"/>
+      <stop offset="0.5" stop-color="#58d9ef" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.24"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="1.4"/>
+    </filter>
+  </defs>
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#glow)"/>
+  <path d="M0 0h1600v900H0z" fill="url(#shade)"/>
+  <circle cx="1490" cy="602" r="390" fill="none" stroke="#c5f6ff" stroke-width="5" opacity="0.45"/>
+  <g transform="translate(0 60)">
+    <path d="M585 738c86-91 178-161 271-218 59 47 103 92 161 142 79-102 165-207 272-333 149 154 252 294 311 409H585z" fill="#c3f3ff" opacity="0.26"/>
+    <path d="M709 748c89-100 190-182 303-246 65 70 102 118 154 187 77-121 147-213 257-319 74 83 132 176 177 279v99H709z" fill="url(#mountain)"/>
+    <path d="M1006 506c-79 95-148 170-211 238h241l105-63 91-153-31 169h158l90-280-180-47-102 151-56 118z" fill="#ffffff" opacity="0.22" filter="url(#soft)"/>
+    <path d="M968 590c70 25 132 62 199 95 83 41 173 41 262 62H654c96-68 204-105 314-157z" fill="#0b68c4" opacity="0.22"/>
+  </g>
+  <path d="M1380 420c26-18 55-20 83-2-30-4-51 4-63 24-3-14-10-20-20-22z" fill="#126fd2" opacity="0.72"/>
+  <path d="M1462 455c22-15 46-16 69-1-25-3-43 4-53 20-2-11-8-17-16-19z" fill="#126fd2" opacity="0.68"/>
+  <path d="M1512 406c24-18 51-20 78-4-27-2-47 5-59 23-3-11-9-17-19-19z" fill="#126fd2" opacity="0.64"/>
+</svg>

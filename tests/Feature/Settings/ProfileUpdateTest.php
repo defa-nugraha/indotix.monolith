@@ -22,6 +22,7 @@ test('profile information can be updated', function () {
         ->patch(route('profile.update'), [
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'phone' => '081234567890',
         ]);
 
     $response
@@ -32,7 +33,22 @@ test('profile information can be updated', function () {
 
     expect($user->name)->toBe('Test User');
     expect($user->email)->toBe('test@example.com');
+    expect($user->phone)->toBe('081234567890');
     expect($user->email_verified_at)->toBeNull();
+});
+
+test('profile phone is required for booking communication', function () {
+    $user = User::factory()->create();
+
+    $response = $this
+        ->actingAs($user)
+        ->patch(route('profile.update'), [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'phone' => '',
+        ]);
+
+    $response->assertSessionHasErrors('phone');
 });
 
 test('email verification status is unchanged when the email address is unchanged', function () {
@@ -43,6 +59,7 @@ test('email verification status is unchanged when the email address is unchanged
         ->patch(route('profile.update'), [
             'name' => 'Test User',
             'email' => $user->email,
+            'phone' => $user->phone ?? '081234567890',
         ]);
 
     $response

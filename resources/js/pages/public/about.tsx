@@ -1,20 +1,11 @@
 import { Link } from '@inertiajs/react';
-import {
-    BookOpen,
-    CalendarCheck,
-    MapPinned,
-    ShoppingBag,
-    Star,
-    Ticket,
-} from 'lucide-react';
+import { MapPinned } from 'lucide-react';
 import PublicLayout from '@/layouts/public-layout';
 import { PublicSeo } from '@/components/public-seo';
 import {
     PublicFooter,
-    PublicPartnerSection,
     PublicTrustSection,
     type PublicContact,
-    type PublicPartner,
     type PublicTrustContent,
 } from '@/components/public-page-sections';
 
@@ -27,20 +18,13 @@ export default function AboutPage({
     about,
     homeContent,
     contact,
-    partners = [],
 }: {
     about: AboutPage;
     homeContent?: PublicTrustContent | null;
     contact?: PublicContact | null;
-    partners?: PublicPartner[];
 }) {
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
-        { label: 'Event', icon: CalendarCheck, href: '/events' },
-        { label: 'Retail Shop', icon: ShoppingBag, href: '/retail-shop' },
-        { label: 'Spesial Program', icon: Star, href: '/special-programs' },
-        { label: 'Academy', icon: BookOpen, href: '/academy' },
-        { label: 'Hotel', icon: Ticket, href: '/stay' },
     ];
 
     const chips = [
@@ -61,7 +45,7 @@ export default function AboutPage({
         <PublicLayout categories={categories} chips={chips}>
             <PublicSeo
                 title={`${about?.title ?? 'Tentang Kami'} - Indotix`}
-                description="Kenali Indotix sebagai platform pemesanan wisata, hotel, event, special program, academy, dan retail shop di Indonesia."
+                description="Kenali Indotix sebagai platform pemesanan tiket wisata dan destinasi rekreasi pilihan di Indonesia."
                 canonicalPath="/about"
                 keywords={[
                     'tentang Indotix',
@@ -97,7 +81,7 @@ export default function AboutPage({
                     </h1>
                     <p className="mt-2 text-sm text-slate-600">
                         Profil singkat Indotix dan komitmen layanan kami untuk
-                        perjalanan, event, dan pengalaman terbaik.
+                        pemesanan tiket wisata yang mudah, aman, dan nyaman.
                     </p>
 
                     <div className="mt-6">
@@ -117,7 +101,6 @@ export default function AboutPage({
                 </div>
             </div>
 
-            <PublicPartnerSection partners={partners} />
             <PublicTrustSection homeContent={homeContent} contact={contact} />
             <PublicFooter contact={contact} />
         </PublicLayout>

@@ -1,7 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
-import { PublicPartnerSection } from '@/components/public-page-sections';
+import {
+    PublicPartOfSection,
+    PublicPartnerSection,
+} from '@/components/public-page-sections';
 import {
     Dialog,
     DialogContent,
@@ -134,11 +137,19 @@ type HomeContent = {
             url?: string | null;
             poster_url?: string | null;
         };
+        video_secondary?: {
+            title: string;
+            subtitle: string;
+            url?: string | null;
+            poster_url?: string | null;
+        };
         cards: {
             title?: string | null;
             subtitle?: string | null;
             image_url?: string | null;
             link_url?: string | null;
+            voucher_code?: string | null;
+            voucher_remaining_count?: number | null;
         }[];
     };
     promo: { icon: string; title: string; link_label: string };
@@ -165,6 +176,18 @@ type HomeContent = {
         badges: { icon: string; text: string }[];
         cta_label: string;
         cards: { icon: string; title: string; description: string }[];
+    };
+    part_of?: {
+        eyebrow?: string;
+        title?: string;
+        description?: string;
+        logos?: {
+            id: number | string;
+            name?: string | null;
+            image_url?: string | null;
+            link_url?: string | null;
+        }[];
+        stats?: { icon?: string | null; value: string; label: string }[];
     };
 };
 
@@ -265,12 +288,6 @@ export default function Welcome({
     } | null>(null);
     const [isLocating, setIsLocating] = useState(false);
     const [locationNotice, setLocationNotice] = useState<string | null>(null);
-    const [shouldLoadSpecialPromoVideo, setShouldLoadSpecialPromoVideo] =
-        useState(false);
-    const [
-        shouldLoadCompactSpecialPromoVideo,
-        setShouldLoadCompactSpecialPromoVideo,
-    ] = useState(false);
     const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
     const categories = [
@@ -436,28 +453,23 @@ export default function Welcome({
         });
     }, [activeBannerIndex, bannerSlides]);
     const getBannerSlideStyle = (offset: number) => {
-        const activeBannerSlideWidth = 'clamp(20rem, 54vw, 68rem)';
-        const sideBannerSlideWidth = 'clamp(18rem, 46vw, 58rem)';
+        const activeBannerSlideWidth = 'clamp(44rem, 86vw, 84rem)';
+        const sideBannerSlideWidth = 'clamp(40rem, 78vw, 78rem)';
         const bannerSlideGap = '1.25rem';
-        const frameWidth =
-            offset === 0 ? activeBannerSlideWidth : sideBannerSlideWidth;
 
         if (offset < 0) {
             return {
-                width: frameWidth,
                 transform: `translateX(calc(-50% - (${activeBannerSlideWidth} / 2) - (${sideBannerSlideWidth} / 2) - ${bannerSlideGap})) translateY(-50%)`,
             };
         }
 
         if (offset > 0) {
             return {
-                width: frameWidth,
                 transform: `translateX(calc(-50% + (${activeBannerSlideWidth} / 2) + (${sideBannerSlideWidth} / 2) + ${bannerSlideGap})) translateY(-50%)`,
             };
         }
 
         return {
-            width: frameWidth,
             transform: 'translateX(-50%) translateY(-50%)',
         };
     };
@@ -489,6 +501,10 @@ export default function Welcome({
 
         return `/storage/${path}`;
     };
+    const isVideoMediaUrl = (value: string | null | undefined) =>
+        !!value &&
+        (/^data:video\//i.test(value) ||
+            /\.(mp4|webm|ogg)(?:[?#].*)?$/i.test(value));
     const normalizeLinkUrl = (value: string | null | undefined) => {
         const path = value?.trim();
         if (!path) {
@@ -510,13 +526,21 @@ export default function Welcome({
                 subtitle: card.subtitle || 'Promo pilihan',
                 href: normalizeLinkUrl(card.link_url) ?? '/promo',
                 imageUrl: normalizeMediaUrl(card.image_url),
+                voucherCode: card.voucher_code ?? null,
+                voucherRemainingCount: card.voucher_remaining_count ?? null,
             })),
             ...promoItems.map((promo) => ({
                 id: `promo-${promo.id}`,
                 title: promo.title ?? 'Promo Indotix',
                 subtitle: promo.excerpt ?? promo.category ?? 'Promo wisata',
-                href: promo.slug ? `/promo/${promo.slug}` : '/promo',
+                href: promo.voucher_code
+                    ? `/promo/voucher/${promo.voucher_code}`
+                    : promo.slug
+                      ? `/promo/${promo.slug}`
+                      : '/promo',
                 imageUrl: normalizeMediaUrl(promo.image_path),
+                voucherCode: promo.voucher_code ?? null,
+                voucherRemainingCount: promo.voucher_remaining_count ?? null,
             })),
             ...wisataProducts.map((destination) => ({
                 id: `wisata-${destination.id}`,
@@ -527,6 +551,8 @@ export default function Welcome({
                     'Destinasi wisata',
                 href: `/wisata/${destination.slug ?? destination.encrypted_id ?? destination.id}`,
                 imageUrl: destination.image_url ?? null,
+                voucherCode: null,
+                voucherRemainingCount: null,
             })),
         ];
 
@@ -547,10 +573,30 @@ export default function Welcome({
     const specialPromoVideoUrl = normalizeMediaUrl(
         homeContent.special_promo.video.url,
     );
-    const specialPromoVideoPosterUrl =
-        normalizeMediaUrl(homeContent.special_promo.video.poster_url) ??
-        specialPromoImageCards[0]?.imageUrl ??
-        heroImage;
+    const specialPromoVideoPosterUrl = normalizeMediaUrl(
+        homeContent.special_promo.video.poster_url,
+    );
+    const specialPromoSecondaryVideoUrl = normalizeMediaUrl(
+        homeContent.special_promo.video_secondary?.url,
+    );
+    const specialPromoSecondaryVideoPosterUrl = normalizeMediaUrl(
+        homeContent.special_promo.video_secondary?.poster_url,
+    );
+    const playableSpecialPromoVideoUrl =
+        specialPromoVideoUrl ??
+        (isVideoMediaUrl(specialPromoVideoPosterUrl)
+            ? specialPromoVideoPosterUrl
+            : null);
+    const legacySecondaryPromoVideoUrl = isVideoMediaUrl(
+        specialPromoVideoPosterUrl,
+    )
+        ? specialPromoVideoPosterUrl
+        : null;
+    const playableSpecialPromoSecondaryVideoUrl =
+        specialPromoSecondaryVideoUrl ??
+        (isVideoMediaUrl(specialPromoSecondaryVideoPosterUrl)
+            ? specialPromoSecondaryVideoPosterUrl
+            : legacySecondaryPromoVideoUrl);
     const specialPromoSlots = Array.from(
         { length: 3 },
         (_, index) =>
@@ -640,7 +686,7 @@ export default function Welcome({
 
     const renderWisataCard = (item: WisataCard) => {
         const detailSlug = item.slug ?? item.encrypted_id;
-        const priceLabel = formatRupiah(item.min_price) ?? 'Harga tersedia';
+        const priceLabel = formatRupiah(item.min_price) ?? 'Tiket belum tersedia';
         const distanceLabel =
             userLocation &&
             typeof item.latitude === 'number' &&
@@ -728,36 +774,45 @@ export default function Welcome({
     };
     const renderSpecialPromoVideo = ({
         compact = false,
-        shouldLoad,
-        onLoad,
         ariaLabel,
+        videoUrl,
+        posterUrl,
+        title,
     }: {
         compact?: boolean;
-        shouldLoad: boolean;
-        onLoad: () => void;
         ariaLabel: string;
+        videoUrl: string | null;
+        posterUrl: string | null;
+        title: string;
     }) => (
         <div
             className={`group relative overflow-hidden rounded-3xl bg-slate-100 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.65)] ring-1 ring-slate-200 ${
-                compact ? 'aspect-[1920/520]' : 'aspect-[1920/1080]'
+                compact ? 'aspect-[1920/960]' : 'aspect-[1920/960]'
             }`}
+            aria-label={ariaLabel}
         >
-            {shouldLoad && specialPromoVideoUrl ? (
+            {videoUrl ? (
                 <video
-                    src={specialPromoVideoUrl}
-                    poster={specialPromoVideoPosterUrl ?? undefined}
+                    src={videoUrl}
                     className="absolute inset-0 h-full w-full object-cover"
                     controls
                     autoPlay
+                    muted
+                    loop
                     playsInline
-                    preload="metadata"
+                    preload="auto"
+                    poster={
+                        posterUrl && !isVideoMediaUrl(posterUrl)
+                            ? posterUrl
+                            : undefined
+                    }
                 />
             ) : (
                 <>
-                    {specialPromoVideoPosterUrl ? (
+                    {posterUrl && !isVideoMediaUrl(posterUrl) ? (
                         <img
-                            src={specialPromoVideoPosterUrl}
-                            alt={homeContent.special_promo.video.title}
+                            src={posterUrl}
+                            alt={title}
                             loading="lazy"
                             decoding="async"
                             className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
@@ -767,13 +822,7 @@ export default function Welcome({
                             <ImageOff className="h-14 w-14" />
                         </div>
                     )}
-                    <button
-                        type="button"
-                        onClick={onLoad}
-                        disabled={!specialPromoVideoUrl}
-                        className="absolute inset-0 flex items-center justify-center disabled:cursor-not-allowed"
-                        aria-label={ariaLabel}
-                    >
+                    <div className="absolute inset-0 flex items-center justify-center">
                         <span
                             className={`flex items-center justify-center rounded-full bg-white text-slate-900 shadow-2xl ring-1 ring-white/60 transition group-hover:scale-105 ${
                                 compact
@@ -789,29 +838,97 @@ export default function Welcome({
                                 }`}
                             />
                         </span>
-                    </button>
+                    </div>
                 </>
             )}
         </div>
     );
+    const getSpecialPromoBadgeCopy = (
+        remainingCount: number | null | undefined,
+    ) => {
+        if (remainingCount === null || remainingCount === undefined) {
+            return {
+                value: 'PROMO',
+                caption: 'diskon',
+                title: 'Promo tersedia',
+            };
+        }
+
+        if (remainingCount <= 0) {
+            return {
+                value: 'HABIS',
+                caption: 'promo',
+                title: 'Promo habis',
+            };
+        }
+
+        return {
+            value: remainingCount > 999 ? '999+' : String(remainingCount),
+            caption: 'tersisa',
+            title: `${remainingCount} promo tersisa`,
+        };
+    };
     const renderSpecialPromoImageSlot = (
         promo: (typeof specialPromoSlots)[number],
         index: number,
         className = '',
+        imageClassName = '',
     ) =>
         promo ? (
             <Link
                 key={promo.id}
                 href={promo.href}
-                className={`group relative min-h-[132px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] ${className}`}
+                className={`group relative block min-h-[132px] overflow-hidden rounded-3xl bg-slate-100 shadow-[0_18px_45px_-28px_rgba(15,23,42,0.6)] ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-[0_20px_55px_-26px_rgba(15,23,42,0.7)] ${className}`}
             >
                 <img
                     src={promo.imageUrl ?? ''}
                     alt={promo.title}
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                    className={`absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105 ${imageClassName}`}
                 />
+                {promo.voucherCode &&
+                    (() => {
+                        const badge = getSpecialPromoBadgeCopy(
+                            promo.voucherRemainingCount,
+                        );
+
+                        return (
+                            <span
+                                className="special-promo-badge absolute top-4 left-4 text-white"
+                                title={badge.title}
+                            >
+                                <svg
+                                    aria-hidden="true"
+                                    className="special-promo-badge__shape"
+                                    viewBox="0 0 80 100"
+                                    preserveAspectRatio="none"
+                                >
+                                    <path
+                                        className="special-promo-badge__shape-border"
+                                        d="M15 1.5H65C72.5 1.5 78.5 7.5 78.5 15V79.5C78.5 82.6 76.6 85.4 73.7 86.5L43.3 98.5C41.2 99.3 38.8 99.3 36.7 98.5L6.3 86.5C3.4 85.4 1.5 82.6 1.5 79.5V15C1.5 7.5 7.5 1.5 15 1.5Z"
+                                    />
+                                    <path
+                                        className="special-promo-badge__shape-body"
+                                        d="M15.6 5H64.4C70.2 5 75 9.8 75 15.6V77.6C75 79.6 73.8 81.5 71.9 82.2L42.2 94C40.8 94.6 39.2 94.6 37.8 94L8.1 82.2C6.2 81.5 5 79.6 5 77.6V15.6C5 9.8 9.8 5 15.6 5Z"
+                                    />
+                                </svg>
+                                <span
+                                    aria-hidden="true"
+                                    className="special-promo-badge__pin"
+                                />
+                                <span className="special-promo-badge__eyebrow">
+                                    SALE
+                                </span>
+                                <span className="special-promo-badge__value">
+                                    {badge.value}
+                                </span>
+                                <span className="special-promo-badge__caption">
+                                    {badge.caption}
+                                </span>
+                            </span>
+                        );
+                    })()}
             </Link>
         ) : (
             <div
@@ -926,7 +1043,7 @@ export default function Welcome({
                 >
                     <nav
                         aria-label="Kategori wisata"
-                        className="border-y border-slate-100 bg-white"
+                        className="hidden border-y border-slate-100 bg-white md:block"
                     >
                         <div className="flex items-center justify-center gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {bannerCategoryLabels.map((label) => (
@@ -942,17 +1059,21 @@ export default function Welcome({
                     </nav>
 
                     {activeBanner ? (
-                        <div className="relative overflow-hidden bg-[#f4f6f8] py-7">
-                            <div className="relative mx-auto aspect-[1200/450] w-[clamp(20rem,54vw,68rem)]">
+                        <div className="relative overflow-hidden bg-[#f4f6f8] py-0 md:py-2">
+                            <div className="relative mx-auto aspect-[390/142] w-screen md:aspect-[1600/449] md:w-[clamp(44rem,86vw,84rem)]">
                                 {visibleBannerSlides.map(
                                     ({ slide, active, offset }) => {
-                                        const bannerFrameClass = `absolute top-1/2 left-1/2 block aspect-[1200/450] overflow-hidden rounded-2xl shadow-sm transition duration-500 ease-out ${
+                                        const bannerFrameClass = `absolute top-1/2 left-1/2 block overflow-hidden shadow-sm transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] md:rounded-2xl ${
                                             active
-                                                ? 'z-10'
-                                                : 'z-0 opacity-95'
+                                                ? 'z-10 aspect-[390/142] w-screen opacity-100 md:aspect-[1600/449] md:w-[clamp(44rem,86vw,84rem)]'
+                                                : 'z-0 hidden aspect-[1600/449] opacity-90 saturate-90 md:block md:w-[clamp(40rem,78vw,78rem)]'
                                         }`;
                                         const bannerFrameStyle =
                                             getBannerSlideStyle(offset);
+                                        const bannerFrameKey =
+                                            totalBannerSlides > 2
+                                                ? slide.id
+                                                : `${slide.id}-${offset}`;
                                         const bannerImage = (
                                             <img
                                                 src={slide.imageUrl}
@@ -966,7 +1087,7 @@ export default function Welcome({
                                         if (slide.href?.startsWith('http')) {
                                             return (
                                                 <a
-                                                    key={`${slide.id}-${offset}`}
+                                                    key={bannerFrameKey}
                                                     href={slide.href}
                                                     target="_blank"
                                                     rel="noreferrer"
@@ -981,7 +1102,7 @@ export default function Welcome({
                                         if (slide.href) {
                                             return (
                                                 <Link
-                                                    key={`${slide.id}-${offset}`}
+                                                    key={bannerFrameKey}
                                                     href={slide.href}
                                                     className={bannerFrameClass}
                                                     style={bannerFrameStyle}
@@ -993,7 +1114,7 @@ export default function Welcome({
 
                                         return (
                                             <div
-                                                key={`${slide.id}-${offset}`}
+                                                key={bannerFrameKey}
                                                 className={bannerFrameClass}
                                                 style={bannerFrameStyle}
                                             >
@@ -1009,7 +1130,7 @@ export default function Welcome({
                                     <button
                                         type="button"
                                         onClick={() => advanceBanner(-1)}
-                                        className="absolute top-1/2 left-3 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl font-bold text-slate-600 shadow-lg transition hover:bg-sky-50 hover:text-sky-700"
+                                        className="absolute top-1/2 left-3 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-2xl font-bold text-slate-600 shadow-lg transition hover:bg-sky-50 hover:text-sky-700 md:flex"
                                         aria-label="Banner sebelumnya"
                                     >
                                         ‹
@@ -1017,62 +1138,98 @@ export default function Welcome({
                                     <button
                                         type="button"
                                         onClick={() => advanceBanner(1)}
-                                        className="absolute top-1/2 right-3 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-xl font-bold text-slate-600 shadow-lg transition hover:bg-sky-50 hover:text-sky-700"
+                                        className="absolute top-1/2 right-3 z-20 hidden h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white text-2xl font-bold text-slate-600 shadow-lg transition hover:bg-sky-50 hover:text-sky-700 md:flex"
                                         aria-label="Banner berikutnya"
                                     >
                                         ›
                                     </button>
+                                    <div className="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 md:bottom-5">
+                                        {bannerSlides.map((slide, index) => {
+                                            const isActive =
+                                                index === activeBannerIndex;
+
+                                            return (
+                                                <button
+                                                    key={slide.id}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setActiveBannerIndex(
+                                                            index,
+                                                        )
+                                                    }
+                                                    aria-label={`Tampilkan banner ${index + 1}`}
+                                                    aria-current={
+                                                        isActive
+                                                            ? 'true'
+                                                            : undefined
+                                                    }
+                                                    className={`h-2.5 w-2.5 rounded-full border border-white/60 shadow-sm transition ${
+                                                        isActive
+                                                            ? 'scale-110 bg-white'
+                                                            : 'bg-white/35 hover:bg-white/70'
+                                                    }`}
+                                                />
+                                            );
+                                        })}
+                                    </div>
                                 </>
                             )}
                         </div>
                     ) : (
-                        <div className="aspect-[1200/450] w-full border-y border-dashed border-slate-200 bg-sky-50" />
+                        <div className="aspect-[390/142] w-full border-y border-dashed border-slate-200 bg-sky-50 md:aspect-[1600/449]" />
                     )}
                 </section>
 
-                <section className="mx-auto max-w-6xl space-y-5 px-4 pt-0 sm:px-6 lg:px-8">
-                    <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
-                        {homeContent.special_promo.title}
-                    </h2>
+                <section
+                    className="mx-auto max-w-6xl space-y-5 px-4 pt-0 sm:px-6 lg:px-8"
+                    data-coach="home-special-promo"
+                >
+                    <div>
+                        <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                            {homeContent.special_promo.title}
+                        </h2>
+                        <span className="mt-3 block h-1.5 w-8 rounded-full bg-sky-500" />
+                    </div>
 
-                    <div className="grid items-stretch gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] lg:grid-rows-[auto_auto]">
-                        <div className="lg:col-start-1 lg:row-start-1">
+                    <div className="grid items-stretch gap-4 sm:gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+                        <div className="grid gap-5">
                             {renderSpecialPromoVideo({
-                                shouldLoad: shouldLoadSpecialPromoVideo,
-                                onLoad: () =>
-                                    setShouldLoadSpecialPromoVideo(true),
                                 ariaLabel: 'Putar video promo spesial',
+                                videoUrl: playableSpecialPromoVideoUrl,
+                                posterUrl: specialPromoVideoPosterUrl,
+                                title: homeContent.special_promo.video.title,
                             })}
-                        </div>
 
-                        <div className="lg:col-start-1 lg:row-start-2">
                             {renderSpecialPromoVideo({
                                 compact: true,
-                                shouldLoad: shouldLoadCompactSpecialPromoVideo,
-                                onLoad: () =>
-                                    setShouldLoadCompactSpecialPromoVideo(true),
                                 ariaLabel: 'Putar video promo tambahan',
+                                videoUrl: playableSpecialPromoSecondaryVideoUrl,
+                                posterUrl: specialPromoSecondaryVideoPosterUrl,
+                                title:
+                                    homeContent.special_promo.video_secondary
+                                        ?.title ?? 'Video promo tambahan',
                             })}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-5 lg:col-start-2 lg:row-start-1">
+                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-5">
                             {specialPromoSlots
                                 .slice(0, 2)
                                 .map((promo, index) =>
                                     renderSpecialPromoImageSlot(
                                         promo,
                                         index,
-                                        'h-full min-h-[220px] lg:min-h-[240px]',
+                                        'h-full min-w-0 aspect-square min-h-0 sm:aspect-[4/5] sm:min-h-[260px] lg:min-h-0',
                                     ),
                                 )}
-                        </div>
 
-                        <div className="w-full lg:col-start-2 lg:row-start-2">
-                            {renderSpecialPromoImageSlot(
-                                specialPromoSlots[2],
-                                2,
-                                'h-full w-full min-h-[150px]',
-                            )}
+                            <div className="col-span-2 w-full">
+                                {renderSpecialPromoImageSlot(
+                                    specialPromoSlots[2],
+                                    2,
+                                    'h-full w-full min-h-[150px] min-w-0 aspect-[16/7] sm:aspect-[16/5] sm:min-h-[180px] lg:min-h-0',
+                                    'object-contain bg-white p-1 sm:object-cover sm:p-0',
+                                )}
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -1081,6 +1238,7 @@ export default function Welcome({
                     <section
                         key={section.key}
                         className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8"
+                        data-coach="home-category-products"
                     >
                         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                             <div>
@@ -1311,9 +1469,15 @@ export default function Welcome({
                     )}
                 </section>
 
-                {partners.length > 0 && (
+                {(partners.length > 0 ||
+                    (homeContent.part_of?.logos?.length ?? 0) > 0) && (
                     <div className="mb-10 sm:mb-14">
-                        <PublicPartnerSection partners={partners} />
+                        {partners.length > 0 && (
+                            <PublicPartnerSection partners={partners} />
+                        )}
+                        <PublicPartOfSection
+                            homeContent={homeContent}
+                        />
                     </div>
                 )}
             </main>

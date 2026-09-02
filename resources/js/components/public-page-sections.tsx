@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import {
+    Award,
     BadgePercent,
     Bell,
     BookOpen,
@@ -7,6 +8,7 @@ import {
     Download,
     Droplets,
     Gift,
+    Globe,
     GraduationCap,
     Home as HomeIcon,
     Landmark,
@@ -19,6 +21,7 @@ import {
     Ticket,
     Trees,
     Utensils,
+    Users,
     Waves,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -44,6 +47,13 @@ export type PublicTrustContent = {
         badges?: { icon?: string | null; text: string }[];
         cta_label?: string;
         cards?: { icon?: string | null; title: string; description: string }[];
+    };
+    part_of?: {
+        eyebrow?: string;
+        title?: string;
+        description?: string;
+        logos?: PublicPartner[];
+        stats?: { icon?: string | null; value: string; label: string }[];
     };
 };
 
@@ -74,6 +84,9 @@ const iconMap = {
     Trees,
     Droplets,
     Compass,
+    Users,
+    Globe,
+    Award,
 } satisfies Record<string, LucideIcon>;
 
 const defaultTrust = {
@@ -209,6 +222,100 @@ export function PublicPartnerSection({
                     })}
                 </div>
             </div>
+        </section>
+    );
+}
+
+const repeatedPartnerRow = (items: PublicPartner[], minimum = 8) => {
+    if (items.length === 0) {
+        return [];
+    }
+
+    const minimumRepeatCount = Math.max(2, Math.ceil(minimum / items.length));
+    const repeatCount =
+        minimumRepeatCount % 2 === 0
+            ? minimumRepeatCount
+            : minimumRepeatCount + 1;
+
+    return Array.from({ length: repeatCount }).flatMap(() => items);
+};
+
+export function PublicPartOfSection({
+    homeContent,
+}: {
+    homeContent?: PublicTrustContent | null;
+}) {
+    const partOf = {
+        eyebrow: 'Part of',
+        title: 'El John Group',
+        description:
+            'Indotix adalah bagian dari ekosistem El John Group yang telah berpengalaman lebih dari 40 tahun di berbagai industri.',
+        ...(homeContent?.part_of ?? {}),
+    };
+    const logos = homeContent?.part_of?.logos ?? [];
+
+    if (logos.length === 0) {
+        return null;
+    }
+
+    const topRow = repeatedPartnerRow(logos);
+    const renderLogo = (partner: PublicPartner, index: number) => {
+        const logo = partner.image_url ? (
+            <img
+                src={partner.image_url}
+                alt={partner.name ?? 'Logo El John Group'}
+                className="h-12 w-auto max-w-[10rem] object-contain sm:h-14 sm:max-w-[12rem]"
+                loading="lazy"
+            />
+        ) : (
+            <span className="text-base font-black tracking-tight text-slate-600 sm:text-lg">
+                {partner.name ?? 'El John Group'}
+            </span>
+        );
+
+        return (
+            <div
+                key={`${partner.id}-${index}`}
+                className="flex h-16 min-w-[10.5rem] shrink-0 items-center justify-center rounded-2xl border border-sky-100 bg-white px-5 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.65)] sm:h-20 sm:min-w-[12.5rem]"
+            >
+                {logo}
+            </div>
+        );
+    };
+
+    return (
+        <section
+            className="relative mx-auto mt-6 max-w-7xl overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-white px-4 py-7 shadow-sm sm:px-8 sm:py-9"
+            aria-label={partOf.title}
+        >
+            <div className="pointer-events-none absolute inset-y-8 right-0 hidden w-72 opacity-45 lg:block">
+                <div className="absolute right-6 bottom-14 h-44 w-44 rotate-45 border border-sky-200/80" />
+                <div className="absolute right-20 bottom-20 h-52 w-28 rotate-12 border border-sky-100 bg-sky-100/30" />
+                <div className="absolute right-0 bottom-0 h-28 w-72 bg-gradient-to-t from-sky-100/70 to-transparent" />
+            </div>
+
+            <div className="relative text-center">
+                <div className="mx-auto flex w-fit items-center gap-3 text-sm font-black text-sky-500">
+                    <span className="h-px w-8 bg-sky-200" />
+                    {partOf.eyebrow}
+                    <span className="h-px w-8 bg-sky-200" />
+                </div>
+                <h2 className="mt-2 font-['Space_Grotesk'] text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                    {partOf.title}
+                </h2>
+                <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 font-medium text-slate-600 sm:text-base">
+                    {partOf.description}
+                </p>
+            </div>
+
+            <div className="relative mt-6 overflow-hidden">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-sky-50 to-transparent sm:w-28" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-sky-50 to-transparent sm:w-28" />
+                <div className="part-of-logo-marquee flex min-w-max items-center gap-4 pr-4 sm:gap-5 sm:pr-5">
+                    {topRow.map(renderLogo)}
+                </div>
+            </div>
+
         </section>
     );
 }

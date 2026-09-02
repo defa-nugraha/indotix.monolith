@@ -7,6 +7,7 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\MitraWisataStaff;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,7 +48,13 @@ class StaffController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('mitra_wisata_staff', 'email')
+                    ->where('mitra_wisata_onboarding_id', $destination->id),
+            ],
             'role' => ['required', 'in:owner,admin_mitra,staff_validasi'],
             'is_active' => ['nullable', 'boolean'],
         ]);
@@ -74,7 +81,14 @@ class StaffController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('mitra_wisata_staff', 'email')
+                    ->where('mitra_wisata_onboarding_id', $destination->id)
+                    ->ignore($staff->id),
+            ],
             'role' => ['required', 'in:owner,admin_mitra,staff_validasi'],
             'is_active' => ['nullable', 'boolean'],
         ]);

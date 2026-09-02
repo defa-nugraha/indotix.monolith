@@ -2,6 +2,7 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import InputError from '@/components/input-error';
@@ -194,10 +195,11 @@ export default function AdminMitraIndex({
                                     }}
                                 >
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
+                                        <Label required className="text-sm font-semibold text-slate-700">
                                             Nama
-                                        </label>
+                                        </Label>
                                         <input
+                                            required
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.name}
                                             onChange={(event) =>
@@ -212,11 +214,12 @@ export default function AdminMitraIndex({
                                         />
                                     </div>
                                     <div className="grid gap-2">
-                                        <label className="text-sm font-semibold text-slate-700">
+                                        <Label required className="text-sm font-semibold text-slate-700">
                                             Email
-                                        </label>
+                                        </Label>
                                         <input
                                             type="email"
+                                            required
                                             className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                             value={createForm.data.email}
                                             onChange={(event) =>

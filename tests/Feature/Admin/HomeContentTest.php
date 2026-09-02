@@ -3,7 +3,9 @@
 use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\PublicPartner;
+use App\Models\PublicPartOfLogo;
 use App\Models\MitraWisataOnboarding;
+use App\Models\Voucher;
 use App\Models\WisataTicket;
 use App\Support\HomePageContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,6 +21,16 @@ test('admin can manage dynamic public home content', function () {
         'role' => 'admin',
         'email_verified_at' => now(),
     ]);
+    $voucher = Voucher::query()->create([
+        'code' => 'HOMEPROMO12',
+        'discount_type' => 'percentage',
+        'discount_value' => 12,
+        'min_transaction' => 0,
+        'quota_total' => 10,
+        'quota_used' => 2,
+        'max_per_user_per_day' => 1,
+        'is_active' => true,
+    ]);
 
     $this->actingAs($admin)
         ->get('/admin/public/home')
@@ -30,7 +42,11 @@ test('admin can manage dynamic public home content', function () {
             ->where('content.icon_options.Gift', HomePageContent::ICON_OPTIONS['Gift'])
             ->where('content.icon_options.TreePalm', HomePageContent::ICON_OPTIONS['TreePalm'])
             ->where('content.image_upload_fields.special_promo_card_1_image_url', 'special_promo_card_1_image_url_file')
-            ->where('content.video_upload_fields.special_promo_video_url', 'special_promo_video_url_file'));
+            ->where('content.image_upload_fields.mobile_top_banner_media_url', 'mobile_top_banner_media_url_file')
+            ->where('content.video_upload_fields.special_promo_video_url', 'special_promo_video_url_file')
+            ->has('partOfLogos', 0)
+            ->where('voucherOptions.0.code', 'HOMEPROMO12')
+            ->where('voucherOptions.0.remaining_quota', 8));
 
     $payload = HomePageContent::DEFAULTS;
     $payload['category_1_label'] = 'Keluarga';
@@ -40,7 +56,11 @@ test('admin can manage dynamic public home content', function () {
     $payload['special_promo_video_poster_url'] = '/storage/promo-videos/weekend.jpg';
     $payload['special_promo_card_1_title'] = 'Wisata keluarga';
     $payload['special_promo_card_1_image_url'] = '/storage/promo/family.jpg';
-    $payload['special_promo_card_1_link_url'] = '/promo/wisata-keluarga';
+    $payload['special_promo_card_1_link_url'] = "/promo/voucher/{$voucher->code}";
+    $payload['mobile_top_banner_title'] = 'Liburan Seru Bersama Indotix';
+    $payload['mobile_top_banner_media_url'] = '/storage/mobile/home-hero.webm';
+    $payload['mobile_promo_banner_title'] = 'Diskon Spesial Akhir Pekan';
+    $payload['mobile_promo_banner_media_url'] = '/storage/mobile/weekend.gif';
     $payload['featured_link_label'] = 'Jelajah semua wisata';
 
     $this->actingAs($admin)
@@ -53,6 +73,8 @@ test('admin can manage dynamic public home content', function () {
         ->and(SystemSetting::query()->where('key', 'home_special_promo_title')->value('value'))->toBe('Promo spesial akhir pekan')
         ->and(SystemSetting::query()->where('key', 'home_special_promo_video_url')->value('value'))->toBe('/storage/promo-videos/weekend.mp4')
         ->and(SystemSetting::query()->where('key', 'home_special_promo_card_1_image_url')->value('value'))->toBe('/storage/promo/family.jpg')
+        ->and(SystemSetting::query()->where('key', 'home_mobile_top_banner_media_url')->value('value'))->toBe('/storage/mobile/home-hero.webm')
+        ->and(SystemSetting::query()->where('key', 'home_mobile_promo_banner_media_url')->value('value'))->toBe('/storage/mobile/weekend.gif')
         ->and(SystemSetting::query()->where('key', 'home_featured_link_label')->value('value'))->toBe('Jelajah semua wisata');
 
     PublicPartner::query()->create([
@@ -68,6 +90,18 @@ test('admin can manage dynamic public home content', function () {
         'sort_order' => 2,
         'is_active' => false,
     ]);
+    PublicPartOfLogo::query()->create([
+        'name' => 'Logo Part of Aktif',
+        'image_path' => 'public-part-of-logos/part-of-aktif.png',
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+    PublicPartOfLogo::query()->create([
+        'name' => 'Logo Part of Nonaktif',
+        'image_path' => 'public-part-of-logos/part-of-nonaktif.png',
+        'sort_order' => 2,
+        'is_active' => false,
+    ]);
 
     $this->get('/')
         ->assertOk()
@@ -79,10 +113,93 @@ test('admin can manage dynamic public home content', function () {
             ->where('homeContent.special_promo.video.url', '/storage/promo-videos/weekend.mp4')
             ->where('homeContent.special_promo.cards.0.title', 'Wisata keluarga')
             ->where('homeContent.special_promo.cards.0.image_url', '/storage/promo/family.jpg')
+            ->where('homeContent.special_promo.cards.0.voucher_code', 'HOMEPROMO12')
+            ->where('homeContent.special_promo.cards.0.voucher_remaining_count', 8)
+            ->where('homeContent.mobile_home.top_banner.title', 'Liburan Seru Bersama Indotix')
+            ->where('homeContent.mobile_home.top_banner.media_type', 'video')
+            ->where('homeContent.mobile_home.promo_banner.title', 'Diskon Spesial Akhir Pekan')
+            ->where('homeContent.mobile_home.promo_banner.media_type', 'image')
             ->where('homeContent.featured.link_label', 'Jelajah semua wisata')
+            ->where('homeContent.part_of.logos.0.name', 'Logo Part of Aktif')
+            ->where('homeContent.part_of.logos.0.image_url', '/storage/public-part-of-logos/part-of-aktif.png')
+            ->missing('homeContent.part_of.logos.1')
             ->where('partners.0.name', 'Partner Aktif')
             ->where('partners.0.image_url', '/storage/public-partners/partner-aktif.png')
             ->missing('partners.1'));
+
+    $this->getJson('/api/mobile/home')
+        ->assertOk()
+        ->assertJsonPath('mobile_home.top_banner.title', 'Liburan Seru Bersama Indotix')
+        ->assertJsonPath('mobile_home.top_banner.media_type', 'video')
+        ->assertJsonPath('mobile_home.promo_banner.media_url', '/storage/mobile/weekend.gif');
+});
+
+test('admin can manage public home part of logos from home content tab', function () {
+    Storage::fake('public');
+
+    $admin = User::factory()->create([
+        'role' => 'admin',
+        'email_verified_at' => now(),
+    ]);
+
+    $this->actingAs($admin)
+        ->post('/admin/public/home/part-of-logos', [
+            'name' => 'El John Media',
+            'sort_order' => 4,
+            'is_active' => true,
+            'image' => fakeTestImage('eljohn-media.png'),
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $logo = PublicPartOfLogo::query()->firstOrFail();
+
+    expect($logo->name)->toBe('El John Media')
+        ->and($logo->sort_order)->toBe(4)
+        ->and($logo->is_active)->toBeTrue()
+        ->and($logo->image_path)->toStartWith('public-part-of-logos/');
+
+    Storage::disk('public')->assertExists($logo->image_path);
+
+    $this->actingAs($admin)
+        ->get('/admin/public/home')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('partOfLogos.0.name', 'El John Media')
+            ->where('partOfLogos.0.sort_order', 4)
+            ->where('partOfLogos.0.is_active', true));
+
+    $oldPath = $logo->image_path;
+
+    $this->actingAs($admin)
+        ->put("/admin/public/home/part-of-logos/{$logo->id}", [
+            'name' => 'El John Group',
+            'sort_order' => 1,
+            'is_active' => false,
+            'image' => fakeTestImage('eljohn-group.png'),
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    $logo->refresh();
+
+    expect($logo->name)->toBe('El John Group')
+        ->and($logo->sort_order)->toBe(1)
+        ->and($logo->is_active)->toBeFalse()
+        ->and($logo->image_path)->not->toBe($oldPath);
+
+    Storage::disk('public')->assertMissing($oldPath);
+    Storage::disk('public')->assertExists($logo->image_path);
+
+    $newPath = $logo->image_path;
+
+    $this->actingAs($admin)
+        ->delete("/admin/public/home/part-of-logos/{$logo->id}")
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect(PublicPartOfLogo::query()->whereKey($logo->id)->exists())->toBeFalse();
+    Storage::disk('public')->assertMissing($newPath);
 });
 
 test('admin can upload public home special promo media from file input', function () {
@@ -96,8 +213,8 @@ test('admin can upload public home special promo media from file input', functio
     $payload = HomePageContent::DEFAULTS;
     $payload['_method'] = 'put';
     $payload['special_promo_video_url_file'] = UploadedFile::fake()->create('promo-wisata.mp4', 1024, 'video/mp4');
-    $payload['special_promo_card_1_image_url_file'] = UploadedFile::fake()->image('promo-keluarga.jpg', 900, 600);
-    $payload['special_promo_video_poster_url_file'] = UploadedFile::fake()->image('poster-video.jpg', 1280, 720);
+    $payload['special_promo_card_1_image_url_file'] = fakeTestImage('promo-keluarga.png');
+    $payload['special_promo_video_poster_url_file'] = fakeTestImage('poster-video.png');
 
     $this->actingAs($admin)
         ->post('/admin/public/home', $payload)

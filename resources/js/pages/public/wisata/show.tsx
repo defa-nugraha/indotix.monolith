@@ -39,7 +39,14 @@ type TicketItem = {
     min_order_quantity?: number | null;
     max_order_quantity?: number | null;
     ticket_type?: string | null;
+    ticket_kind?: string | null;
     is_entry_ticket?: boolean;
+    package_items?: Array<{
+        ticket_id: number;
+        quantity: number;
+        name?: string | null;
+        price?: number | null;
+    }>;
     refund_policy?: string | null;
 };
 
@@ -546,6 +553,45 @@ export default function WisataShow({
                                                             ? ` · Maks. ${maxOrder} tiket`
                                                             : ''}
                                                     </span>
+                                                    {ticket.ticket_kind ===
+                                                        'package' &&
+                                                        (ticket.package_items
+                                                            ?.length ?? 0) >
+                                                            0 && (
+                                                            <div className="mt-3 rounded-xl border border-sky-100 bg-white/80 p-3 text-[11px] text-slate-600">
+                                                                <div className="font-bold text-slate-800">
+                                                                    Isi paket
+                                                                </div>
+                                                                <div className="mt-2 space-y-1.5">
+                                                                    {ticket.package_items?.map(
+                                                                        (
+                                                                            item,
+                                                                        ) => (
+                                                                            <div
+                                                                                key={`${ticket.id}-${item.ticket_id}`}
+                                                                                className="flex items-start justify-between gap-3"
+                                                                            >
+                                                                                <span className="min-w-0">
+                                                                                    {item.quantity}
+                                                                                    x{' '}
+                                                                                    {item.name ??
+                                                                                        `Tiket #${item.ticket_id}`}
+                                                                                </span>
+                                                                                <span className="shrink-0 font-semibold text-slate-700">
+                                                                                    Rp{' '}
+                                                                                    {Number(
+                                                                                        item.price ??
+                                                                                            0,
+                                                                                    ).toLocaleString(
+                                                                                        'id-ID',
+                                                                                    )}
+                                                                                </span>
+                                                                            </div>
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                 </div>
                                                 <div className="flex w-fit shrink-0 items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-xs">
                                                     <button

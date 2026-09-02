@@ -399,11 +399,12 @@ export default function AdminMitraShow({
                                         <div className="grid gap-4 md:grid-cols-2">
                                             <div className="grid gap-2">
                                                 <label className="text-sm font-semibold text-slate-700">
-                                                    Nama
+                                                    Nama <span className="text-red-600">*</span>
                                                 </label>
                                                 <input
                                                     className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                                     value={editForm.data.name}
+                                                    required
                                                     onChange={(event) =>
                                                         editForm.setData(
                                                             'name',
@@ -419,12 +420,13 @@ export default function AdminMitraShow({
                                             </div>
                                             <div className="grid gap-2">
                                                 <label className="text-sm font-semibold text-slate-700">
-                                                    Email
+                                                    Email <span className="text-red-600">*</span>
                                                 </label>
                                                 <input
                                                     type="email"
                                                     className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                                                     value={editForm.data.email}
+                                                    required
                                                     onChange={(event) =>
                                                         editForm.setData(
                                                             'email',

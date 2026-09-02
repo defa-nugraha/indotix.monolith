@@ -8,6 +8,7 @@ use App\Models\Voucher;
 use App\Support\HomePageContent;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,6 +26,7 @@ class PublicPromoController extends Controller
     public function index(): Response
     {
         $vouchers = Voucher::query()
+            ->with('wisataDestinations:id,destination_name,slug')
             ->where(function ($query) {
                 $query->whereNull('hotel_id')->orWhere('hotel_id', 0);
             })
@@ -55,6 +57,15 @@ class PublicPromoController extends Controller
                 'max_per_user_per_day' => (int) ($voucher->max_per_user_per_day ?? 0),
                 'starts_at' => $voucher->starts_at?->toDateString(),
                 'ends_at' => $voucher->ends_at?->toDateString(),
+                'use_url' => route('promo.voucher.select', $voucher->code),
+                'target_destinations' => $voucher->wisataDestinations
+                    ->map(fn ($destination) => [
+                        'id' => $destination->id,
+                        'name' => $destination->destination_name,
+                        'slug' => $destination->slug,
+                    ])
+                    ->values()
+                    ->all(),
             ]);
 
         $promoItems = $this->activePromoItemsQuery()
@@ -96,7 +107,18 @@ class PublicPromoController extends Controller
     {
         abort_unless($this->isVoucherSelectable($voucher), HttpResponse::HTTP_NOT_FOUND);
 
+        $voucher->loadMissing('wisataDestinations');
         session(['pending_voucher_code' => $voucher->code]);
+
+        $destination = $voucher->wisataDestinations->first();
+        if ($destination) {
+            return redirect()
+                ->route('wisata.show', [
+                    'destination' => $destination->slug ?: Crypt::encryptString((string) $destination->id),
+                    'promo' => $voucher->code,
+                ])
+                ->with('status', 'voucher-selected');
+        }
 
         return redirect()
             ->route('wisata.search')

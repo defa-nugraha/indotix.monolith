@@ -98,8 +98,8 @@ export default function PromoItemCreate({
                         }}
                     >
                         <div className="grid gap-2">
-                            <Label>Judul promo</Label>
-                            <Input value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
+                            <Label required>Judul promo</Label>
+                            <Input required value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
                             <InputError message={form.errors.title} />
                         </div>
                         <div className="grid gap-2">
@@ -112,8 +112,9 @@ export default function PromoItemCreate({
                             <InputError message={form.errors.slug} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Kategori promo</Label>
+                            <Label required>Kategori promo</Label>
                             <select
+                                required
                                 value={form.data.category}
                                 onChange={(event) => form.setData('category', event.target.value)}
                                 className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-sky-400 focus:outline-none"
@@ -253,8 +254,8 @@ export default function PromoItemCreate({
                             </div>
                         </div>
                         <div className="grid gap-2">
-                            <Label>Gambar promo</Label>
-                            <Input type="file" accept="image/*" onChange={(event) => form.setData('image', event.target.files?.[0] ?? null)} />
+                            <Label required>Gambar promo</Label>
+                            <Input required type="file" accept="image/*" onChange={(event) => form.setData('image', event.target.files?.[0] ?? null)} />
                             <p className="text-xs text-slate-500">
                                 Ukuran rekomendasi: slot homepage 1-2 → 600 × 800 px (rasio 3:4), slot 0 atau 3 → 1200 × 400 px (rasio 3:1).
                             </p>

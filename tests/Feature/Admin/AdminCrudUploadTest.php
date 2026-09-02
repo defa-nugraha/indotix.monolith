@@ -2,8 +2,6 @@
 
 use App\Models\PublicBanner;
 use App\Models\PromoItem;
-use App\Models\SouvenirCategory;
-use App\Models\SouvenirProduct;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -28,7 +26,7 @@ test('public banner crud stores replaces and deletes image file', function () {
             'title' => 'Banner Test',
             'sort_order' => 1,
             'is_active' => true,
-            'image' => UploadedFile::fake()->image('banner.jpg', 1200, 450),
+            'image' => fakeTestImage('banner.png'),
         ])
         ->assertRedirect('/admin/public/banners')
         ->assertSessionHasNoErrors();
@@ -44,7 +42,7 @@ test('public banner crud stores replaces and deletes image file', function () {
             'title' => 'Banner Updated',
             'sort_order' => 2,
             'is_active' => false,
-            'image' => UploadedFile::fake()->image('banner-updated.jpg', 1200, 450),
+            'image' => fakeTestImage('banner-updated.png'),
         ])
         ->assertRedirect('/admin/public/banners')
         ->assertSessionHasNoErrors();
@@ -69,7 +67,7 @@ test('public banner crud stores replaces and deletes image file', function () {
 test('invalid banner replacement keeps the current image', function () {
     Storage::fake('public');
     $admin = superAdminForUploadTest();
-    $oldPath = UploadedFile::fake()->image('existing.jpg', 1200, 450)
+    $oldPath = fakeTestImage('existing.png')
         ->store('public-banners', 'public');
     $banner = PublicBanner::query()->create([
         'title' => 'Banner Existing',
@@ -84,7 +82,7 @@ test('invalid banner replacement keeps the current image', function () {
             'title' => 'Tidak boleh tersimpan',
             'sort_order' => 2,
             'is_active' => true,
-            'image' => UploadedFile::fake()->image('invalid-size.jpg', 800, 600),
+            'image' => UploadedFile::fake()->create('invalid.txt', 1, 'text/plain'),
         ])
         ->assertSessionHasErrors('image');
 
@@ -102,7 +100,7 @@ test('multiple public banners can be active for homepage carousel', function () 
             'title' => 'Banner Pertama',
             'sort_order' => 1,
             'is_active' => true,
-            'image' => UploadedFile::fake()->image('banner-1.jpg', 1200, 450),
+            'image' => fakeTestImage('banner-1.png'),
         ])
         ->assertRedirect('/admin/public/banners')
         ->assertSessionHasNoErrors();
@@ -114,7 +112,7 @@ test('multiple public banners can be active for homepage carousel', function () 
             'title' => 'Banner Kedua',
             'sort_order' => 2,
             'is_active' => true,
-            'image' => UploadedFile::fake()->image('banner-2.jpg', 1200, 450),
+            'image' => fakeTestImage('banner-2.png'),
         ])
         ->assertRedirect('/admin/public/banners')
         ->assertSessionHasNoErrors();
@@ -163,7 +161,7 @@ test('promo homepage slots cannot be reused', function () {
             'category' => 'wisata',
             'sort_order' => 1,
             'is_active' => true,
-            'image' => UploadedFile::fake()->image('promo-conflict.jpg', 600, 800),
+            'image' => fakeTestImage('promo-conflict.png', 600, 800),
         ])
         ->assertSessionHasErrors('sort_order');
 
@@ -174,7 +172,7 @@ test('promo homepage slots cannot be reused', function () {
             'category' => 'wisata',
             'sort_order' => 2,
             'is_active' => true,
-            'image' => UploadedFile::fake()->image('promo-slot-dua.jpg', 600, 800),
+            'image' => fakeTestImage('promo-slot-dua.png', 600, 800),
         ])
         ->assertRedirect('/admin/public/promo-items')
         ->assertSessionHasNoErrors();
@@ -193,80 +191,12 @@ test('promo homepage slots cannot be reused', function () {
         ->assertSessionHasErrors('sort_order');
 });
 
-test('retail product crud stores and removes image files', function () {
-    Storage::fake('public');
+test('retired retail product upload routes are unavailable', function () {
     $admin = superAdminForUploadTest();
-    $category = SouvenirCategory::query()->create([
-        'name' => 'Kategori Test',
-        'is_active' => true,
-    ]);
 
     $this->actingAs($admin)
         ->post('/admin/retail-shop/products', [
             'name' => 'Produk Test',
-            'category_id' => $category->id,
-            'description' => 'Deskripsi produk',
-            'price' => 150000,
-            'cost_price' => 100000,
-            'sku' => 'SKU-TEST-1',
-            'weight' => 500,
-            'length' => 10,
-            'width' => 10,
-            'height' => 10,
-            'status' => 'active',
-            'min_stock' => 1,
-            'stock' => 5,
-            'images' => [
-                UploadedFile::fake()->image('produk.jpg', 800, 600),
-            ],
         ])
-        ->assertRedirect()
-        ->assertSessionHasNoErrors();
-
-    $product = SouvenirProduct::query()->where('sku', 'SKU-TEST-1')->firstOrFail();
-    $image = $product->images()->firstOrFail();
-
-    Storage::disk('public')->assertExists($image->image_url);
-
-    $this->actingAs($admin)
-        ->put("/admin/retail-shop/products/{$product->id}", [
-            'name' => 'Produk Test Update',
-            'category_id' => $category->id,
-            'description' => 'Deskripsi update',
-            'price' => 175000,
-            'cost_price' => 100000,
-            'sku' => 'SKU-TEST-1',
-            'weight' => 600,
-            'length' => 12,
-            'width' => 11,
-            'height' => 10,
-            'status' => 'active',
-            'min_stock' => 1,
-            'stock' => 8,
-            'images' => [
-                UploadedFile::fake()->image('produk-2.jpg', 800, 600),
-            ],
-        ])
-        ->assertRedirect()
-        ->assertSessionHasNoErrors();
-
-    $product->refresh();
-    expect($product->name)->toBe('Produk Test Update')
-        ->and($product->images()->count())->toBe(2);
-
-    $imagePath = $image->image_url;
-    $this->actingAs($admin)
-        ->delete("/admin/retail-shop/products/{$product->id}/images/{$image->id}")
-        ->assertRedirect()
-        ->assertSessionHasNoErrors();
-
-    expect($product->images()->whereKey($image->id)->exists())->toBeFalse();
-    Storage::disk('public')->assertMissing($imagePath);
-
-    $this->actingAs($admin)
-        ->delete("/admin/retail-shop/products/{$product->id}/force")
-        ->assertRedirect()
-        ->assertSessionHasNoErrors();
-
-    expect(SouvenirProduct::query()->whereKey($product->id)->exists())->toBeFalse();
+        ->assertNotFound();
 });

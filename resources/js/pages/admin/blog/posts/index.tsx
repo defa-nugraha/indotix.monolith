@@ -63,9 +63,6 @@ export default function BlogPostsIndex() {
                             <p className="text-sm text-slate-500">Kelola artikel, SEO, dan konten publik.</p>
                         </div>
                         <div className="flex gap-2">
-                            <Link href="/admin/blog/categories" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
-                                Kategori
-                            </Link>
                             <Link href="/admin/blog/tags" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700">
                                 Tags
                             </Link>

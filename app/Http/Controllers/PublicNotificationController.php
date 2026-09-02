@@ -14,6 +14,16 @@ class PublicNotificationController extends Controller
     {
         $notifications = UserNotification::query()
             ->where('user_id', $request->user()->id)
+            ->where(function ($query) {
+                $query->where('type', 'like', 'wisata_%')
+                    ->orWhere(function ($query) {
+                        $query->where('type', 'not like', 'event_%')
+                            ->where('type', 'not like', 'hotel_%')
+                            ->where('type', 'not like', 'souvenir_%')
+                            ->where('type', 'not like', 'academy_%')
+                            ->where('type', 'not like', 'special_program_%');
+                    });
+            })
             ->latest()
             ->get()
             ->map(fn (UserNotification $notification) => [

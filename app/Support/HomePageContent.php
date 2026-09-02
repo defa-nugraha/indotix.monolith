@@ -3,12 +3,15 @@
 namespace App\Support;
 
 use App\Models\PublicPartner;
+use App\Models\PublicPartOfLogo;
 use App\Models\SystemSetting;
+use App\Models\Voucher;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
 class HomePageContent
 {
+    private const SPECIAL_PROMO_CARD_COUNT = 3;
     public const ICON_OPTIONS = [
         'BadgePercent' => 'Persen / Voucher',
         'Gift' => 'Hadiah / Promo',
@@ -53,6 +56,9 @@ class HomePageContent
         'TreePine' => 'Hutan Pinus',
         'Umbrella' => 'Pantai / Santai',
         'Volleyball' => 'Aktivitas Pantai',
+        'Users' => 'Komunitas / Industri',
+        'Globe' => 'Jaringan Global',
+        'Award' => 'Penghargaan / Reputasi',
     ];
 
     public const DEFAULTS = [
@@ -86,6 +92,10 @@ class HomePageContent
         'special_promo_video_subtitle' => 'Inspirasi wisata',
         'special_promo_video_url' => '',
         'special_promo_video_poster_url' => '',
+        'special_promo_video_2_title' => 'Promo wisata pilihan Indotix',
+        'special_promo_video_2_subtitle' => 'Promo tambahan',
+        'special_promo_video_2_url' => '',
+        'special_promo_video_2_poster_url' => '',
         'special_promo_card_1_title' => '',
         'special_promo_card_1_subtitle' => '',
         'special_promo_card_1_image_url' => '',
@@ -98,10 +108,6 @@ class HomePageContent
         'special_promo_card_3_subtitle' => '',
         'special_promo_card_3_image_url' => '',
         'special_promo_card_3_link_url' => '',
-        'special_promo_card_4_title' => '',
-        'special_promo_card_4_subtitle' => '',
-        'special_promo_card_4_image_url' => '',
-        'special_promo_card_4_link_url' => '',
         'promo_icon' => 'Gift',
         'promo_title' => 'Promo terbaik buat liburan irit!',
         'promo_link_label' => 'Lihat Semua Promo',
@@ -136,18 +142,35 @@ class HomePageContent
         'trust_card_3_icon' => 'Bell',
         'trust_card_3_title' => 'Notifikasi instan',
         'trust_card_3_description' => 'Terima update pesanan, e-tiket, dan informasi penting secara langsung.',
+        'part_of_eyebrow' => 'Part of',
+        'part_of_title' => 'El John Group',
+        'part_of_description' => 'Indotix adalah bagian dari ekosistem El John Group yang telah berpengalaman lebih dari 40 tahun di berbagai industri.',
+        'mobile_top_banner_title' => 'Liburan Seru, Momen Tak Terlupakan',
+        'mobile_top_banner_subtitle' => 'Temukan destinasi impian & dapatkan tiket terbaik di Indotix!',
+        'mobile_top_banner_cta_label' => 'Jelajahi Sekarang',
+        'mobile_top_banner_media_url' => '',
+        'mobile_top_banner_link_url' => '/wisata',
+        'mobile_promo_banner_title' => 'Diskon Spesial Liburan Akhir Pekan',
+        'mobile_promo_banner_subtitle' => 'Hemat hingga',
+        'mobile_promo_banner_highlight' => '30%',
+        'mobile_promo_banner_cta_label' => 'Lihat Promo',
+        'mobile_promo_banner_media_url' => '',
+        'mobile_promo_banner_link_url' => '/promo',
     ];
 
     private const IMAGE_UPLOAD_FIELDS = [
         'special_promo_video_poster_url' => 'special_promo_video_poster_url_file',
+        'special_promo_video_2_poster_url' => 'special_promo_video_2_poster_url_file',
         'special_promo_card_1_image_url' => 'special_promo_card_1_image_url_file',
         'special_promo_card_2_image_url' => 'special_promo_card_2_image_url_file',
         'special_promo_card_3_image_url' => 'special_promo_card_3_image_url_file',
-        'special_promo_card_4_image_url' => 'special_promo_card_4_image_url_file',
+        'mobile_top_banner_media_url' => 'mobile_top_banner_media_url_file',
+        'mobile_promo_banner_media_url' => 'mobile_promo_banner_media_url_file',
     ];
 
     private const VIDEO_UPLOAD_FIELDS = [
         'special_promo_video_url' => 'special_promo_video_url_file',
+        'special_promo_video_2_url' => 'special_promo_video_2_url_file',
     ];
 
     public static function keys(): array
@@ -175,6 +198,8 @@ class HomePageContent
     {
         $values = self::values();
 
+        $specialPromoCards = self::specialPromoCards($values);
+
         return [
             'search' => [
                 'placeholder' => $values['search_placeholder'],
@@ -197,14 +222,13 @@ class HomePageContent
                     'url' => $values['special_promo_video_url'],
                     'poster_url' => $values['special_promo_video_poster_url'],
                 ],
-                'cards' => collect(range(1, 4))
-                    ->map(fn (int $index) => [
-                        'title' => $values["special_promo_card_{$index}_title"],
-                        'subtitle' => $values["special_promo_card_{$index}_subtitle"],
-                        'image_url' => $values["special_promo_card_{$index}_image_url"],
-                        'link_url' => $values["special_promo_card_{$index}_link_url"],
-                    ])
-                    ->all(),
+                'video_secondary' => [
+                    'title' => $values['special_promo_video_2_title'],
+                    'subtitle' => $values['special_promo_video_2_subtitle'],
+                    'url' => $values['special_promo_video_2_url'],
+                    'poster_url' => $values['special_promo_video_2_poster_url'],
+                ],
+                'cards' => $specialPromoCards,
             ],
             'promo' => self::only($values, ['icon', 'title', 'link_label'], 'promo_'),
             'featured' => self::only($values, ['title', 'description', 'link_label'], 'featured_'),
@@ -224,6 +248,38 @@ class HomePageContent
                     self::only($values, ['icon', 'title', 'description'], 'trust_card_3_'),
                 ],
             ],
+            'part_of' => [
+                'eyebrow' => $values['part_of_eyebrow'],
+                'title' => $values['part_of_title'],
+                'description' => $values['part_of_description'],
+                'logos' => self::publicPartOfLogos(),
+            ],
+            'mobile_home' => self::mobileHomePayload($values),
+        ];
+    }
+
+    public static function mobileHomePayload(?array $values = null): array
+    {
+        $values ??= self::values();
+
+        return [
+            'top_banner' => [
+                'title' => $values['mobile_top_banner_title'],
+                'subtitle' => $values['mobile_top_banner_subtitle'],
+                'cta_label' => $values['mobile_top_banner_cta_label'],
+                'media_url' => $values['mobile_top_banner_media_url'],
+                'media_type' => self::mediaType($values['mobile_top_banner_media_url']),
+                'link_url' => $values['mobile_top_banner_link_url'],
+            ],
+            'promo_banner' => [
+                'title' => $values['mobile_promo_banner_title'],
+                'subtitle' => $values['mobile_promo_banner_subtitle'],
+                'highlight' => $values['mobile_promo_banner_highlight'],
+                'cta_label' => $values['mobile_promo_banner_cta_label'],
+                'media_url' => $values['mobile_promo_banner_media_url'],
+                'media_type' => self::mediaType($values['mobile_promo_banner_media_url']),
+                'link_url' => $values['mobile_promo_banner_link_url'],
+            ],
         ];
     }
 
@@ -239,6 +295,21 @@ class HomePageContent
                 'name' => $partner->name,
                 'image_url' => $partner->image_path ? Storage::url($partner->image_path) : null,
                 'link_url' => $partner->link_url,
+            ])
+            ->all();
+    }
+
+    public static function publicPartOfLogos(): array
+    {
+        return PublicPartOfLogo::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (PublicPartOfLogo $logo) => [
+                'id' => $logo->id,
+                'name' => $logo->name,
+                'image_url' => $logo->image_path ? Storage::url($logo->image_path) : null,
             ])
             ->all();
     }
@@ -263,6 +334,22 @@ class HomePageContent
             ->all();
 
         foreach (self::IMAGE_UPLOAD_FIELDS as $fileKey) {
+            if (in_array($fileKey, [
+                'special_promo_video_poster_url_file',
+                'special_promo_video_2_poster_url_file',
+                'mobile_top_banner_media_url_file',
+                'mobile_promo_banner_media_url_file',
+            ], true)) {
+                $rules[$fileKey] = [
+                    'nullable',
+                    'file',
+                    'mimetypes:image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/ogg',
+                    'max:102400',
+                ];
+
+                continue;
+            }
+
             $rules[$fileKey] = ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'];
         }
 
@@ -339,6 +426,84 @@ class HomePageContent
         return collect($keys)
             ->mapWithKeys(fn (string $key) => [$key => $values["{$prefix}{$key}"]])
             ->all();
+    }
+
+    private static function specialPromoCards(array $values): array
+    {
+        $cards = collect(range(1, self::SPECIAL_PROMO_CARD_COUNT))
+            ->map(fn (int $index) => [
+                'title' => $values["special_promo_card_{$index}_title"],
+                'subtitle' => $values["special_promo_card_{$index}_subtitle"],
+                'image_url' => $values["special_promo_card_{$index}_image_url"],
+                'link_url' => $values["special_promo_card_{$index}_link_url"],
+            ]);
+
+        $voucherCodes = $cards
+            ->map(fn (array $card) => self::voucherCodeFromUrl($card['link_url']))
+            ->filter()
+            ->map(fn (string $code) => strtoupper($code))
+            ->unique()
+            ->values();
+
+        $vouchers = $voucherCodes->isEmpty()
+            ? collect()
+            : Voucher::query()
+                ->whereIn('code', $voucherCodes->all())
+                ->get()
+                ->keyBy(fn (Voucher $voucher) => strtoupper($voucher->code));
+
+        return $cards
+            ->map(function (array $card) use ($vouchers) {
+                $voucherCode = self::voucherCodeFromUrl($card['link_url']);
+                $voucher = $voucherCode
+                    ? $vouchers->get(strtoupper($voucherCode))
+                    : null;
+
+                return [
+                    ...$card,
+                    'voucher_code' => $voucher?->code,
+                    'voucher_remaining_count' => self::remainingVoucherQuota($voucher),
+                ];
+            })
+            ->all();
+    }
+
+    private static function voucherCodeFromUrl(?string $url): ?string
+    {
+        $path = trim((string) $url);
+        if ($path === '') {
+            return null;
+        }
+
+        $path = parse_url($path, PHP_URL_PATH) ?: $path;
+        if (preg_match('~/promo/voucher/([^/?#]+)~', $path, $matches) !== 1) {
+            return null;
+        }
+
+        return strtoupper(urldecode($matches[1]));
+    }
+
+    private static function remainingVoucherQuota(?Voucher $voucher): ?int
+    {
+        if (! $voucher || (int) $voucher->quota_total <= 0) {
+            return null;
+        }
+
+        return max(0, (int) $voucher->quota_total - (int) $voucher->quota_used);
+    }
+
+    private static function mediaType(?string $url): string
+    {
+        $value = strtolower(trim((string) $url));
+
+        if ($value === '') {
+            return 'image';
+        }
+
+        $isVideo = preg_match('/\.(mp4|webm|ogg)(?:[?#].*)?$/', $value) === 1
+            || str_starts_with($value, 'data:video/');
+
+        return $isVideo ? 'video' : 'image';
     }
 
     private static function ruleFor(string $key): array

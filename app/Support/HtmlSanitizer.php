@@ -54,7 +54,7 @@ class HtmlSanitizer
             return null;
         }
 
-        $html = trim($html);
+        $html = trim(self::normalizeEncodingArtifacts($html));
         if ($html === '') {
             return '';
         }
@@ -66,7 +66,7 @@ class HtmlSanitizer
         $previous = libxml_use_internal_errors(true);
         $document = new DOMDocument('1.0', 'UTF-8');
         $document->loadHTML(
-            '<!DOCTYPE html><html><body><div id="__sanitize_root">'.$html.'</div></body></html>',
+            '<?xml encoding="UTF-8"><!DOCTYPE html><html><body><div id="__sanitize_root">'.$html.'</div></body></html>',
             LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD
         );
         libxml_clear_errors();
@@ -85,6 +85,15 @@ class HtmlSanitizer
         }
 
         return trim($output);
+    }
+
+    private static function normalizeEncodingArtifacts(string $html): string
+    {
+        return str_replace(
+            ["\xc2\xa0", 'Â&nbsp;', 'Â '],
+            [' ', '&nbsp;', ' '],
+            $html
+        );
     }
 
     private static function sanitizeChildren(DOMNode $node): void

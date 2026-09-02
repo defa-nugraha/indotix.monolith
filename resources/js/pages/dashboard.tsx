@@ -71,7 +71,7 @@ export default function Dashboard({
             ? 'Ringkasan Special Program hari ini'
             : isCustom
               ? 'Ringkasan sesuai akses role Anda'
-              : 'Ringkasan operasional hari ini';
+              : 'Ringkasan operasional wisata hari ini';
 
     const description = isAcademy
         ? 'Pantau booking kelas, tiket terjual, dan kelas aktif.'
@@ -81,7 +81,7 @@ export default function Dashboard({
             ? 'Pantau booking special program, tiket terjual, dan program aktif.'
             : isCustom
               ? 'Pantau transaksi, produk, dan tindak lanjut dari fitur yang dapat Anda akses.'
-              : 'Pantau performa tiket, aktivitas pengguna, dan transaksi terbaru dalam satu tempat.';
+              : 'Pantau performa tiket wisata, aktivitas pengguna, dan transaksi terbaru dalam satu tempat.';
 
     const summaryCards = isAcademy
         ? [
@@ -157,23 +157,23 @@ export default function Dashboard({
               ]
             : [
                   {
-                      title: 'Transaksi Hari Ini',
+                      title: 'Booking Wisata Hari Ini',
                       value: summary.transactions_today.toLocaleString('id-ID'),
-                      detail: 'Total transaksi berhasil hari ini',
+                      detail: 'Total booking wisata berhasil hari ini',
                       icon: CreditCard,
                       accent: 'bg-sky-50 text-sky-600',
                   },
                   {
                       title: 'Tiket Terjual',
                       value: summary.tickets_sold.toLocaleString('id-ID'),
-                      detail: 'Total tiket terjual hari ini',
+                      detail: 'Total tiket wisata terjual hari ini',
                       icon: Ticket,
                       accent: 'bg-amber-50 text-amber-600',
                   },
                   {
-                      title: 'Mitra Aktif',
+                      title: 'Mitra Wisata Aktif',
                       value: summary.active_partners.toLocaleString('id-ID'),
-                      detail: 'Mitra terverifikasi saat ini',
+                      detail: 'Mitra wisata terverifikasi saat ini',
                       icon: Users,
                       accent: 'bg-emerald-50 text-emerald-600',
                   },
@@ -182,7 +182,7 @@ export default function Dashboard({
     const systemCards = isAdmin
         ? [
               {
-                  title: 'Review Mitra',
+                  title: 'Review Mitra Wisata',
                   value: `${system.pending_reviews} pending`,
                   note: 'Perlu verifikasi admin',
                   accent:
@@ -201,7 +201,7 @@ export default function Dashboard({
               },
               {
                   title: 'Payout Pending',
-                  value: `${system.pending_payouts} mitra`,
+                  value: `${system.pending_payouts} mitra wisata`,
                   note: 'Perlu persetujuan',
                   accent:
                       system.pending_payouts > 0
@@ -303,7 +303,7 @@ export default function Dashboard({
                                     Aktivitas Terkini
                                 </p>
                                 <h2 className="mt-2 text-lg font-semibold text-slate-900">
-                                    Aktivitas terakhir di platform
+                                    Aktivitas terakhir di wisata
                                 </h2>
                             </div>
                             <Button

@@ -121,52 +121,25 @@ class DashboardController extends Controller
             ->whereIn('status', ['paid', 'completed'])
             ->sum('quantity');
 
-        $transactionsToday = $hotelBookingsToday
-            + $wisataBookingsToday
-            + $eventBookingsToday
-            + $academyBookingsToday
-            + $souvenirOrdersToday;
-        $ticketsSoldToday = $hotelRoomsSoldToday
-            + $wisataTicketsSoldToday
-            + $eventTicketsSoldToday
-            + $academyTicketsSoldToday;
+        $transactionsToday = $wisataBookingsToday;
+        $ticketsSoldToday = $wisataTicketsSoldToday;
 
-        $activePartners = MitraOnboarding::query()
+        $activePartners = MitraWisataOnboarding::query()
             ->where('verification_status', 'verified')
-            ->count()
-            + MitraWisataOnboarding::query()
-                ->where('verification_status', 'verified')
-                ->where('is_suspended', false)
-                ->count()
-            + MitraEventOnboarding::query()
-                ->where('verification_status', 'verified')
-                ->count();
+            ->where('is_suspended', false)
+            ->count();
 
-        $pendingReviews = MitraOnboarding::query()
+        $pendingReviews = MitraWisataOnboarding::query()
             ->where('verification_status', 'pending')
-            ->count()
-            + MitraWisataOnboarding::query()
-                ->where('verification_status', 'pending')
-                ->count()
-            + MitraEventOnboarding::query()
-                ->where('verification_status', 'pending')
-                ->count();
+            ->count();
 
-        $pendingPayouts = MitraOnboarding::query()
+        $pendingPayouts = MitraWisataOnboarding::query()
             ->where('payout_status', 'pending')
-            ->count()
-            + MitraWisataOnboarding::query()
-                ->where('payout_status', 'pending')
-                ->count();
+            ->count();
 
-        $pendingPayments = Booking::query()->where('status', 'pending_payment')->count()
-            + WisataBooking::query()->where('status', 'pending_payment')->count()
-            + EventBooking::query()
-                ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
-                ->where('status', 'pending_payment')
-                ->count()
-            + AcademyBooking::query()->where('status', 'pending_payment')->count()
-            + SouvenirOrder::query()->where('status', 'pending_payment')->count();
+        $pendingPayments = WisataBooking::query()
+            ->where('status', 'pending_payment')
+            ->count();
 
         $activities = collect();
 
@@ -202,65 +175,12 @@ class DashboardController extends Controller
                 ]);
             }
         } else {
-            $latestHotel = $canSeeHotel ? Booking::query()->with('hotel')->latest('created_at')->first() : null;
-            if ($latestHotel) {
-                $activities->push([
-                    'title' => 'Booking hotel '.($latestHotel->hotel?->name ?? 'baru'),
-                    'meta' => $latestHotel->rooms_count.' kamar • '.$latestHotel->created_at->diffForHumans(),
-                    'created_at' => $latestHotel->created_at?->timestamp ?? 0,
-                ]);
-            }
-
             $latestWisata = $canSeeWisata ? WisataBooking::query()->with('destination')->latest('created_at')->first() : null;
             if ($latestWisata) {
                 $activities->push([
                     'title' => 'Tiket wisata '.($latestWisata->destination?->destination_name ?? 'baru'),
                     'meta' => $latestWisata->quantity.' tiket • '.$latestWisata->created_at->diffForHumans(),
                     'created_at' => $latestWisata->created_at?->timestamp ?? 0,
-                ]);
-            }
-
-            $latestEvent = $canSeeEvent ? EventBooking::query()
-                ->whereHas('event', fn ($q) => $q->where('event_type', 'event'))
-                ->with('event')
-                ->latest('created_at')
-                ->first() : null;
-            if ($latestEvent) {
-                $activities->push([
-                    'title' => 'Booking event '.($latestEvent->event?->title ?? 'baru'),
-                    'meta' => $latestEvent->quantity.' tiket • '.$latestEvent->created_at->diffForHumans(),
-                    'created_at' => $latestEvent->created_at?->timestamp ?? 0,
-                ]);
-            }
-
-            $latestAcademy = $canSeeAcademy ? AcademyBooking::query()->with('academyClass')->latest('created_at')->first() : null;
-            if ($latestAcademy) {
-                $activities->push([
-                    'title' => 'Kelas Academy '.($latestAcademy->academyClass?->title ?? 'baru'),
-                    'meta' => $latestAcademy->quantity.' tiket • '.$latestAcademy->created_at->diffForHumans(),
-                    'created_at' => $latestAcademy->created_at?->timestamp ?? 0,
-                ]);
-            }
-
-            $latestSouvenir = $canSeeRetail ? SouvenirOrder::query()->latest('created_at')->first() : null;
-            if ($latestSouvenir) {
-                $activities->push([
-                    'title' => 'Order souvenir baru',
-                    'meta' => 'Order #'.$latestSouvenir->id.' • '.$latestSouvenir->created_at->diffForHumans(),
-                    'created_at' => $latestSouvenir->created_at?->timestamp ?? 0,
-                ]);
-            }
-
-            $latestSpecial = $canSeeSpecial ? EventBooking::query()
-                ->whereHas('event', fn ($q) => $q->where('event_type', 'special_program'))
-                ->with('event')
-                ->latest('created_at')
-                ->first() : null;
-            if ($latestSpecial) {
-                $activities->push([
-                    'title' => 'Booking special program '.($latestSpecial->event?->title ?? 'baru'),
-                    'meta' => $latestSpecial->quantity.' tiket • '.$latestSpecial->created_at->diffForHumans(),
-                    'created_at' => $latestSpecial->created_at?->timestamp ?? 0,
                 ]);
             }
         }

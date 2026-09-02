@@ -9,9 +9,11 @@ use App\Http\Controllers\Api\HistoryDetailController;
 use App\Http\Controllers\Api\MobileErrorLogController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\OtpController;
+use App\Http\Controllers\Api\PasskeyController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PublicBannerController;
+use App\Http\Controllers\Api\PublicContactController;
 use App\Http\Controllers\Api\PublicFaqController;
 use App\Http\Controllers\Api\PublicPrivacyPolicyController;
 use App\Http\Controllers\Api\PushTokenController;
@@ -19,6 +21,7 @@ use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\WisataBookingController;
 use App\Http\Controllers\Api\WisataController;
+use App\Http\Controllers\Api\WisataTicketScanController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -28,12 +31,22 @@ Route::prefix('auth')->group(function () {
     Route::post('google', [SocialAuthController::class, 'google']);
     Route::post('password/forgot', [PasswordResetController::class, 'requestOtp']);
     Route::post('password/reset', [PasswordResetController::class, 'reset']);
+    Route::post('passkeys/login/options', [PasskeyController::class, 'loginOptions'])
+        ->middleware('throttle:10,1');
+    Route::post('passkeys/login', [PasskeyController::class, 'login'])
+        ->middleware('throttle:5,1');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
         Route::post('logout', [AuthController::class, 'logout']);
         Route::post('otp/verify', [OtpController::class, 'verify']);
         Route::post('otp/resend', [OtpController::class, 'resend']);
+        Route::get('passkeys', [PasskeyController::class, 'index']);
+        Route::post('passkeys/register/options', [PasskeyController::class, 'registerOptions'])
+            ->middleware('throttle:5,1');
+        Route::post('passkeys/register', [PasskeyController::class, 'register'])
+            ->middleware('throttle:5,1');
+        Route::delete('passkeys', [PasskeyController::class, 'destroy']);
     });
 });
 
@@ -99,7 +112,16 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/bookings')->grou
     Route::get('{booking}/ticket', [WisataBookingController::class, 'ticket']);
 });
 
+Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/ticket-scans')->group(function () {
+    Route::get('lookup', [WisataTicketScanController::class, 'lookup']);
+    Route::post('use', [WisataTicketScanController::class, 'use']);
+});
+
 Route::get('banners', [PublicBannerController::class, 'index'])
+    ->middleware('api.public-cache:300');
+Route::get('mobile/home', [PublicBannerController::class, 'mobileHome'])
+    ->middleware('api.public-cache:300');
+Route::get('public/contact', [PublicContactController::class, 'show'])
     ->middleware('api.public-cache:300');
 Route::get('faqs', [PublicFaqController::class, 'index'])
     ->middleware('api.public-cache:300');

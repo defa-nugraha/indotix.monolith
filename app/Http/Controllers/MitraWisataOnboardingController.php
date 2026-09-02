@@ -19,17 +19,8 @@ class MitraWisataOnboardingController extends Controller
     public function show(Request $request): Response
     {
         $user = $request->user();
-        if ($user->mitra_onboarding_type === 'hotel') {
-            return redirect()->route('mitra.onboarding');
-        }
-        if ($user->mitra_onboarding_type === 'event') {
-            return redirect()->route('mitra.event.onboarding');
-        }
-        if (! $user->mitra_onboarding_type) {
-            return redirect()->route('mitra.dashboard')->withErrors([
-                'mitra' => 'Silakan pilih jenis mitra terlebih dahulu.',
-            ]);
-        }
+        $this->ensureWisataMitra($request);
+
         $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
@@ -64,6 +55,8 @@ class MitraWisataOnboardingController extends Controller
     public function updateStepOne(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $this->ensureWisataMitra($request);
+
         $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
@@ -71,7 +64,7 @@ class MitraWisataOnboardingController extends Controller
         $data = $request->validate([
             'responsible_name' => ['nullable', 'string', 'max:255'],
             'responsible_phone' => ['nullable', 'string', 'max:50'],
-            'responsible_role' => ['nullable', 'in:owner,manager,pokdarwis,staff'],
+            'responsible_role' => ['nullable', 'string', 'max:80'],
         ]);
 
         $onboarding->fill($data);
@@ -84,13 +77,15 @@ class MitraWisataOnboardingController extends Controller
     public function updateStepTwo(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
+        $this->ensureWisataMitra($request);
+
         $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
 
         $data = $request->validate([
             'destination_name' => ['nullable', 'string', 'max:255'],
-            'destination_type' => ['nullable', 'in:alam,edukasi,budaya,wahana,event'],
+            'destination_type' => ['nullable', 'string', 'max:80'],
             'description' => ['nullable', 'string', 'max:1000'],
             'highlights' => ['nullable', 'string', 'max:1000'],
             'province_code' => ['nullable', 'exists:provinces,code'],
@@ -162,6 +157,8 @@ class MitraWisataOnboardingController extends Controller
     public function updateStepThree(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $user = $request->user();
+        $this->ensureWisataMitra($request);
+
         $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
@@ -172,9 +169,9 @@ class MitraWisataOnboardingController extends Controller
             'legal_doc_type' => ['nullable', 'in:nib,sk_desa,surat_pokdarwis,izin_wisata,dokumen_kawasan'],
             'legal_doc_number' => ['nullable', 'string', 'max:255'],
             'legal_doc_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:'.self::MAX_IMAGE_KILOBYTES],
-            'bank_name' => ['nullable', 'string', 'max:255'],
-            'bank_account_number' => ['nullable', 'string', 'max:100'],
-            'bank_account_name' => ['nullable', 'string', 'max:255'],
+            'bank_name' => ['nullable', 'required_with:bank_account_number,bank_account_name', 'string', 'max:255'],
+            'bank_account_number' => ['nullable', 'required_with:bank_name,bank_account_name', 'string', 'regex:/^[0-9]{6,30}$/'],
+            'bank_account_name' => ['nullable', 'required_with:bank_name,bank_account_number', 'string', 'max:255'],
         ], [
             '*.max' => 'Ukuran setiap dokumen maksimal 5 MB.',
             '*.mimes' => 'Format dokumen tidak sesuai.',
@@ -215,6 +212,8 @@ class MitraWisataOnboardingController extends Controller
     public function submitVerification(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $this->ensureWisataMitra($request);
+
         $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
@@ -245,9 +244,9 @@ class MitraWisataOnboardingController extends Controller
         \Validator::make($payload, [
             'responsible_name' => ['required', 'string', 'max:255'],
             'responsible_phone' => ['required', 'string', 'max:50'],
-            'responsible_role' => ['required', 'in:owner,manager,pokdarwis,staff'],
+            'responsible_role' => ['required', 'string', 'max:80'],
             'destination_name' => ['required', 'string', 'max:255'],
-            'destination_type' => ['required', 'in:alam,edukasi,budaya,wahana,event'],
+            'destination_type' => ['required', 'string', 'max:80'],
             'description' => ['required', 'string', 'max:1000'],
             'province_code' => ['required', 'exists:provinces,code'],
             'city_code' => ['required', 'exists:regencies,code'],
@@ -276,6 +275,8 @@ class MitraWisataOnboardingController extends Controller
     public function submitPayout(Request $request): RedirectResponse
     {
         $user = $request->user();
+        $this->ensureWisataMitra($request);
+
         $onboarding = MitraWisataOnboarding::query()->firstOrCreate([
             'user_id' => $user->id,
         ]);
@@ -288,7 +289,7 @@ class MitraWisataOnboardingController extends Controller
 
         \Validator::make($payload, [
             'bank_name' => ['required', 'string', 'max:255'],
-            'bank_account_number' => ['required', 'string', 'max:100'],
+            'bank_account_number' => ['required', 'string', 'regex:/^[0-9]{6,30}$/'],
             'bank_account_name' => ['required', 'string', 'max:255'],
         ])->validate();
 
@@ -298,5 +299,14 @@ class MitraWisataOnboardingController extends Controller
         ]);
 
         return back()->with('status', 'payout-submitted');
+    }
+
+    private function ensureWisataMitra(Request $request): void
+    {
+        abort_unless(
+            $request->user()?->mitra_onboarding_type === 'wisata',
+            403,
+            'Pendaftaran mitra saat ini hanya tersedia untuk pengelola wisata.'
+        );
     }
 }

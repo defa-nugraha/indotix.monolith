@@ -125,61 +125,61 @@ it('blocks non admin roles from admin and root admin hotel management routes', f
     'hotel partner' => 'mitra',
 ]);
 
-it('enforces custom rbac crud actions on root hotel management routes', function () {
+it('keeps retired root hotel management routes unavailable', function () {
     $viewOnly = accessMatrixCustomAdmin(['hotel_properties.view']);
 
     $this->actingAs($viewOnly)
         ->get('/hotels')
-        ->assertOk();
+        ->assertNotFound();
 
     $this->actingAs($viewOnly)
         ->get('/hotels/create')
-        ->assertForbidden();
+        ->assertNotFound();
 
     $this->actingAs($viewOnly)
         ->get('/room-types')
-        ->assertForbidden();
+        ->assertNotFound();
 
     $creator = accessMatrixCustomAdmin(['hotel_properties.view', 'hotel_properties.create']);
 
     $this->actingAs($creator)
         ->get('/hotels/create')
-        ->assertOk();
+        ->assertNotFound();
 });
 
-it('keeps legacy product admins inside their product boundaries', function () {
+it('keeps retired legacy product admin surfaces unavailable', function () {
     $academyAdmin = accessMatrixUser('admin_academy');
     $retailAdmin = accessMatrixUser('admin_retail');
     $specialProgramAdmin = accessMatrixUser('admin_special_program');
 
-    $this->actingAs($academyAdmin)->get('/admin/academy/classes')->assertOk();
-    $this->actingAs($academyAdmin)->get('/admin/retail-shop/products')->assertRedirect('/dashboard');
-    $this->actingAs($academyAdmin)->get('/admin/special-programs')->assertRedirect('/dashboard');
+    $this->actingAs($academyAdmin)->get('/admin/academy/classes')->assertNotFound();
+    $this->actingAs($academyAdmin)->get('/admin/retail-shop/products')->assertNotFound();
+    $this->actingAs($academyAdmin)->get('/admin/special-programs')->assertNotFound();
 
-    $this->actingAs($retailAdmin)->get('/admin/retail-shop/products')->assertOk();
-    $this->actingAs($retailAdmin)->get('/admin/academy/classes')->assertRedirect('/dashboard');
-    $this->actingAs($retailAdmin)->get('/admin/special-programs')->assertRedirect('/dashboard');
+    $this->actingAs($retailAdmin)->get('/admin/retail-shop/products')->assertNotFound();
+    $this->actingAs($retailAdmin)->get('/admin/academy/classes')->assertNotFound();
+    $this->actingAs($retailAdmin)->get('/admin/special-programs')->assertNotFound();
 
-    $this->actingAs($specialProgramAdmin)->get('/admin/special-programs')->assertOk();
-    $this->actingAs($specialProgramAdmin)->get('/admin/academy/classes')->assertRedirect('/dashboard');
-    $this->actingAs($specialProgramAdmin)->get('/admin/retail-shop/products')->assertRedirect('/dashboard');
+    $this->actingAs($specialProgramAdmin)->get('/admin/special-programs')->assertNotFound();
+    $this->actingAs($specialProgramAdmin)->get('/admin/academy/classes')->assertNotFound();
+    $this->actingAs($specialProgramAdmin)->get('/admin/retail-shop/products')->assertNotFound();
 });
 
-it('keeps mitra product routes isolated by onboarding type', function () {
+it('restricts mitra product routes to wisata operations only', function () {
     $hotelMitra = accessMatrixVerifiedHotelMitra();
     $wisataMitra = accessMatrixVerifiedWisataMitra();
     $eventMitra = accessMatrixVerifiedEventMitra();
 
-    $this->actingAs($hotelMitra)->get('/mitra/hotels')->assertOk();
+    $this->actingAs($hotelMitra)->get('/mitra/hotels')->assertNotFound();
     $this->actingAs($hotelMitra)->get('/mitra/wisata/tickets')->assertRedirect('/mitra/dashboard');
-    $this->actingAs($hotelMitra)->get('/mitra/events')->assertRedirect('/mitra/dashboard');
+    $this->actingAs($hotelMitra)->get('/mitra/events')->assertNotFound();
 
     $this->actingAs($wisataMitra)->get('/mitra/wisata/tickets')->assertOk();
-    $this->actingAs($wisataMitra)->get('/mitra/hotels')->assertRedirect('/mitra/dashboard');
-    $this->actingAs($wisataMitra)->get('/mitra/events')->assertRedirect('/mitra/dashboard');
+    $this->actingAs($wisataMitra)->get('/mitra/hotels')->assertNotFound();
+    $this->actingAs($wisataMitra)->get('/mitra/events')->assertNotFound();
 
-    $this->actingAs($eventMitra)->get('/mitra/events')->assertOk();
-    $this->actingAs($eventMitra)->get('/mitra/hotels')->assertRedirect('/mitra/dashboard');
+    $this->actingAs($eventMitra)->get('/mitra/events')->assertNotFound();
+    $this->actingAs($eventMitra)->get('/mitra/hotels')->assertNotFound();
     $this->actingAs($eventMitra)->get('/mitra/wisata/tickets')->assertRedirect('/mitra/dashboard');
 });
 

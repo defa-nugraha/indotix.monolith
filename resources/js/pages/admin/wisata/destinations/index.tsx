@@ -77,12 +77,17 @@ export default function AdminWisataDestinationsIndex({
                                 admin.
                             </p>
                         </div>
-                        <Link href="/admin/wisata/destinations/create">
-                            <Button className="bg-sky-600 text-white hover:bg-sky-700">Tambah Destinasi</Button>
+                        <Link
+                            href="/admin/wisata/destinations/create"
+                            className="w-full md:w-auto"
+                            data-coach="admin-wisata-destination-create"
+                        >
+                            <Button className="w-full bg-sky-600 text-white hover:bg-sky-700 md:w-auto">Tambah Destinasi</Button>
                         </Link>
                     </div>
                     <form
                         className="mt-6 grid gap-3 md:grid-cols-4"
+                        data-coach="admin-wisata-destination-filters"
                         onSubmit={(event) => {
                             event.preventDefault();
                             submitFilters(event.currentTarget);
@@ -109,6 +114,7 @@ export default function AdminWisataDestinationsIndex({
                                 <option value="pending">Pending</option>
                                 <option value="verified">Verified</option>
                                 <option value="rejected">Rejected</option>
+                                <option value="suspended">Suspend</option>
                             </select>
                         </label>
                         <label className="grid gap-1 text-xs font-medium text-slate-600">
@@ -128,7 +134,7 @@ export default function AdminWisataDestinationsIndex({
                         </label>
                         <Button
                             type="submit"
-                            className="bg-sky-600 text-white hover:bg-sky-700"
+                            className="w-full bg-sky-600 text-white hover:bg-sky-700 md:w-auto"
                         >
                             Filter
                         </Button>
@@ -136,7 +142,10 @@ export default function AdminWisataDestinationsIndex({
                 </section>
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                    <div className="overflow-hidden rounded-2xl border border-slate-100">
+                    <div
+                        className="overflow-hidden rounded-2xl border border-slate-100"
+                        data-coach="admin-wisata-destination-table"
+                    >
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>

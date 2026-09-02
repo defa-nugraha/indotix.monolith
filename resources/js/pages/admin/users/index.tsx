@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import AppLayout from '@/layouts/app-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import {
     Dialog,
@@ -97,7 +98,7 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                         </div>
                         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                             <DialogTrigger asChild>
-                                <Button className="bg-sky-600 text-white hover:bg-sky-700">
+                                <Button className="w-full bg-sky-600 text-white hover:bg-sky-700 sm:w-auto">
                                     Tambah User
                                 </Button>
                             </DialogTrigger>
@@ -123,7 +124,7 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                                         });
                                     }}
                                 >
-                                    <UserFormFields form={createForm} passwordLabel="Password" passwordPlaceholder="Minimal 8 karakter" />
+                                    <UserFormFields form={createForm} passwordLabel="Password" passwordPlaceholder="Minimal 8 karakter" passwordRequired />
                                     <DialogFooter className="gap-2">
                                         <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
                                             Batal
@@ -177,7 +178,7 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                                 <option value="unverified">Belum verifikasi</option>
                             </select>
                         </label>
-                        <Button type="submit" className="bg-sky-600 text-white hover:bg-sky-700">
+                        <Button type="submit" className="w-full bg-sky-600 text-white hover:bg-sky-700 md:w-auto">
                             Terapkan filter
                         </Button>
                     </form>
@@ -217,7 +218,7 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                                             </Badge>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <div className="flex flex-wrap gap-2">
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
                                                 <Button
                                                     asChild
                                                     variant="outline"
@@ -336,16 +337,19 @@ function UserFormFields({
     form,
     passwordLabel,
     passwordPlaceholder,
+    passwordRequired = false,
 }: {
     form: ReturnType<typeof useForm<UserFormShape>>;
     passwordLabel: string;
     passwordPlaceholder: string;
+    passwordRequired?: boolean;
 }) {
     return (
         <>
             <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">Nama</label>
+                <Label required className="text-sm font-semibold text-slate-700">Nama</Label>
                 <input
+                    required
                     className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                     value={form.data.name}
                     onChange={(event) => form.setData('name', event.target.value)}
@@ -353,9 +357,10 @@ function UserFormFields({
                 <InputError message={form.errors.name} />
             </div>
             <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">Email</label>
+                <Label required className="text-sm font-semibold text-slate-700">Email</Label>
                 <input
                     type="email"
+                    required
                     className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                     value={form.data.email}
                     onChange={(event) => form.setData('email', event.target.value)}
@@ -387,9 +392,10 @@ function UserFormFields({
                 </div>
             </div>
             <div className="grid gap-2">
-                <label className="text-sm font-semibold text-slate-700">{passwordLabel}</label>
+                <Label required={passwordRequired} className="text-sm font-semibold text-slate-700">{passwordLabel}</Label>
                 <input
                     type="password"
+                    required={passwordRequired}
                     className="h-10 rounded-lg border border-slate-200 px-3 text-sm"
                     value={form.data.password}
                     placeholder={passwordPlaceholder}

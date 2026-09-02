@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PartnerTermsDocument extends Model
 {
-    public const BUSINESS_TYPES = ['hotel', 'wisata', 'event'];
+    public const BUSINESS_TYPES = ['wisata'];
 
     protected $fillable = [
         'business_type',

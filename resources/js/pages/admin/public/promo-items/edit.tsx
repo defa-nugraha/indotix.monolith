@@ -134,8 +134,8 @@ export default function PromoItemEdit({
                         }}
                     >
                         <div className="grid gap-2">
-                            <Label>Judul promo</Label>
-                            <Input value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
+                            <Label required>Judul promo</Label>
+                            <Input required value={form.data.title} onChange={(event) => form.setData('title', event.target.value)} />
                             <InputError message={form.errors.title} />
                         </div>
                         <div className="grid gap-2">
@@ -144,8 +144,9 @@ export default function PromoItemEdit({
                             <InputError message={form.errors.slug} />
                         </div>
                         <div className="grid gap-2">
-                            <Label>Kategori promo</Label>
+                            <Label required>Kategori promo</Label>
                             <select
+                                required
                                 value={form.data.category}
                                 onChange={(event) => form.setData('category', event.target.value)}
                                 className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-sky-400 focus:outline-none"

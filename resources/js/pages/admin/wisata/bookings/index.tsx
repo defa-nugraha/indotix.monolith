@@ -3,6 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import Swal from 'sweetalert2';
 
 type Option = { id: string | number; label: string };
 
@@ -51,6 +52,44 @@ export default function AdminWisataBookingsIndex({ bookings, destinations, filte
         router.get('/admin/wisata/bookings', Object.fromEntries(data.entries()), {
             preserveState: true,
         });
+    };
+
+    const cancelBooking = async (booking: BookingRow) => {
+        const result = await Swal.fire({
+            title: 'Batalkan booking?',
+            input: 'textarea',
+            inputLabel: 'Alasan pembatalan',
+            inputPlaceholder: 'Tulis alasan pembatalan...',
+            showCancelButton: true,
+            confirmButtonText: 'Batalkan booking',
+            cancelButtonText: 'Tutup',
+            inputValidator: (value) => {
+                if (!value) return 'Alasan pembatalan wajib diisi.';
+                return null;
+            },
+        });
+
+        if (!result.isConfirmed) return;
+
+        router.post(
+            `/admin/wisata/bookings/${booking.id}/cancel`,
+            { reason: result.value },
+            {
+                preserveScroll: true,
+                onSuccess: () =>
+                    Swal.fire({
+                        title: 'Berhasil',
+                        text: 'Booking dibatalkan.',
+                        icon: 'success',
+                    }),
+                onError: () =>
+                    Swal.fire({
+                        title: 'Gagal',
+                        text: 'Booking tidak dapat dibatalkan.',
+                        icon: 'error',
+                    }),
+            },
+        );
     };
 
     return (
@@ -142,12 +181,23 @@ export default function AdminWisataBookingsIndex({ bookings, destinations, filte
                                         </td>
                                         <td className="px-4 py-3">Rp {row.total_price.toLocaleString('id-ID')}</td>
                                         <td className="px-4 py-3">
-                                            <Link
-                                                href={`/admin/wisata/bookings/${row.id}`}
-                                                className="text-sm font-semibold text-sky-600 hover:underline"
-                                            >
-                                                Detail
-                                            </Link>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <Link
+                                                    href={`/admin/wisata/bookings/${row.id}`}
+                                                    className="text-sm font-semibold text-sky-600 hover:underline"
+                                                >
+                                                    Detail
+                                                </Link>
+                                                {['pending', 'pending_payment'].includes(row.status) && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => cancelBooking(row)}
+                                                        className="text-sm font-semibold text-rose-600 hover:underline"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

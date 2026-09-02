@@ -26,8 +26,8 @@ test('admin public content menu follows active public home sections', function (
         ->toContain('<span>Konten Publik</span>')
         ->toContain('/admin/public/home')
         ->toContain('Halaman Home')
-        ->toContain('Banner')
-        ->toContain('Promo Spesial')
+        ->not->toContain('label: \'Banner\'')
+        ->not->toContain('label: \'Promo Spesial\'')
         ->toContain('Kontak')
         ->toContain('/admin/public/partners')
         ->toContain('Partner Kami')
@@ -37,4 +37,18 @@ test('admin public content menu follows active public home sections', function (
     expect($routes)
         ->toContain('admin/public/partners')
         ->not->toContain('admin/public/promo-videos');
+});
+
+test('admin wisata menu exposes voucher management and hides affiliate menu', function () {
+    $sidebar = file_get_contents(__DIR__.'/../../resources/js/components/app-sidebar-admin.tsx');
+    $routes = file_get_contents(__DIR__.'/../../routes/web.php');
+
+    expect($sidebar)
+        ->toContain('/admin/wisata/vouchers')
+        ->toContain('Voucher Wisata')
+        ->toContain('const showAffiliateSection = false');
+
+    expect($routes)
+        ->toContain("admin/wisata/vouchers")
+        ->toContain("admin.wisata.vouchers.index");
 });
