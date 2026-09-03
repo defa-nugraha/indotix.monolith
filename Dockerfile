@@ -44,11 +44,11 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY . .
 
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress \
+RUN mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-progress \
     && if [ -f package-lock.json ]; then npm ci; else npm install; fi \
     && npm run build \
     && npm prune --omit=dev \
-    && mkdir -p storage/app/public storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/entrypoint.sh /usr/local/bin/indotix-entrypoint
