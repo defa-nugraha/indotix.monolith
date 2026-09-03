@@ -7,6 +7,9 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      DB_HOST: mariadb
+      REDIS_HOST: redis
     depends_on:
       mariadb:
         condition: service_healthy
@@ -36,6 +39,9 @@ services:
     command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=120
     env_file:
       - .env
+    environment:
+      DB_HOST: mariadb
+      REDIS_HOST: redis
     depends_on:
       app:
         condition: service_started
@@ -51,6 +57,9 @@ services:
     command: sh -c "while true; do php artisan schedule:run --no-interaction; sleep 60; done"
     env_file:
       - .env
+    environment:
+      DB_HOST: mariadb
+      REDIS_HOST: redis
     depends_on:
       app:
         condition: service_started
@@ -64,6 +73,9 @@ services:
     command: php artisan reverb:start --host=0.0.0.0 --port=8080
     env_file:
       - .env
+    environment:
+      DB_HOST: mariadb
+      REDIS_HOST: redis
     depends_on:
       app:
         condition: service_started
@@ -77,15 +89,16 @@ services:
     image: mariadb:11.4
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-indotix}
-      MYSQL_USER: ${DB_USERNAME:-indotix}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_DATABASE:-indotix}
+      MARIADB_USER: ${DB_USERNAME:-indotix}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-${DB_PASSWORD:?DB_PASSWORD is required}}
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 30
     volumes:
       - indotix_db:/var/lib/mysql
 
