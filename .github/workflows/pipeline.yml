@@ -62,6 +62,9 @@ jobs:
       - name: Lint Frontend
         run: npm run lint
 
+      - name: Build Assets
+        run: npm run build
+
       - name: Type Check
         run: npm run types
 
