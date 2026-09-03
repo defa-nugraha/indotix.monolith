@@ -73,6 +73,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: quality
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test
+          MYSQL_DATABASE: indotix_laravel_testing
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptest"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     strategy:
       fail-fast: true
       matrix:
@@ -105,6 +119,9 @@ jobs:
 
       - name: Generate Application Key
         run: php artisan key:generate
+
+      - name: Prepare Test Database
+        run: mysql --host=127.0.0.1 --port=3306 --user=root --password=test -e "CREATE DATABASE IF NOT EXISTS indotix_laravel_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
       - name: Build Assets
         run: npm run build
