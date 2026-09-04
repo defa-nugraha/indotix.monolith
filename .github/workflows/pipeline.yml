@@ -212,33 +212,7 @@ jobs:
           printf '%s\n' "${SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Deploy via SSH
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
-          SSH_PATH: ${{ secrets.SSH_PATH }}
-        run: |
-          set -euo pipefail
-
-          SSH_OPTS="-i ~/.ssh/deploy_key -p ${SSH_PORT} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "mkdir -p '${SSH_PATH}'"
-
-          rsync -az --delete \
-            -e "ssh ${SSH_OPTS}" \
-            --exclude='.git*' \
-            --exclude='.github/' \
-            --exclude='node_modules/' \
-            --exclude='vendor/' \
-            --exclude='storage/' \
-            --exclude='tests/' \
-            --exclude='docs/' \
-            --exclude='.env' \
-            --exclude='database/database.sqlite' \
-            --exclude='bootstrap/cache/*.php' \
-            ./ "${SSH_USER}@${SSH_HOST}:${SSH_PATH%/}/"
-
-      - name: Build and restart Docker services
+      - name: Deploy files via SSH
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
@@ -254,13 +228,21 @@ jobs:
             exit 1
           fi
 
+          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "mkdir -p '${SSH_PATH}'"
+
+          rsync -az --delete \
+            -e "ssh ${SSH_OPTS}" \
+            --exclude='.git*' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='storage/' \
+            --exclude='tests/' \
+            --exclude='docs/' \
+            --exclude='.env' \
+            --exclude='database/database.sqlite' \
+            ./ "${SSH_USER}@${SSH_HOST}:${SSH_PATH%/}/"
+
           printf '%s\n' "${ENV_FILE}" | ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cat > '${SSH_PATH%/}/.env' && chmod 600 '${SSH_PATH%/}/.env'"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && docker compose -f docker-compose.prod.yml up -d --build --remove-orphans"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && docker compose -f docker-compose.prod.yml exec -T app php artisan migrate --force"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && docker compose -f docker-compose.prod.yml exec -T app php artisan optimize:clear"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && docker compose -f docker-compose.prod.yml exec -T app php artisan config:cache"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && docker compose -f docker-compose.prod.yml exec -T app php artisan view:cache"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && docker compose -f docker-compose.prod.yml exec -T queue php artisan queue:restart"
 
       - name: WhatsApp notify success
         if: success()
