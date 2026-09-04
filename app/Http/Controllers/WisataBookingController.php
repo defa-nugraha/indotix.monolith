@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\WisataTicketMail;
 use App\Models\MitraWisataOnboarding;
+use App\Models\SystemSetting;
 use App\Models\UserNotification;
 use App\Models\WisataBooking;
 use App\Models\WisataAffiliate;
@@ -29,7 +30,6 @@ use Spatie\LaravelPdf\Facades\Pdf;
 
 class WisataBookingController extends Controller
 {
-    private const PAYMENT_TTL_MINUTES = 15;
     private const MAX_TICKETS_PER_BOOKING = 20;
 
     public function prepare(Request $request): RedirectResponse
@@ -253,7 +253,7 @@ class WisataBookingController extends Controller
                 'total_price' => $total,
                 'status' => 'pending_payment',
                 'payment_status' => 'pending',
-                'payment_deadline' => now()->addMinutes(self::PAYMENT_TTL_MINUTES),
+                'payment_deadline' => now()->addMinutes(SystemSetting::wisataBookingTimeoutMinutes()),
                 'guest_name' => $data['guest_name'],
                 'guest_email' => $data['guest_email'],
                 'guest_phone' => $data['guest_phone'],

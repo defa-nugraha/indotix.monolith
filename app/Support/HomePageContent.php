@@ -73,7 +73,7 @@ class HomePageContent
         'category_4_icon' => 'Utensils',
         'category_4_label' => 'Kuliner',
         'category_5_icon' => 'HomeIcon',
-        'category_5_label' => 'Desa Wisata',
+        'category_5_label' => 'Wahana',
         'category_6_icon' => 'Sparkles',
         'category_6_label' => 'Religi',
         'category_7_icon' => 'Waves',
@@ -144,7 +144,7 @@ class HomePageContent
         'trust_card_3_description' => 'Terima update pesanan, e-tiket, dan informasi penting secara langsung.',
         'part_of_eyebrow' => 'Part of',
         'part_of_title' => 'El John Group',
-        'part_of_description' => 'Indotix adalah bagian dari ekosistem El John Group yang telah berpengalaman lebih dari 40 tahun di berbagai industri.',
+        'part_of_description' => 'Indotix adalah bagian dari ekosistem El John Group di berbagai industri.',
         'mobile_top_banner_title' => 'Liburan Seru, Momen Tak Terlupakan',
         'mobile_top_banner_subtitle' => 'Temukan destinasi impian & dapatkan tiket terbaik di Indotix!',
         'mobile_top_banner_cta_label' => 'Jelajahi Sekarang',
@@ -189,7 +189,13 @@ class HomePageContent
             ->mapWithKeys(function (string $default, string $key) use ($settings) {
                 $value = $settings->get("home_{$key}")?->value;
 
-                return [$key => is_string($value) && $value !== '' ? $value : $default];
+                $resolved = is_string($value) && $value !== '' ? $value : $default;
+
+                if ($key === 'category_5_label' && self::isLegacyDesaWisataLabel($resolved)) {
+                    $resolved = 'Wahana';
+                }
+
+                return [$key => $resolved];
             })
             ->all();
     }
@@ -323,6 +329,15 @@ class HomePageContent
             'image_upload_fields' => self::IMAGE_UPLOAD_FIELDS,
             'video_upload_fields' => self::VIDEO_UPLOAD_FIELDS,
         ];
+    }
+
+    private static function isLegacyDesaWisataLabel(string $value): bool
+    {
+        return in_array(
+            mb_strtolower(trim($value)),
+            ['desa wisata', 'desa_wisata', 'desa-wisata'],
+            true,
+        );
     }
 
     public static function validationRules(): array

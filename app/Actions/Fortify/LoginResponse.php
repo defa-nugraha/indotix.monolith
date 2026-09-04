@@ -30,6 +30,10 @@ class LoginResponse implements LoginResponseContract
             return redirect()->route('verification.notice');
         }
 
+        if ($request->session()->has('wisata_booking_draft')) {
+            return redirect()->route('wisata.booking.review');
+        }
+
         if ($request->session()->has('booking_draft')) {
             return redirect()->route('booking.review');
         }

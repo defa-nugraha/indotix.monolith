@@ -59,6 +59,44 @@ test('wisata discovery listing respects live status and search filters', functio
         ->assertJsonPath('meta.applied_filters.q', 'Bandung');
 });
 
+test('wisata package listing only returns destinations with active package tickets', function () {
+    $packageDestination = discoveryWisataDestination(true, 'Wisata Paket Aktif');
+    $regularDestination = discoveryWisataDestination(true, 'Wisata Reguler Saja');
+
+    WisataTicket::query()->create([
+        'mitra_wisata_onboarding_id' => $packageDestination->id,
+        'name' => 'Paket Keluarga',
+        'price' => 150000,
+        'quota' => 50,
+        'daily_quota' => 50,
+        'ticket_kind' => 'package',
+        'is_active' => true,
+        'is_closed' => false,
+    ]);
+
+    $this->getJson('/api/discovery/wisata?ticket_kind=package')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.title', $packageDestination->destination_name)
+        ->assertJsonMissing(['title' => $regularDestination->destination_name]);
+});
+
+test('wisata category facets canonicalize retired desa wisata values as wahana', function () {
+    $legacyDestination = discoveryWisataDestination(true, 'Wisata Legacy Desa');
+    $legacyDestination->update(['destination_type' => 'desa_wisata']);
+    $wahanaDestination = discoveryWisataDestination(true, 'Wisata Wahana');
+    $wahanaDestination->update(['destination_type' => 'wahana']);
+
+    $this->getJson('/api/discovery/wisata/filters')
+        ->assertOk()
+        ->assertJsonFragment(['label' => 'Wahana', 'value' => 'wahana', 'count' => 2])
+        ->assertJsonMissing(['label' => 'Desa Wisata']);
+
+    $this->getJson('/api/discovery/wisata?category=wahana')
+        ->assertOk()
+        ->assertJsonPath('meta.total', 2);
+});
+
 test('non wisata discovery type is not available', function () {
     $this->getJson('/api/discovery/events')->assertNotFound();
     $this->getJson('/api/discovery/souvenirs')->assertNotFound();

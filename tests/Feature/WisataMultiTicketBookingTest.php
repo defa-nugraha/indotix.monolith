@@ -2,6 +2,7 @@
 
 use App\Mail\WisataTicketMail;
 use App\Models\MitraWisataOnboarding;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
@@ -61,6 +62,11 @@ test('user can book multiple wisata ticket types in one order', function () {
         'email_verified_at' => now(),
         'phone' => '081234567890',
     ]);
+    SystemSetting::query()->create([
+        'key' => 'wisata_booking_timeout_minutes',
+        'value' => '25',
+        'type' => 'number',
+    ]);
 
     $this->actingAs($user)
         ->post('/wisata/booking/prepare', [
@@ -118,7 +124,8 @@ test('user can book multiple wisata ticket types in one order', function () {
 
     expect($booking->quantity)->toBe(6)
         ->and((int) $booking->total_price)->toBe(400000)
-        ->and((int) $booking->wisata_ticket_id)->toBe((int) $regular->id);
+        ->and((int) $booking->wisata_ticket_id)->toBe((int) $regular->id)
+        ->and($booking->payment_deadline->between(now()->addMinutes(24), now()->addMinutes(26)))->toBeTrue();
 
     $this->assertDatabaseHas('wisata_booking_items', [
         'wisata_booking_id' => $booking->id,
@@ -153,6 +160,33 @@ test('user can book multiple wisata ticket types in one order', function () {
         ->assertJsonPath('tickets.1.available', 21)
         ->assertJsonPath('tickets.0.is_entry_ticket', true)
         ->assertJsonPath('tickets.1.is_entry_ticket', false);
+});
+
+test('guest booking draft survives login and continues to wisata review', function () {
+    [$destination, $regular] = createWisataMultiTicketFixture();
+    $visitDate = now()->addDays(2)->toDateString();
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+
+    $this->post('/wisata/booking/prepare', [
+        'destination_id' => $destination->id,
+        'ticket_id' => $regular->id,
+        'visit_date' => $visitDate,
+        'quantity' => 1,
+    ])
+        ->assertRedirect(route('login', absolute: false))
+        ->assertSessionHas('wisata_booking_draft.destination_id', $destination->id)
+        ->assertSessionHas('wisata_booking_draft.ticket_id', $regular->id);
+
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ])->assertRedirect(route('wisata.booking.review', absolute: false));
+
+    $this->assertAuthenticatedAs($user);
 });
 
 test('user must include an entry ticket when booking continuation ticket', function () {

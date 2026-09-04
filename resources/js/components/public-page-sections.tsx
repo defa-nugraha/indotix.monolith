@@ -249,7 +249,7 @@ export function PublicPartOfSection({
         eyebrow: 'Part of',
         title: 'El John Group',
         description:
-            'Indotix adalah bagian dari ekosistem El John Group yang telah berpengalaman lebih dari 40 tahun di berbagai industri.',
+            'Indotix adalah bagian dari ekosistem El John Group di berbagai industri.',
         ...(homeContent?.part_of ?? {}),
     };
     const logos = homeContent?.part_of?.logos ?? [];

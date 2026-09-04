@@ -95,6 +95,8 @@ class PublicHomeController extends Controller
             ->distinct()
             ->pluck('destination_type')
             ->filter()
+            ->map(fn (string $type) => $this->canonicalDestinationType($type))
+            ->unique()
             ->sortBy(fn (string $type) => $categoryOrder[$type] ?? 999)
             ->values();
 
@@ -102,7 +104,7 @@ class PublicHomeController extends Controller
             ->map(function (string $type) use ($categoryLabels) {
                 $products = MitraWisataOnboarding::query()
                     ->publiclyVisible()
-                    ->where('destination_type', $type)
+                    ->whereIn('destination_type', $this->destinationTypeValues($type))
                     ->with(['tickets'])
                     ->latest('updated_at')
                     ->take(3)
@@ -158,8 +160,6 @@ class PublicHomeController extends Controller
             'budaya' => 'Budaya',
             'edukasi' => 'Edukasi',
             'kuliner' => 'Kuliner',
-            'desa_wisata' => 'Desa Wisata',
-            'desa-wisata' => 'Desa Wisata',
             'religi' => 'Religi',
             'pantai' => 'Pantai',
             'gunung' => 'Gunung',
@@ -170,6 +170,22 @@ class PublicHomeController extends Controller
             'wahana' => 'Wahana',
             'event' => 'Event',
         ];
+    }
+
+    private function canonicalDestinationType(string $type): string
+    {
+        $normalized = mb_strtolower(trim($type));
+
+        return in_array($normalized, ['desa wisata', 'desa_wisata', 'desa-wisata'], true)
+            ? 'wahana'
+            : $normalized;
+    }
+
+    private function destinationTypeValues(string $type): array
+    {
+        return $type === 'wahana'
+            ? ['wahana', 'desa wisata', 'desa_wisata', 'desa-wisata']
+            : [$type];
     }
 
     private function extractLatitude(?string $mapsUrl): ?float

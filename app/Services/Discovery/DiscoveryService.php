@@ -458,6 +458,7 @@ class DiscoveryService
         $data = Validator::make($request->query(), [
             'q' => ['nullable', 'string', 'max:255'],
             'category' => ['nullable', 'string', 'max:100'],
+            'ticket_kind' => ['nullable', 'in:single,package'],
             'category_id' => ['nullable', 'integer', 'min:1'],
             'location' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],
@@ -733,7 +734,14 @@ class DiscoveryService
     private function applyWisataFilters(Builder $query, array $filters): void
     {
         if ($category = $filters['category'] ?? null) {
-            $query->where('destination_type', 'like', '%'.$category.'%');
+            $query->whereIn('destination_type', $this->wisataCategoryValues($category));
+        }
+
+        if ($ticketKind = $filters['ticket_kind'] ?? null) {
+            $query->whereHas('tickets', fn (Builder $ticketQuery) => $ticketQuery
+                ->where('ticket_kind', $ticketKind)
+                ->where('is_active', true)
+                ->where('is_closed', false));
         }
 
         $this->applyCityOrLocationFilter($query, 'city_code', ['destination_name', 'address_full'], $filters);
@@ -1507,7 +1515,7 @@ class DiscoveryService
         });
 
         return [
-            'categories' => $this->simpleFacet($base, 'destination_type'),
+            'categories' => $this->wisataCategoryFacets($base),
             'locations' => $cityCounts,
             'cities' => $cityCounts,
             'price_range' => $range,
@@ -1625,6 +1633,52 @@ class DiscoveryService
             ->map(fn ($row) => ['label' => ucfirst((string) $row->{$column}), 'value' => (string) $row->{$column}, 'count' => (int) $row->count])
             ->values()
             ->all();
+    }
+
+    private function wisataCategoryFacets(Builder $base): array
+    {
+        return (clone $base)
+            ->select('destination_type', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('destination_type')
+            ->where('destination_type', '!=', '')
+            ->groupBy('destination_type')
+            ->get()
+            ->map(function ($row) {
+                $value = $this->canonicalWisataCategory((string) $row->destination_type);
+
+                return [
+                    'label' => str($value)->replace(['-', '_'], ' ')->title()->toString(),
+                    'value' => $value,
+                    'count' => (int) $row->count,
+                ];
+            })
+            ->groupBy('value')
+            ->map(fn ($items, string $value) => [
+                'label' => $items->first()['label'],
+                'value' => $value,
+                'count' => $items->sum('count'),
+            ])
+            ->sortBy('label')
+            ->values()
+            ->all();
+    }
+
+    private function canonicalWisataCategory(string $category): string
+    {
+        $normalized = mb_strtolower(trim($category));
+
+        return in_array($normalized, ['desa wisata', 'desa_wisata', 'desa-wisata'], true)
+            ? 'wahana'
+            : $normalized;
+    }
+
+    private function wisataCategoryValues(string $category): array
+    {
+        $category = $this->canonicalWisataCategory($category);
+
+        return $category === 'wahana'
+            ? ['wahana', 'desa wisata', 'desa_wisata', 'desa-wisata']
+            : [$category];
     }
 
     private function cityFacets(Builder $base, string $cityColumn): array

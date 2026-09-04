@@ -56,6 +56,7 @@ class PublicWisataController extends Controller
                 'visit_date' => $request->input('visit_date') ?? $today->toDateString(),
                 'quantity' => (int) $request->input('quantity', 1),
                 'sort' => $request->input('sort'),
+                'ticket_kind' => $request->input('ticket_kind'),
             ],
             'destinations' => $destinations,
             'discovery' => $listing['discovery'] ?? null,

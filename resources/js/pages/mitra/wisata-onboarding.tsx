@@ -83,7 +83,7 @@ const destinationTypes = [
 const roleOptions = [
     { id: 'owner', label: 'Pemilik' },
     { id: 'manager', label: 'Pengelola' },
-    { id: 'pokdarwis', label: 'Ketua Pokdarwis' },
+    { id: 'pokdarwis', label: 'Marketing' },
     { id: 'staff', label: 'Staff Operasional' },
 ];
 
@@ -1198,7 +1198,7 @@ export default function MitraWisataOnboarding({
                                             SK Desa / BUMDes
                                         </SelectItem>
                                         <SelectItem value="surat_pokdarwis">
-                                            Surat Pokdarwis
+                                            Surat Marketing
                                         </SelectItem>
                                         <SelectItem value="izin_wisata">
                                             Surat Izin Pengelolaan Wisata

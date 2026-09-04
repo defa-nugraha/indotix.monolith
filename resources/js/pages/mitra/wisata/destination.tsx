@@ -73,7 +73,7 @@ const destinationTypes = [
 const responsibleRoles = [
     { id: 'owner', label: 'Pemilik / Owner' },
     { id: 'manager', label: 'Manajer Operasional' },
-    { id: 'pokdarwis', label: 'Pokdarwis' },
+    { id: 'pokdarwis', label: 'Marketing' },
     { id: 'staff', label: 'Staf' },
 ];
 const otherOptionValue = '__other';
@@ -81,7 +81,7 @@ const otherOptionValue = '__other';
 const legalDocTypes = [
     { id: 'nib', label: 'NIB' },
     { id: 'sk_desa', label: 'SK Desa' },
-    { id: 'surat_pokdarwis', label: 'Surat Pokdarwis' },
+    { id: 'surat_pokdarwis', label: 'Surat Marketing' },
     { id: 'izin_wisata', label: 'Izin Wisata' },
     { id: 'dokumen_kawasan', label: 'Dokumen Kawasan' },
 ];

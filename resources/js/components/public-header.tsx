@@ -129,6 +129,7 @@ export default function PublicHeader({
     const mainNav = [
         { label: 'Beranda', href: '/' },
         { label: 'Destinasi', href: '/wisata' },
+        { label: 'Paket Wisata', href: '/wisata?ticket_kind=package' },
         { label: 'Promo', href: '/promo' },
         { label: 'Jelajah', href: '/jelajah' },
         { label: 'Tentang', href: '/about' },

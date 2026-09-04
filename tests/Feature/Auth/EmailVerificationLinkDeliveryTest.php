@@ -124,6 +124,7 @@ test('api registration sends verification link for a new unverified account', fu
         'email' => 'verify-link-api@example.com',
         'phone' => '081234567890',
         'password' => 'password123',
+        'terms_accepted' => true,
         'role' => 'user',
         'device_name' => 'test-device',
     ])
@@ -163,6 +164,7 @@ test('api registration for existing unverified email sends a new verification li
         'email' => $user->email,
         'phone' => '081234567891',
         'password' => 'password123',
+        'terms_accepted' => true,
         'role' => 'user',
         'device_name' => 'test-device',
     ])
@@ -177,4 +179,17 @@ test('api registration for existing unverified email sends a new verification li
         VerifyEmailLinkNotification::class,
         fn (VerifyEmailLinkNotification $notification) => $notification->isForMobileApp(),
     );
+});
+
+test('api registration requires legal acceptance', function () {
+    $this->postJson('/api/auth/register', [
+        'name' => 'API Legal Acceptance User',
+        'email' => 'api-legal-acceptance@example.com',
+        'phone' => '081234567890',
+        'password' => 'password123',
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('terms_accepted');
+
+    expect(User::query()->where('email', 'api-legal-acceptance@example.com')->exists())->toBeFalse();
 });

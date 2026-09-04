@@ -84,6 +84,43 @@ test('wisata booking quote rejects draft destination even with valid ids', funct
         ->assertJsonPath('message', 'Destinasi tidak tersedia.');
 });
 
+test('wisata booking quote returns a price and subtotal for every selected ticket', function () {
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+    $destination = createWisataVisibilityDestination(true, 'Wisata Harga Per Tiket');
+    $entryTicket = $destination->tickets()->firstOrFail();
+    $entryTicket->update(['price' => 50000, 'is_entry_ticket' => true]);
+    $continuationTicket = WisataTicket::query()->create([
+        'mitra_wisata_onboarding_id' => $destination->id,
+        'name' => 'Tiket Wahana',
+        'price' => 25000,
+        'quota' => 100,
+        'daily_quota' => 100,
+        'is_entry_ticket' => false,
+        'is_active' => true,
+        'is_closed' => false,
+    ]);
+
+    $this->actingAs($user, 'sanctum')
+        ->postJson('/api/wisata/bookings/quote', [
+            'destination_id' => Crypt::encryptString((string) $destination->id),
+            'visit_date' => now()->addDay()->toDateString(),
+            'items' => [
+                ['ticket_id' => Crypt::encryptString((string) $entryTicket->id), 'quantity' => 1],
+                ['ticket_id' => Crypt::encryptString((string) $continuationTicket->id), 'quantity' => 2],
+            ],
+        ])
+        ->assertOk()
+        ->assertJsonPath('pricing.total', 100000)
+        ->assertJsonPath('pricing.items.0.unit_price', 50000)
+        ->assertJsonPath('pricing.items.0.subtotal', 50000)
+        ->assertJsonPath('pricing.items.1.unit_price', 25000)
+        ->assertJsonPath('pricing.items.1.subtotal', 50000);
+});
+
 test('wisata booking quote counts pending bookings against ticket quota', function () {
     $user = User::factory()->create([
         'role' => 'user',

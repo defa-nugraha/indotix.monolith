@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Support\QrCodeRenderer;
 use App\Support\WisataEntryQrTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,10 @@ class WisataEntryQrTemplateController extends Controller
     {
         return Inertia::render('admin/public/entry-qr/edit', [
             'template' => WisataEntryQrTemplate::formPayload(),
+            'preview' => [
+                'template' => WisataEntryQrTemplate::publicPayload(),
+                'qr_image' => QrCodeRenderer::dataUri('indotix-entry-qr-preview', 320),
+            ],
         ]);
     }
 

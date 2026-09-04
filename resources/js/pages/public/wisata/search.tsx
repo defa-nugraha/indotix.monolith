@@ -35,6 +35,7 @@ type Filters = {
     visit_date?: string | null;
     quantity?: number;
     sort?: string | null;
+    ticket_kind?: 'single' | 'package' | null;
 };
 
 const sortOptions = [
@@ -198,6 +199,7 @@ export default function WisataSearch({
                 visit_date: form.visit_date,
                 quantity: form.quantity,
                 sort,
+                ticket_kind: filters.ticket_kind ?? undefined,
             },
             { preserveScroll: true, preserveState: true },
         );
@@ -214,7 +216,11 @@ export default function WisataSearch({
         setSelectedTypes([]);
         setSelectedCities([]);
         setMaxPrice(highestPrice);
-        router.get('/wisata', next, { preserveScroll: true });
+        router.get(
+            '/wisata',
+            { ...next, ticket_kind: filters.ticket_kind ?? undefined },
+            { preserveScroll: true },
+        );
     };
 
     const toggleValue = (

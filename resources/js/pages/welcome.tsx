@@ -297,6 +297,11 @@ export default function Welcome({
             active: true,
             href: '/wisata',
         },
+        {
+            label: 'Paket Wisata',
+            icon: BaggageClaim,
+            href: '/wisata?ticket_kind=package',
+        },
     ];
     const bannerCategoryLabels = useMemo(() => {
         const fallbackLabels = [
@@ -304,7 +309,7 @@ export default function Welcome({
             'Budaya',
             'Edukasi',
             'Kuliner',
-            'Desa Wisata',
+            'Wahana',
             'Religi',
             'Pantai',
             'Gunung',
@@ -779,17 +784,19 @@ export default function Welcome({
         videoUrl,
         posterUrl,
         title,
+        className = '',
     }: {
         compact?: boolean;
         ariaLabel: string;
         videoUrl: string | null;
         posterUrl: string | null;
         title: string;
+        className?: string;
     }) => (
         <div
             className={`group relative overflow-hidden rounded-3xl bg-slate-100 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.65)] ring-1 ring-slate-200 ${
                 compact ? 'aspect-[1920/960]' : 'aspect-[1920/960]'
-            }`}
+            } ${className}`}
             aria-label={ariaLabel}
         >
             {videoUrl ? (
@@ -1044,7 +1051,7 @@ export default function Welcome({
                 >
                     <nav
                         aria-label="Kategori wisata"
-                        className="hidden border-y border-slate-100 bg-white md:block"
+                        className="border-y border-slate-100 bg-white"
                     >
                         <div className="flex items-center justify-center gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                             {bannerCategoryLabels.map((label) => (
@@ -1192,13 +1199,14 @@ export default function Welcome({
                         <span className="mt-3 block h-1.5 w-8 rounded-full bg-sky-500" />
                     </div>
 
-                    <div className="grid items-stretch gap-4 sm:gap-5 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                        <div className="grid gap-5">
+                    <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:grid-rows-2 lg:items-stretch">
+                        <div className="grid gap-5 lg:contents">
                             {renderSpecialPromoVideo({
                                 ariaLabel: 'Putar video promo spesial',
                                 videoUrl: playableSpecialPromoVideoUrl,
                                 posterUrl: specialPromoVideoPosterUrl,
                                 title: homeContent.special_promo.video.title,
+                                className: 'lg:col-start-1 lg:row-start-1 lg:aspect-auto',
                             })}
 
                             {renderSpecialPromoVideo({
@@ -1209,17 +1217,18 @@ export default function Welcome({
                                 title:
                                     homeContent.special_promo.video_secondary
                                         ?.title ?? 'Video promo tambahan',
+                                className: 'lg:col-start-1 lg:row-start-2 lg:aspect-auto',
                             })}
                         </div>
 
-                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-5">
+                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-5 lg:col-start-2 lg:row-span-2">
                             {specialPromoSlots
                                 .slice(0, 2)
                                 .map((promo, index) =>
                                     renderSpecialPromoImageSlot(
                                         promo,
                                         index,
-                                        'h-full min-w-0 aspect-square min-h-0 sm:aspect-[4/5] sm:min-h-[260px] lg:min-h-0',
+                                        'h-full min-w-0 aspect-square min-h-0 sm:aspect-[4/5] sm:min-h-[260px] lg:aspect-auto lg:min-h-0',
                                     ),
                                 )}
 
@@ -1227,7 +1236,7 @@ export default function Welcome({
                                 {renderSpecialPromoImageSlot(
                                     specialPromoSlots[2],
                                     2,
-                                    'h-full w-full min-h-[150px] min-w-0 aspect-[16/7] sm:aspect-[16/5] sm:min-h-[180px] lg:min-h-0',
+                                    'h-full w-full min-h-[150px] min-w-0 aspect-[16/7] sm:aspect-[16/5] sm:min-h-[180px] lg:aspect-auto lg:min-h-0',
                                     'object-contain bg-white p-1 sm:object-cover sm:p-0',
                                 )}
                             </div>

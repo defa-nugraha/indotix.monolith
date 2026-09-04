@@ -21,6 +21,7 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['required', 'string', 'max:50'],
             'password' => ['required', 'string', 'min:8'],
+            'terms_accepted' => ['accepted'],
             'role' => ['nullable', Rule::in(['user', 'mitra'])],
             'device_name' => ['nullable', 'string', 'max:255'],
         ]);

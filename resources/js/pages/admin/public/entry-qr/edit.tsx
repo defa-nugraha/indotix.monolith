@@ -1,5 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { CircleCheck, Globe2, Image as ImageIcon, QrCode, ScanLine, Ticket } from 'lucide-react';
 import AppLayout from '@/layouts/app-layout';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -33,6 +35,16 @@ type TemplateValues = {
 type TemplatePayload = {
     values: TemplateValues;
     text_limits: Record<string, number>;
+};
+
+type PreviewPayload = {
+    qr_image: string;
+    template: TemplateValues & {
+        top_logo_urls: string[];
+        qr_logo_url: string | null;
+        background_image_url: string | null;
+        playstore_image_url: string | null;
+    };
 };
 
 type ImageKey =
@@ -115,9 +127,12 @@ const textFields: Array<{
 
 export default function EntryQrTemplateEdit({
     template,
+    preview,
 }: {
     template: TemplatePayload;
+    preview: PreviewPayload;
 }) {
+    const [activeTab, setActiveTab] = useState<'settings' | 'preview'>('settings');
     const form = useForm<FormData>({
         _method: 'put',
         scan_label: template.values.scan_label ?? '',
@@ -148,6 +163,10 @@ export default function EntryQrTemplateEdit({
     };
 
     const previewImage = (key: ImageKey) => template.values[key];
+    const previewTemplate = preview.template;
+    const previewLogos = previewTemplate.top_logo_urls.length
+        ? previewTemplate.top_logo_urls.slice(0, 3)
+        : ['/logo.png'];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -168,7 +187,27 @@ export default function EntryQrTemplateEdit({
                     </p>
                 </section>
 
-                <form
+                <div className="flex flex-wrap gap-2 rounded-2xl border border-sky-100 bg-white/90 p-2 shadow-sm">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('settings')}
+                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${activeTab === 'settings' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-600 hover:bg-sky-50 hover:text-sky-700'}`}
+                    >
+                        <ImageIcon className="h-4 w-4" />
+                        Pengaturan Template
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('preview')}
+                        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${activeTab === 'preview' ? 'bg-sky-600 text-white shadow-sm' : 'text-slate-600 hover:bg-sky-50 hover:text-sky-700'}`}
+                        data-coach="entry-qr-preview-tab"
+                    >
+                        <QrCode className="h-4 w-4" />
+                        Preview QR
+                    </button>
+                </div>
+
+                {activeTab === 'settings' ? <form
                     className="space-y-6"
                     onSubmit={(event) => {
                         event.preventDefault();
@@ -345,7 +384,56 @@ export default function EntryQrTemplateEdit({
                             </Button>
                         </div>
                     </div>
-                </form>
+                </form> : (
+                    <section className="grid gap-6 rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm lg:grid-cols-[minmax(0,390px)_minmax(0,1fr)]" data-coach="entry-qr-preview">
+                        <div className="relative mx-auto aspect-[1086/1536] w-full max-w-[390px] overflow-hidden rounded-[26px] border-[6px] border-[#116fd4] bg-white shadow-[0_28px_70px_-42px_rgba(15,23,42,0.5)]">
+                            <div className="absolute inset-x-0 top-0 h-[40%] overflow-hidden bg-gradient-to-br from-[#0b55c7] via-[#0487df] to-[#23d4e4]">
+                                {previewTemplate.background_image_url && <img src={previewTemplate.background_image_url} alt="" aria-hidden="true" className="absolute inset-x-0 top-[4%] h-full w-full object-cover" />}
+                                <div className="absolute top-0 left-0 flex h-[16%] w-[34%] items-center justify-center gap-2 rounded-br-[56px] bg-white px-4 shadow-sm">
+                                    {previewLogos.map((logoUrl, index) => <img key={`${logoUrl}-${index}`} src={logoUrl} alt={index === 0 ? 'Logo QR masuk' : ''} className={`h-[60%] w-auto object-contain ${previewLogos.length > 1 ? 'max-w-[30%]' : 'max-w-full'}`} />)}
+                                </div>
+                                <div className="absolute top-[3.7%] right-[4%] inline-flex items-center gap-2 rounded-full border border-white/70 bg-[#145ccf]/88 px-4 py-2.5 text-sm font-bold text-white">
+                                    <ScanLine className="h-5 w-5" />
+                                    <span>{previewTemplate.scan_label}</span>
+                                </div>
+                                <div className="absolute top-[20.2%] left-[6%] max-w-[78%] text-white">
+                                    <h2 className="text-[29px] leading-[1.04] font-black tracking-wide uppercase">NAMA DESTINASI WISATA</h2>
+                                    <div className="mt-4 h-1.5 w-14 rounded-full bg-cyan-200" />
+                                    <p className="mt-4 max-w-[300px] text-[14px] leading-snug font-medium">{previewTemplate.lead_text}</p>
+                                </div>
+                            </div>
+                            <div className="absolute inset-x-0 top-[35.5%] bottom-0 rounded-t-[46px] bg-white px-[7%] text-center">
+                                <div className="absolute top-[3.6%] left-1/2 w-[32%] max-w-[125px] -translate-x-1/2">
+                                    <div className="relative rounded-[20px] bg-white p-3 shadow-[0_18px_36px_-18px_rgba(15,23,42,0.55)] ring-1 ring-slate-100">
+                                        <img src={preview.qr_image} alt="Contoh QR masuk wisata" className="mx-auto aspect-square w-full" />
+                                        {previewTemplate.qr_logo_url && <span className="absolute top-1/2 left-1/2 flex h-[18px] w-[18px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-md bg-white p-0.5 shadow-sm ring-1 ring-slate-100"><img src={previewTemplate.qr_logo_url} alt="" aria-hidden="true" className="h-full w-full object-contain" /></span>}
+                                    </div>
+                                    <div className="absolute -bottom-5 left-1/2 flex h-10 w-10 -translate-x-1/2 items-center justify-center rounded-[14px] bg-sky-600 text-white"><CircleCheck className="h-6 w-6" /></div>
+                                </div>
+                                <div className="absolute inset-x-[7%] bottom-[36.8%] text-center">
+                                    <div className="text-[11px] leading-tight font-black tracking-wide text-[#123a75] uppercase">{previewTemplate.main_title}</div>
+                                    <p className="mx-auto mt-2.5 max-w-[300px] text-[9.5px] leading-snug text-[#263b67]">{previewTemplate.main_description}</p>
+                                </div>
+                                <div className="absolute inset-x-[8%] bottom-[21%] flex items-center justify-between gap-3 rounded-2xl border border-sky-100 bg-white/90 px-3 py-2 text-left shadow-sm">
+                                    <div className="flex min-w-0 items-center gap-2 text-[#123a75]"><Globe2 className="h-4 w-4 shrink-0 text-sky-600" /><span className="truncate text-[10px] font-black">{previewTemplate.website_label}</span></div>
+                                    {previewTemplate.playstore_image_url && <img src={previewTemplate.playstore_image_url} alt="Google Play" className="h-6 w-auto shrink-0 object-contain" />}
+                                </div>
+                            </div>
+                            <div className="absolute inset-x-0 bottom-0 flex h-[12.5%] items-center justify-between gap-1 bg-gradient-to-r from-[#0c55be] via-[#078ee4] to-[#2bd8df] px-[6%] text-[9.5px] font-bold text-white">
+                                <span className="flex min-w-0 flex-1 items-center justify-center gap-1 truncate"><QrCode className="h-3.5 w-3.5 shrink-0" />{previewTemplate.footer_step_one}</span>
+                                <span className="h-[48%] w-px bg-white/70" />
+                                <span className="flex min-w-0 flex-1 items-center justify-center gap-1 truncate"><Ticket className="h-3.5 w-3.5 shrink-0" />{previewTemplate.footer_step_two}</span>
+                                <span className="h-[48%] w-px bg-white/70" />
+                                <span className="flex min-w-0 flex-1 items-center justify-center gap-1 truncate"><CircleCheck className="h-3.5 w-3.5 shrink-0" />{previewTemplate.footer_step_three}</span>
+                            </div>
+                        </div>
+                        <div className="self-center">
+                            <p className="text-xs font-semibold text-sky-600 uppercase">Preview QR</p>
+                            <h2 className="mt-2 text-xl font-semibold text-slate-900">Tampilan poster untuk mitra wisata</h2>
+                            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">Preview memakai template yang sudah tersimpan. Simpan perubahan pada tab Pengaturan Template, lalu buka kembali tab ini untuk memeriksa teks, logo, dan keterbacaan QR.</p>
+                        </div>
+                    </section>
+                )}
             </div>
         </AppLayout>
     );

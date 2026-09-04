@@ -56,6 +56,8 @@ test('public home product surface prioritizes wisata', function () {
 
     expect($contentSource)
         ->toContain('Cari kota, destinasi, atau tiket wisata...')
+        ->toContain("'category_5_label' => 'Wahana'")
+        ->not->toContain("'category_5_label' => 'Desa Wisata'")
         ->toContain('category_1_label')
         ->toContain('Kupon Diskon 12% untuk Pengguna Baru')
         ->toContain('Promo terbaik buat liburan irit!')
@@ -64,6 +66,10 @@ test('public home product surface prioritizes wisata', function () {
         ->toContain('Destinasi Wisata Unggulan')
         ->toContain('Jelajah Indotix')
         ->toContain('Tiket wisata lebih mudah, aman, dan praktis');
+
+    expect($contentSource)
+        ->not->toContain('40 tahun')
+        ->not->toContain('part_of_stat_');
 
     expect($heroPosition)
         ->not->toBeFalse();
