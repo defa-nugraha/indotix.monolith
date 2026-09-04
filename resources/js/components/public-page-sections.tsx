@@ -407,6 +407,7 @@ export function PublicTrustSection({
 }
 
 export function PublicFooter({ contact }: { contact?: PublicContact | null }) {
+    const companyName = contact?.company_name?.trim() || 'Indotix';
     const addressText =
         contact?.address ??
         'Neo Soho Capital 40th Floor\nJl. Tanjung Duren Raya No 1\nJakarta Barat, DKI Jakarta 11470';
@@ -423,6 +424,9 @@ export function PublicFooter({ contact }: { contact?: PublicContact | null }) {
                             className="h-11 w-36 object-contain"
                         />
                     </Link>
+                    <p className="mt-3 text-sm font-semibold text-slate-900">
+                        {companyName}
+                    </p>
                     <p className="mt-3 text-sm text-slate-600">
                         {addressLines.map((line, index) => (
                             <span key={line}>

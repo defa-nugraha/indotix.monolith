@@ -486,6 +486,7 @@ export default function Welcome({
         contact?.address ??
         'Neo Soho Capital 40th Floor\\nJl. Tanjung Duren Raya No 1\\nJakarta Barat, DKI Jakarta 11470';
     const addressLines = addressText.split('\\n');
+    const companyName = contact?.company_name?.trim() || 'Indotix';
     const downloadAppUrl = contact?.download_url?.trim() || '#';
     const downloadLinkAttributes =
         downloadAppUrl !== '#' ? { target: '_blank', rel: 'noreferrer' } : {};
@@ -1492,6 +1493,9 @@ export default function Welcome({
                                 className="h-11 w-36 object-contain"
                             />
                         </Link>
+                        <p className="mt-3 text-sm font-semibold text-slate-900">
+                            {companyName}
+                        </p>
                         <p className="mt-3 text-sm text-slate-600">
                             {addressLines.map((line, index) => (
                                 <span key={line}>

@@ -153,7 +153,7 @@ export default function EntryQrTemplateEdit({
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="QR Masuk Mitra" />
 
-            <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
+            <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <p className="text-xs font-semibold text-sky-600 uppercase">
                         Konten Publik

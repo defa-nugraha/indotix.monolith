@@ -33,6 +33,7 @@ test('public home follows the tourism design without dummy promo rails', functio
 
     expect($home)
         ->toContain('space-y-8 pb-0 font-sans text-slate-800')
+        ->toContain('const companyName = contact?.company_name?.trim() || \'Indotix\'')
         ->toContain('bannerCategoryLabels.map')
         ->toContain('visibleBannerSlides.map')
         ->toContain('activeBanner')
@@ -77,6 +78,7 @@ test('public home follows the tourism design without dummy promo rails', functio
         ->toContain('homeContent.blog.eyebrow')
         ->toContain('Baca artikel')
         ->toContain('mb-10 sm:mb-14')
+        ->toContain('{companyName}')
         ->not->toContain('absolute top-6 left-1/4 -rotate-12 animate-bounce')
         ->not->toContain('Lihat semua promo')
         ->not->toContain('homeContent.categories.map')
@@ -123,6 +125,12 @@ test('public home follows the tourism design without dummy promo rails', functio
         ->toContain('.public-shell footer > div:first-child')
         ->toContain('grid-template-columns: repeat(5, minmax(0, 1fr))')
         ->toContain('grid-template-columns: repeat(2, minmax(0, 1fr))');
+
+    $publicSections = file_get_contents(__DIR__.'/../../resources/js/components/public-page-sections.tsx');
+
+    expect($publicSections)
+        ->toContain('const companyName = contact?.company_name?.trim() || \'Indotix\'')
+        ->toContain('{companyName}');
 });
 
 test('retail cart is removed from the public mobile drawer', function () {

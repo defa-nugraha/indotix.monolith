@@ -43,7 +43,8 @@ test('product tour targets are attached to business critical pages', function ()
     expect($entryQr)
         ->toContain('data-coach="entry-qr-text"')
         ->toContain('data-coach="entry-qr-images"')
-        ->toContain('data-coach="entry-qr-save"');
+        ->toContain('data-coach="entry-qr-save"')
+        ->not->toContain("font-['Plus_Jakarta_Sans']");
 
     expect($mitraScans)
         ->toContain('data-coach="mitra-scan-tabs"')
