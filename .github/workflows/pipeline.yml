@@ -252,6 +252,8 @@ jobs:
           rsync -az -e "ssh ${SSH_OPTS}" .env "${SSH_USER}@${SSH_HOST}:${SSH_PATH%/}/.env"
           ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "chmod 600 '${SSH_PATH%/}/.env'"
           ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && php -r '\$key = \"\"; foreach (file(\".env\", FILE_IGNORE_NEW_LINES) as \$line) { if (str_starts_with(\$line, \"APP_KEY=\")) { \$key = trim(substr(\$line, 8), \"\\\"'\\'' \\t\"); break; } } if (\$key === \"\") { fwrite(STDERR, \"APP_KEY is missing from deployed .env\\n\"); exit(1); }'"
+          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && php -r 'foreach ([\"bootstrap/cache/config.php\", \"bootstrap/cache/routes-v7.php\", \"bootstrap/cache/events.php\"] as \$file) { if (is_file(\$file)) { unlink(\$file); } }'"
+          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && php artisan optimize:clear"
 
       - name: WhatsApp notify success
         if: success()
