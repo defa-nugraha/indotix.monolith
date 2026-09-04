@@ -1,0 +1,55 @@
+name: Build release artifact
+description: Build an immutable Laravel release artifact with environment-scoped public Vite variables.
+
+inputs:
+  artifact-name:
+    description: GitHub artifact name.
+    required: true
+  frontend-build-env:
+    description: Optional newline-separated VITE_* variables for this deployment environment.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Prepare public frontend build configuration
+      shell: bash
+      env:
+        FRONTEND_BUILD_ENV: ${{ inputs.frontend-build-env }}
+      run: |
+        set -Eeuo pipefail
+
+        if [ -n "${FRONTEND_BUILD_ENV}" ]; then
+          if ! printf '%s\n' "${FRONTEND_BUILD_ENV}" | php -r '
+            foreach (file("php://stdin", FILE_IGNORE_NEW_LINES) as $line) {
+                $line = trim($line);
+                if ($line === "" || str_starts_with($line, "#")) continue;
+                if (! preg_match("/^VITE_[A-Z0-9_]+=.*$/", $line)) exit(1);
+            }
+          '; then
+            echo '::error::FRONTEND_BUILD_ENV may contain only VITE_* assignments.'
+            exit 1
+          fi
+
+          printf '%s\n' "${FRONTEND_BUILD_ENV}" > .env
+        else
+          cp .env.example .env
+        fi
+
+    - name: Build immutable application artifact
+      shell: bash
+      run: |
+        set -Eeuo pipefail
+        composer install --no-dev --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist --optimize-autoloader
+        npm ci
+        npm run build
+        rm -f .env
+        tar --exclude-vcs --exclude=.env --exclude=.env.* --exclude=node_modules --exclude=storage --exclude=tests --exclude=docs --exclude=database/database.sqlite -czf indotix-release.tgz .
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: indotix-release.tgz
+        if-no-files-found: error
+        retention-days: 7

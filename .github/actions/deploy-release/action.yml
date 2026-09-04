@@ -1,0 +1,79 @@
+name: Deploy release
+description: Upload an immutable Indotix release, activate it atomically, and verify health.
+inputs:
+  artifact-name:
+    required: true
+  environment-name:
+    required: true
+  ssh-host:
+    required: true
+  ssh-port:
+    required: true
+  ssh-user:
+    required: true
+  ssh-private-key:
+    required: true
+  ssh-known-hosts:
+    required: true
+  deploy-root:
+    required: true
+  expected-host:
+    required: true
+  health-url:
+    required: true
+  smoke-url:
+    required: true
+  run-backup:
+    required: true
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: .release-artifact
+    - name: Configure deployment SSH key
+      shell: bash
+      run: |
+        set -Eeuo pipefail
+        for value in '${{ inputs.ssh-host }}' '${{ inputs.ssh-port }}' '${{ inputs.ssh-user }}' '${{ inputs.deploy-root }}'; do
+          [[ -n "$value" ]] || { echo 'Missing required deployment configuration.' >&2; exit 1; }
+        done
+        mkdir -p "$HOME/.ssh"
+        chmod 700 "$HOME/.ssh"
+        printf '%s\n' '${{ inputs.ssh-private-key }}' > "$HOME/.ssh/indotix_deploy"
+        printf '%s\n' '${{ inputs.ssh-known-hosts }}' > "$HOME/.ssh/known_hosts"
+        chmod 600 "$HOME/.ssh/indotix_deploy"
+        chmod 644 "$HOME/.ssh/known_hosts"
+    - name: Deploy release atomically
+      shell: bash
+      env:
+        SSH_HOST: ${{ inputs.ssh-host }}
+        SSH_PORT: ${{ inputs.ssh-port }}
+        SSH_USER: ${{ inputs.ssh-user }}
+        DEPLOY_ROOT: ${{ inputs.deploy-root }}
+        EXPECTED_ENVIRONMENT: ${{ inputs.environment-name }}
+        EXPECTED_HOST: ${{ inputs.expected-host }}
+        HEALTH_URL: ${{ inputs.health-url }}
+        SMOKE_URL: ${{ inputs.smoke-url }}
+        RUN_BACKUP: ${{ inputs.run-backup }}
+        GITHUB_SHA: ${{ github.sha }}
+      run: |
+        set -Eeuo pipefail
+        archive="$(find .release-artifact -maxdepth 1 -name 'indotix-release.tgz' -type f -print -quit)"
+        [[ -n "$archive" ]] || { echo 'Release artifact is missing.' >&2; exit 1; }
+        [[ "$SSH_USER" != 'root' ]] || { echo 'Refusing root deployment user.' >&2; exit 1; }
+        release_id="$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA:0:7}-${GITHUB_RUN_ID}"
+        ssh_args=(-i "$HOME/.ssh/indotix_deploy" -p "$SSH_PORT" -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes)
+        target="${SSH_USER}@${SSH_HOST}"
+        quote() { printf '%q' "$1"; }
+
+        ssh "${ssh_args[@]}" "$target" "mkdir -p $(quote "$DEPLOY_ROOT/incoming") $(quote "$DEPLOY_ROOT/releases") $(quote "$DEPLOY_ROOT/shared/storage")"
+        rsync -rlz --no-perms --no-times -e "ssh -i $HOME/.ssh/indotix_deploy -p $SSH_PORT -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" "$archive" "$target:$DEPLOY_ROOT/incoming/$release_id.tgz"
+
+        if [[ "$RUN_BACKUP" == 'true' ]]; then
+          ssh "${ssh_args[@]}" "$target" "DEPLOY_ROOT=$(quote "$DEPLOY_ROOT") EXPECTED_ENVIRONMENT=$(quote "$EXPECTED_ENVIRONMENT") bash -s" < deploy/backup-database.sh
+        fi
+
+        remote_command="set -Eeuo pipefail; release_dir=$(quote "$DEPLOY_ROOT/releases/$release_id"); rm -rf -- \"\$release_dir\"; mkdir -p \"\$release_dir\"; tar -xzf $(quote "$DEPLOY_ROOT/incoming/$release_id.tgz") -C \"\$release_dir\"; rm -f $(quote "$DEPLOY_ROOT/incoming/$release_id.tgz"); DEPLOY_ROOT=$(quote "$DEPLOY_ROOT") RELEASE_ID=$(quote "$release_id") EXPECTED_ENVIRONMENT=$(quote "$EXPECTED_ENVIRONMENT") EXPECTED_HOST=$(quote "$EXPECTED_HOST") HEALTH_URL=$(quote "$HEALTH_URL") SMOKE_URL=$(quote "$SMOKE_URL") GITHUB_SHA=$(quote "$GITHUB_SHA") bash \"\$release_dir/deploy/release-deploy.sh\""
+        ssh "${ssh_args[@]}" "$target" "bash -lc $(quote "$remote_command")"

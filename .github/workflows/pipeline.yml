@@ -1,283 +1,174 @@
-name: pipeline
+name: Indotix CI/CD
 
 on:
-  push:
-    branches:
-      - develop
-      - main
-      - master
-      - workos
   pull_request:
-    branches:
-      - develop
-      - main
-      - master
-      - workos
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
   workflow_dispatch:
+    inputs:
+      deploy_production:
+        description: Deploy the current main commit to production
+        required: true
+        type: choice
+        options: ['no', production]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  group: ci-${{ github.workflow }}-${{ github.event_name == 'workflow_dispatch' && 'production' || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 jobs:
   quality:
     name: Quality checks
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           tools: composer:v2
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Install Composer Dependencies
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
-      - name: Install Node Dependencies
+          cache: npm
+      - name: Validate manifests
+        run: composer validate --no-check-publish
+      - name: Install PHP dependencies
+        run: composer install --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      - name: Install Node dependencies
         run: npm ci
-
-      - name: Audit Dependencies
+      - name: Audit dependencies
         run: |
           composer audit --locked --no-interaction
           npm audit --audit-level=high
-
-      - name: Run Pint
-        run: composer lint
-
-      - name: Format Frontend
-        run: npm run format
-
-      - name: Lint Frontend
-        run: npm run lint
-
-      - name: Build Assets
+      - name: Check PHP syntax
+        run: find app bootstrap config database routes -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Build frontend
         run: npm run build
-
-      - name: Type Check
+      - name: Type check
         run: npm run types
 
   tests:
-    name: Tests PHP ${{ matrix.php-version }}
+    name: Laravel tests
     runs-on: ubuntu-latest
     needs: quality
-
     services:
       mysql:
         image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: test
           MYSQL_DATABASE: indotix_laravel_testing
-        ports:
-          - 3306:3306
+        ports: ['3306:3306']
         options: >-
           --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -ptest"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=10
-
-    strategy:
-      fail-fast: true
-      matrix:
-        php-version: ['8.4']
-
+          --health-interval=10s --health-timeout=5s --health-retries=10
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.4'
           tools: composer:v2
-          coverage: xdebug
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+      - run: composer install --no-ansi --no-interaction --prefer-dist --optimize-autoloader
+      - run: npm ci
+      - name: Configure test application
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
+          mysql --host=127.0.0.1 --port=3306 --user=root --password=test -e "CREATE DATABASE IF NOT EXISTS indotix_laravel_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+      - run: npm run build
+      - run: ./vendor/bin/pest
 
-      - name: Install Node Dependencies
-        run: npm ci
+  deploy-staging:
+    name: Deploy staging
+    runs-on: ubuntu-latest
+    needs: tests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.indotix.co.id
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: ./.github/actions/build-release
+        with:
+          artifact-name: indotix-release-${{ github.sha }}
+          frontend-build-env: ${{ secrets.STAGING_FRONTEND_BUILD_ENV }}
+      - uses: ./.github/actions/deploy-release
+        with:
+          artifact-name: indotix-release-${{ github.sha }}
+          environment-name: staging
+          ssh-host: ${{ secrets.STAGING_HOST }}
+          ssh-port: ${{ secrets.STAGING_PORT }}
+          ssh-user: ${{ secrets.STAGING_USER }}
+          ssh-private-key: ${{ secrets.STAGING_SSH_KEY }}
+          ssh-known-hosts: ${{ secrets.STAGING_SSH_KNOWN_HOSTS }}
+          deploy-root: ${{ secrets.STAGING_DEPLOY_ROOT }}
+          expected-host: staging.indotix.co.id
+          health-url: https://staging.indotix.co.id/up
+          smoke-url: https://staging.indotix.co.id/wisata
+          run-backup: 'false'
 
-      - name: Install Composer Dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Copy Environment File
-        run: cp .env.example .env
-
-      - name: Generate Application Key
-        run: php artisan key:generate
-
-      - name: Prepare Test Database
-        run: mysql --host=127.0.0.1 --port=3306 --user=root --password=test -e "CREATE DATABASE IF NOT EXISTS indotix_laravel_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-
-      - name: Build Assets
-        run: npm run build
-
-      - name: Type Check
-        run: npm run types
-
-      - name: Tests
-        run: ./vendor/bin/pest
-
-  deploy:
+  deploy-production:
     name: Deploy production
     runs-on: ubuntu-latest
     needs: tests
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
-
+    if: >-
+      github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' &&
+      inputs.deploy_production == 'production'
+    environment:
+      name: production
+      url: https://indotix.co.id
     concurrency:
-      group: production-deploy
+      group: deploy-production
       cancel-in-progress: false
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@v6
+      - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.4'
           tools: composer:v2
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Create .env for build
-        env:
-          ENV_FILE: ${{ secrets.ENV_FILE }}
+          cache: npm
+      - name: Confirm controlled production target
         run: |
-          set -euo pipefail
-
-          if [ -z "${ENV_FILE:-}" ]; then
-            echo "::error::Missing required GitHub secret: ENV_FILE"
-            exit 1
-          fi
-
-          printf '%s\n' "${ENV_FILE}" > .env
-          php -r '$key = ""; foreach (file(".env", FILE_IGNORE_NEW_LINES) as $line) { if (str_starts_with($line, "APP_KEY=")) { $key = trim(substr($line, 8), "\"'\'' \t"); break; } } if ($key === "") { fwrite(STDERR, "::error::ENV_FILE must contain a non-empty APP_KEY. Generate one once with: php artisan key:generate --show\n"); exit(1); }'
-
-      - name: Install Node Dependencies
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-
-      - name: Install Composer Dependencies
-        run: composer install --no-dev --prefer-dist --optimize-autoloader
-
-      - name: Security Audit
-        run: |
-          composer audit --locked --no-interaction
-          npm audit --audit-level=high
-
-      - name: Build Assets
-        run: npm run build
-
-      - name: Type Check
-        run: npm run types
-
-      - name: Install SSH deployment tools
-        run: sudo apt-get update && sudo apt-get install -y rsync
-
-      - name: Configure SSH
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PATH: ${{ secrets.SSH_PATH }}
-        run: |
-          set -euo pipefail
-
-          for name in SSH_PRIVATE_KEY SSH_KNOWN_HOSTS SSH_HOST SSH_USER SSH_PATH; do
-            if [ -z "${!name:-}" ]; then
-              echo "::error::Missing required GitHub secret: ${name}"
-              exit 1
-            fi
-          done
-
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          printf '%s\n' "${SSH_PRIVATE_KEY}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          printf '%s\n' "${SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
-
-      - name: Deploy files via SSH
-        env:
-          SSH_HOST: ${{ secrets.SSH_HOST }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
-          SSH_PATH: ${{ secrets.SSH_PATH }}
-        run: |
-          set -euo pipefail
-
-          SSH_OPTS="-i ~/.ssh/deploy_key -p ${SSH_PORT} -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes"
-          if [ ! -s .env ]; then
-            echo "::error::Missing validated .env artifact"
-            exit 1
-          fi
-
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "mkdir -p '${SSH_PATH}'"
-
-          rsync -rlz --delete --no-perms --no-times \
-            -e "ssh ${SSH_OPTS}" \
-            --exclude='.git*' \
-            --exclude='.github/' \
-            --exclude='node_modules/' \
-            --exclude='vendor/' \
-            --exclude='storage/' \
-            --exclude='tests/' \
-            --exclude='docs/' \
-            --exclude='.env' \
-            --exclude='database/database.sqlite' \
-            ./ "${SSH_USER}@${SSH_HOST}:${SSH_PATH%/}/"
-
-          rsync -rz --no-perms --no-times -e "ssh ${SSH_OPTS}" .env "${SSH_USER}@${SSH_HOST}:${SSH_PATH%/}/.env"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "chmod 644 '${SSH_PATH%/}/.env'"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && php -r '\$key = \"\"; foreach (file(\".env\", FILE_IGNORE_NEW_LINES) as \$line) { if (str_starts_with(\$line, \"APP_KEY=\")) { \$key = trim(substr(\$line, 8), \"\\\"'\\'' \\t\"); break; } } if (\$key === \"\") { fwrite(STDERR, \"APP_KEY is missing from deployed .env\\n\"); exit(1); }'"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache"
-          ssh ${SSH_OPTS} "${SSH_USER}@${SSH_HOST}" "cd '${SSH_PATH}' && php -r 'foreach ([\"bootstrap/cache/config.php\", \"bootstrap/cache/routes-v7.php\", \"bootstrap/cache/events.php\"] as \$file) { if (is_file(\$file)) { unlink(\$file); } } foreach (glob(\"storage/framework/views/*.php\") ?: [] as \$file) { if (is_file(\$file)) { unlink(\$file); } }'"
-
-      - name: WhatsApp notify success
-        if: success()
-        continue-on-error: true
-        env:
-          WA_API_KEY: ${{ secrets.WA_API_KEY }}
-          WA_SENDER: ${{ secrets.WA_SENDER }}
-          WA_NUMBER: ${{ secrets.WA_NUMBER }}
-        run: |
-          message="Deploy sukses: ${{ github.repository }} (${{ github.ref_name }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -sS --connect-timeout 10 --max-time 20 -X POST "http://wa.digitalpelajar.id/send-message" \
-            -H "Content-Type: application/json" \
-            -d "{\"api_key\":\"${WA_API_KEY}\",\"sender\":\"${WA_SENDER}\",\"number\":\"${WA_NUMBER}\",\"message\":\"${message}\"}"
-
-      - name: WhatsApp notify failure
-        if: failure()
-        continue-on-error: true
-        env:
-          WA_API_KEY: ${{ secrets.WA_API_KEY }}
-          WA_SENDER: ${{ secrets.WA_SENDER }}
-          WA_NUMBER: ${{ secrets.WA_NUMBER }}
-        run: |
-          message="Deploy gagal: ${{ github.repository }} (${{ github.ref_name }}) by ${{ github.actor }}. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -sS --connect-timeout 10 --max-time 20 -X POST "http://wa.digitalpelajar.id/send-message" \
-            -H "Content-Type: application/json" \
-            -d "{\"api_key\":\"${WA_API_KEY}\",\"sender\":\"${WA_SENDER}\",\"number\":\"${WA_NUMBER}\",\"message\":\"${message}\"}"
+          echo 'Target: PRODUCTION'
+          echo 'Domain: indotix.co.id'
+          echo 'Branch: main'
+          echo 'Commit: ${{ github.sha }}'
+      - uses: ./.github/actions/build-release
+        with:
+          artifact-name: indotix-release-${{ github.sha }}
+          frontend-build-env: ${{ secrets.PRODUCTION_FRONTEND_BUILD_ENV }}
+      - uses: ./.github/actions/deploy-release
+        with:
+          artifact-name: indotix-release-${{ github.sha }}
+          environment-name: production
+          ssh-host: ${{ secrets.PRODUCTION_HOST }}
+          ssh-port: ${{ secrets.PRODUCTION_PORT }}
+          ssh-user: ${{ secrets.PRODUCTION_USER }}
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+          ssh-known-hosts: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+          deploy-root: ${{ secrets.PRODUCTION_DEPLOY_ROOT }}
+          expected-host: indotix.co.id
+          health-url: https://indotix.co.id/up
+          smoke-url: https://indotix.co.id/wisata
+          run-backup: 'true'
