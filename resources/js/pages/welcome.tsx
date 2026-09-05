@@ -1199,14 +1199,14 @@ export default function Welcome({
                         <span className="mt-3 block h-1.5 w-8 rounded-full bg-sky-500" />
                     </div>
 
-                    <div className="grid gap-4 sm:gap-5 lg:grid-cols-2 lg:grid-rows-2 lg:items-stretch">
-                        <div className="grid gap-5 lg:contents">
+                    <div className="grid gap-4 sm:gap-5 lg:aspect-[2.1/1] lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:items-stretch">
+                        <div className="grid gap-4 sm:gap-5 lg:h-full lg:grid-rows-2">
                             {renderSpecialPromoVideo({
                                 ariaLabel: 'Putar video promo spesial',
                                 videoUrl: playableSpecialPromoVideoUrl,
                                 posterUrl: specialPromoVideoPosterUrl,
                                 title: homeContent.special_promo.video.title,
-                                className: 'lg:col-start-1 lg:row-start-1 lg:aspect-auto',
+                                className: 'lg:h-full lg:aspect-auto',
                             })}
 
                             {renderSpecialPromoVideo({
@@ -1217,11 +1217,11 @@ export default function Welcome({
                                 title:
                                     homeContent.special_promo.video_secondary
                                         ?.title ?? 'Video promo tambahan',
-                                className: 'lg:col-start-1 lg:row-start-2 lg:aspect-auto',
+                                className: 'lg:h-full lg:aspect-auto',
                             })}
                         </div>
 
-                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-5 lg:col-start-2 lg:row-span-2">
+                        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-5 lg:h-full lg:grid-rows-[minmax(0,1.7fr)_minmax(0,1fr)]">
                             {specialPromoSlots
                                 .slice(0, 2)
                                 .map((promo, index) =>
