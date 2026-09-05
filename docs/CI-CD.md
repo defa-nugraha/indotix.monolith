@@ -42,7 +42,8 @@ After the one-time server migration, each application root is:
 The aaPanel site document root must be `<deploy-root>/current/public`. Every
 release receives the same CI-built `vendor/` and `public/build/`; `.env` and
 runtime storage are never inside an artifact. The deploy user owns each release
-and generates its `bootstrap/cache`; PHP-FPM only needs write access to
+and generates its `bootstrap/cache`; the PHP-FPM group needs read/traverse
+access to the deploy root, `releases`, and `shared`, plus write access to
 `shared/storage`.
 
 The workflow retains the five newest releases, plus the active and previous

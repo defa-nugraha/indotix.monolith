@@ -15,9 +15,11 @@ if ! id "$DEPLOY_USER" >/dev/null 2>&1; then
 fi
 
 getent group "$PHP_FPM_GROUP" >/dev/null || { echo "Unknown PHP-FPM group: ${PHP_FPM_GROUP}" >&2; exit 1; }
-install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" -m 750 "$DEPLOY_ROOT"
+install -d -o "$DEPLOY_USER" -g "$PHP_FPM_GROUP" -m 750 "$DEPLOY_ROOT"
+install -d -o "$DEPLOY_USER" -g "$PHP_FPM_GROUP" -m 750 \
+    "$DEPLOY_ROOT/releases" "$DEPLOY_ROOT/shared"
 install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" -m 750 \
-    "$DEPLOY_ROOT/releases" "$DEPLOY_ROOT/incoming" "$DEPLOY_ROOT/backups"
+    "$DEPLOY_ROOT/incoming" "$DEPLOY_ROOT/backups"
 install -d -o "$DEPLOY_USER" -g "$PHP_FPM_GROUP" -m 775 \
     "$DEPLOY_ROOT/shared/storage/app/public" \
     "$DEPLOY_ROOT/shared/storage/framework/cache" \

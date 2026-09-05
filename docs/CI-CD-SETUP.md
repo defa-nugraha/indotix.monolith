@@ -8,8 +8,10 @@ Indotix application directories and do not touch mail services.
 
 ```bash
 sudo adduser --disabled-password --gecos '' deploy
-sudo install -d -o deploy -g deploy -m 750 /www/wwwroot/indotix
+sudo install -d -o deploy -g <php-fpm-group> -m 750 /www/wwwroot/indotix
 sudo -u deploy mkdir -p /www/wwwroot/indotix/{releases,incoming,backups,shared/storage}
+sudo chgrp <php-fpm-group> /www/wwwroot/indotix/{releases,shared}
+sudo chmod 750 /www/wwwroot/indotix/{releases,shared}
 sudo install -o deploy -g <php-fpm-group> -m 640 /dev/null /www/wwwroot/indotix/shared/.env
 sudo chown -R deploy:<php-fpm-group> /www/wwwroot/indotix/shared/storage
 sudo find /www/wwwroot/indotix/shared/storage -type d -exec chmod 775 {} \;
@@ -40,6 +42,35 @@ Use a separate application root, for example `/www/wwwroot/indotix-staging`,
 and repeat the same setup with `APP_ENV=staging`,
 `APP_URL=https://staging.indotix.co.id`, staging database credentials, sandbox
 payment credentials, and a staging Redis prefix/database.
+
+Replace `<php-fpm-group>` with the aaPanel PHP-FPM worker group (commonly
+`www` or `www-data`) and `<existing-staging-root>` with the current staging
+application directory:
+
+```bash
+sudo adduser --disabled-password --gecos '' deploy
+sudo install -d -o deploy -g <php-fpm-group> -m 750 /www/wwwroot/indotix-staging
+sudo -u deploy mkdir -p /www/wwwroot/indotix-staging/{releases,incoming,shared/storage}
+sudo chgrp <php-fpm-group> /www/wwwroot/indotix-staging/{releases,shared}
+sudo chmod 750 /www/wwwroot/indotix-staging/{releases,shared}
+sudo install -o deploy -g <php-fpm-group> -m 640 <existing-staging-root>/.env \
+  /www/wwwroot/indotix-staging/shared/.env
+sudo rsync -a --chown=deploy:<php-fpm-group> <existing-staging-root>/storage/ \
+  /www/wwwroot/indotix-staging/shared/storage/
+sudo chown -R deploy:<php-fpm-group> /www/wwwroot/indotix-staging/shared/storage
+sudo find /www/wwwroot/indotix-staging/shared/storage -type d -exec chmod 775 {} \;
+sudo find /www/wwwroot/indotix-staging/shared/storage -type f -exec chmod 664 {} \;
+sudo -u deploy ln -sfn <existing-staging-root> /www/wwwroot/indotix-staging/current
+```
+
+Before creating the first release, confirm that `shared/.env` has
+`APP_ENV=staging`, `APP_URL=https://staging.indotix.co.id`, staging-only
+database credentials, sandbox payment credentials, and an isolated Redis
+database/prefix. Do not copy a production `.env`.
+
+The temporary `current` symlink lets aaPanel keep serving the existing staging
+application during the document-root cutover. The first successful deployment
+atomically replaces it with a release under `releases/`.
 
 Set aaPanel document root to:
 
