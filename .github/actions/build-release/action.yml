@@ -45,7 +45,10 @@ runs:
         npm ci
         npm run build
         rm -f .env
-        tar --exclude-vcs --exclude=.env --exclude=.env.* --exclude=node_modules --exclude=storage --exclude=tests --exclude=docs --exclude=database/database.sqlite -czf indotix-release.tgz .
+        archive="$RUNNER_TEMP/indotix-release.tgz"
+        rm -f "$archive"
+        tar --exclude-vcs --exclude=.env --exclude=.env.* --exclude=node_modules --exclude=storage --exclude=tests --exclude=docs --exclude=database/database.sqlite -czf "$archive" .
+        mv "$archive" indotix-release.tgz
 
     - uses: actions/upload-artifact@v4
       with:
