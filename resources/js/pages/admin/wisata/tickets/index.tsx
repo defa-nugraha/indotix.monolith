@@ -1,9 +1,10 @@
 import { Head, router } from '@inertiajs/react';
+import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import Swal from 'sweetalert2';
 
 type PaginationLink = { url: string | null; label: string; active: boolean };
 
@@ -525,9 +526,10 @@ export default function AdminWisataTicketsIndex({
                         data-coach="admin-wisata-ticket-table"
                     >
                         <div className="overflow-hidden rounded-2xl border border-slate-100">
-                            <table className="w-full text-sm">
+                            <BulkDeleteTable requireReason className="w-full text-sm">
                                 <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                     <tr>
+                                        <BulkDeleteSelectAll />
                                         <th className="px-4 py-3 text-left">
                                             Produk
                                         </th>
@@ -547,7 +549,7 @@ export default function AdminWisataTicketsIndex({
                                 </thead>
                                 <tbody>
                                     {tickets.data.map((ticket) => (
-                                        <tr
+                                        <BulkDeleteRow deleteUrl={`/admin/wisata/tickets/${ticket.id}`}
                                             key={ticket.id}
                                             className="border-t border-slate-100"
                                         >
@@ -728,12 +730,12 @@ export default function AdminWisataTicketsIndex({
                                                     </Button>
                                                 </div>
                                             </td>
-                                        </tr>
+                                        </BulkDeleteRow>
                                     ))}
                                     {tickets.data.length === 0 && (
                                         <tr>
                                             <td
-                                                colSpan={5}
+                                                colSpan={6}
                                                 className="px-4 py-8 text-center text-sm text-slate-500"
                                             >
                                                 Belum ada produk tiket untuk
@@ -742,7 +744,7 @@ export default function AdminWisataTicketsIndex({
                                         </tr>
                                     )}
                                 </tbody>
-                            </table>
+                            </BulkDeleteTable>
                         </div>
                         <PaginationLinks links={tickets.links} />
                     </section>

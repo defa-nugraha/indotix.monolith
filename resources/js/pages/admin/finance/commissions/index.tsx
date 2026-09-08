@@ -1,9 +1,10 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
-import Swal from 'sweetalert2';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -229,9 +230,10 @@ export default function CommissionIndex({
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full text-left text-sm">
+                        <BulkDeleteTable className="min-w-full text-left text-sm">
                             <thead className="text-xs text-slate-400 uppercase">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="py-3 pr-4">Scope</th>
                                     <th className="py-3 pr-4">Tipe</th>
                                     <th className="py-3 pr-4">Nilai</th>
@@ -246,7 +248,7 @@ export default function CommissionIndex({
                                 {rules.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={8}
+                                            colSpan={9}
                                             className="py-8 text-center text-slate-500"
                                         >
                                             Belum ada aturan komisi.
@@ -254,7 +256,7 @@ export default function CommissionIndex({
                                     </tr>
                                 )}
                                 {rules.map((rule) => (
-                                    <tr key={rule.id}>
+                                    <BulkDeleteRow deleteUrl={`/admin/finance/commissions/${rule.id}`} key={rule.id}>
                                         <td className="py-4 pr-4">
                                             <div className="font-semibold text-slate-900">
                                                 {rule.hotel_name ?? 'Global'}
@@ -311,10 +313,10 @@ export default function CommissionIndex({
                                                 Hapus
                                             </Button>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

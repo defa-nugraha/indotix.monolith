@@ -58,6 +58,7 @@ import type { LucideIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import {
@@ -1297,9 +1298,10 @@ export default function HomeContentEdit({
 
                 <div className="overflow-hidden rounded-2xl border border-slate-200">
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[720px] text-sm">
+                        <BulkDeleteTable className="w-full min-w-[720px] text-sm">
                             <thead className="bg-slate-50 text-xs font-semibold tracking-wide text-slate-500 uppercase">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">
                                         Logo
                                     </th>
@@ -1319,7 +1321,7 @@ export default function HomeContentEdit({
                             </thead>
                             <tbody className="divide-y divide-slate-100 bg-white">
                                 {partOfLogos.map((logo) => (
-                                    <tr key={logo.id}>
+                                    <BulkDeleteRow deleteUrl={`/admin/public/home/part-of-logos/${logo.id}`} key={logo.id}>
                                         <td className="px-4 py-3">
                                             <div className="flex h-14 w-24 items-center justify-center rounded-xl bg-slate-50 p-2 ring-1 ring-slate-100">
                                                 {logo.image_url ? (
@@ -1381,12 +1383,12 @@ export default function HomeContentEdit({
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {partOfLogos.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="px-4 py-10 text-center"
                                         >
                                             <ImageIcon className="mx-auto h-10 w-10 text-slate-300" />
@@ -1402,7 +1404,7 @@ export default function HomeContentEdit({
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </div>
             </section>

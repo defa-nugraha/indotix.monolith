@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import Swal from 'sweetalert2';
-import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -94,9 +95,10 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
 
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">
                                         Preview
                                     </th>
@@ -116,7 +118,7 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                             </thead>
                             <tbody>
                                 {banners.map((banner) => (
-                                    <tr
+                                    <BulkDeleteRow deleteUrl={`/admin/public/banners/${banner.id}`}
                                         key={banner.id}
                                         className="border-t border-slate-100"
                                     >
@@ -177,12 +179,12 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {banners.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="px-4 py-8 text-center text-sm text-slate-500"
                                         >
                                             Belum ada banner.
@@ -190,7 +192,7 @@ export default function BannerIndex({ banners }: { banners: Banner[] }) {
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

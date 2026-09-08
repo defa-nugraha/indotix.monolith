@@ -1,9 +1,10 @@
 import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Sistem, Audit & Kontrol', href: '/admin/system/notifications' },
@@ -431,9 +432,10 @@ export default function NotificationControl({
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="min-w-full text-left text-sm">
+                        <BulkDeleteTable className="min-w-full text-left text-sm">
                             <thead className="text-xs text-slate-400 uppercase">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="py-3 pr-4">Key</th>
                                     <th className="py-3 pr-4">Channel</th>
                                     <th className="py-3 pr-4">Subject</th>
@@ -445,7 +447,7 @@ export default function NotificationControl({
                                 {templates.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="py-8 text-center text-slate-500"
                                         >
                                             Belum ada template.
@@ -453,7 +455,7 @@ export default function NotificationControl({
                                     </tr>
                                 )}
                                 {templates.map((template) => (
-                                    <tr key={template.id}>
+                                    <BulkDeleteRow deleteUrl={`/admin/system/notifications/templates/${template.id}`} key={template.id}>
                                         <td className="py-4 pr-4 font-semibold text-slate-900">
                                             {template.key}
                                         </td>
@@ -493,10 +495,10 @@ export default function NotificationControl({
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
 

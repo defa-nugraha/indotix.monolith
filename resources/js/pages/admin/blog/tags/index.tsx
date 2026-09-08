@@ -1,8 +1,9 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
 
 type Tag = {
     id: number;
@@ -137,9 +138,10 @@ export default function BlogTagsIndex({ tags = [] }: { tags: Tag[] }) {
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-hidden rounded-2xl border border-slate-100">
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">Tag</th>
                                     <th className="px-4 py-3 text-left">
                                         Slug
@@ -154,7 +156,7 @@ export default function BlogTagsIndex({ tags = [] }: { tags: Tag[] }) {
                             </thead>
                             <tbody>
                                 {tags.map((item) => (
-                                    <tr
+                                    <BulkDeleteRow deleteUrl={`/admin/blog/tags/${item.id}`}
                                         key={item.id}
                                         className="border-t border-slate-100"
                                     >
@@ -193,10 +195,10 @@ export default function BlogTagsIndex({ tags = [] }: { tags: Tag[] }) {
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

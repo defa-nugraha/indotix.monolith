@@ -1,11 +1,10 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
-import InputError from '@/components/input-error';
 import {
     Dialog,
     DialogContent,
@@ -14,7 +13,9 @@ import {
     DialogTrigger,
     DialogFooter,
 } from '@/components/ui/dialog';
-import Swal from 'sweetalert2';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -563,9 +564,10 @@ export default function AdminMitraWisataIndex({
 
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm" deletionWarning="Mitra beserta destinasi, tiket, booking, payout, komisi, afiliasi, review, dispute, staff, dokumen, dan file upload terkait akan dihapus permanen.">
                             <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">
                                         Mitra
                                     </th>
@@ -591,7 +593,7 @@ export default function AdminMitraWisataIndex({
                             </thead>
                             <tbody>
                                 {mitra.data.map((row) => (
-                                    <tr
+                                    <BulkDeleteRow deleteUrl={`/admin/mitra-wisata/${row.id}`}
                                         key={row.id}
                                         className="border-t border-slate-100"
                                     >
@@ -759,12 +761,12 @@ export default function AdminMitraWisataIndex({
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {mitra.data.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={7}
+                                            colSpan={8}
                                             className="px-4 py-8 text-center text-slate-500"
                                         >
                                             Belum ada mitra wisata.
@@ -772,7 +774,7 @@ export default function AdminMitraWisataIndex({
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>
