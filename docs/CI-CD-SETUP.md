@@ -57,6 +57,8 @@ sudo install -o deploy -g <php-fpm-group> -m 640 <existing-staging-root>/.env \
   /www/wwwroot/indotix-staging/shared/.env
 sudo rsync -a --chown=deploy:<php-fpm-group> <existing-staging-root>/storage/ \
   /www/wwwroot/indotix-staging/shared/storage/
+sudo rsync -a --ignore-existing --chown=deploy:<php-fpm-group> <existing-staging-root>/public/storage/ \
+  /www/wwwroot/indotix-staging/shared/storage/app/public/
 sudo chown -R deploy:<php-fpm-group> /www/wwwroot/indotix-staging/shared/storage
 sudo find /www/wwwroot/indotix-staging/shared/storage -type d -exec chmod 775 {} \;
 sudo find /www/wwwroot/indotix-staging/shared/storage -type f -exec chmod 664 {} \;
@@ -71,6 +73,12 @@ database/prefix. Do not copy a production `.env`.
 The temporary `current` symlink lets aaPanel keep serving the existing staging
 application during the document-root cutover. The first successful deployment
 atomically replaces it with a release under `releases/`.
+
+If the previous aaPanel deployment stored uploaded files directly under
+`public/storage`, copy that directory into `shared/storage/app/public` before
+or immediately after the cutover. Otherwise public media URLs such as
+`/storage/home-content/*.mp4` can fall through to Laravel's private storage
+handler and return 403/404 even though the database still references them.
 
 Set aaPanel document root to:
 
