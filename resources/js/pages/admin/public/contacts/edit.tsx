@@ -1,10 +1,11 @@
 import { Head, useForm } from '@inertiajs/react';
 import Swal from 'sweetalert2';
-import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import CkeditorField from '@/components/ckeditor-field';
 import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -17,6 +18,7 @@ type Contact = {
     id: number;
     company_name: string | null;
     address: string | null;
+    address_html?: string | null;
     phone: string | null;
     email: string | null;
     download_url: string | null;
@@ -30,7 +32,7 @@ type Contact = {
 export default function ContactEdit({ contact }: { contact: Contact }) {
     const form = useForm({
         company_name: contact.company_name ?? '',
-        address: contact.address ?? '',
+        address: contact.address_html ?? contact.address ?? '',
         phone: contact.phone ?? '',
         email: contact.email ?? '',
         download_url: contact.download_url ?? '',
@@ -72,12 +74,10 @@ export default function ContactEdit({ contact }: { contact: Contact }) {
                         </div>
                         <div className="grid gap-2">
                             <Label>Alamat</Label>
-                            <textarea
+                            <CkeditorField
                                 value={form.data.address}
-                                onChange={(event) => form.setData('address', event.target.value)}
-                                rows={4}
-                                className="min-h-28 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
-                                placeholder="Tulis alamat lengkap kantor atau layanan Indotix"
+                                onChange={(value) => form.setData('address', value)}
+                                minHeightClassName="min-h-28"
                             />
                             <InputError message={form.errors.address} />
                         </div>

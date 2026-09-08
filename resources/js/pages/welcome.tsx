@@ -1,19 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
-import { FooterDownloadSocial } from '@/components/footer-download-social';
-import {
-    PublicPartOfSection,
-    PublicPartnerSection,
-} from '@/components/public-page-sections';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import PublicLayout from '@/layouts/public-layout';
-import { PublicSeo } from '@/components/public-seo';
 import {
     BadgePercent,
     Backpack,
@@ -65,6 +50,22 @@ import {
     Waves,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { FooterAddress } from '@/components/footer-address';
+import { FooterDownloadSocial } from '@/components/footer-download-social';
+import {
+    PublicPartOfSection,
+    PublicPartnerSection,
+} from '@/components/public-page-sections';
+import { PublicSeo } from '@/components/public-seo';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import PublicLayout from '@/layouts/public-layout';
 
 type Banner = { id: number; image_path: string; link_url?: string | null };
 type PromoItem = {
@@ -116,6 +117,7 @@ type BlogPost = {
 type Contact = {
     company_name?: string | null;
     address?: string | null;
+    address_html?: string | null;
     phone?: string | null;
     email?: string | null;
     download_url?: string | null;
@@ -487,10 +489,6 @@ export default function Welcome({
             (current + direction + totalBannerSlides) % totalBannerSlides,
         );
     };
-    const addressText =
-        contact?.address ??
-        'Neo Soho Capital 40th Floor\\nJl. Tanjung Duren Raya No 1\\nJakarta Barat, DKI Jakarta 11470';
-    const addressLines = addressText.split('\\n');
     const companyName = contact?.company_name?.trim() || 'Indotix';
     const downloadAppUrl = contact?.download_url?.trim() || '#';
     const downloadLinkAttributes =
@@ -1505,14 +1503,7 @@ export default function Welcome({
                         <p className="mt-3 text-sm font-semibold text-slate-900">
                             {companyName}
                         </p>
-                        <p className="mt-3 text-sm text-slate-600">
-                            {addressLines.map((line, index) => (
-                                <span key={line}>
-                                    {line}
-                                    {index < addressLines.length - 1 && <br />}
-                                </span>
-                            ))}
-                        </p>
+                        <FooterAddress contact={contact} />
                         <p className="mt-4 text-sm text-slate-600">
                             {contact?.phone ?? '0812 9205 9888'}
                         </p>

@@ -25,11 +25,13 @@ import {
     Waves,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { FooterAddress } from '@/components/footer-address';
 import { FooterDownloadSocial } from '@/components/footer-download-social';
 
 export type PublicContact = {
     company_name?: string | null;
     address?: string | null;
+    address_html?: string | null;
     phone?: string | null;
     email?: string | null;
     download_url?: string | null;
@@ -408,10 +410,6 @@ export function PublicTrustSection({
 
 export function PublicFooter({ contact }: { contact?: PublicContact | null }) {
     const companyName = contact?.company_name?.trim() || 'Indotix';
-    const addressText =
-        contact?.address ??
-        'Neo Soho Capital 40th Floor\nJl. Tanjung Duren Raya No 1\nJakarta Barat, DKI Jakarta 11470';
-    const addressLines = addressText.split('\n');
 
     return (
         <footer className="mt-0 border-t border-slate-200 bg-white">
@@ -427,14 +425,7 @@ export function PublicFooter({ contact }: { contact?: PublicContact | null }) {
                     <p className="mt-3 text-sm font-semibold text-slate-900">
                         {companyName}
                     </p>
-                    <p className="mt-3 text-sm text-slate-600">
-                        {addressLines.map((line, index) => (
-                            <span key={line}>
-                                {line}
-                                {index < addressLines.length - 1 && <br />}
-                            </span>
-                        ))}
-                    </p>
+                    <FooterAddress contact={contact} />
                     <p className="mt-4 text-sm text-slate-600">
                         {contact?.phone ?? '0812 9205 9888'}
                     </p>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PublicContact;
+use App\Support\HtmlSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,8 +23,6 @@ class PublicContactController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $contact = PublicContact::query()->firstOrCreate([]);
-
         $data = $request->validate([
             'company_name' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:1000'],
@@ -37,6 +36,11 @@ class PublicContactController extends Controller
             'youtube_url' => ['nullable', 'url', 'max:500'],
         ]);
 
+        if (array_key_exists('address', $data)) {
+            $data['address'] = HtmlSanitizer::clean($data['address']);
+        }
+
+        $contact = PublicContact::query()->firstOrCreate([]);
         $contact->update($data);
 
         return back()->with('status', 'contact-updated');
