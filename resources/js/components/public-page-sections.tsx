@@ -262,6 +262,7 @@ export function PublicPartOfSection({
 
     const topRow = repeatedPartnerRow(logos);
     const renderLogo = (partner: PublicPartner, index: number) => {
+        const link = partner.link_url && /^https?:\/\//i.test(partner.link_url) ? partner.link_url : null;
         const logo = partner.image_url ? (
             <img
                 src={partner.image_url}
@@ -280,7 +281,11 @@ export function PublicPartOfSection({
                 key={`${partner.id}-${index}`}
                 className="flex h-16 min-w-[10.5rem] shrink-0 items-center justify-center rounded-2xl border border-sky-100 bg-white px-5 shadow-[0_14px_32px_-24px_rgba(15,23,42,0.65)] sm:h-20 sm:min-w-[12.5rem]"
             >
-                {logo}
+                {link ? (
+                    <a href={link} className="flex h-full w-full items-center justify-center rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600">
+                        {logo}
+                    </a>
+                ) : logo}
             </div>
         );
     };

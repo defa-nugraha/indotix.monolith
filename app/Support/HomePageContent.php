@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class HomePageContent
 {
     private const SPECIAL_PROMO_CARD_COUNT = 3;
+
     public const ICON_OPTIONS = [
         'BadgePercent' => 'Persen / Voucher',
         'Gift' => 'Hadiah / Promo',
@@ -315,6 +316,7 @@ class HomePageContent
             ->map(fn (PublicPartOfLogo $logo) => [
                 'id' => $logo->id,
                 'name' => $logo->name,
+                'link_url' => $logo->link_url,
                 'image_url' => $logo->image_path ? Storage::url($logo->image_path) : null,
             ])
             ->all();

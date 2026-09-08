@@ -11,6 +11,7 @@ class PublicPartOfLogo extends Model
 
     protected $fillable = [
         'name',
+        'link_url',
         'image_path',
         'sort_order',
         'is_active',

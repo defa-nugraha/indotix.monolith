@@ -178,7 +178,8 @@
     animation-direction: reverse;
 }
 
-.part-of-logo-marquee:hover {
+.part-of-logo-marquee:hover,
+.part-of-logo-marquee:focus-within {
     animation-play-state: paused;
 }
 

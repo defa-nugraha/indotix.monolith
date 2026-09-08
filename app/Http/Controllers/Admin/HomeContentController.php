@@ -73,6 +73,7 @@ class HomeContentController extends Controller
             ->map(fn (PublicPartOfLogo $logo) => [
                 'id' => $logo->id,
                 'name' => $logo->name,
+                'link_url' => $logo->link_url,
                 'image_path' => $logo->image_path,
                 'image_url' => $logo->image_path ? asset('storage/'.$logo->image_path) : null,
                 'sort_order' => $logo->sort_order,
