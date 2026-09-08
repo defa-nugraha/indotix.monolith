@@ -17,10 +17,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 type Partner = {
     id: number;
     name: string | null;
-    image_path: string;
+    image_path: string | null;
     link_url: string | null;
     sort_order: number;
     is_active: boolean;
+};
+
+const storageUrl = (path?: string | null) => {
+    const cleanPath = path?.trim();
+
+    return cleanPath ? `/storage/${cleanPath}` : null;
 };
 
 export default function PartnerEdit({ partner }: { partner: Partner }) {
@@ -73,11 +79,17 @@ export default function PartnerEdit({ partner }: { partner: Partner }) {
                         </div>
                         <div className="grid gap-2">
                             <Label>Logo saat ini</Label>
-                            <img
-                                src={`/storage/${partner.image_path}`}
-                                alt={partner.name ?? 'Partner'}
-                                className="h-16 w-24 rounded-md bg-slate-50 object-contain"
-                            />
+                            {storageUrl(partner.image_path) ? (
+                                <img
+                                    src={storageUrl(partner.image_path) ?? ''}
+                                    alt={partner.name ?? 'Partner'}
+                                    className="h-16 w-24 rounded-md bg-slate-50 object-contain"
+                                />
+                            ) : (
+                                <div className="flex h-16 w-24 items-center justify-center rounded-md bg-slate-50 text-xs font-medium text-slate-400">
+                                    No logo
+                                </div>
+                            )}
                         </div>
                         <div className="grid gap-2">
                             <Label>Ganti logo (opsional)</Label>

@@ -15,10 +15,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 type Partner = {
     id: number;
     name: string | null;
-    image_path: string;
+    image_path: string | null;
     link_url: string | null;
     sort_order: number;
     is_active: boolean;
+};
+
+const storageUrl = (path?: string | null) => {
+    const cleanPath = path?.trim();
+
+    return cleanPath ? `/storage/${cleanPath}` : null;
 };
 
 export default function PartnerIndex({ partners }: { partners: Partner[] }) {
@@ -96,11 +102,17 @@ export default function PartnerIndex({ partners }: { partners: Partner[] }) {
                                             <div className="font-semibold text-slate-900">{partner.name ?? '-'}</div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <img
-                                                src={`/storage/${partner.image_path}`}
-                                                alt={partner.name ?? 'Partner'}
-                                                className="h-10 w-16 rounded-md object-contain bg-slate-50"
-                                            />
+                                            {storageUrl(partner.image_path) ? (
+                                                <img
+                                                    src={storageUrl(partner.image_path) ?? ''}
+                                                    alt={partner.name ?? 'Partner'}
+                                                    className="h-10 w-16 rounded-md bg-slate-50 object-contain"
+                                                />
+                                            ) : (
+                                                <div className="flex h-10 w-16 items-center justify-center rounded-md bg-slate-50 text-[10px] font-medium text-slate-400">
+                                                    No logo
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3 text-xs text-slate-500">
                                             {partner.link_url ?? '-'}

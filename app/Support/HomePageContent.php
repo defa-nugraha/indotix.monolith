@@ -294,6 +294,8 @@ class HomePageContent
     {
         return PublicPartner::query()
             ->where('is_active', true)
+            ->whereNotNull('image_path')
+            ->where('image_path', '!=', '')
             ->orderBy('sort_order')
             ->orderByDesc('id')
             ->get()

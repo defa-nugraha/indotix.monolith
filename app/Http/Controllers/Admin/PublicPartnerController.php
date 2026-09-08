@@ -16,6 +16,8 @@ class PublicPartnerController extends Controller
     public function index(): Response
     {
         $partners = PublicPartner::query()
+            ->whereNotNull('image_path')
+            ->where('image_path', '!=', '')
             ->orderBy('sort_order')
             ->orderByDesc('id')
             ->get();
@@ -41,6 +43,11 @@ class PublicPartnerController extends Controller
         ]);
 
         $path = $mediaCompression->store($request->file('image'), 'public-partners', 'public');
+        if (! is_string($path) || trim($path) === '') {
+            return back()
+                ->withErrors(['image' => 'Logo gagal disimpan. Silakan unggah ulang.'])
+                ->withInput();
+        }
 
         PublicPartner::create([
             'name' => $data['name'] ?? null,
@@ -75,6 +82,11 @@ class PublicPartnerController extends Controller
                 Storage::disk('public')->delete($partner->image_path);
             }
             $partner->image_path = $mediaCompression->store($request->file('image'), 'public-partners', 'public');
+            if (! is_string($partner->image_path) || trim($partner->image_path) === '') {
+                return back()
+                    ->withErrors(['image' => 'Logo gagal disimpan. Silakan unggah ulang.'])
+                    ->withInput();
+            }
         }
 
         $partner->fill([
