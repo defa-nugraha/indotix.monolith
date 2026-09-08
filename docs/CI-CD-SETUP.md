@@ -82,7 +82,34 @@ Do not alter Postfix, Dovecot, Rspamd, SMTP/IMAP ports, mail certificates,
 hostname, firewall, DNS, or `/var/vmail`. The staging deploy user has no access
 to mail configuration or mail storage.
 
-## Queue
+## Upload Succeeds But Staging Still Shows Old Code
+
+Uploading and switching `current` does not change the aaPanel site root.
+In aaPanel, edit **only the staging website**: set its site directory to
+`/www/wwwroot/indotix-staging/current` and running directory to `/public`.
+The effective Nginx document root must be
+`/www/wwwroot/indotix-staging/current/public`, not the old
+`/www/wwwroot/staging.indotix.co.id/public` directory. If PHP uses an explicit
+`SCRIPT_FILENAME` or `open_basedir`, its staging-only configuration must allow
+the new releases and shared storage. Do not change global PHP/Nginx settings
+or mail services. Keep the old directory intact for recovery.
+
+Verify the active release without printing any environment secrets:
+
+```bash
+readlink -f /www/wwwroot/indotix-staging/current
+cat /www/wwwroot/indotix-staging/current/release.json
+curl -fsS -D - -o /dev/null "https://staging.indotix.co.id/up?deploy_check=$(date +%s)"
+```
+
+New releases return `X-Indotix-Release` from Laravel on `/up`; it must match
+`release.json`. The deployment now fails and attempts application rollback
+when the header is missing or different, even if HTTP is 200. Older releases
+do not have this header. Correct the site root before deploying this change.
+Exclude `/up` from any Cloudflare cache-everything rule. A static file check
+alone is insufficient because PHP can still serve a different release.
+
+## Queue Workers
 
 If Supervisor manages `queue:work`, configure it to run from the stable
 `current` path. The deployment only sends `php artisan queue:restart`; it does

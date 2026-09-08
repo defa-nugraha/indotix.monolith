@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddReleaseIdentity;
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\BlockRetiredProductFeatures;
 use App\Http\Middleware\CachePublicApiResponse;
@@ -52,6 +53,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->append(BlockRetiredProductFeatures::class);
         $middleware->append(AddSecurityHeaders::class);
+        $middleware->append(AddReleaseIdentity::class);
 
         $middleware->web(append: [
             HandleAppearance::class,

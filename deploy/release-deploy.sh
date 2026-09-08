@@ -80,6 +80,6 @@ php artisan queue:restart --ansi
 printf '{"release":"%s","environment":"%s","commit":"%s","deployed_at":"%s"}\n' \
     "$RELEASE_ID" "$EXPECTED_ENVIRONMENT" "${GITHUB_SHA:-unknown}" "$(date -u +%FT%TZ)" > "${RELEASE_DIR}/release.json"
 
-"${RELEASE_DIR}/deploy/health-check.sh" "$HEALTH_URL" "$SMOKE_URL"
+EXPECTED_RELEASE="$RELEASE_ID" "${RELEASE_DIR}/deploy/health-check.sh" "$HEALTH_URL" "$SMOKE_URL"
 DEPLOY_ROOT="$DEPLOY_ROOT" "${RELEASE_DIR}/deploy/cleanup-releases.sh"
 echo "Release active: ${RELEASE_ID}"
