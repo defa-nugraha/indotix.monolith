@@ -13,7 +13,7 @@ Artisan::command('indotix:cleanup-legacy-database
     {--mode=preview : Cleanup mode: preview or execute}
     {--plan-id= : Cleanup plan ID returned by preview}
     {--confirmation= : Required execute confirmation string}
-    {--admin-id= : Optional admin user ID recorded in audit log}
+    {--admin-id= : Required Admin Utama user ID recorded in audit log}
     {--json : Output machine-readable JSON}', function (LegacyDatabaseCleanupService $cleanup): int {
         $mode = (string) ($this->option('mode') ?: 'preview');
         $json = (bool) $this->option('json');
@@ -25,14 +25,18 @@ Artisan::command('indotix:cleanup-legacy-database
             return 1;
         }
 
-        if ($adminId !== null) {
-            $admin = User::query()->find($adminId);
+        if ($adminId === null) {
+            $this->error('admin-id wajib diisi agar cleanup tercatat di audit log.');
 
-            if (! $admin || $admin->role !== 'admin') {
-                $this->error('admin-id harus mengarah ke akun Admin Utama yang valid.');
+            return 1;
+        }
 
-                return 1;
-            }
+        $admin = User::query()->find($adminId);
+
+        if (! $admin || $admin->role !== 'admin') {
+            $this->error('admin-id harus mengarah ke akun Admin Utama yang valid.');
+
+            return 1;
         }
 
         if ($mode === 'execute') {
