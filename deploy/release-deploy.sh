@@ -81,5 +81,7 @@ printf '{"release":"%s","environment":"%s","commit":"%s","deployed_at":"%s"}\n' 
     "$RELEASE_ID" "$EXPECTED_ENVIRONMENT" "${GITHUB_SHA:-unknown}" "$(date -u +%FT%TZ)" > "${RELEASE_DIR}/release.json"
 
 EXPECTED_RELEASE="$RELEASE_ID" "${RELEASE_DIR}/deploy/health-check.sh" "$HEALTH_URL" "$SMOKE_URL"
-DEPLOY_ROOT="$DEPLOY_ROOT" "${RELEASE_DIR}/deploy/cleanup-releases.sh"
+if ! DEPLOY_ROOT="$DEPLOY_ROOT" "${RELEASE_DIR}/deploy/cleanup-releases.sh"; then
+    echo 'Warning: release retention cleanup failed after successful health checks; deployment remains active.' >&2
+fi
 echo "Release active: ${RELEASE_ID}"
