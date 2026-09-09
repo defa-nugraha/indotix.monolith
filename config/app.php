@@ -124,5 +124,6 @@ return [
     ],
 
     'allow_database_cleanup' => env('ALLOW_DATABASE_CLEANUP', false),
+    'allow_database_schema_cleanup' => env('ALLOW_DATABASE_SCHEMA_CLEANUP', false),
 
 ];
