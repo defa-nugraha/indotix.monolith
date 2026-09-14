@@ -1,6 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,8 +12,8 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
 import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
+import type { BreadcrumbItem } from '@/types';
 
 const defaultBreadcrumbs: BreadcrumbItem[] = [
     { title: 'Promo & Voucher', href: '/admin/marketing/vouchers' },
@@ -488,9 +489,10 @@ export default function VoucherIndex({
                     data-coach="voucher-list"
                 >
                     <div className="overflow-x-auto">
-                        <table className="min-w-full text-left text-sm">
+                        <BulkDeleteTable className="min-w-full text-left text-sm">
                             <thead className="text-xs uppercase text-slate-400">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="py-3 pr-4">Kode</th>
                                     <th className="py-3 pr-4">Diskon</th>
                                     <th className="py-3 pr-4">Min Transaksi</th>
@@ -505,13 +507,13 @@ export default function VoucherIndex({
                             <tbody className="divide-y divide-slate-100">
                                 {vouchers.length === 0 && (
                                     <tr>
-                                        <td colSpan={9} className="py-8 text-center text-slate-500">
+                                        <td colSpan={10} className="py-8 text-center text-slate-500">
                                             Belum ada voucher.
                                         </td>
                                     </tr>
                                 )}
                                 {vouchers.map((voucher) => (
-                                    <tr key={voucher.id}>
+                                    <BulkDeleteRow deleteUrl={`${routeBase}/${voucher.id}`} key={voucher.id}>
                                         <td className="py-4 pr-4">
                                             <div className="font-semibold text-slate-900">{voucher.code}</div>
                                         </td>
@@ -557,10 +559,10 @@ export default function VoucherIndex({
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

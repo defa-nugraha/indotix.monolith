@@ -1,11 +1,10 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
-import AppLayout from '@/layouts/app-layout';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
+import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
 import {
     Dialog,
     DialogContent,
@@ -14,6 +13,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 type UserRow = {
@@ -186,9 +187,10 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
 
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm" deletionWarning="User beserta transaksi, pesanan, booking, review, alamat, notifikasi, OTP, device token, riwayat pencarian, dan chat terkait akan dihapus permanen.">
                             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">User</th>
                                     <th className="px-4 py-3 text-left">Kontak</th>
                                     <th className="px-4 py-3 text-left">Verifikasi</th>
@@ -198,7 +200,7 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                             </thead>
                             <tbody>
                                 {users.data.map((row) => (
-                                    <tr key={row.id} className="border-t border-slate-100">
+                                    <BulkDeleteRow deleteUrl={`/admin/users/${row.id}`} key={row.id} className="border-t border-slate-100">
                                         <td className="px-4 py-3">
                                             <div className="font-semibold text-slate-900">{row.name}</div>
                                             <div className="text-xs text-slate-500">{row.email}</div>
@@ -272,17 +274,17 @@ export default function AdminUsersIndex({ users, filters }: PageProps) {
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {users.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
                                             Belum ada user.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
                 <Dialog open={editingUser !== null} onOpenChange={(open) => !open && closeEdit()}>

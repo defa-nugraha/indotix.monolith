@@ -20,5 +20,7 @@ for index in "${!releases[@]}"; do
     fi
 
     echo "Removing expired release: ${release}"
-    rm -rf -- "$release"
+    if ! rm -rf -- "$release"; then
+        echo "Warning: failed to remove expired release, leaving it for manual cleanup: ${release}" >&2
+    fi
 done

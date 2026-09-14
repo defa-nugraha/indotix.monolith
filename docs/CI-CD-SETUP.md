@@ -57,6 +57,8 @@ sudo install -o deploy -g <php-fpm-group> -m 640 <existing-staging-root>/.env \
   /www/wwwroot/indotix-staging/shared/.env
 sudo rsync -a --chown=deploy:<php-fpm-group> <existing-staging-root>/storage/ \
   /www/wwwroot/indotix-staging/shared/storage/
+sudo rsync -a --ignore-existing --chown=deploy:<php-fpm-group> <existing-staging-root>/public/storage/ \
+  /www/wwwroot/indotix-staging/shared/storage/app/public/
 sudo chown -R deploy:<php-fpm-group> /www/wwwroot/indotix-staging/shared/storage
 sudo find /www/wwwroot/indotix-staging/shared/storage -type d -exec chmod 775 {} \;
 sudo find /www/wwwroot/indotix-staging/shared/storage -type f -exec chmod 664 {} \;
@@ -72,6 +74,12 @@ The temporary `current` symlink lets aaPanel keep serving the existing staging
 application during the document-root cutover. The first successful deployment
 atomically replaces it with a release under `releases/`.
 
+If the previous aaPanel deployment stored uploaded files directly under
+`public/storage`, copy that directory into `shared/storage/app/public` before
+or immediately after the cutover. Otherwise public media URLs such as
+`/storage/home-content/*.mp4` can fall through to Laravel's private storage
+handler and return 403/404 even though the database still references them.
+
 Set aaPanel document root to:
 
 ```text
@@ -82,7 +90,34 @@ Do not alter Postfix, Dovecot, Rspamd, SMTP/IMAP ports, mail certificates,
 hostname, firewall, DNS, or `/var/vmail`. The staging deploy user has no access
 to mail configuration or mail storage.
 
-## Queue
+## Upload Succeeds But Staging Still Shows Old Code
+
+Uploading and switching `current` does not change the aaPanel site root.
+In aaPanel, edit **only the staging website**: set its site directory to
+`/www/wwwroot/indotix-staging/current` and running directory to `/public`.
+The effective Nginx document root must be
+`/www/wwwroot/indotix-staging/current/public`, not the old
+`/www/wwwroot/staging.indotix.co.id/public` directory. If PHP uses an explicit
+`SCRIPT_FILENAME` or `open_basedir`, its staging-only configuration must allow
+the new releases and shared storage. Do not change global PHP/Nginx settings
+or mail services. Keep the old directory intact for recovery.
+
+Verify the active release without printing any environment secrets:
+
+```bash
+readlink -f /www/wwwroot/indotix-staging/current
+cat /www/wwwroot/indotix-staging/current/release.json
+curl -fsS -D - -o /dev/null "https://staging.indotix.co.id/up?deploy_check=$(date +%s)"
+```
+
+New releases return `X-Indotix-Release` from Laravel on `/up`; it must match
+`release.json`. The deployment now fails and attempts application rollback
+when the header is missing or different, even if HTTP is 200. Older releases
+do not have this header. Correct the site root before deploying this change.
+Exclude `/up` from any Cloudflare cache-everything rule. A static file check
+alone is insufficient because PHP can still serve a different release.
+
+## Queue Workers
 
 If Supervisor manages `queue:work`, configure it to run from the stable
 `current` path. The deployment only sends `php artisan queue:restart`; it does

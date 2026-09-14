@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import Swal from 'sweetalert2';
-import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -14,10 +15,16 @@ const breadcrumbs: BreadcrumbItem[] = [
 type Partner = {
     id: number;
     name: string | null;
-    image_path: string;
+    image_path: string | null;
     link_url: string | null;
     sort_order: number;
     is_active: boolean;
+};
+
+const storageUrl = (path?: string | null) => {
+    const cleanPath = path?.trim();
+
+    return cleanPath ? `/storage/${cleanPath}` : null;
 };
 
 export default function PartnerIndex({ partners }: { partners: Partner[] }) {
@@ -76,9 +83,10 @@ export default function PartnerIndex({ partners }: { partners: Partner[] }) {
 
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">Nama</th>
                                     <th className="px-4 py-3 text-left">Logo</th>
                                     <th className="px-4 py-3 text-left">Link</th>
@@ -89,16 +97,22 @@ export default function PartnerIndex({ partners }: { partners: Partner[] }) {
                             </thead>
                             <tbody>
                                 {partners.map((partner) => (
-                                    <tr key={partner.id} className="border-t border-slate-100">
+                                    <BulkDeleteRow deleteUrl={`/admin/public/partners/${partner.id}`} key={partner.id} className="border-t border-slate-100">
                                         <td className="px-4 py-3">
                                             <div className="font-semibold text-slate-900">{partner.name ?? '-'}</div>
                                         </td>
                                         <td className="px-4 py-3">
-                                            <img
-                                                src={`/storage/${partner.image_path}`}
-                                                alt={partner.name ?? 'Partner'}
-                                                className="h-10 w-16 rounded-md object-contain bg-slate-50"
-                                            />
+                                            {storageUrl(partner.image_path) ? (
+                                                <img
+                                                    src={storageUrl(partner.image_path) ?? ''}
+                                                    alt={partner.name ?? 'Partner'}
+                                                    className="h-10 w-16 rounded-md bg-slate-50 object-contain"
+                                                />
+                                            ) : (
+                                                <div className="flex h-10 w-16 items-center justify-center rounded-md bg-slate-50 text-[10px] font-medium text-slate-400">
+                                                    No logo
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3 text-xs text-slate-500">
                                             {partner.link_url ?? '-'}
@@ -123,17 +137,17 @@ export default function PartnerIndex({ partners }: { partners: Partner[] }) {
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {partners.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
                                             Belum ada partner.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

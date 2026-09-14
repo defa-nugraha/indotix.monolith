@@ -1,9 +1,10 @@
 import { Head, router } from '@inertiajs/react';
 import Swal from 'sweetalert2';
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
 
 type ReviewRow = {
     id: number;
@@ -176,9 +177,10 @@ export default function AdminReviews({ filters, typeOptions, statusOptions, revi
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-hidden rounded-2xl border border-slate-100">
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">Produk</th>
                                     <th className="px-4 py-3 text-left">User</th>
                                     <th className="px-4 py-3 text-left">Rating</th>
@@ -189,7 +191,7 @@ export default function AdminReviews({ filters, typeOptions, statusOptions, revi
                             </thead>
                             <tbody>
                                 {reviews.data.map((review) => (
-                                    <tr key={review.id} className="border-t border-slate-100">
+                                    <BulkDeleteRow deleteUrl={`/admin/reviews/${review.id}`} key={review.id} className="border-t border-slate-100">
                                         <td className="px-4 py-3">
                                             <p className="font-semibold text-slate-900">{review.product_title}</p>
                                             <p className="text-xs text-slate-500">{typeLabel(review.product_type)}</p>
@@ -217,17 +219,17 @@ export default function AdminReviews({ filters, typeOptions, statusOptions, revi
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {reviews.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td colSpan={7} className="px-4 py-8 text-center text-sm text-slate-500">
                                             Belum ada ulasan.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

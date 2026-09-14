@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\PublicBanner;
+use App\Models\PublicPartner;
 use App\Models\PromoItem;
 use App\Models\User;
+use App\Support\HomePageContent;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -136,6 +138,30 @@ test('multiple public banners can be active for homepage carousel', function () 
     expect(PublicBanner::query()->where('is_active', true)->count())->toBe(2)
         ->and($firstBanner->fresh()->is_active)->toBeTrue()
         ->and($secondBanner->fresh()->is_active)->toBeTrue();
+});
+
+test('public partner image is required and blank image paths are not exposed', function () {
+    Storage::fake('public');
+    $admin = superAdminForUploadTest();
+
+    $this->actingAs($admin)
+        ->post('/admin/public/partners', [
+            'name' => 'Partner Tanpa Logo',
+            'sort_order' => 1,
+            'is_active' => true,
+        ])
+        ->assertSessionHasErrors('image');
+
+    expect(PublicPartner::query()->exists())->toBeFalse();
+
+    PublicPartner::query()->create([
+        'name' => 'Data Lama Tanpa Logo',
+        'image_path' => '',
+        'sort_order' => 1,
+        'is_active' => true,
+    ]);
+
+    expect(HomePageContent::publicPartners())->toBeEmpty();
 });
 
 test('promo homepage slots cannot be reused', function () {

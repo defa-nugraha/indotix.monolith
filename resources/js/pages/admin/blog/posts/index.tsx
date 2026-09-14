@@ -1,8 +1,9 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
 
 type Post = {
     id: number;
@@ -90,9 +91,10 @@ export default function BlogPostsIndex() {
 
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="overflow-hidden rounded-2xl border border-slate-100">
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">Cover</th>
                                     <th className="px-4 py-3 text-left">Judul</th>
                                     <th className="px-4 py-3 text-left">Kategori</th>
@@ -104,7 +106,7 @@ export default function BlogPostsIndex() {
                             </thead>
                             <tbody>
                                 {posts.data.map((item) => (
-                                    <tr key={item.id} className="border-t border-slate-100">
+                                    <BulkDeleteRow deleteUrl={`/admin/blog/posts/${item.id}`} key={item.id} className="border-t border-slate-100">
                                         <td className="px-4 py-3">
                                             {item.cover_image_url ? (
                                                 <img
@@ -144,17 +146,17 @@ export default function BlogPostsIndex() {
                                                 </button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {posts.data.length === 0 && (
                                     <tr>
-                                        <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-500">
+                                        <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">
                                             Belum ada artikel.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

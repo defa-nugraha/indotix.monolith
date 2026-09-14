@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 type DestinationRow = {
     id: number;
@@ -146,9 +147,10 @@ export default function AdminWisataDestinationsIndex({
                         className="overflow-hidden rounded-2xl border border-slate-100"
                         data-coach="admin-wisata-destination-table"
                     >
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">
                                         Destinasi
                                     </th>
@@ -168,7 +170,7 @@ export default function AdminWisataDestinationsIndex({
                             </thead>
                             <tbody>
                                 {destinations.data.map((row) => (
-                                    <tr
+                                    <BulkDeleteRow deleteUrl={`/admin/wisata/destinations/${row.encrypted_id}`}
                                         key={row.id}
                                         className="border-t border-slate-100"
                                     >
@@ -223,12 +225,12 @@ export default function AdminWisataDestinationsIndex({
                                                 Detail
                                             </Link>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {destinations.data.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="px-4 py-8 text-center text-sm text-slate-500"
                                         >
                                             Belum ada destinasi wisata.
@@ -236,7 +238,7 @@ export default function AdminWisataDestinationsIndex({
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

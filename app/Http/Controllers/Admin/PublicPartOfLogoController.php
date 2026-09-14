@@ -15,6 +15,7 @@ class PublicPartOfLogoController extends Controller
     {
         $data = $request->validate([
             'name' => ['nullable', 'string', 'max:80'],
+            'link_url' => ['nullable', 'string', 'url:http,https', 'max:2048'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
@@ -22,6 +23,7 @@ class PublicPartOfLogoController extends Controller
 
         PublicPartOfLogo::query()->create([
             'name' => $data['name'] ?? null,
+            'link_url' => $data['link_url'] ?? null,
             'sort_order' => $data['sort_order'] ?? 0,
             'is_active' => (bool) ($data['is_active'] ?? true),
             'image_path' => $mediaCompression->store($request->file('image'), 'public-part-of-logos', 'public'),
@@ -34,6 +36,7 @@ class PublicPartOfLogoController extends Controller
     {
         $data = $request->validate([
             'name' => ['nullable', 'string', 'max:80'],
+            'link_url' => ['nullable', 'string', 'url:http,https', 'max:2048'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
             'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
@@ -49,6 +52,9 @@ class PublicPartOfLogoController extends Controller
             'sort_order' => $data['sort_order'] ?? 0,
             'is_active' => (bool) ($data['is_active'] ?? true),
         ]);
+        if (array_key_exists('link_url', $data)) {
+            $logo->link_url = $data['link_url'];
+        }
         $logo->save();
 
         return back()->with('status', 'part-of-logo-updated');

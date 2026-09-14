@@ -1,20 +1,4 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
-import Swal from 'sweetalert2';
-import InputError from '@/components/input-error';
-import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
 import {
     BadgePercent,
     Backpack,
@@ -71,6 +55,23 @@ import {
     Waves,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import Swal from 'sweetalert2';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
+import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -96,6 +97,7 @@ type VoucherOption = {
 };
 type PartOfLogo = {
     id: number;
+    link_url?: string | null;
     name: string | null;
     image_path: string;
     image_url: string | null;
@@ -469,6 +471,7 @@ export default function HomeContentEdit({
     const [fileInputVersion, setFileInputVersion] = useState(0);
     const partOfLogoForm = useForm({
         name: '',
+        link_url: '',
         sort_order: 0,
         is_active: true,
         image: null as File | null,
@@ -531,6 +534,7 @@ export default function HomeContentEdit({
         partOfLogoForm.clearErrors();
         partOfLogoForm.setData({
             name: '',
+            link_url: '',
             sort_order: 0,
             is_active: true,
             image: null,
@@ -543,6 +547,7 @@ export default function HomeContentEdit({
         partOfLogoForm.clearErrors();
         partOfLogoForm.setData({
             name: logo.name ?? '',
+            link_url: logo.link_url ?? '',
             sort_order: logo.sort_order ?? 0,
             is_active: logo.is_active,
             image: null,
@@ -571,19 +576,21 @@ export default function HomeContentEdit({
             onError: () =>
                 Swal.fire({
                     title: 'Gagal',
-                    text: 'Periksa nama, urutan, dan file logo yang dipilih.',
+                    text: 'Periksa nama, link, urutan, dan file logo yang dipilih.',
                     icon: 'error',
                 }),
         };
 
         if (editingLogo) {
-            partOfLogoForm.put(
+            partOfLogoForm.transform((data) => ({ ...data, _method: 'put' }));
+            partOfLogoForm.post(
                 `/admin/public/home/part-of-logos/${editingLogo.id}`,
                 options,
             );
             return;
         }
 
+        partOfLogoForm.transform((data) => data);
         partOfLogoForm.post('/admin/public/home/part-of-logos', options);
     };
 
@@ -1291,9 +1298,10 @@ export default function HomeContentEdit({
 
                 <div className="overflow-hidden rounded-2xl border border-slate-200">
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[720px] text-sm">
+                        <BulkDeleteTable className="w-full min-w-[720px] text-sm">
                             <thead className="bg-slate-50 text-xs font-semibold tracking-wide text-slate-500 uppercase">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">
                                         Logo
                                     </th>
@@ -1313,7 +1321,7 @@ export default function HomeContentEdit({
                             </thead>
                             <tbody className="divide-y divide-slate-100 bg-white">
                                 {partOfLogos.map((logo) => (
-                                    <tr key={logo.id}>
+                                    <BulkDeleteRow deleteUrl={`/admin/public/home/part-of-logos/${logo.id}`} key={logo.id}>
                                         <td className="px-4 py-3">
                                             <div className="flex h-14 w-24 items-center justify-center rounded-xl bg-slate-50 p-2 ring-1 ring-slate-100">
                                                 {logo.image_url ? (
@@ -1375,12 +1383,12 @@ export default function HomeContentEdit({
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {partOfLogos.length === 0 && (
                                     <tr>
                                         <td
-                                            colSpan={5}
+                                            colSpan={6}
                                             className="px-4 py-10 text-center"
                                         >
                                             <ImageIcon className="mx-auto h-10 w-10 text-slate-300" />
@@ -1396,7 +1404,7 @@ export default function HomeContentEdit({
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </div>
             </section>
@@ -1583,6 +1591,20 @@ export default function HomeContentEdit({
                                 <InputError
                                     message={partOfLogoForm.errors.name}
                                 />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="part-of-logo-link">Link tujuan (opsional)</Label>
+                                <Input
+                                    id="part-of-logo-link"
+                                    type="url"
+                                    placeholder="https://example.com"
+                                    maxLength={2048}
+                                    value={partOfLogoForm.data.link_url}
+                                    onChange={(event) => partOfLogoForm.setData('link_url', event.target.value)}
+                                    disabled={partOfLogoForm.processing}
+                                />
+                                <InputError message={partOfLogoForm.errors.link_url} />
                             </div>
 
                             <div className="grid gap-2">

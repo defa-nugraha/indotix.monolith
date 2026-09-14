@@ -37,6 +37,15 @@ class MidtransCallbackController extends Controller
             return response('Invalid signature', 400);
         }
 
+        // Dashboard delivery probes are signed notifications without a customer booking.
+        $merchantId = (string) ($payload['merchant_id'] ?? '');
+        if ($merchantId !== '' && preg_match(
+            '/\Apayment_notif_test_'.preg_quote($merchantId, '/').'_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i',
+            $orderId
+        ) === 1) {
+            return response('OK', 200);
+        }
+
         $payment = Payment::query()->where('order_id', $orderId)->latest()->first();
         $booking = $payment?->booking ?? Booking::query()->where('midtrans_order_id', $orderId)->first();
 

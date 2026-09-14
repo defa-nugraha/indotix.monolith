@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import Swal from 'sweetalert2';
-import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
+import { BulkDeleteTable, BulkDeleteRow, BulkDeleteSelectAll } from '@/components/admin/bulk-delete-table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -75,9 +76,10 @@ export default function FaqIndex({ faqs }: { faqs: Faq[] }) {
 
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
+                        <BulkDeleteTable className="w-full text-sm">
                             <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                                 <tr>
+                                    <BulkDeleteSelectAll />
                                     <th className="px-4 py-3 text-left">Pertanyaan</th>
                                     <th className="px-4 py-3 text-left">Kategori</th>
                                     <th className="px-4 py-3 text-left">Urutan</th>
@@ -87,7 +89,7 @@ export default function FaqIndex({ faqs }: { faqs: Faq[] }) {
                             </thead>
                             <tbody>
                                 {faqs.map((faq) => (
-                                    <tr key={faq.id} className="border-t border-slate-100">
+                                    <BulkDeleteRow deleteUrl={`/admin/public/faqs/${faq.id}`} key={faq.id} className="border-t border-slate-100">
                                         <td className="px-4 py-3">
                                             <div className="font-semibold text-slate-900">{faq.question}</div>
                                             <div className="text-xs text-slate-500 line-clamp-2">{faq.answer}</div>
@@ -113,17 +115,17 @@ export default function FaqIndex({ faqs }: { faqs: Faq[] }) {
                                                 </Button>
                                             </div>
                                         </td>
-                                    </tr>
+                                    </BulkDeleteRow>
                                 ))}
                                 {faqs.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-sm text-slate-500">
+                                        <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
                                             Belum ada FAQ.
                                         </td>
                                     </tr>
                                 )}
                             </tbody>
-                        </table>
+                        </BulkDeleteTable>
                     </div>
                 </section>
             </div>

@@ -275,7 +275,7 @@ function cleanupSeedLegacyAndWisataData(): array
     );
 }
 
-test('legacy database cleanup command validates optional admin audit identity', function () {
+test('legacy database cleanup command requires valid main admin audit identity', function () {
     $role = AdminRole::query()->create([
         'name' => 'Operator',
         'slug' => 'operator',
@@ -290,6 +290,10 @@ test('legacy database cleanup command validates optional admin audit identity', 
     $mitra = User::factory()->create(['role' => 'mitra', 'email_verified_at' => now()]);
 
     expect(Artisan::call('indotix:cleanup-legacy-database', [
+        '--mode' => 'preview',
+        '--json' => true,
+    ]))->toBe(1)
+        ->and(Artisan::call('indotix:cleanup-legacy-database', [
         '--mode' => 'preview',
         '--admin-id' => $user->id,
         '--json' => true,

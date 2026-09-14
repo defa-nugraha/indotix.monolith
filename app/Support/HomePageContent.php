@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class HomePageContent
 {
     private const SPECIAL_PROMO_CARD_COUNT = 3;
+
     public const ICON_OPTIONS = [
         'BadgePercent' => 'Persen / Voucher',
         'Gift' => 'Hadiah / Promo',
@@ -293,6 +294,8 @@ class HomePageContent
     {
         return PublicPartner::query()
             ->where('is_active', true)
+            ->whereNotNull('image_path')
+            ->where('image_path', '!=', '')
             ->orderBy('sort_order')
             ->orderByDesc('id')
             ->get()
@@ -315,6 +318,7 @@ class HomePageContent
             ->map(fn (PublicPartOfLogo $logo) => [
                 'id' => $logo->id,
                 'name' => $logo->name,
+                'link_url' => $logo->link_url,
                 'image_url' => $logo->image_path ? Storage::url($logo->image_path) : null,
             ])
             ->all();
