@@ -550,8 +550,10 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::get('admin/wisata/exceptions', [WisataExceptionController::class, 'index'])
         ->name('admin.wisata.exceptions.index');
     Route::post('admin/wisata/bookings/{booking}/cancel', [WisataExceptionController::class, 'cancel'])
+        ->middleware('throttle:10,1')
         ->name('admin.wisata.bookings.cancel');
     Route::post('admin/wisata/bookings/{booking}/refund', [WisataExceptionController::class, 'refund'])
+        ->middleware('throttle:10,1')
         ->name('admin.wisata.bookings.refund');
     Route::post('admin/wisata/disputes/{dispute}', [WisataExceptionController::class, 'resolveDispute'])
         ->name('admin.wisata.disputes.update');
@@ -1198,6 +1200,7 @@ Route::middleware(['auth', 'verified', 'user', 'affiliate.user', 'user.activity'
     Route::get('payouts', [App\Http\Controllers\Affiliate\PayoutController::class, 'index'])
         ->name('payouts');
     Route::post('payouts', [App\Http\Controllers\Affiliate\PayoutController::class, 'store'])
+        ->middleware('throttle:5,1')
         ->name('payouts.store');
     Route::get('notifications', [NotificationController::class, 'index'])
         ->name('notifications');
@@ -1315,13 +1318,13 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
         ->middleware('maintenance.transactions')
         ->name('wisata.booking.voucher.remove');
     Route::post('/wisata/booking/confirm', [WisataBookingController::class, 'confirm'])
-        ->middleware('maintenance.transactions')
+        ->middleware(['maintenance.transactions', 'throttle:10,1'])
         ->name('wisata.booking.confirm');
     Route::get('/wisata/booking/{booking}/payment', [WisataBookingController::class, 'payment'])
         ->middleware('maintenance.transactions')
         ->name('wisata.booking.payment');
     Route::post('/wisata/booking/{booking}/payment', [WisataBookingController::class, 'pay'])
-        ->middleware('maintenance.transactions')
+        ->middleware(['maintenance.transactions', 'throttle:10,1'])
         ->name('wisata.booking.pay');
     Route::get('/wisata/booking/{booking}/ticket', [WisataBookingController::class, 'ticket'])
         ->name('wisata.booking.ticket');
