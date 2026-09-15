@@ -720,23 +720,26 @@ class WisataPaymentLifecycleService
         }
 
         $encryptedId = Crypt::encryptString((string) $booking->id);
-        UserNotification::query()->firstOrCreate(
-            [
+        $alreadyNotified = UserNotification::query()
+            ->where('user_id', $booking->user_id)
+            ->where('type', 'wisata_payment_paid')
+            ->where('data->booking_db_id', $booking->id)
+            ->exists();
+
+        if (! $alreadyNotified) {
+            UserNotification::query()->create([
                 'user_id' => $booking->user_id,
-                'type' => 'wisata_payment_paid',
-                'data->booking_db_id' => $booking->id,
-            ],
-            [
                 'title' => 'Pembayaran tiket berhasil',
                 'message' => 'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
+                'type' => 'wisata_payment_paid',
                 'data' => [
                     'booking_id' => $encryptedId,
                     'booking_db_id' => $booking->id,
                     'type' => 'wisata',
                     'category' => 'wisata',
                 ],
-            ],
-        );
+            ]);
+        }
 
         SendPushNotificationJob::dispatch(
             $booking->user_id,

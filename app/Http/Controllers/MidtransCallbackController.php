@@ -17,6 +17,7 @@ use App\Models\WisataAffiliateCommissionItem;
 use App\Models\SouvenirOrder;
 use App\Services\BookingService;
 use App\Services\MidtransService;
+use App\Services\WisataPaymentLifecycleService;
 use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Log;
 
 class MidtransCallbackController extends Controller
 {
-    public function __invoke(Request $request, MidtransService $midtransService): Response
+    public function __invoke(Request $request, MidtransService $midtransService, WisataPaymentLifecycleService $wisataPayments): Response
     {
         $payload = $request->all();
 
@@ -92,7 +93,6 @@ class MidtransCallbackController extends Controller
         $status = $payload['transaction_status'] ?? null;
         $isSuccessful = $statusCode === '200' && (
             $status === 'settlement'
-            || $status === 'success'
             || (
                 $status === 'capture'
                 && (! array_key_exists('fraud_status', $payload) || $payload['fraud_status'] === 'accept')
@@ -119,6 +119,12 @@ class MidtransCallbackController extends Controller
             ]);
 
             return response('Amount mismatch', 422);
+        }
+
+        if ($wisataPayment && $wisataBooking) {
+            $wisataPayments->handleProviderNotification($wisataPayment, $payload);
+
+            return response('OK', 200);
         }
 
         if (
@@ -691,7 +697,15 @@ class MidtransCallbackController extends Controller
             return false;
         }
 
-        return (int) round((float) $grossAmount) === (int) round((float) $expected);
+        if (! preg_match('/\A([0-9]+)(?:\.([0-9]{1,2}))?\z/', $grossAmount, $matches)) {
+            return false;
+        }
+
+        if (isset($matches[2]) && (int) str_pad($matches[2], 2, '0') !== 0) {
+            return false;
+        }
+
+        return (int) $matches[1] === (int) $expected;
     }
 
     private function bookingAlreadyPaid(

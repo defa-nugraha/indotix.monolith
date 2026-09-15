@@ -16,6 +16,7 @@ use App\Models\WisataBookingItem;
 use App\Models\WisataPayment;
 use App\Models\WisataTicket;
 use App\Services\MidtransService;
+use App\Services\WisataPaymentLifecycleService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -222,7 +223,7 @@ class WisataBookingController extends Controller
         ]);
     }
 
-    public function pay(Request $request, string $booking, MidtransService $midtransService): JsonResponse
+    public function pay(Request $request, string $booking, WisataPaymentLifecycleService $payments): JsonResponse
     {
         $booking = $this->resolveBooking($booking);
 
@@ -234,80 +235,48 @@ class WisataBookingController extends Controller
             $this->completeFreeBooking($booking);
             $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
 
-            return response()->json([
-                'booking' => $this->bookingPayload($booking),
-            ]);
+            return response()->json(['booking' => $this->bookingPayload($booking)]);
         }
 
         if ($booking->isExpired()) {
-            $booking->update(['status' => 'expired', 'payment_status' => 'expired']);
+            try {
+                $payments->expireBooking($booking);
+            } catch (\Throwable $exception) {
+                Log::warning('Unable to synchronize expired wisata booking with Midtrans.', [
+                    'booking_id' => $booking->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
 
             return response()->json(['message' => 'Booking sudah kedaluwarsa.'], 422);
         }
 
-        if ($booking->status !== 'pending_payment') {
-            $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
-
-            return response()->json([
-                'booking' => $this->bookingPayload($booking),
-            ]);
-        }
-
-        if ($booking->payments()->where('status', 'pending')->exists()) {
-            $payment = $booking->payments()->latest()->first();
-
-            return response()->json([
-                'payment' => [
-                    'order_id' => $payment?->order_id,
-                    'snap_token' => $payment?->payload['token'] ?? null,
-                    'redirect_url' => $payment?->payload['redirect_url'] ?? null,
-                    'payload' => $payment?->payload,
-                ],
-            ]);
-        }
-
-        $orderId = sprintf('WISATA-%s-%s', $booking->id, now()->format('YmdHis'));
-        $payload = $this->buildSnapPayload($booking, $orderId);
-
         try {
-            $charge = $midtransService->snap($payload);
+            $payment = $payments->createOrGetSnapPayment($booking);
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
         } catch (\Throwable $exception) {
-            Log::warning('Midtrans wisata snap payment failed', [
+            Log::warning('Midtrans wisata payment creation failed', [
                 'booking_id' => $booking->id,
-                'order_id' => $orderId,
                 'message' => $exception->getMessage(),
             ]);
 
-            return response()->json(['message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.'], 500);
+            return response()->json([
+                'message' => 'Status pembuatan pembayaran belum dapat dipastikan. Silakan coba beberapa saat lagi.',
+            ], 503);
         }
-
-        $payment = WisataPayment::create([
-            'wisata_booking_id' => $booking->id,
-            'provider' => 'midtrans',
-            'status' => 'pending',
-            'gross_amount' => (int) $booking->total_price,
-            'payment_type' => 'snap',
-            'transaction_id' => $charge['transaction_id'] ?? null,
-            'order_id' => $orderId,
-            'payload' => $charge,
-        ]);
-
-        $booking->update([
-            'midtrans_order_id' => $payment->order_id,
-            'payment_status' => $payment->status,
-        ]);
 
         return response()->json([
             'payment' => [
                 'order_id' => $payment->order_id,
-                'snap_token' => $charge['token'] ?? null,
-                'redirect_url' => $charge['redirect_url'] ?? null,
-                'payload' => $charge,
+                'status' => $payment->status,
+                'snap_token' => $payment->payload['token'] ?? null,
+                'redirect_url' => $payment->payload['redirect_url'] ?? null,
             ],
         ]);
     }
 
-    public function cancel(Request $request, string $booking): JsonResponse
+    public function cancel(Request $request, string $booking, WisataPaymentLifecycleService $payments): JsonResponse
     {
         $booking = $this->resolveBooking($booking);
 
@@ -315,16 +284,23 @@ class WisataBookingController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
-        if ($booking->status !== 'pending_payment') {
-            return response()->json(['message' => 'Pesanan tidak dapat dibatalkan.'], 422);
-        }
+        try {
+            $booking = $payments->cancelBooking(
+                $booking,
+                $request->string('reason')->toString() ?: null,
+            );
+        } catch (RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        } catch (\Throwable $exception) {
+            Log::warning('Wisata cancellation synchronization failed.', [
+                'booking_id' => $booking->id,
+                'message' => $exception->getMessage(),
+            ]);
 
-        $booking->update([
-            'status' => 'cancelled',
-            'payment_status' => 'cancelled',
-            'cancel_reason' => $request->string('reason')->toString() ?: null,
-            'cancelled_at' => now(),
-        ]);
+            return response()->json([
+                'message' => 'Pembatalan belum dapat dipastikan. Pesanan belum ditandai batal dan akan direkonsiliasi.',
+            ], 503);
+        }
 
         UserNotification::create([
             'user_id' => $booking->user_id,
@@ -340,9 +316,7 @@ class WisataBookingController extends Controller
 
         $booking->load(['ticket', 'destination', 'items.ticket', 'payments']);
 
-        return response()->json([
-            'booking' => $this->bookingPayload($booking),
-        ]);
+        return response()->json(['booking' => $this->bookingPayload($booking)]);
     }
 
     public function ticket(Request $request, string $booking)
@@ -552,7 +526,16 @@ class WisataBookingController extends Controller
             ->whereHas('booking', function ($query) use ($date) {
                 $query
                     ->whereDate('visit_date', $date)
-                    ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+                    ->where(function ($statusQuery) {
+                        $statusQuery->whereIn('status', ['paid', 'completed'])
+                            ->orWhere(function ($pendingQuery) {
+                                $pendingQuery->where('status', 'pending_payment')
+                                    ->where(function ($deadlineQuery) {
+                                        $deadlineQuery->whereNull('payment_deadline')
+                                            ->orWhere('payment_deadline', '>', now());
+                                    });
+                            });
+                    });
             });
 
         if ($lock) {
@@ -562,7 +545,16 @@ class WisataBookingController extends Controller
         $legacyQuery = WisataBooking::query()
             ->where('wisata_ticket_id', $ticket->id)
             ->whereDate('visit_date', $date)
-            ->whereIn('status', ['pending_payment', 'paid', 'completed'])
+            ->where(function ($statusQuery) {
+                $statusQuery->whereIn('status', ['paid', 'completed'])
+                    ->orWhere(function ($pendingQuery) {
+                        $pendingQuery->where('status', 'pending_payment')
+                            ->where(function ($deadlineQuery) {
+                                $deadlineQuery->whereNull('payment_deadline')
+                                    ->orWhere('payment_deadline', '>', now());
+                            });
+                    });
+            })
             ->whereDoesntHave('items');
 
         if ($lock) {
