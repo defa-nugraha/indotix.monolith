@@ -163,7 +163,7 @@ class WisataFinanceController extends Controller
             ->when($filters['end_date'] ?? null, fn ($query, $date) => $query->whereDate('created_at', '<=', $date));
 
         $gmv = $bookingScope()
-            ->whereIn('status', ['paid', 'completed', 'refunded'])
+            ->whereIn('status', ['paid', 'completed'])
             ->sum('total_price');
 
         $refund = $bookingScope()
