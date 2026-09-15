@@ -60,6 +60,11 @@ type Props = {
     onboarding: Onboarding;
     cityName?: string | null;
     provinceName?: string | null;
+    sensitiveDocumentUrls: {
+        ktp?: string | null;
+        selfie?: string | null;
+        legal?: string | null;
+    };
 };
 
 const statusTone = (status?: string | null) => {
@@ -71,8 +76,16 @@ const statusTone = (status?: string | null) => {
 
 const imageUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
 
-const DocItem = ({ label, path }: { label: string; path?: string | null }) => {
-    const url = imageUrl(path);
+const DocItem = ({
+    label,
+    path,
+    protectedUrl,
+}: {
+    label: string;
+    path?: string | null;
+    protectedUrl?: string | null;
+}) => {
+    const url = protectedUrl ?? imageUrl(path);
     const isPdf = path?.toLowerCase().endsWith('.pdf') ?? false;
     const hasFile = Boolean(path);
 
@@ -121,6 +134,7 @@ export default function AdminMitraWisataShow({
     onboarding,
     cityName,
     provinceName,
+    sensitiveDocumentUrls,
 }: Props) {
     const handleSuspend = async () => {
         const result = await Swal.fire({
@@ -411,14 +425,17 @@ export default function AdminMitraWisataShow({
                                 <DocItem
                                     label="KTP"
                                     path={onboarding.ktp_path}
+                                    protectedUrl={sensitiveDocumentUrls.ktp}
                                 />
                                 <DocItem
                                     label="Selfie + KTP"
                                     path={onboarding.selfie_ktp_path}
+                                    protectedUrl={sensitiveDocumentUrls.selfie}
                                 />
                                 <DocItem
                                     label="Dokumen Legalitas"
                                     path={onboarding.legal_doc_path}
+                                    protectedUrl={sensitiveDocumentUrls.legal}
                                 />
                             </div>
                             <div className="mt-3 text-xs text-slate-500">
