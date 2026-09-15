@@ -653,7 +653,7 @@ class WisataPaymentLifecycleService
                 'reconciliation_attempts' => (int) $lockedPayment->reconciliation_attempts + 1,
             ]);
 
-            if (in_array($booking->status, ['cancelled', 'expired', 'refunded'], true)) {
+            if (in_array($booking->status, ['cancelled', 'expired'], true)) {
                 $booking->update(['refund_status' => 'pending']);
 
                 WisataRefund::query()->firstOrCreate(
@@ -887,7 +887,6 @@ class WisataPaymentLifecycleService
                 ->sum('amount');
 
             $booking->update([
-                'status' => $processedAmount >= (int) $payment->gross_amount ? 'refunded' : $booking->status,
                 'refund_status' => 'processed',
                 'refund_amount' => $processedAmount,
                 'refund_processed_at' => now(),
