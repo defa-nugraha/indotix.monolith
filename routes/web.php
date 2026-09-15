@@ -504,6 +504,9 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra-wisata.store');
     Route::get('admin/mitra-wisata/{user}', [MitraWisataController::class, 'show'])
         ->name('admin.mitra-wisata.show');
+    Route::get('admin/mitra-wisata/{user}/documents/{type}', [App\Http\Controllers\MitraWisataSensitiveDocumentController::class, 'showAdmin'])
+        ->where('type', 'ktp|selfie|legal')
+        ->name('admin.mitra-wisata.documents.show');
     Route::delete('admin/mitra-wisata/{user}', [MitraWisataController::class, 'destroy'])
         ->name('admin.mitra-wisata.destroy');
     Route::post('admin/mitra-wisata/{user}/verify', [MitraWisataController::class, 'verify'])
@@ -932,6 +935,9 @@ Route::prefix('mitra/wisata')
             ->name('destination.edit');
         Route::put('destination', [DestinationController::class, 'update'])
             ->name('destination.update');
+        Route::get('documents/{type}', [App\Http\Controllers\MitraWisataSensitiveDocumentController::class, 'showOwn'])
+            ->where('type', 'ktp|selfie|legal')
+            ->name('documents.show');
 
         Route::get('tickets', [App\Http\Controllers\Mitra\Wisata\TicketController::class, 'index'])
             ->name('tickets.index');
