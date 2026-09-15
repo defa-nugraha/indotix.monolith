@@ -17,7 +17,7 @@ class WisataFinanceService
         $bookings = WisataBooking::query()
             ->where('mitra_wisata_onboarding_id', $destinationId)
             ->whereBetween('visit_date', [$startDate, $endDate])
-            ->whereIn('status', ['paid', 'completed', 'refunded'])
+            ->whereIn('status', ['paid', 'completed'])
             ->get();
 
         $gross = 0;
