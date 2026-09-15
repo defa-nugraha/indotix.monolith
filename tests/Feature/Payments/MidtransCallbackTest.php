@@ -272,3 +272,41 @@ test('event settlement increments sold counters only once on duplicate callbacks
     expect($event->capacity_sold)->toBe(2);
     expect(UserNotification::query()->where('user_id', $user->id)->where('type', 'event_payment_paid')->count())->toBe(1);
 });
+
+
+test('midtrans capture with challenged fraud status does not mark booking paid', function () {
+    [, , , $booking] = createHotelBookingFixture('HOTEL-CAPTURE-CHALLENGE');
+
+    $payload = midtransPayload('HOTEL-CAPTURE-CHALLENGE', 'capture');
+    $payload['fraud_status'] = 'challenge';
+
+    $this->withoutMiddleware()
+        ->post('/payments/midtrans/callback', $payload)
+        ->assertOk();
+
+    $booking->refresh();
+    $payment = Payment::query()->where('booking_id', $booking->id)->firstOrFail();
+
+    expect($booking->status)->toBe('pending_payment')
+        ->and($payment->status)->toBe('capture')
+        ->and(UserNotification::query()->where('type', 'payment_paid')->count())->toBe(0);
+});
+
+test('successful callback does not reactivate a cancelled booking', function () {
+    [, , , $booking] = createHotelBookingFixture('HOTEL-CANCELLED-LATE-PAID');
+    $booking->update([
+        'status' => 'cancelled',
+        'payment_status' => 'cancelled',
+    ]);
+
+    $this->withoutMiddleware()
+        ->post('/payments/midtrans/callback', midtransPayload('HOTEL-CANCELLED-LATE-PAID', 'settlement'))
+        ->assertOk();
+
+    $booking->refresh();
+    $payment = Payment::query()->where('booking_id', $booking->id)->firstOrFail();
+
+    expect($booking->status)->toBe('cancelled')
+        ->and($payment->status)->toBe('settlement')
+        ->and(UserNotification::query()->where('type', 'payment_paid')->count())->toBe(0);
+});

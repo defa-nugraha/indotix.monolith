@@ -37,7 +37,7 @@ class WisataBookingController extends Controller
         $data = $request->validate([
             'destination_id' => ['required', 'integer', 'exists:mitra_wisata_onboardings,id'],
             'ticket_id' => ['nullable', 'integer', 'exists:wisata_tickets,id'],
-            'visit_date' => ['required', 'date'],
+            'visit_date' => ['required', 'date', 'after_or_equal:today'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_TICKETS_PER_BOOKING],
             'items' => ['nullable', 'array'],
             'items.*.ticket_id' => ['required_with:items', 'integer', 'exists:wisata_tickets,id'],
@@ -468,6 +468,12 @@ class WisataBookingController extends Controller
             return redirect()->route('home');
         }
 
+        if (! in_array($booking->status, ['paid', 'completed'], true)) {
+            return redirect()
+                ->route('wisata.booking.show', ['booking' => $this->encryptId($booking->id)])
+                ->withErrors(['ticket' => 'Tiket hanya tersedia setelah pembayaran berhasil.']);
+        }
+
         $booking->load('ticket', 'destination', 'items.ticket');
 
         $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
@@ -550,6 +556,18 @@ class WisataBookingController extends Controller
             if (! $ticket->is_active || $ticket->is_closed) {
                 throw ValidationException::withMessages([
                     'items' => "Tiket {$ticket->name} belum tersedia.",
+                ]);
+            }
+
+            $visitDate = \Carbon\Carbon::parse($draft['visit_date'])->startOfDay();
+            if ($ticket->valid_from && $visitDate->lt($ticket->valid_from->startOfDay())) {
+                throw ValidationException::withMessages([
+                    'items' => "Tiket {$ticket->name} belum berlaku pada tanggal kunjungan.",
+                ]);
+            }
+            if ($ticket->valid_until && $visitDate->gt($ticket->valid_until->startOfDay())) {
+                throw ValidationException::withMessages([
+                    'items' => "Masa berlaku tiket {$ticket->name} sudah berakhir untuk tanggal kunjungan.",
                 ]);
             }
 
@@ -832,6 +850,10 @@ class WisataBookingController extends Controller
                 'first_name' => $booking->guest_name,
                 'email' => $booking->guest_email,
                 'phone' => $booking->guest_phone,
+            ],
+            'expiry' => [
+                'duration' => max(1, (int) now()->diffInMinutes($booking->payment_deadline ?? now()->addMinutes(SystemSetting::wisataBookingTimeoutMinutes()))),
+                'unit' => 'minute',
             ],
         ];
     }

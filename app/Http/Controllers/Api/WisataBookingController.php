@@ -46,7 +46,7 @@ class WisataBookingController extends Controller
         $data = $request->validate([
             'destination_id' => ['required', 'string'],
             'ticket_id' => ['nullable', 'required_without:items', 'string'],
-            'visit_date' => ['required', 'date'],
+            'visit_date' => ['required', 'date', 'after_or_equal:today'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
             'items' => ['nullable', 'array', 'min:1', 'max:20'],
             'items.*.ticket_id' => ['required_with:items', 'string'],
@@ -92,7 +92,7 @@ class WisataBookingController extends Controller
         $data = $request->validate([
             'destination_id' => ['required', 'string'],
             'ticket_id' => ['nullable', 'required_without:items', 'string'],
-            'visit_date' => ['required', 'date'],
+            'visit_date' => ['required', 'date', 'after_or_equal:today'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
             'items' => ['nullable', 'array', 'min:1', 'max:20'],
             'items.*.ticket_id' => ['required_with:items', 'string'],
@@ -353,6 +353,10 @@ class WisataBookingController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan.'], 404);
         }
 
+        if (! in_array($booking->status, ['paid', 'completed'], true)) {
+            return response()->json(['message' => 'Tiket hanya tersedia setelah pembayaran berhasil.'], 403);
+        }
+
         $booking->load('ticket', 'destination', 'items.ticket');
 
         $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
@@ -389,6 +393,14 @@ class WisataBookingController extends Controller
 
             if (! $ticket->is_active || $ticket->is_closed) {
                 throw new RuntimeException('Tiket belum tersedia.');
+            }
+
+            $visitDate = \Carbon\Carbon::parse($data['visit_date'])->startOfDay();
+            if ($ticket->valid_from && $visitDate->lt($ticket->valid_from->startOfDay())) {
+                throw new RuntimeException('Tiket belum berlaku pada tanggal kunjungan.');
+            }
+            if ($ticket->valid_until && $visitDate->gt($ticket->valid_until->startOfDay())) {
+                throw new RuntimeException('Masa berlaku tiket sudah berakhir untuk tanggal kunjungan.');
             }
 
             $quantity = (int) $selection['quantity'];
@@ -619,6 +631,10 @@ class WisataBookingController extends Controller
                 'first_name' => $booking->guest_name,
                 'email' => $booking->guest_email,
                 'phone' => $booking->guest_phone,
+            ],
+            'expiry' => [
+                'duration' => max(1, (int) now()->diffInMinutes($booking->payment_deadline ?? now()->addMinutes(SystemSetting::wisataBookingTimeoutMinutes()))),
+                'unit' => 'minute',
             ],
         ];
     }
