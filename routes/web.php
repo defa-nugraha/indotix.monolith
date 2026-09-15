@@ -131,6 +131,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/.well-known/assetlinks.json', [PasskeyAssociationController::class, 'assetLinks']);
+Route::get('/panduan/mitra', App\Http\Controllers\PublicMitraGuideController::class)
+    ->name('public.guides.mitra');
 Route::get('/.well-known/apple-app-site-association', [PasskeyAssociationController::class, 'appleAppSiteAssociation']);
 
 Route::get('/', [PublicHomeController::class, 'index'])

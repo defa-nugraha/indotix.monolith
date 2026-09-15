@@ -1,0 +1,94 @@
+{
+  "generatedAt": "2026-09-15T01:11:02.812Z",
+  "actions": [
+    {
+      "name": "ticket-create-edit",
+      "result": "passed",
+      "at": "2026-09-14T14:56:05.134Z"
+    },
+    {
+      "name": "ticket-package",
+      "result": "passed",
+      "at": "2026-09-14T14:49:57.941Z"
+    },
+    {
+      "name": "booking-detail-filter",
+      "result": "passed",
+      "at": "2026-09-14T14:50:06.643Z"
+    },
+    {
+      "name": "review-reply",
+      "result": "passed",
+      "at": "2026-09-14T14:34:40.575Z"
+    },
+    {
+      "name": "dispute-create",
+      "result": "passed",
+      "at": "2026-09-14T14:34:52.645Z"
+    },
+    {
+      "name": "chat-send",
+      "result": "passed",
+      "at": "2026-09-14T14:50:16.804Z"
+    },
+    {
+      "name": "profile-save",
+      "result": "passed",
+      "at": "2026-09-14T15:02:30.817Z"
+    },
+    {
+      "name": "password-save",
+      "result": "passed",
+      "at": "2026-09-14T15:02:41.263Z"
+    },
+    {
+      "name": "guide-tour",
+      "result": "passed",
+      "at": "2026-09-14T14:50:34.741Z"
+    },
+    {
+      "name": "logout",
+      "result": "passed",
+      "at": "2026-09-14T14:35:33.482Z"
+    },
+    {
+      "name": "register-email-link-type-onboarding-account",
+      "result": "passed",
+      "at": "2026-09-14T15:01:35.487Z",
+      "scope": "UI register, local mail link, choose Wisata, save responsible data; external SMTP not tested"
+    },
+    {
+      "name": "onboarding-upload-submit",
+      "result": "observed",
+      "scope": "Three photo uploads and submission through actual UI; legal fields preloaded with non-sensitive documentation fixtures."
+    },
+    {
+      "name": "partner-terms-sign",
+      "result": "passed",
+      "scope": "Actual UI signature; local mailer only."
+    },
+    {
+      "name": "destination-save",
+      "result": "passed",
+      "at": "2026-09-15T00:59:58.239Z"
+    },
+    {
+      "name": "qr-pdf-download",
+      "result": "passed",
+      "at": "2026-09-15T01:00:18.398Z"
+    },
+    {
+      "name": "password-reset-email-and-login",
+      "result": "passed",
+      "scope": "Real password reset link from local mail log; login with new password and restoration through profile form. External inbox not tested."
+    }
+  ],
+  "additionalEvidence": {
+    "onboarding": "Read-only database check: registrasi.wisata@example.com has pending verification and all three uploaded photo paths."
+  },
+  "limits": [
+    "Package form selected and captured; package submission not exercised.",
+    "Deletion dialogs inspected, deletion not executed.",
+    "External SMTP, Google OAuth, bank transfer, Midtrans, visitor camera and physical printer not tested."
+  ]
+}

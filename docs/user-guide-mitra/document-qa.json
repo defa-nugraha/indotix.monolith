@@ -1,0 +1,30 @@
+{
+  "date": "15 September 2026",
+  "commit": "6e12e5a",
+  "sections": 14,
+  "screenshots": 44,
+  "omitted": [],
+  "viewports": [
+    {
+      "width": 1440,
+      "overflow": false,
+      "brokenImages": 0
+    },
+    {
+      "width": 768,
+      "overflow": false,
+      "brokenImages": 0
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "brokenImages": 0
+    },
+    {
+      "width": 320,
+      "overflow": false,
+      "brokenImages": 0
+    }
+  ],
+  "pdfFormat": "A3 landscape"
+}

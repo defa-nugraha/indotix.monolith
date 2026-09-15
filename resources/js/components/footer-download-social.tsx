@@ -75,6 +75,12 @@ export function FooterDownloadSocial({
                     </a>
                 ))}
             </div>
+            <a
+                href="/panduan/mitra"
+                className="mt-6 inline-flex min-h-11 items-center text-sm font-medium text-slate-600 transition hover:text-sky-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-600"
+            >
+                Panduan Mitra
+            </a>
         </div>
     );
 }

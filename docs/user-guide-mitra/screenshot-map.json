@@ -1,0 +1,2289 @@
+[
+  {
+    "id": "01-login",
+    "title": "Masuk ke akun Mitra",
+    "route": "/login",
+    "guest": true,
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Email terdaftar",
+        "description": "Masukkan alamat email akun Mitra.",
+        "selector": "input[type=email]",
+        "bounds": {
+          "x": 553,
+          "y": 473,
+          "height": 36,
+          "width": 334
+        }
+      },
+      {
+        "number": 2,
+        "label": "Password",
+        "description": "Masukkan password akun Anda.",
+        "selector": "input[type=password]",
+        "bounds": {
+          "x": 553,
+          "y": 553,
+          "height": 36,
+          "width": 334
+        }
+      },
+      {
+        "number": 3,
+        "label": "Masuk sekarang",
+        "description": "Klik untuk masuk; akun yang belum terverifikasi diarahkan ke verifikasi email.",
+        "selector": "button[type=submit]",
+        "bounds": {
+          "x": 553,
+          "y": 649,
+          "height": 36,
+          "width": 334
+        }
+      },
+      {
+        "number": 4,
+        "label": "Lupa password?",
+        "description": "Buka pemulihan bila lupa password.",
+        "selector": "a[href=\"/forgot-password\"]",
+        "bounds": {
+          "x": 794.515625,
+          "y": 529,
+          "height": 16,
+          "width": 92.484375
+        }
+      }
+    ],
+    "screenshot": "01-login.png",
+    "annotated": "01-login-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:30:08.380Z"
+  },
+  {
+    "id": "02-register",
+    "title": "Pilih jenis akun Mitra",
+    "route": "/register",
+    "guest": true,
+    "action": "mitra",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Mitra",
+        "description": "Pilih jenis akun Mitra sebelum mengisi formulir.",
+        "selector": "text:Mitra",
+        "bounds": {
+          "x": 724,
+          "y": 321,
+          "height": 38,
+          "width": 155
+        }
+      },
+      {
+        "number": 2,
+        "label": "Nama",
+        "description": "Isi nama lengkap penanggung jawab akun.",
+        "selector": "input[name=name]",
+        "bounds": {
+          "x": 553,
+          "y": 513,
+          "height": 36,
+          "width": 334
+        }
+      },
+      {
+        "number": 3,
+        "label": "Email",
+        "description": "Gunakan email yang dapat Anda akses.",
+        "selector": "input[name=email]",
+        "bounds": {
+          "x": 553,
+          "y": 591,
+          "height": 36,
+          "width": 334
+        }
+      }
+    ],
+    "screenshot": "02-register.png",
+    "annotated": "02-register-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:30:18.309Z"
+  },
+  {
+    "id": "03-register-submit",
+    "title": "Lengkapi data dan persetujuan",
+    "route": "/register",
+    "guest": true,
+    "action": "mitra",
+    "focus": "button[type=submit]",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Nomor HP",
+        "description": "Isi nomor kontak aktif.",
+        "selector": "input[name=phone]",
+        "bounds": {
+          "x": 553,
+          "y": 59,
+          "height": 36,
+          "width": 334
+        }
+      },
+      {
+        "number": 2,
+        "label": "Password",
+        "description": "Buat password dan ulangi pada konfirmasi.",
+        "selector": "input[name=password]",
+        "bounds": {
+          "x": 553,
+          "y": 215,
+          "height": 36,
+          "width": 334
+        }
+      },
+      {
+        "number": 3,
+        "label": "Konfirmasi password",
+        "description": "Harus sama dengan password di atas.",
+        "selector": "input[name=password_confirmation]",
+        "bounds": {
+          "x": 553,
+          "y": 293,
+          "height": 36,
+          "width": 334
+        }
+      },
+      {
+        "number": 4,
+        "label": "Persetujuan",
+        "description": "Baca Syarat dan Ketentuan serta Kebijakan Privasi, lalu centang persetujuan.",
+        "selector": "label[for=terms_accepted]",
+        "bounds": {
+          "x": 595,
+          "y": 366,
+          "height": 72,
+          "width": 275
+        }
+      },
+      {
+        "number": 5,
+        "label": "Buat akun",
+        "description": "Kirim formulir registrasi.",
+        "selector": "button[type=submit]",
+        "bounds": {
+          "x": 553,
+          "y": 479,
+          "height": 36,
+          "width": 334
+        }
+      }
+    ],
+    "screenshot": "03-register-submit.png",
+    "annotated": "03-register-submit-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:30:29.357Z"
+  },
+  {
+    "id": "08-dashboard",
+    "title": "Membaca ringkasan dashboard",
+    "route": "/mitra/dashboard",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Lengkapi dokumen",
+        "description": "Buka data pendaftaran dan kelengkapan dokumen.",
+        "selector": "a[href=\"/mitra/wisata/onboarding\"]",
+        "bounds": {
+          "x": 1222.640625,
+          "y": 257,
+          "height": 36,
+          "width": 160.359375
+        }
+      },
+      {
+        "number": 2,
+        "label": "Indikator utama",
+        "description": "Lihat tiket hari ini, pendapatan bulan ini, dan sisa kuota.",
+        "selector": "[data-coach=\"dashboard-metrics\"]",
+        "bounds": {
+          "x": 305,
+          "y": 347,
+          "height": 106,
+          "width": 1078
+        }
+      },
+      {
+        "number": 3,
+        "label": "Status pendaftaran",
+        "description": "Periksa verifikasi usaha dan rekening secara terpisah.",
+        "selector": "[data-coach=\"dashboard-verification\"]",
+        "bounds": {
+          "x": 280,
+          "y": 502,
+          "height": 200,
+          "width": 1128
+        }
+      }
+    ],
+    "screenshot": "08-dashboard.png",
+    "annotated": "08-dashboard-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:30:52.418Z"
+  },
+  {
+    "id": "09-dashboard-activity",
+    "title": "Memantau aktivitas dan operasional",
+    "route": "/mitra/dashboard",
+    "focus": "[data-coach=\"dashboard-status\"]",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Aktivitas destinasi",
+        "description": "Lihat booking terbaru dan buka Lihat semua untuk daftar booking.",
+        "selector": "[data-coach=\"dashboard-activity\"]",
+        "bounds": {
+          "x": 280,
+          "y": 268,
+          "height": 438,
+          "width": 643.984375
+        }
+      },
+      {
+        "number": 2,
+        "label": "Status operasional",
+        "description": "Pantau booking pending, validasi hari ini, dan status akun.",
+        "selector": "[data-coach=\"dashboard-status\"]",
+        "bounds": {
+          "x": 947.984375,
+          "y": 268,
+          "height": 438,
+          "width": 460
+        }
+      }
+    ],
+    "screenshot": "09-dashboard-activity.png",
+    "annotated": "09-dashboard-activity-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:31:00.809Z"
+  },
+  {
+    "id": "11-onboarding-destination",
+    "title": "Mengisi identitas destinasi",
+    "route": "/mitra/wisata/onboarding",
+    "action": "destination-tab",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Data Destinasi Wisata",
+        "description": "Buka kelompok informasi destinasi.",
+        "selector": "text:Data Destinasi Wisata",
+        "bounds": {
+          "x": 420.953125,
+          "y": 377,
+          "height": 36,
+          "width": 163.71875
+        }
+      },
+      {
+        "number": 2,
+        "label": "Nama Destinasi Wisata",
+        "description": "Gunakan nama yang dikenal pengunjung.",
+        "selector": "field:Nama Destinasi Wisata",
+        "bounds": {
+          "x": 305,
+          "y": 539,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 3,
+        "label": "Jenis Wisata",
+        "description": "Pilih kategori yang sesuai.",
+        "selector": "field:Jenis Wisata",
+        "bounds": {
+          "x": 852,
+          "y": 539,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 4,
+        "label": "Deskripsi Singkat",
+        "description": "Jelaskan daya tarik dan layanan destinasi.",
+        "selector": "field:Deskripsi Singkat",
+        "bounds": {
+          "x": 305,
+          "y": 613,
+          "height": 142,
+          "width": 1078
+        }
+      }
+    ],
+    "screenshot": "11-onboarding-destination.png",
+    "annotated": "11-onboarding-destination-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:31:14.216Z"
+  },
+  {
+    "id": "15-onboarding-bank",
+    "title": "Mengisi rekening penerima",
+    "route": "/mitra/wisata/onboarding",
+    "action": "legal-tab",
+    "focus": "field:Nama Pemilik Rekening",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Nama Bank",
+        "description": "Isi nama bank tujuan.",
+        "selector": "field:Nama Bank",
+        "bounds": {
+          "x": 305,
+          "y": 650.5,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 2,
+        "label": "Nomor Rekening",
+        "description": "Gunakan 6-30 digit angka.",
+        "selector": "field:Nomor Rekening",
+        "bounds": {
+          "x": 852,
+          "y": 650.5,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 3,
+        "label": "Nama Pemilik Rekening",
+        "description": "Harus sesuai pemilik rekening.",
+        "selector": "field:Nama Pemilik Rekening",
+        "bounds": {
+          "x": 305,
+          "y": 724.5,
+          "height": 58,
+          "width": 1078
+        }
+      },
+      {
+        "number": 4,
+        "label": "Simpan",
+        "description": "Simpan legalitas dan data keuangan.",
+        "selector": "button[type=submit]",
+        "bounds": {
+          "x": 1308.21875,
+          "y": 798.5,
+          "height": 36,
+          "width": 74.78125
+        }
+      }
+    ],
+    "screenshot": "15-onboarding-bank.png",
+    "annotated": "15-onboarding-bank-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:31:38.838Z"
+  },
+  {
+    "id": "18-destination-info",
+    "title": "Memperbarui profil destinasi",
+    "route": "/mitra/wisata/destination",
+    "focus": "field:Nama Destinasi",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Nama Destinasi",
+        "description": "Perbarui nama publik destinasi.",
+        "selector": "field:Nama Destinasi",
+        "bounds": {
+          "x": 305,
+          "y": 421,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 2,
+        "label": "Jenis Wisata",
+        "description": "Pilih kategori atau jenis lainnya bila tersedia.",
+        "selector": "field:Jenis Wisata",
+        "bounds": {
+          "x": 852,
+          "y": 421,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 3,
+        "label": "Deskripsi",
+        "description": "Jelaskan informasi yang diperlukan calon pengunjung.",
+        "selector": "field:Deskripsi",
+        "bounds": {
+          "x": 305,
+          "y": 495,
+          "height": 142,
+          "width": 1078
+        }
+      },
+      {
+        "number": 4,
+        "label": "Highlight",
+        "description": "Ringkas daya tarik utama.",
+        "selector": "field:Highlight",
+        "bounds": {
+          "x": 305,
+          "y": 653,
+          "height": 122,
+          "width": 1078
+        }
+      }
+    ],
+    "screenshot": "18-destination-info.png",
+    "annotated": "18-destination-info-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:31:47.116Z"
+  },
+  {
+    "id": "20-destination-photos",
+    "title": "Mengganti foto destinasi",
+    "route": "/mitra/wisata/destination",
+    "focus": "field:Foto Area Utama",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Foto Produk",
+        "description": "Gambar utama untuk halaman publik.",
+        "selector": "field:Foto Produk",
+        "bounds": {
+          "x": 305,
+          "y": 465,
+          "height": 88,
+          "width": 348.65625
+        }
+      },
+      {
+        "number": 2,
+        "label": "Foto Gerbang",
+        "description": "Gunakan foto akses masuk destinasi.",
+        "selector": "field:Foto Gerbang",
+        "bounds": {
+          "x": 669.65625,
+          "y": 465,
+          "height": 88,
+          "width": 348.671875
+        }
+      },
+      {
+        "number": 3,
+        "label": "Foto Area Utama",
+        "description": "Tampilkan area wisata yang representatif.",
+        "selector": "field:Foto Area Utama",
+        "bounds": {
+          "x": 1034.328125,
+          "y": 465,
+          "height": 88,
+          "width": 348.65625
+        }
+      },
+      {
+        "number": 4,
+        "label": "Foto Loket/Validasi",
+        "description": "Tunjukkan lokasi penerimaan pengunjung.",
+        "selector": "field:Foto Loket/Validasi",
+        "bounds": {
+          "x": 305,
+          "y": 569,
+          "height": 88,
+          "width": 348.65625
+        }
+      }
+    ],
+    "screenshot": "20-destination-photos.png",
+    "annotated": "20-destination-photos-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:31:55.975Z"
+  },
+  {
+    "id": "21-destination-save",
+    "title": "Menyimpan perubahan destinasi",
+    "route": "/mitra/wisata/destination",
+    "focus": "[data-coach=\"mitra-destination-save\"]",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Foto lainnya",
+        "description": "Tambahkan maksimal lima gambar pendukung, masing-masing maksimal 5 MB.",
+        "selector": "field:Foto Lainnya (maksimal 5)",
+        "bounds": {
+          "x": 305,
+          "y": 673,
+          "height": 110,
+          "width": 1078
+        }
+      },
+      {
+        "number": 2,
+        "label": "Simpan perubahan",
+        "description": "Simpan lalu periksa kembali data yang tampil.",
+        "selector": "[data-coach=\"mitra-destination-save\"]",
+        "bounds": {
+          "x": 305,
+          "y": 799,
+          "height": 36,
+          "width": 1078
+        }
+      }
+    ],
+    "screenshot": "21-destination-save.png",
+    "annotated": "21-destination-save-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:00.418Z"
+  },
+  {
+    "id": "22-ticket-list",
+    "title": "Mengelola produk tiket",
+    "route": "/mitra/wisata/tickets",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Tambah Tiket",
+        "description": "Buka formulir produk baru.",
+        "selector": "[data-coach=\"mitra-ticket-create\"]",
+        "bounds": {
+          "x": 1262.15625,
+          "y": 247,
+          "height": 36,
+          "width": 120.84375
+        }
+      },
+      {
+        "number": 2,
+        "label": "Daftar tiket",
+        "description": "Bandingkan nama, harga, kuota dan status.",
+        "selector": "[data-coach=\"mitra-ticket-table\"]",
+        "bounds": {
+          "x": 305,
+          "y": 377,
+          "height": 119,
+          "width": 1078
+        }
+      },
+      {
+        "number": 3,
+        "label": "Edit",
+        "description": "Buka tiket yang ingin diperbarui.",
+        "selector": "text:Edit",
+        "bounds": {
+          "x": 1145.1875,
+          "y": 439,
+          "height": 36,
+          "width": 48.578125
+        }
+      },
+      {
+        "number": 4,
+        "label": "Hapus",
+        "description": "Hapus hanya tiket yang memang tidak diperlukan; alasan wajib diisi.",
+        "selector": "text:Hapus",
+        "bounds": {
+          "x": 1201.765625,
+          "y": 439,
+          "height": 32,
+          "width": 67.515625
+        }
+      }
+    ],
+    "screenshot": "22-ticket-list.png",
+    "annotated": "22-ticket-list-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:04.767Z"
+  },
+  {
+    "id": "23-ticket-form",
+    "title": "Mengisi harga dan kuota tiket",
+    "route": "/mitra/wisata/tickets/create",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Nama Tiket",
+        "description": "Contoh: Tiket Masuk Reguler.",
+        "selector": "field:Nama Tiket",
+        "bounds": {
+          "x": 305,
+          "y": 303,
+          "height": 58,
+          "width": 1078
+        }
+      },
+      {
+        "number": 2,
+        "label": "Harga",
+        "description": "Masukkan harga dalam rupiah; nilai tidak boleh negatif.",
+        "selector": "field:Harga (Rp)",
+        "bounds": {
+          "x": 305,
+          "y": 515,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 3,
+        "label": "Kuota Total",
+        "description": "Isi kapasitas tiket.",
+        "selector": "field:Kuota Total",
+        "bounds": {
+          "x": 852,
+          "y": 515,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 4,
+        "label": "Kuota Harian",
+        "description": "Isi batas harian bila diperlukan.",
+        "selector": "field:Kuota Harian (opsional)",
+        "bounds": {
+          "x": 305,
+          "y": 589,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 5,
+        "label": "Batas pembelian",
+        "description": "Atur minimum dan maksimum pesanan dalam rentang 1-20 tiket.",
+        "selector": "field:Minimum Order",
+        "bounds": {
+          "x": 852,
+          "y": 589,
+          "height": 58,
+          "width": 531
+        }
+      }
+    ],
+    "screenshot": "23-ticket-form.png",
+    "annotated": "23-ticket-form-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:09.493Z"
+  },
+  {
+    "id": "24-ticket-settings",
+    "title": "Mengatur jenis dan masa berlaku",
+    "route": "/mitra/wisata/tickets/create",
+    "focus": "button[type=submit]",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Jenis Produk",
+        "description": "Pilih Tiket satuan atau Paket wisata.",
+        "selector": "field:Jenis Produk",
+        "bounds": {
+          "x": 305,
+          "y": 409,
+          "height": 96,
+          "width": 1078
+        }
+      },
+      {
+        "number": 2,
+        "label": "Berlaku Dari",
+        "description": "Tanggal awal bila tiket dibatasi periode.",
+        "selector": "field:Berlaku Dari",
+        "bounds": {
+          "x": 305,
+          "y": 614.5,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 3,
+        "label": "Berlaku Sampai",
+        "description": "Tanggal akhir periode.",
+        "selector": "field:Berlaku Sampai",
+        "bounds": {
+          "x": 852,
+          "y": 614.5,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 4,
+        "label": "Aktifkan tiket",
+        "description": "Aktifkan produk yang siap dijual.",
+        "selector": "text:Aktifkan tiket",
+        "bounds": {
+          "x": 305,
+          "y": 762.5,
+          "height": 20,
+          "width": 107.109375
+        }
+      },
+      {
+        "number": 5,
+        "label": "Simpan",
+        "description": "Simpan tiket setelah semua data diperiksa.",
+        "selector": "button[type=submit]",
+        "bounds": {
+          "x": 305,
+          "y": 798.5,
+          "height": 36,
+          "width": 82
+        }
+      }
+    ],
+    "screenshot": "24-ticket-settings.png",
+    "annotated": "24-ticket-settings-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:14.249Z"
+  },
+  {
+    "id": "26-ticket-delete",
+    "title": "Mengonfirmasi penghapusan tiket",
+    "route": "/mitra/wisata/tickets",
+    "action": "delete-dialog",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Alasan penghapusan",
+        "description": "Jelaskan alasan penghapusan; jangan hapus produk yang masih diperlukan.",
+        "selector": ".swal2-textarea",
+        "bounds": {
+          "x": 500,
+          "y": 404.65625,
+          "height": 121.5,
+          "width": 440
+        }
+      },
+      {
+        "number": 2,
+        "label": "Hapus",
+        "description": "Konfirmasi penghapusan hanya setelah yakin.",
+        "selector": ".swal2-confirm",
+        "bounds": {
+          "x": 623.75,
+          "y": 554.15625,
+          "height": 43.1875,
+          "width": 96.234375
+        }
+      },
+      {
+        "number": 3,
+        "label": "Batal",
+        "description": "Kembali tanpa menghapus tiket.",
+        "selector": ".swal2-cancel",
+        "bounds": {
+          "x": 729.984375,
+          "y": 554.15625,
+          "height": 43.1875,
+          "width": 86.265625
+        }
+      }
+    ],
+    "screenshot": "26-ticket-delete.png",
+    "annotated": "26-ticket-delete-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:20.119Z"
+  },
+  {
+    "id": "27-bookings",
+    "title": "Menyaring booking wisata",
+    "route": "/mitra/wisata/bookings",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Tanggal kunjungan",
+        "description": "Batasi daftar berdasarkan tanggal kunjungan.",
+        "selector": "input[type=date]",
+        "bounds": {
+          "x": 305,
+          "y": 347,
+          "height": 38,
+          "width": 351.328125
+        }
+      },
+      {
+        "number": 2,
+        "label": "Status",
+        "description": "Pilih status pembayaran/booking yang ingin dilihat.",
+        "selector": "select[name=status]",
+        "bounds": {
+          "x": 668.328125,
+          "y": 347,
+          "height": 38,
+          "width": 351.328125
+        }
+      },
+      {
+        "number": 3,
+        "label": "Filter",
+        "description": "Terapkan pilihan.",
+        "selector": "text:Filter",
+        "bounds": {
+          "x": 1031.65625,
+          "y": 327,
+          "height": 36,
+          "width": 351.34375
+        }
+      },
+      {
+        "number": 4,
+        "label": "Detail",
+        "description": "Buka rincian booking pada baris yang dipilih.",
+        "selector": "text:Detail",
+        "bounds": {
+          "x": 1314.296875,
+          "y": 606,
+          "height": 15,
+          "width": 33.3125
+        }
+      }
+    ],
+    "screenshot": "27-bookings.png",
+    "annotated": "27-bookings-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:24.543Z"
+  },
+  {
+    "id": "29-entry-qr",
+    "title": "Menyiapkan QR Masuk di lokasi",
+    "route": "/mitra/wisata/scans",
+    "focus": "[data-coach=\"mitra-entry-qr-actions\"]",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "QR Tiket / Data Scan",
+        "description": "Pilih preview QR atau riwayat validasi.",
+        "selector": "[data-coach=\"mitra-scan-tabs\"]",
+        "bounds": {
+          "x": 280,
+          "y": 201,
+          "height": 54,
+          "width": 1128
+        }
+      },
+      {
+        "number": 2,
+        "label": "Unduh PDF / Cetak QR",
+        "description": "Simpan atau cetak QR untuk dipasang di pintu masuk.",
+        "selector": "[data-coach=\"mitra-entry-qr-actions\"]",
+        "bounds": {
+          "x": 825.796875,
+          "y": 432,
+          "height": 36,
+          "width": 258.890625
+        }
+      }
+    ],
+    "screenshot": "29-entry-qr.png",
+    "annotated": "29-entry-qr-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:30.055Z"
+  },
+  {
+    "id": "30-scan-history",
+    "title": "Memantau penggunaan tiket",
+    "route": "/mitra/wisata/scans?tab=history",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Pencarian dan tanggal scan",
+        "description": "Cari booking/pengunjung atau batasi tanggal; Filter menerapkan, Reset menghapus pilihan.",
+        "selector": "[data-coach=\"mitra-scan-history-filter\"]",
+        "bounds": {
+          "x": 305,
+          "y": 305,
+          "height": 58,
+          "width": 1078
+        }
+      },
+      {
+        "number": 2,
+        "label": "Data Scan",
+        "description": "Periksa waktu, kode booking, tiket, jumlah dan hasil validasi.",
+        "selector": "[data-coach=\"mitra-scan-history-table\"]",
+        "bounds": {
+          "x": 305,
+          "y": 379,
+          "height": 246,
+          "width": 1078
+        }
+      }
+    ],
+    "screenshot": "30-scan-history.png",
+    "annotated": "30-scan-history-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:34.580Z"
+  },
+  {
+    "id": "32-payout-access",
+    "title": "Mengakses riwayat payout",
+    "route": "/mitra/dashboard",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Riwayat Payout",
+        "description": "Menu untuk melihat pencairan yang dibuat admin. Jika halaman kosong, hubungi admin.",
+        "selector": "a[href=\"/mitra/wisata/finance/payouts\"]",
+        "bounds": {
+          "x": 16,
+          "y": 396,
+          "height": 32,
+          "width": 224
+        }
+      }
+    ],
+    "screenshot": "32-payout-access.png",
+    "annotated": "32-payout-access-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:44.658Z"
+  },
+  {
+    "id": "33-notifications",
+    "title": "Membaca notifikasi",
+    "route": "/mitra/wisata/notifications",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Update Terbaru",
+        "description": "Baca informasi terbaru terkait akun dan operasional.",
+        "selector": "text:Update Terbaru",
+        "bounds": {
+          "x": 305,
+          "y": 251,
+          "height": 32,
+          "width": 1078
+        }
+      },
+      {
+        "number": 2,
+        "label": "Judul notifikasi",
+        "description": "Baca rincian pesan dan waktu di bawah judul.",
+        "selector": "text:Booking wisata baru",
+        "bounds": {
+          "x": 297,
+          "y": 369,
+          "height": 20,
+          "width": 400.765625
+        }
+      },
+      {
+        "number": 3,
+        "label": "Baru",
+        "description": "Menandai notifikasi yang belum terbaca.",
+        "selector": "text:Baru",
+        "bounds": {
+          "x": 1347.140625,
+          "y": 369,
+          "height": 22,
+          "width": 43.859375
+        }
+      }
+    ],
+    "screenshot": "33-notifications.png",
+    "annotated": "33-notifications-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:49.142Z"
+  },
+  {
+    "id": "34-reviews",
+    "title": "Menanggapi ulasan",
+    "route": "/mitra/wisata/reviews",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Daftar ulasan",
+        "description": "Lihat produk, pengunjung, rating dan komentar.",
+        "selector": "table",
+        "bounds": {
+          "x": 306,
+          "y": 438,
+          "height": 137,
+          "width": 1076
+        }
+      },
+      {
+        "number": 2,
+        "label": "Balas",
+        "description": "Buka formulir tanggapan untuk ulasan yang dipilih.",
+        "selector": "text:Balas",
+        "bounds": {
+          "x": 1232.984375,
+          "y": 491,
+          "height": 32,
+          "width": 60.375
+        }
+      },
+      {
+        "number": 3,
+        "label": "Hapus",
+        "description": "Gunakan secara hati-hati untuk ulasan yang perlu ditindaklanjuti.",
+        "selector": "text:Hapus",
+        "bounds": {
+          "x": 1232.984375,
+          "y": 531,
+          "height": 32,
+          "width": 67.515625
+        }
+      }
+    ],
+    "screenshot": "34-reviews.png",
+    "annotated": "34-reviews-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:53.247Z"
+  },
+  {
+    "id": "36-disputes",
+    "title": "Membuat laporan masalah",
+    "route": "/mitra/wisata/disputes",
+    "focus": "text:Kirim Laporan",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Booking",
+        "description": "Pilih booking yang mengalami masalah.",
+        "selector": "field:Booking",
+        "bounds": {
+          "x": 305,
+          "y": 315,
+          "height": 60,
+          "width": 533
+        }
+      },
+      {
+        "number": 2,
+        "label": "Subjek",
+        "description": "Tuliskan ringkasan masalah.",
+        "selector": "field:Subjek",
+        "bounds": {
+          "x": 850,
+          "y": 315,
+          "height": 60,
+          "width": 533
+        }
+      },
+      {
+        "number": 3,
+        "label": "Deskripsi",
+        "description": "Jelaskan kejadian, tanggal, dan bantuan yang dibutuhkan.",
+        "selector": "field:Deskripsi",
+        "bounds": {
+          "x": 305,
+          "y": 387,
+          "height": 122,
+          "width": 1078
+        }
+      },
+      {
+        "number": 4,
+        "label": "Bukti opsional",
+        "description": "Lampirkan JPG, PNG, atau PDF maksimal 5 MB.",
+        "selector": "input[type=file]",
+        "bounds": {
+          "x": 305,
+          "y": 549,
+          "height": 38,
+          "width": 1078
+        }
+      },
+      {
+        "number": 5,
+        "label": "Kirim Laporan",
+        "description": "Kirim laporan untuk ditinjau admin.",
+        "selector": "text:Kirim Laporan",
+        "bounds": {
+          "x": 1259.640625,
+          "y": 599,
+          "height": 36,
+          "width": 123.359375
+        }
+      }
+    ],
+    "screenshot": "36-disputes.png",
+    "annotated": "36-disputes-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:32:57.610Z"
+  },
+  {
+    "id": "35-review-reply",
+    "title": "Mengirim balasan ulasan",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Balasan",
+        "description": "Tulis tanggapan yang sopan dan relevan.",
+        "selector": ".swal2-textarea",
+        "bounds": {
+          "x": 500,
+          "y": 427.15625,
+          "height": 121.5,
+          "width": 440
+        }
+      },
+      {
+        "number": 2,
+        "label": "Kirim",
+        "description": "Simpan balasan untuk ulasan ini.",
+        "selector": ".swal2-confirm",
+        "bounds": {
+          "x": 628,
+          "y": 576.65625,
+          "height": 43.1875,
+          "width": 87.734375
+        }
+      },
+      {
+        "number": 3,
+        "label": "Batal",
+        "description": "Tutup tanpa mengirim.",
+        "selector": ".swal2-cancel",
+        "bounds": {
+          "x": 725.734375,
+          "y": 576.65625,
+          "height": 43.1875,
+          "width": 86.265625
+        }
+      }
+    ],
+    "route": "/mitra/wisata/reviews",
+    "screenshot": "35-review-reply.png",
+    "annotated": "35-review-reply-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:34:35.646Z"
+  },
+  {
+    "id": "37-dispute-created",
+    "title": "Memantau laporan yang dikirim",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Riwayat laporan",
+        "description": "Periksa booking, subjek, dan status laporan setelah dikirim.",
+        "selector": "table",
+        "bounds": {
+          "x": 306,
+          "y": 722,
+          "height": 101,
+          "width": 1076
+        }
+      }
+    ],
+    "focus": "table",
+    "route": "/mitra/wisata/disputes",
+    "screenshot": "37-dispute-created.png",
+    "annotated": "37-dispute-created-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:34:52.644Z"
+  },
+  {
+    "id": "42-logout",
+    "title": "Keluar dari akun Mitra",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Log out",
+        "description": "Akhiri sesi setelah selesai, terutama di perangkat bersama.",
+        "selector": "[data-test=logout-button]",
+        "bounds": {
+          "x": 1197,
+          "y": 168,
+          "height": 32,
+          "width": 214
+        }
+      }
+    ],
+    "route": "/mitra/dashboard",
+    "screenshot": "42-logout.png",
+    "annotated": "42-logout-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:35:26.968Z"
+  },
+  {
+    "id": "04-forgot-password",
+    "title": "Memulihkan akses akun",
+    "route": "/forgot-password",
+    "guest": true,
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Email",
+        "description": "Isi email yang terdaftar.",
+        "selector": "input[type=email]",
+        "bounds": {
+          "x": 528,
+          "y": 463,
+          "height": 36,
+          "width": 384
+        }
+      },
+      {
+        "number": 2,
+        "label": "Email password reset link",
+        "description": "Kirim tautan pemulihan ke email terdaftar.",
+        "selector": "[data-test=email-password-reset-link-button]",
+        "bounds": {
+          "x": 528,
+          "y": 523,
+          "height": 36,
+          "width": 384
+        }
+      }
+    ],
+    "screenshot": "04-forgot-password.png",
+    "annotated": "04-forgot-password-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:43:52.436Z"
+  },
+  {
+    "id": "10-onboarding-account",
+    "title": "Mengisi penanggung jawab",
+    "route": "/mitra/wisata/onboarding",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Akun Mitra",
+        "description": "Kelompok data penanggung jawab.",
+        "selector": "text:Akun Mitra",
+        "bounds": {
+          "x": 305,
+          "y": 377,
+          "height": 36,
+          "width": 103.953125
+        }
+      },
+      {
+        "number": 2,
+        "label": "Nama penanggung jawab",
+        "description": "Isi nama yang sesuai dokumen.",
+        "selector": "field:Nama Lengkap Penanggung Jawab",
+        "bounds": {
+          "x": 305,
+          "y": 539,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 3,
+        "label": "Nomor HP",
+        "description": "Gunakan nomor yang dapat dihubungi.",
+        "selector": "field:Nomor HP",
+        "bounds": {
+          "x": 852,
+          "y": 539,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 4,
+        "label": "Jabatan",
+        "description": "Pilih jabatan sesuai kewenangan Anda.",
+        "selector": "field:Jabatan Penanggung Jawab",
+        "bounds": {
+          "x": 305,
+          "y": 613,
+          "height": 58,
+          "width": 1078
+        }
+      },
+      {
+        "number": 5,
+        "label": "Simpan",
+        "description": "Simpan kelompok data sebelum melanjutkan.",
+        "selector": "button[type=submit]",
+        "bounds": {
+          "x": 1308.21875,
+          "y": 687,
+          "height": 36,
+          "width": 74.78125
+        }
+      }
+    ],
+    "screenshot": "10-onboarding-account.png",
+    "annotated": "10-onboarding-account-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:44:08.748Z"
+  },
+  {
+    "id": "13-onboarding-photos",
+    "title": "Melengkapi foto pendaftaran",
+    "route": "/mitra/wisata/onboarding",
+    "action": "destination-tab",
+    "focus": "button[type=submit]",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Foto gerbang",
+        "description": "Unggah JPG, PNG, atau WEBP maksimal 5 MB per file.",
+        "selector": "label[for=photo_gate_file]",
+        "bounds": {
+          "x": 322,
+          "y": 674,
+          "height": 92,
+          "width": 314.65625
+        }
+      },
+      {
+        "number": 2,
+        "label": "Simpan",
+        "description": "Simpan data destinasi, termasuk foto area utama dan loket/validasi.",
+        "selector": "button[type=submit]",
+        "bounds": {
+          "x": 1308.21875,
+          "y": 799,
+          "height": 36,
+          "width": 74.78125
+        }
+      }
+    ],
+    "screenshot": "13-onboarding-photos.png",
+    "annotated": "13-onboarding-photos-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:44:15.738Z"
+  },
+  {
+    "id": "14-onboarding-legal",
+    "title": "Mengunggah dokumen legalitas",
+    "route": "/mitra/wisata/onboarding",
+    "action": "legal-tab",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Legalitas & Keuangan",
+        "description": "Buka dokumen dan data rekening.",
+        "selector": "text:Legalitas & Keuangan",
+        "bounds": {
+          "x": 596.671875,
+          "y": 377,
+          "height": 36,
+          "width": 166.578125
+        }
+      },
+      {
+        "number": 2,
+        "label": "KTP",
+        "description": "Unggah dokumen sesuai format dan ukuran yang ditentukan.",
+        "selector": "label[for=ktp_file]",
+        "bounds": {
+          "x": 322,
+          "y": 693.5,
+          "height": 92,
+          "width": 497
+        }
+      },
+      {
+        "number": 3,
+        "label": "Jenis dokumen",
+        "description": "Pilih jenis legalitas usaha yang dimiliki.",
+        "selector": "field:Jenis Dokumen Legalitas",
+        "bounds": {
+          "x": 305,
+          "y": 818.5,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 4,
+        "label": "Nomor dokumen",
+        "description": "Isi sesuai berkas yang diunggah.",
+        "selector": "field:Nomor Dokumen",
+        "bounds": {
+          "x": 852,
+          "y": 818.5,
+          "height": 58,
+          "width": 531
+        }
+      }
+    ],
+    "screenshot": "14-onboarding-legal.png",
+    "annotated": "14-onboarding-legal-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:44:22.552Z"
+  },
+  {
+    "id": "31-finance",
+    "title": "Membaca pendapatan dan komisi",
+    "route": "/mitra/wisata/finance/summary",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Total Booking",
+        "description": "Jumlah booking berstatus paid atau completed.",
+        "selector": "text:Total Booking",
+        "bounds": {
+          "x": 305,
+          "y": 377,
+          "height": 16,
+          "width": 315.328125
+        }
+      },
+      {
+        "number": 2,
+        "label": "Pendapatan Kotor",
+        "description": "Total nilai booking yang diperhitungkan.",
+        "selector": "text:Pendapatan Kotor",
+        "bounds": {
+          "x": 686.328125,
+          "y": 377,
+          "height": 16,
+          "width": 315.328125
+        }
+      },
+      {
+        "number": 3,
+        "label": "Pendapatan Bersih",
+        "description": "Pendapatan kotor dikurangi komisi.",
+        "selector": "text:Pendapatan Bersih",
+        "bounds": {
+          "x": 1067.65625,
+          "y": 377,
+          "height": 16,
+          "width": 315.34375
+        }
+      },
+      {
+        "number": 4,
+        "label": "Detail Komisi",
+        "description": "Periksa komisi platform dan skema yang berlaku.",
+        "selector": "text:Detail Komisi",
+        "bounds": {
+          "x": 305,
+          "y": 507,
+          "height": 28,
+          "width": 1078
+        }
+      }
+    ],
+    "screenshot": "31-finance.png",
+    "annotated": "31-finance-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:44:27.226Z"
+  },
+  {
+    "id": "38-chat",
+    "title": "Membalas percakapan",
+    "route": "/mitra/chat",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Percakapan",
+        "description": "Pilih percakapan yang ingin ditangani.",
+        "selector": "text:Percakapan",
+        "bounds": {
+          "x": 273,
+          "y": 187,
+          "height": 20,
+          "width": 246
+        }
+      },
+      {
+        "number": 2,
+        "label": "Pesan",
+        "description": "Tulis jawaban yang jelas, maksimal 2.000 karakter.",
+        "selector": "input[placeholder=\"Tulis balasan...\"]",
+        "bounds": {
+          "x": 585,
+          "y": 656,
+          "height": 44,
+          "width": 738.5
+        }
+      },
+      {
+        "number": 3,
+        "label": "Kirim",
+        "description": "Kirim balasan kepada lawan bicara.",
+        "selector": "text:Kirim",
+        "bounds": {
+          "x": 1331.5,
+          "y": 646,
+          "height": 44,
+          "width": 75.5
+        }
+      }
+    ],
+    "screenshot": "38-chat.png",
+    "annotated": "38-chat-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:44:31.261Z"
+  },
+  {
+    "id": "25b-ticket-package",
+    "title": "Menyusun paket wisata",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Paket wisata",
+        "description": "Gabungkan tiket satuan milik destinasi yang sama.",
+        "selector": "field:Jenis Produk",
+        "bounds": {
+          "x": 305,
+          "y": 207,
+          "height": 96,
+          "width": 1078
+        }
+      },
+      {
+        "number": 2,
+        "label": "Isi Paket Wisata",
+        "description": "Pilih tiket komponen dan jumlahnya; harga dihitung otomatis.",
+        "selector": "field:Isi Paket Wisata",
+        "bounds": {
+          "x": 322,
+          "y": 429.5,
+          "height": 40,
+          "width": 1044
+        }
+      }
+    ],
+    "focus": "field:Isi Paket Wisata",
+    "route": "/mitra/wisata/tickets/create",
+    "screenshot": "25b-ticket-package.png",
+    "annotated": "25b-ticket-package-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:49:57.931Z"
+  },
+  {
+    "id": "28-booking-detail",
+    "title": "Memeriksa detail pesanan",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Kode booking",
+        "description": "Pastikan kode sesuai booking pengunjung.",
+        "selector": "h1",
+        "bounds": {
+          "x": 305,
+          "y": 251,
+          "height": 32,
+          "width": 1078
+        }
+      },
+      {
+        "number": 2,
+        "label": "Rincian tiket",
+        "description": "Cocokkan jenis tiket, jumlah, harga satuan, subtotal, status dan pemesan.",
+        "selector": "section.grid",
+        "bounds": {
+          "x": 280,
+          "y": 352,
+          "height": 324,
+          "width": 1128
+        }
+      }
+    ],
+    "route": "/mitra/wisata/bookings/5",
+    "screenshot": "28-booking-detail.png",
+    "annotated": "28-booking-detail-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:50:06.636Z"
+  },
+  {
+    "id": "41-guide",
+    "title": "Membuka panduan interaktif",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Lanjut",
+        "description": "Lanjutkan ke petunjuk berikutnya.",
+        "selector": "text:Lanjut",
+        "bounds": {
+          "x": 535.359375,
+          "y": 630,
+          "height": 32,
+          "width": 67.640625
+        }
+      },
+      {
+        "number": 2,
+        "label": "Tutup panduan",
+        "description": "Tutup petunjuk untuk kembali bekerja.",
+        "selector": "button[aria-label=\"Tutup panduan\"]",
+        "bounds": {
+          "x": 579,
+          "y": 513,
+          "height": 24,
+          "width": 24
+        }
+      }
+    ],
+    "route": "/mitra/dashboard",
+    "screenshot": "41-guide.png",
+    "annotated": "41-guide-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:50:34.737Z"
+  },
+  {
+    "id": "25-ticket-created",
+    "title": "Memeriksa tiket yang tersimpan",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Tiket tersimpan",
+        "description": "Cari tiket baru dan periksa harga, kuota, serta status.",
+        "selector": "table",
+        "bounds": {
+          "x": 306,
+          "y": 378,
+          "height": 271,
+          "width": 1076
+        }
+      },
+      {
+        "number": 2,
+        "label": "Edit",
+        "description": "Buka kembali produk untuk memperbarui data.",
+        "selector": "text:Edit",
+        "bounds": {
+          "x": 1163.3125,
+          "y": 439,
+          "height": 36,
+          "width": 48.578125
+        }
+      }
+    ],
+    "route": "/mitra/wisata/tickets",
+    "screenshot": "25-ticket-created.png",
+    "annotated": "25-ticket-created-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:55:53.561Z"
+  },
+  {
+    "id": "17-onboarding-submit",
+    "title": "Mengirim pendaftaran untuk verifikasi",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Kirim Verifikasi",
+        "description": "Kirim setelah seluruh data dan dokumen diperiksa. Contoh berkas pada lingkungan dokumentasi bukan identitas atau izin usaha nyata.",
+        "selector": "text:Kirim Verifikasi",
+        "bounds": {
+          "x": 1257.875,
+          "y": 792.5,
+          "height": 36,
+          "width": 125.125
+        }
+      }
+    ],
+    "focus": "text:Kirim Verifikasi",
+    "route": "/mitra/wisata/onboarding",
+    "screenshot": "17-onboarding-submit.png",
+    "annotated": "17-onboarding-submit-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T14:59:18.530Z"
+  },
+  {
+    "id": "07-terms",
+    "title": "Menyetujui dokumen kerja sama",
+    "focus": "text:Kirim tanda tangan",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Persetujuan",
+        "description": "Centang hanya setelah membaca dan menyetujui dokumen kerja sama.",
+        "selector": "input[type=checkbox]",
+        "bounds": {
+          "x": 322,
+          "y": 444,
+          "height": 16,
+          "width": 16
+        }
+      },
+      {
+        "number": 2,
+        "label": "Kirim tanda tangan",
+        "description": "Catat persetujuan dan kirim salinan dokumen ke email akun.",
+        "selector": "text:Kirim tanda tangan",
+        "bounds": {
+          "x": 1209.515625,
+          "y": 432,
+          "height": 36,
+          "width": 156.484375
+        }
+      }
+    ],
+    "route": "/mitra/dashboard",
+    "screenshot": "07-terms.png",
+    "annotated": "07-terms-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T15:00:01.403Z"
+  },
+  {
+    "id": "05-email-verification",
+    "title": "Memverifikasi email akun",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Kirim ulang link verifikasi",
+        "description": "Gunakan jika tautan belum diterima; periksa folder spam terlebih dahulu.",
+        "selector": "text:Kirim ulang link verifikasi",
+        "bounds": {
+          "x": 528,
+          "y": 597,
+          "height": 36,
+          "width": 384
+        }
+      },
+      {
+        "number": 2,
+        "label": "Keluar",
+        "description": "Akhiri sesi jika ingin menggunakan akun lain.",
+        "selector": "text:Keluar",
+        "bounds": {
+          "x": 699.390625,
+          "y": 657,
+          "height": 20,
+          "width": 41.203125
+        }
+      }
+    ],
+    "route": "/email/verify",
+    "screenshot": "05-email-verification.png",
+    "annotated": "05-email-verification-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T15:01:13.238Z"
+  },
+  {
+    "id": "06-choose-wisata",
+    "title": "Memulai pendaftaran Mitra Wisata",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Daftar Wisata",
+        "description": "Pilih untuk melengkapi data usaha wisata.",
+        "selector": "text:Daftar Wisata",
+        "bounds": {
+          "x": 326,
+          "y": 610,
+          "height": 36,
+          "width": 122.71875
+        }
+      }
+    ],
+    "route": "/mitra/dashboard",
+    "screenshot": "06-choose-wisata.png",
+    "annotated": "06-choose-wisata-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T15:01:24.309Z"
+  },
+  {
+    "id": "16-onboarding-checklist",
+    "title": "Memeriksa kelengkapan pengajuan",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Checklist kelengkapan",
+        "description": "Lengkapi setiap persyaratan yang belum terpenuhi; tombol Kirim Verifikasi muncul setelah data siap.",
+        "selector": "text:Checklist kelengkapan",
+        "bounds": {
+          "x": 322,
+          "y": 562,
+          "height": 16,
+          "width": 1044
+        }
+      }
+    ],
+    "focus": "text:Checklist kelengkapan",
+    "route": "/mitra/wisata/onboarding",
+    "screenshot": "16-onboarding-checklist.png",
+    "annotated": "16-onboarding-checklist-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-14T15:01:35.485Z"
+  },
+  {
+    "id": "12-onboarding-location",
+    "title": "Mengisi lokasi dan jam kunjungan",
+    "route": "/mitra/wisata/onboarding",
+    "action": "destination-tab",
+    "focus": "field:Hari Buka",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Provinsi",
+        "description": "Pilih provinsi destinasi.",
+        "selector": "field:Provinsi",
+        "bounds": {
+          "x": 305,
+          "y": 203,
+          "height": 62,
+          "width": 531
+        }
+      },
+      {
+        "number": 2,
+        "label": "Kota/Kabupaten",
+        "description": "Pilih wilayah destinasi.",
+        "selector": "field:Kota/Kabupaten",
+        "bounds": {
+          "x": 852,
+          "y": 203,
+          "height": 62,
+          "width": 531
+        }
+      },
+      {
+        "number": 3,
+        "label": "Alamat Lengkap",
+        "description": "Isi alamat yang dapat diikuti pengunjung.",
+        "selector": "field:Alamat Lengkap",
+        "bounds": {
+          "x": 305,
+          "y": 281,
+          "height": 58,
+          "width": 1078
+        }
+      },
+      {
+        "number": 4,
+        "label": "Titik Google Maps",
+        "description": "Tempel tautan pin lokasi yang benar.",
+        "selector": "field:Titik Google Maps",
+        "bounds": {
+          "x": 305,
+          "y": 355,
+          "height": 58,
+          "width": 1078
+        }
+      },
+      {
+        "number": 5,
+        "label": "Hari Buka",
+        "description": "Pilih hari operasional.",
+        "selector": "field:Hari Buka",
+        "bounds": {
+          "x": 305,
+          "y": 429,
+          "height": 42,
+          "width": 1078
+        }
+      }
+    ],
+    "screenshot": "12-onboarding-location.png",
+    "annotated": "12-onboarding-location-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-15T01:01:12.509Z"
+  },
+  {
+    "id": "19-destination-operation",
+    "title": "Mengatur operasional dan fasilitas",
+    "route": "/mitra/wisata/destination",
+    "focus": "field:Status Operasional",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Jam Buka",
+        "description": "Tetapkan jam mulai kunjungan.",
+        "selector": "field:Jam Buka",
+        "bounds": {
+          "x": 305,
+          "y": 151,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 2,
+        "label": "Jam Tutup",
+        "description": "Tetapkan jam berakhir kunjungan.",
+        "selector": "field:Jam Tutup",
+        "bounds": {
+          "x": 852,
+          "y": 151,
+          "height": 58,
+          "width": 531
+        }
+      },
+      {
+        "number": 3,
+        "label": "Fasilitas",
+        "description": "Pilih fasilitas yang benar-benar tersedia.",
+        "selector": "field:Fasilitas Wisata",
+        "bounds": {
+          "x": 305,
+          "y": 299,
+          "height": 42,
+          "width": 1078
+        }
+      },
+      {
+        "number": 4,
+        "label": "Status Operasional",
+        "description": "Gunakan tutup sementara saat destinasi tidak menerima kunjungan.",
+        "selector": "field:Status Operasional",
+        "bounds": {
+          "x": 305,
+          "y": 429,
+          "height": 42,
+          "width": 1078
+        }
+      }
+    ],
+    "screenshot": "19-destination-operation.png",
+    "annotated": "19-destination-operation-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-15T01:01:18.444Z"
+  },
+  {
+    "id": "39-profile",
+    "title": "Memperbarui data akun",
+    "route": "/settings/profile",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Nama Lengkap",
+        "description": "Perbarui nama pemilik akun operasional.",
+        "selector": "field:Nama Lengkap",
+        "bounds": {
+          "x": 389,
+          "y": 371,
+          "height": 86,
+          "width": 566
+        }
+      },
+      {
+        "number": 2,
+        "label": "Email",
+        "description": "Gunakan email aktif; perubahan email memerlukan verifikasi ulang.",
+        "selector": "field:Email",
+        "bounds": {
+          "x": 389,
+          "y": 477,
+          "height": 86,
+          "width": 566
+        }
+      },
+      {
+        "number": 3,
+        "label": "Nomor HP",
+        "description": "Isi nomor yang dapat dihubungi.",
+        "selector": "field:Nomor HP",
+        "bounds": {
+          "x": 389,
+          "y": 583,
+          "height": 86,
+          "width": 273
+        }
+      },
+      {
+        "number": 4,
+        "label": "Simpan Profil",
+        "description": "Simpan dan periksa pemberitahuan Profil tersimpan.",
+        "selector": "text:Simpan Profil",
+        "bounds": {
+          "x": 389,
+          "y": 689,
+          "height": 40,
+          "width": 128.640625
+        }
+      }
+    ],
+    "screenshot": "39-profile.png",
+    "annotated": "39-profile-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-15T01:01:22.496Z"
+  },
+  {
+    "id": "40-password",
+    "title": "Mengganti password",
+    "route": "/settings/profile",
+    "focus": "text:Simpan Password",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Password Saat Ini",
+        "description": "Masukkan password yang sedang digunakan.",
+        "selector": "field:Password Saat Ini",
+        "bounds": {
+          "x": 389,
+          "y": 703,
+          "height": 72,
+          "width": 290
+        }
+      },
+      {
+        "number": 2,
+        "label": "Password Baru",
+        "description": "Buat password baru yang kuat.",
+        "selector": "field:Password Baru",
+        "bounds": {
+          "x": 699,
+          "y": 703,
+          "height": 72,
+          "width": 290
+        }
+      },
+      {
+        "number": 3,
+        "label": "Konfirmasi Password",
+        "description": "Ulangi password baru dengan tepat.",
+        "selector": "field:Konfirmasi Password",
+        "bounds": {
+          "x": 1009,
+          "y": 703,
+          "height": 72,
+          "width": 290
+        }
+      },
+      {
+        "number": 4,
+        "label": "Simpan Password",
+        "description": "Simpan untuk mengganti password login.",
+        "selector": "text:Simpan Password",
+        "bounds": {
+          "x": 389,
+          "y": 795,
+          "height": 40,
+          "width": 157.296875
+        }
+      }
+    ],
+    "screenshot": "40-password.png",
+    "annotated": "40-password-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-15T01:01:27.799Z"
+  },
+  {
+    "id": "04b-reset-password",
+    "title": "Menetapkan password pengganti",
+    "routeTemplate": "/reset-password/{token}",
+    "annotations": [
+      {
+        "number": 1,
+        "label": "Email",
+        "description": "Pastikan akun yang akan dipulihkan sudah benar.",
+        "selector": "input[name=email]",
+        "bounds": {
+          "x": 528,
+          "y": 393,
+          "height": 36,
+          "width": 384
+        }
+      },
+      {
+        "number": 2,
+        "label": "Password",
+        "description": "Isi password baru yang unik.",
+        "selector": "input[name=password]",
+        "bounds": {
+          "x": 528,
+          "y": 479,
+          "height": 36,
+          "width": 384
+        }
+      },
+      {
+        "number": 3,
+        "label": "Confirm password",
+        "description": "Ulangi password baru yang sama.",
+        "selector": "input[name=password_confirmation]",
+        "bounds": {
+          "x": 528,
+          "y": 565,
+          "height": 36,
+          "width": 384
+        }
+      },
+      {
+        "number": 4,
+        "label": "Reset password",
+        "description": "Simpan password baru, lalu masuk kembali.",
+        "selector": "[data-test=reset-password-button]",
+        "bounds": {
+          "x": 528,
+          "y": 641,
+          "height": 36,
+          "width": 384
+        }
+      }
+    ],
+    "route": "/reset-password/{token}",
+    "screenshot": "04b-reset-password.png",
+    "annotated": "04b-reset-password-annotated.png",
+    "viewport": {
+      "width": 1440,
+      "height": 900,
+      "deviceScaleFactor": 2
+    },
+    "capturedAt": "2026-09-15T01:03:13.054Z"
+  }
+]
