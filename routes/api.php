@@ -107,12 +107,12 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('reviews')->group(functi
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/bookings')->group(function () {
-    Route::post('quote', [WisataBookingController::class, 'quote'])->middleware('maintenance.transactions');
-    Route::post('/', [WisataBookingController::class, 'store'])->middleware('maintenance.transactions');
+    Route::post('quote', [WisataBookingController::class, 'quote'])->middleware(['maintenance.transactions', 'throttle:30,1']);
+    Route::post('/', [WisataBookingController::class, 'store'])->middleware(['maintenance.transactions', 'throttle:15,1']);
     Route::get('/', [WisataBookingController::class, 'index']);
     Route::get('{booking}', [WisataBookingController::class, 'show']);
-    Route::post('{booking}/pay', [WisataBookingController::class, 'pay'])->middleware('maintenance.transactions');
-    Route::post('{booking}/cancel', [WisataBookingController::class, 'cancel']);
+    Route::post('{booking}/pay', [WisataBookingController::class, 'pay'])->middleware(['maintenance.transactions', 'throttle:10,1']);
+    Route::post('{booking}/cancel', [WisataBookingController::class, 'cancel'])->middleware('throttle:10,1');
     Route::get('{booking}/ticket', [WisataBookingController::class, 'ticket']);
 });
 
