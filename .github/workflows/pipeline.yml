@@ -83,7 +83,7 @@ jobs:
           php artisan key:generate --force
           mysql --host=127.0.0.1 --port=3306 --user=root --password=test -e "CREATE DATABASE IF NOT EXISTS indotix_laravel_testing CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
       - run: npm run build
-      - run: ./vendor/bin/pest tests/Feature/Admin/AdminAuditLogTest.php --stop-on-failure
+      - run: ./vendor/bin/pest
 
   deploy-staging:
     name: Deploy staging
