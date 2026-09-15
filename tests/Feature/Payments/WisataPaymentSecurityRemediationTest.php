@@ -409,3 +409,118 @@ test('processed refund reverses affiliate commission and creates clawback for pa
         ->and(WisataPayoutAdjustment::query()->where('wisata_booking_id', $booking->id)->count())->toBe(1)
         ->and((int) WisataPayoutAdjustment::query()->where('wisata_booking_id', $booking->id)->value('amount'))->toBe(90000);
 });
+
+
+test('wisata signed webhook replay does not duplicate fulfillment', function () {
+    [$buyer, , , , $booking] = paymentSecurityFixture();
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'pending',
+        'gross_amount' => 100000,
+        'order_id' => 'WISATA-WEBHOOK-REPLAY',
+        'active_key' => 'wisata-booking-'.$booking->id,
+    ]);
+    $booking->update(['midtrans_order_id' => $payment->order_id]);
+    config(['services.midtrans.server_key' => 'test-server-key']);
+
+    $payload = [
+        'order_id' => $payment->order_id,
+        'status_code' => '200',
+        'gross_amount' => '100000.00',
+        'transaction_status' => 'settlement',
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'trx-webhook-replay',
+    ];
+    $payload['signature_key'] = hash(
+        'sha512',
+        $payload['order_id'].$payload['status_code'].$payload['gross_amount'].'test-server-key',
+    );
+
+    $this->post('/payments/midtrans/callback', $payload)->assertOk();
+    $this->post('/payments/midtrans/callback', $payload)->assertOk();
+
+    expect($booking->fresh()->status)->toBe('paid')
+        ->and($payment->fresh()->status)->toBe('settlement')
+        ->and(\App\Models\UserNotification::query()
+            ->where('user_id', $buyer->id)
+            ->where('type', 'wisata_payment_paid')
+            ->count())->toBe(1);
+});
+
+test('late settlement never reactivates a cancelled wisata booking and queues compensation', function () {
+    [, , , , $booking] = paymentSecurityFixture([
+        'status' => 'cancelled',
+        'payment_status' => 'cancel',
+        'cancelled_at' => now(),
+    ]);
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'pending',
+        'gross_amount' => 100000,
+        'order_id' => 'WISATA-LATE-SETTLEMENT',
+    ]);
+    $booking->update(['midtrans_order_id' => $payment->order_id]);
+    config(['services.midtrans.server_key' => 'test-server-key']);
+
+    $payload = [
+        'order_id' => $payment->order_id,
+        'status_code' => '200',
+        'gross_amount' => '100000.00',
+        'transaction_status' => 'settlement',
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'trx-late',
+    ];
+    $payload['signature_key'] = hash(
+        'sha512',
+        $payload['order_id'].$payload['status_code'].$payload['gross_amount'].'test-server-key',
+    );
+
+    $this->post('/payments/midtrans/callback', $payload)->assertOk();
+
+    expect($booking->fresh()->status)->toBe('cancelled')
+        ->and($booking->fresh()->refund_status)->toBe('pending')
+        ->and($payment->fresh()->status)->toBe('settlement')
+        ->and(WisataRefund::query()->where('wisata_booking_id', $booking->id)->value('status'))->toBe('pending');
+});
+
+test('provider cancellation failure keeps booking non terminal for reconciliation', function () {
+    [, , , , $booking] = paymentSecurityFixture();
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'pending',
+        'gross_amount' => 100000,
+        'order_id' => 'WISATA-CANCEL-UNKNOWN',
+        'active_key' => 'wisata-booking-'.$booking->id,
+    ]);
+
+    $gateway = Mockery::mock(MidtransService::class);
+    $gateway->shouldReceive('statusOrNull')->once()->andReturn([
+        'status_code' => '201',
+        'transaction_status' => 'pending',
+    ]);
+    $gateway->shouldReceive('cancel')->once()->andThrow(
+        new PaymentGatewayException('network timeout', 0, []),
+    );
+
+    expect(fn () => paymentLifecycle($gateway)->cancelBooking($booking, 'cancel'))
+        ->toThrow(PaymentGatewayException::class);
+
+    expect($booking->fresh()->status)->toBe('pending_payment')
+        ->and($payment->fresh()->status)->toBe('cancellation_unknown');
+});
+
+test('normal user cannot invoke admin wisata refund endpoint', function () {
+    [$user, , , , $booking] = paymentSecurityFixture([
+        'status' => 'paid',
+        'payment_status' => 'settlement',
+    ]);
+
+    $this->actingAs($user)
+        ->post(route('admin.wisata.bookings.refund', $booking), [
+            'reason' => 'unauthorized',
+        ])
+        ->assertRedirect(route('dashboard'));
+});
