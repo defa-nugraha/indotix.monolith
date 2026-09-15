@@ -45,12 +45,16 @@ test('private mitra document is available only through authenticated protected r
     $this->get(route('mitra.wisata.documents.show', ['type' => 'ktp']))
         ->assertRedirect();
 
-    $this->actingAs($mitra)
+    $response = $this->actingAs($mitra)
         ->get(route('mitra.wisata.documents.show', ['type' => 'ktp']))
-        ->assertOk()
-        ->assertHeader('Cache-Control', 'private, no-store, max-age=0');
+        ->assertOk();
 
-    expect(Storage::disk('public')->exists($path))->toBeFalse();
+    $cacheControl = (string) $response->headers->get('Cache-Control');
+    expect($cacheControl)
+        ->toContain('private')
+        ->toContain('no-store')
+        ->toContain('max-age=0')
+        ->and(Storage::disk('public')->exists($path))->toBeFalse();
 });
 
 test('mitra cannot use protected document endpoint to access another partners file', function () {

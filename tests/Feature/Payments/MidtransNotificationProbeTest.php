@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MidtransCallbackController;
 use App\Services\MidtransService;
+use App\Services\WisataPaymentLifecycleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +18,7 @@ test('signed dashboard notification probe is acknowledged without database acces
         'gross_amount' => '105000.00',
         'transaction_status' => 'settlement',
         'signature_key' => hash('sha512', $orderId.'200105000.00probe-test-key'),
-    ]), app(MidtransService::class));
+    ]), app(MidtransService::class), app(WisataPaymentLifecycleService::class));
 
     expect($response->getStatusCode())->toBe(200)
         ->and($response->getContent())->toBe('OK');
@@ -34,7 +35,7 @@ test('dashboard probe cannot bypass signature validation after a key change', fu
         'status_code' => '200',
         'gross_amount' => '105000.00',
         'signature_key' => hash('sha512', $orderId.'200105000.00old-key'),
-    ]), app(MidtransService::class));
+    ]), app(MidtransService::class), app(WisataPaymentLifecycleService::class));
 
     expect($response->getStatusCode())->toBe(400)
         ->and($response->getContent())->toBe('Invalid signature');

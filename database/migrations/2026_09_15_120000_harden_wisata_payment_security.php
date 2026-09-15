@@ -51,7 +51,7 @@ return new class extends Migration
             $table->foreignId('applied_payout_id')->nullable()->constrained('wisata_payouts')->nullOnDelete();
             $table->timestamps();
 
-            $table->index(['mitra_wisata_onboarding_id', 'status']);
+            $table->index(['mitra_wisata_onboarding_id', 'status'], 'wisata_payout_adj_mitra_status_idx');
         });
 
         Schema::table('wisata_affiliate_payouts', function (Blueprint $table) {
