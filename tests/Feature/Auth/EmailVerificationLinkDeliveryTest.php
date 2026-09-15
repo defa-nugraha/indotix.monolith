@@ -143,12 +143,14 @@ test('api registration sends verification link for a new unverified account', fu
     );
 });
 
-test('api registration for existing unverified email sends a new verification link', function () {
+test('api registration rejects an existing unverified email without mutating the account', function () {
     Notification::fake();
 
     $user = User::factory()->unverified()->create([
         'email' => 'verify-link-existing@example.com',
+        'phone' => '081200000001',
     ]);
+    $originalPassword = $user->password;
 
     EmailOtp::query()->create([
         'user_id' => $user->id,
@@ -160,25 +162,26 @@ test('api registration for existing unverified email sends a new verification li
     ]);
 
     $this->postJson('/api/auth/register', [
-        'name' => 'Verify Link Existing User',
+        'name' => 'Attacker Controlled Name',
         'email' => $user->email,
-        'phone' => '081234567891',
-        'password' => 'password123',
+        'phone' => '081299999999',
+        'password' => 'attacker-password',
         'terms_accepted' => true,
         'role' => 'user',
-        'device_name' => 'test-device',
+        'device_name' => 'attacker-device',
     ])
-        ->assertCreated()
-        ->assertJsonPath('requires_email_verification', true)
-        ->assertJsonPath('verification_method', 'link');
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Email sudah terdaftar. Silakan login untuk melanjutkan verifikasi.')
+        ->assertJsonMissingPath('token');
 
-    expect($user->fresh()->phone)->toBe('081234567891');
+    $fresh = $user->fresh();
 
-    Notification::assertSentTo(
-        $user,
-        VerifyEmailLinkNotification::class,
-        fn (VerifyEmailLinkNotification $notification) => $notification->isForMobileApp(),
-    );
+    expect($fresh->phone)->toBe('081200000001')
+        ->and($fresh->password)->toBe($originalPassword)
+        ->and($fresh->hasVerifiedEmail())->toBeFalse()
+        ->and(EmailOtp::query()->where('user_id', $user->id)->where('purpose', 'verify_email')->count())->toBe(1);
+
+    Notification::assertNothingSent();
 });
 
 test('api registration requires legal acceptance', function () {
