@@ -133,12 +133,18 @@ export default function MitraWisataOnboarding({
     cities,
     status,
     commissionInfo,
+    sensitiveDocumentUrls,
 }: {
     onboarding: Onboarding;
     provinces: Option[];
     cities: Option[];
     status?: string;
     commissionInfo?: CommissionInfo | null;
+    sensitiveDocumentUrls: {
+        ktp?: string | null;
+        selfie?: string | null;
+        legal?: string | null;
+    };
 }) {
     const [activeStep, setActiveStep] = useState(onboarding.current_step || 1);
 
@@ -1147,7 +1153,7 @@ export default function MitraWisataOnboarding({
                                     fileName={step3Form.data.ktp_file?.name}
                                     previewUrl={
                                         filePreviews.ktp ??
-                                        getPublicUrl(onboarding.ktp_path)
+                                        sensitiveDocumentUrls.ktp ?? null
                                     }
                                     onChange={(file) =>
                                         handleFileChange(
@@ -1167,7 +1173,7 @@ export default function MitraWisataOnboarding({
                                     }
                                     previewUrl={
                                         filePreviews.selfie ??
-                                        getPublicUrl(onboarding.selfie_ktp_path)
+                                        sensitiveDocumentUrls.selfie ?? null
                                     }
                                     onChange={(file) =>
                                         handleFileChange(
@@ -1240,7 +1246,7 @@ export default function MitraWisataOnboarding({
                                     }
                                     previewUrl={
                                         filePreviews.legal ??
-                                        getPublicUrl(onboarding.legal_doc_path)
+                                        sensitiveDocumentUrls.legal ?? null
                                     }
                                     onChange={(file) =>
                                         handleFileChange(
