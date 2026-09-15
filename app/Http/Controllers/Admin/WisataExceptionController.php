@@ -7,6 +7,9 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\WisataBooking;
 use App\Models\WisataDispute;
 use App\Support\AdminDataScope;
+use App\Services\WisataPaymentLifecycleService;
+use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -83,34 +86,34 @@ class WisataExceptionController extends Controller
         ]);
     }
 
-    public function cancel(Request $request, WisataBooking $booking): RedirectResponse
+    public function cancel(Request $request, WisataBooking $booking, WisataPaymentLifecycleService $payments): RedirectResponse
     {
         if ($booking->destination) {
             AdminDataScope::authorizeCreatedByOrUser($booking->destination, $request);
         }
 
-        $data = $request->validate([
-            'reason' => ['required', 'string', 'max:500'],
-        ]);
+        $data = $request->validate(['reason' => ['required', 'string', 'max:500']]);
 
-        if (! in_array($booking->status, ['pending', 'pending_payment'], true)) {
+        try {
+            $payments->cancelBooking($booking, $data['reason'], (int) $request->user()->id);
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['booking' => $exception->getMessage()]);
+        } catch (\Throwable $exception) {
+            Log::warning('Admin wisata cancellation synchronization failed.', [
+                'booking_id' => $booking->id,
+                'admin_id' => $request->user()->id,
+                'message' => $exception->getMessage(),
+            ]);
+
             return back()->withErrors([
-                'booking' => 'Booking ini tidak dapat dibatalkan dari status saat ini.',
+                'booking' => 'Pembatalan belum dapat dipastikan. Booking tidak ditandai batal dan akan direkonsiliasi.',
             ]);
         }
-
-        $booking->update([
-            'status' => 'cancelled',
-            'payment_status' => 'cancelled',
-            'cancel_reason' => $data['reason'],
-            'cancelled_at' => now(),
-            'cancelled_by_admin_id' => $request->user()->id,
-        ]);
 
         return back()->with('status', 'booking-cancelled');
     }
 
-    public function refund(Request $request, WisataBooking $booking): RedirectResponse
+    public function refund(Request $request, WisataBooking $booking, WisataPaymentLifecycleService $payments): RedirectResponse
     {
         if ($booking->destination) {
             AdminDataScope::authorizeCreatedByOrUser($booking->destination, $request);
@@ -118,17 +121,31 @@ class WisataExceptionController extends Controller
 
         $data = $request->validate([
             'reason' => ['required', 'string', 'max:500'],
-            'amount' => ['nullable', 'integer', 'min:0'],
+            'amount' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $booking->update([
-            'refund_status' => 'processed',
-            'refund_amount' => $data['amount'] ?? $booking->total_price,
-            'refund_reason' => $data['reason'],
-            'refund_processed_at' => now(),
-        ]);
+        try {
+            $refund = $payments->requestFullRefund(
+                $booking,
+                $data['reason'],
+                isset($data['amount']) ? (int) $data['amount'] : null,
+                (int) $request->user()->id,
+            );
+        } catch (RuntimeException $exception) {
+            return back()->withErrors(['refund' => $exception->getMessage()]);
+        } catch (\Throwable $exception) {
+            Log::warning('Wisata provider refund failed or is uncertain.', [
+                'booking_id' => $booking->id,
+                'admin_id' => $request->user()->id,
+                'message' => $exception->getMessage(),
+            ]);
 
-        return back()->with('status', 'booking-refunded');
+            return back()->withErrors([
+                'refund' => 'Status refund provider belum dapat dipastikan. Jangan ulang manual; sistem akan melakukan rekonsiliasi.',
+            ]);
+        }
+
+        return back()->with('status', $refund->status === 'processed' ? 'booking-refunded' : 'refund-processing');
     }
 
     public function resolveDispute(Request $request, WisataDispute $dispute): RedirectResponse

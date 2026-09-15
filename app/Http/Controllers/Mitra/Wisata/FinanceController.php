@@ -7,46 +7,25 @@ use App\Models\MitraWisataOnboarding;
 use App\Models\WisataBooking;
 use App\Models\WisataCommissionRule;
 use App\Models\WisataPayout;
+use App\Services\WisataFinanceService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class FinanceController extends Controller
 {
-    public function summary(Request $request): Response
+    public function summary(Request $request, WisataFinanceService $finance): Response
     {
         $destination = MitraWisataOnboarding::query()
             ->where('user_id', $request->user()->id)
             ->firstOrFail();
 
-        $paidBookings = WisataBooking::query()
-            ->where('mitra_wisata_onboarding_id', $destination->id)
-            ->whereIn('status', ['paid', 'completed'])
-            ->get(['total_price', 'visit_date', 'created_at']);
-
-        $gross = $paidBookings->sum('total_price');
-
-        $commission = 0;
-        $commissionRule = null;
-        foreach ($paidBookings as $booking) {
-            $date = $booking->visit_date?->toDateString()
-                ?? $booking->created_at?->toDateString()
-                ?? now()->toDateString();
-            $rule = $this->resolveCommissionRule($destination->id, $date);
-            $commissionRule ??= $rule;
-
-            if (! $rule) {
-                continue;
-            }
-
-            if ($rule->type === 'percentage') {
-                $commission += (int) round($booking->total_price * ($rule->value / 100));
-            } else {
-                $commission += (int) $rule->value;
-            }
-        }
-
-        $net = max(0, $gross - $commission);
+        $calculation = $finance->calculatePeriod(
+            $destination->id,
+            now()->subYears(10)->toDateString(),
+            now()->addYears(10)->toDateString(),
+        );
+        $commissionRule = $finance->resolveCommissionRule($destination->id, now()->toDateString());
 
         return Inertia::render('mitra/wisata/finance/summary', [
             'destination' => [
@@ -54,10 +33,11 @@ class FinanceController extends Controller
                 'destination_name' => $destination->destination_name,
             ],
             'summary' => [
-                'gross' => $gross,
-                'commission' => $commission,
-                'net' => $net,
-                'bookings_count' => $paidBookings->count(),
+                'gross' => $calculation['gross'],
+                'refunds' => $calculation['refunds'],
+                'commission' => $calculation['commission'],
+                'net' => $calculation['net_payout'],
+                'bookings_count' => $calculation['bookings_count'],
             ],
             'commission_rule' => $commissionRule ? [
                 'type' => $commissionRule->type,
@@ -117,9 +97,10 @@ class FinanceController extends Controller
                 'id' => $payout->id,
                 'period_start' => $payout->period_start?->toDateString(),
                 'period_end' => $payout->period_end?->toDateString(),
-                'gross' => $payout->gross_amount,
+                'gross' => $payout->total_gmv,
+                'refunds' => $payout->gross_refund_amount,
                 'commission' => $payout->commission_amount,
-                'net' => $payout->net_amount,
+                'net' => $payout->net_payout,
                 'status' => $payout->status,
             ]);
 

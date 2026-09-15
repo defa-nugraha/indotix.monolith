@@ -9,6 +9,7 @@ use App\Models\WisataAffiliatePayout;
 use App\Models\WisataAffiliateSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -53,28 +54,52 @@ class PayoutController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $affiliate = WisataAffiliate::query()
-            ->where('user_id', $request->user()->id)
-            ->firstOrFail();
+        $payout = DB::transaction(function () use ($request) {
+            $affiliate = WisataAffiliate::query()
+                ->where('user_id', $request->user()->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $approvedTotal = WisataAffiliateCommissionItem::query()
-            ->where('affiliate_id', $affiliate->id)
-            ->where('status', 'approved')
-            ->sum('commission_amount');
+            $approvedTotal = (int) WisataAffiliateCommissionItem::query()
+                ->where('affiliate_id', $affiliate->id)
+                ->where('status', 'approved')
+                ->sum('commission_amount');
 
-        $reserved = WisataAffiliatePayout::query()
-            ->where('affiliate_id', $affiliate->id)
-            ->whereIn('status', ['pending', 'approved', 'paid'])
-            ->sum('total_commission');
+            $reserved = (int) WisataAffiliatePayout::query()
+                ->where('affiliate_id', $affiliate->id)
+                ->whereIn('status', ['pending', 'approved', 'paid'])
+                ->sum('total_commission');
 
-        $available = max(0, $approvedTotal - $reserved);
+            $available = max(0, $approvedTotal - $reserved);
+            $minPayout = (int) (WisataAffiliateSetting::query()->first()?->min_payout ?? 0);
 
-        $setting = WisataAffiliateSetting::query()->first();
-        $minPayout = $setting?->min_payout ?? 0;
+            if ($available < $minPayout || $available <= 0) {
+                return null;
+            }
 
-        if ($available < $minPayout || $available <= 0) {
+            $key = hash('sha256', $affiliate->id.'|'.$approvedTotal.'|'.$reserved.'|'.$available);
+
+            return WisataAffiliatePayout::query()->firstOrCreate(
+                ['idempotency_key' => $key],
+                [
+                    'affiliate_id' => $affiliate->id,
+                    'idempotency_key' => $key,
+                    'total_commission' => $available,
+                    'status' => 'pending',
+                    'bank_name' => $affiliate->bank_name,
+                    'bank_account_number' => $affiliate->bank_account_number,
+                    'bank_account_name' => $affiliate->bank_account_name,
+                ],
+            );
+        }, 3);
+
+        if (! $payout) {
             return back()->withErrors(['amount' => 'Saldo belum memenuhi minimum payout.']);
         }
+
+        return back()->with('status', 'payout-requested');
+    }
+}
 
         WisataAffiliatePayout::create([
             'affiliate_id' => $affiliate->id,
@@ -87,4 +112,5 @@ class PayoutController extends Controller
 
         return back()->with('status', 'payout-requested');
     }
+}
 }
