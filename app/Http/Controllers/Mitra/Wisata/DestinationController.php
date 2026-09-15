@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Mitra\Wisata;
 use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Services\MediaCompressionService;
+use App\Services\MitraWisataSensitiveDocumentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -40,12 +41,17 @@ class DestinationController extends Controller
 
         return Inertia::render('mitra/wisata/destination', [
             'destination' => $destination,
+            'sensitiveDocumentUrls' => [
+                'ktp' => $destination->ktp_path ? route('mitra.wisata.documents.show', ['type' => 'ktp']) : null,
+                'selfie' => $destination->selfie_ktp_path ? route('mitra.wisata.documents.show', ['type' => 'selfie']) : null,
+                'legal' => $destination->legal_doc_path ? route('mitra.wisata.documents.show', ['type' => 'legal']) : null,
+            ],
             'provinces' => $provinces,
             'cities' => $cities,
         ]);
     }
 
-    public function update(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
+    public function update(Request $request, MediaCompressionService $mediaCompression, MitraWisataSensitiveDocumentService $sensitiveDocuments): RedirectResponse
     {
         $user = $request->user();
         $destination = MitraWisataOnboarding::query()
@@ -134,17 +140,14 @@ class DestinationController extends Controller
         ]);
 
         $folder = "mitra-wisata/{$user->id}";
-        $uploads = [
+        $publicUploads = [
             'photo_gate_file' => 'photo_gate_path',
             'photo_area_file' => 'photo_area_path',
             'photo_ticket_file' => 'photo_ticket_path',
             'photo_product_file' => 'photo_product_path',
-            'ktp_file' => 'ktp_path',
-            'selfie_ktp_file' => 'selfie_ktp_path',
-            'legal_doc_file' => 'legal_doc_path',
         ];
 
-        foreach ($uploads as $input => $column) {
+        foreach ($publicUploads as $input => $column) {
             if ($request->hasFile($input)) {
                 $old = $destination->{$column};
                 $path = $mediaCompression->store($request->file($input), $folder, 'public');
@@ -152,6 +155,22 @@ class DestinationController extends Controller
                 if ($old) {
                     Storage::disk('public')->delete($old);
                 }
+            }
+        }
+
+        $sensitiveUploads = [
+            'ktp_file' => 'ktp_path',
+            'selfie_ktp_file' => 'selfie_ktp_path',
+            'legal_doc_file' => 'legal_doc_path',
+        ];
+
+        foreach ($sensitiveUploads as $input => $column) {
+            if ($request->hasFile($input)) {
+                $destination->{$column} = $sensitiveDocuments->store(
+                    $request->file($input),
+                    (int) $user->id,
+                    $destination->{$column},
+                );
             }
         }
 
