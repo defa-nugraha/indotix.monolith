@@ -173,6 +173,11 @@ class MitraWisataController extends Controller
                 'suspended_at' => optional($user->suspended_at)->toDateTimeString(),
             ],
             'onboarding' => $onboarding,
+            'sensitiveDocumentUrls' => [
+                'ktp' => $onboarding->ktp_path ? route('admin.mitra-wisata.documents.show', ['user' => $user->id, 'type' => 'ktp']) : null,
+                'selfie' => $onboarding->selfie_ktp_path ? route('admin.mitra-wisata.documents.show', ['user' => $user->id, 'type' => 'selfie']) : null,
+                'legal' => $onboarding->legal_doc_path ? route('admin.mitra-wisata.documents.show', ['user' => $user->id, 'type' => 'legal']) : null,
+            ],
             'cityName' => $cityName,
             'provinceName' => $provinceName,
         ]);
