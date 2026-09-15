@@ -29,24 +29,9 @@ class AuthController extends Controller
         $existingUser = User::query()->where('email', $data['email'])->first();
 
         if ($existingUser) {
-            if ($existingUser->hasVerifiedEmail()) {
-                return response()->json(['message' => 'Email sudah terdaftar.'], 422);
-            }
-
-            $this->clearPendingEmailVerificationOtp($existingUser);
-            $existingUser->forceFill(['phone' => $data['phone']])->save();
-            $existingUser->notify(new VerifyEmailLinkNotification(forMobileApp: true));
-
-            $token = $existingUser->createToken($data['device_name'] ?? 'mobile')->plainTextToken;
-
             return response()->json([
-                'message' => 'Email belum terverifikasi. Link verifikasi baru telah dikirim.',
-                'token' => $token,
-                'token_type' => 'Bearer',
-                'user' => $existingUser,
-                'requires_email_verification' => true,
-                'verification_method' => 'link',
-            ], 201);
+                'message' => 'Email sudah terdaftar. Silakan login untuk melanjutkan verifikasi.',
+            ], 422);
         }
 
         $user = User::create([

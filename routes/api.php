@@ -25,12 +25,16 @@ use App\Http\Controllers\Api\WisataTicketScanController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
+    Route::post('register', [AuthController::class, 'register'])
+        ->middleware('throttle:5,1');
     Route::post('login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1');
-    Route::post('google', [SocialAuthController::class, 'google']);
-    Route::post('password/forgot', [PasswordResetController::class, 'requestOtp']);
-    Route::post('password/reset', [PasswordResetController::class, 'reset']);
+    Route::post('google', [SocialAuthController::class, 'google'])
+        ->middleware('throttle:10,1');
+    Route::post('password/forgot', [PasswordResetController::class, 'requestOtp'])
+        ->middleware('throttle:5,1');
+    Route::post('password/reset', [PasswordResetController::class, 'reset'])
+        ->middleware('throttle:10,1');
     Route::post('passkeys/login/options', [PasskeyController::class, 'loginOptions'])
         ->middleware('throttle:10,1');
     Route::post('passkeys/login', [PasskeyController::class, 'login'])
@@ -86,7 +90,7 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('push')->group(function 
     Route::post('tokens/revoke', [PushTokenController::class, 'revoke']);
 });
 
-Route::middleware('auth:sanctum')->prefix('profile')->group(function () {
+Route::middleware(['auth:sanctum', 'verified'])->prefix('profile')->group(function () {
     Route::put('/', [ProfileController::class, 'update']);
     Route::post('password/otp', [ProfileController::class, 'sendPasswordOtp']);
     Route::put('password', [ProfileController::class, 'updatePassword']);
