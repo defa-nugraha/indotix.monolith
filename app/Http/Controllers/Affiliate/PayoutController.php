@@ -100,17 +100,3 @@ class PayoutController extends Controller
         return back()->with('status', 'payout-requested');
     }
 }
-
-        WisataAffiliatePayout::create([
-            'affiliate_id' => $affiliate->id,
-            'total_commission' => $available,
-            'status' => 'pending',
-            'bank_name' => $affiliate->bank_name,
-            'bank_account_number' => $affiliate->bank_account_number,
-            'bank_account_name' => $affiliate->bank_account_name,
-        ]);
-
-        return back()->with('status', 'payout-requested');
-    }
-}
-}
