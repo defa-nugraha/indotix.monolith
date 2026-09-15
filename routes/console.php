@@ -3,6 +3,8 @@
 use App\Models\User;
 use App\Services\LegacyDatabaseCleanupService;
 use App\Services\RetiredSchemaCleanupService;
+use App\Services\WisataPaymentLifecycleService;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -209,3 +211,21 @@ Artisan::command('indotix:drop-retired-schema
 
     return 0;
 })->purpose('Preview or execute destructive drop of retired non-wisata schema tables');
+
+
+Artisan::command('indotix:expire-wisata-payments {--limit=100}', function (WisataPaymentLifecycleService $payments): int {
+    $count = $payments->expireDueBookings(max(1, (int) $this->option('limit')));
+    $this->info("Expired/reconciled {$count} overdue wisata booking(s).");
+
+    return 0;
+})->purpose('Expire overdue Wisata payment reservations and synchronize Midtrans state');
+
+Artisan::command('indotix:reconcile-wisata-payments {--limit=50}', function (WisataPaymentLifecycleService $payments): int {
+    $count = $payments->reconcileRecentPayments(max(1, (int) $this->option('limit')));
+    $this->info("Reconciled {$count} recent Wisata payment/refund record(s).");
+
+    return 0;
+})->purpose('Reconcile recent Wisata payment and refund state with Midtrans');
+
+Schedule::command('indotix:expire-wisata-payments --limit=100')->everyMinute()->withoutOverlapping();
+Schedule::command('indotix:reconcile-wisata-payments --limit=50')->everyFiveMinutes()->withoutOverlapping();
