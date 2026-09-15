@@ -16,8 +16,15 @@ use App\Services\WisataFinanceService;
 use App\Services\WisataPaymentLifecycleService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Mail::fake();
+    Queue::fake();
+});
 
 function paymentSecurityFixture(array $bookingOverrides = []): array
 {
