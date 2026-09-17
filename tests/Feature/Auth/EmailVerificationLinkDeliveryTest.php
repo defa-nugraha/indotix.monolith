@@ -34,8 +34,55 @@ test('web registration sends verification link and does not create email otp', f
     Notification::assertSentTo(
         $user,
         VerifyEmailLinkNotification::class,
-        fn (VerifyEmailLinkNotification $notification) => ! $notification->isForMobileApp(),
+        function (VerifyEmailLinkNotification $notification) use ($user) {
+            $verificationUrl = $notification->toMail($user)->viewData['verificationUrl'];
+
+            return ! $notification->isForMobileApp()
+                && str_contains($verificationUrl, '/email/verify-link/');
+        },
     );
+});
+
+test('web signed link verifies email without browser authentication', function () {
+    Event::fake();
+
+    $user = User::factory()->unverified()->create();
+    $verificationUrl = URL::temporarySignedRoute(
+        'public.verification.verify',
+        now()->addMinutes(60),
+        [
+            'id' => $user->id,
+            'hash' => sha1($user->getEmailForVerification()),
+        ],
+    );
+
+    $this->get($verificationUrl)
+        ->assertOk()
+        ->assertSee('Email berhasil diverifikasi')
+        ->assertSee('Masuk ke Indotix');
+
+    expect(auth()->check())->toBeFalse();
+    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+    Event::assertDispatched(Verified::class);
+});
+
+test('web verification link rejects a mismatched email hash', function () {
+    Event::fake();
+
+    $user = User::factory()->unverified()->create();
+    $verificationUrl = URL::temporarySignedRoute(
+        'public.verification.verify',
+        now()->addMinutes(60),
+        [
+            'id' => $user->id,
+            'hash' => sha1('wrong@example.com'),
+        ],
+    );
+
+    $this->get($verificationUrl)->assertForbidden();
+
+    expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
+    Event::assertNotDispatched(Verified::class);
 });
 
 test('old web otp routes redirect to verification link flow without sending otp', function () {

@@ -86,6 +86,7 @@ use App\Http\Controllers\Affiliate\SupportController;
 use App\Http\Controllers\Affiliate\TermsController;
 use App\Http\Controllers\PasskeyAssociationController;
 use App\Http\Controllers\Auth\MobileEmailVerificationController;
+use App\Http\Controllers\Auth\PublicEmailVerificationController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ChatController;
@@ -153,6 +154,14 @@ Route::get(
     ->middleware(['signed', 'throttle:6,1'])
     ->whereNumber('id')
     ->name('mobile.verification.verify');
+
+Route::get(
+    '/email/verify-link/{id}/{hash}',
+    PublicEmailVerificationController::class,
+)
+    ->middleware(['signed', 'throttle:6,1'])
+    ->whereNumber('id')
+    ->name('public.verification.verify');
 
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'admin'])
