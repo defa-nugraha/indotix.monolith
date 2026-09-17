@@ -61,9 +61,17 @@ runs:
       run: |
         set -Eeuo pipefail
         archive="$(find .release-artifact -maxdepth 1 -name 'indotix-release.tgz' -type f -print -quit)"
+        guide_archive="$(find .release-artifact -maxdepth 1 -name 'indotix-guide.tgz' -type f -print -quit)"
+        guide_hash_file="$(find .release-artifact -maxdepth 1 -name 'indotix-guide.sha256' -type f -print -quit)"
         [[ -n "$archive" ]] || { echo 'Release artifact is missing.' >&2; exit 1; }
+        [[ -n "$guide_archive" ]] || { echo 'Guide artifact is missing.' >&2; exit 1; }
+        [[ -n "$guide_hash_file" ]] || { echo 'Guide hash is missing.' >&2; exit 1; }
         [[ "$SSH_USER" != 'root' ]] || { echo 'Refusing root deployment user.' >&2; exit 1; }
+        guide_hash="$(tr -d '[:space:]' < "$guide_hash_file")"
+        [[ "$guide_hash" =~ ^[a-f0-9]{64}$ ]] || { echo 'Invalid guide artifact hash.' >&2; exit 1; }
         release_id="$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA:0:7}-${GITHUB_RUN_ID}"
+        remote_archive="$DEPLOY_ROOT/incoming/${GITHUB_SHA}.tgz"
+        remote_guide_archive="$DEPLOY_ROOT/incoming/guide-${guide_hash}.tgz"
         ssh_args=(
           -i "$HOME/.ssh/indotix_deploy"
           -p "$SSH_PORT"
@@ -79,15 +87,34 @@ runs:
         printf -v rsync_ssh 'ssh -i %q -p %q -o BatchMode=yes -o ConnectTimeout=20 -o IdentitiesOnly=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=6 -o StrictHostKeyChecking=yes' "$HOME/.ssh/indotix_deploy" "$SSH_PORT"
 
         echo "Preparing remote release directories for ${release_id}"
-        ssh "${ssh_args[@]}" "$target" "mkdir -p $(quote "$DEPLOY_ROOT/incoming") $(quote "$DEPLOY_ROOT/releases") $(quote "$DEPLOY_ROOT/shared/storage")"
-        ssh "${ssh_args[@]}" "$target" "rm -f -- $(quote "$DEPLOY_ROOT/incoming/$release_id.tgz"); rm -rf -- $(quote "$DEPLOY_ROOT/incoming/.rsync-partial")"
+        ssh "${ssh_args[@]}" "$target" "mkdir -p $(quote "$DEPLOY_ROOT/incoming") $(quote "$DEPLOY_ROOT/releases") $(quote "$DEPLOY_ROOT/shared/storage") $(quote "$DEPLOY_ROOT/shared/public/guide-releases")"
+        ssh "${ssh_args[@]}" "$target" "find $(quote "$DEPLOY_ROOT/incoming/.rsync-partial") -type f -mtime +2 -delete 2>/dev/null || true"
 
         echo "Uploading release artifact"
         stat -c 'Artifact size: %s bytes' "$archive"
-        rsync -rlz --no-perms --no-times --partial --partial-dir=.rsync-partial \
+        rsync -rl --no-perms --no-times --partial --partial-dir=.rsync-partial \
           --info=progress2 --human-readable --timeout=120 \
-          -e "$rsync_ssh" "$archive" "$target:$DEPLOY_ROOT/incoming/$release_id.tgz"
-        ssh "${ssh_args[@]}" "$target" "test -s $(quote "$DEPLOY_ROOT/incoming/$release_id.tgz") && ls -lh $(quote "$DEPLOY_ROOT/incoming/$release_id.tgz")"
+          -e "$rsync_ssh" "$archive" "$target:$remote_archive"
+        ssh "${ssh_args[@]}" "$target" "test -s $(quote "$remote_archive") && ls -lh $(quote "$remote_archive")"
+
+        guide_release="$DEPLOY_ROOT/shared/public/guide-releases/$guide_hash"
+        if ! ssh "${ssh_args[@]}" "$target" "test -f $(quote "$guide_release/.artifact-sha256") && grep -qx $(quote "$guide_hash") $(quote "$guide_release/.artifact-sha256")"; then
+          current_guide_hash="$(ssh "${ssh_args[@]}" "$target" "guide_dir=$(quote "$DEPLOY_ROOT/current/public/guides/mitra"); if test -d \"\$guide_dir\"; then cd \"\$guide_dir\"; find . -type f ! -name .artifact-sha256 -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d ' ' -f 1; fi")"
+
+          if [[ "$current_guide_hash" == "$guide_hash" ]]; then
+            echo "Reusing unchanged Mitra guide from the active release"
+            ssh "${ssh_args[@]}" "$target" "set -Eeuo pipefail; test ! -e $(quote "$guide_release"); guide_tmp=$(quote "$guide_release.tmp-$GITHUB_RUN_ID"); rm -rf -- \"\$guide_tmp\"; mkdir -p \"\$guide_tmp\"; cp -a $(quote "$DEPLOY_ROOT/current/public/guides/mitra/.") \"\$guide_tmp/\"; printf '%s\\n' $(quote "$guide_hash") > \"\$guide_tmp/.artifact-sha256\"; mv \"\$guide_tmp\" $(quote "$guide_release")"
+          else
+            echo "Uploading changed Mitra guide artifact"
+            stat -c 'Guide artifact size: %s bytes' "$guide_archive"
+            rsync -rl --no-perms --no-times --partial --partial-dir=.rsync-partial \
+              --info=progress2 --human-readable --timeout=120 \
+              -e "$rsync_ssh" "$guide_archive" "$target:$remote_guide_archive"
+            ssh "${ssh_args[@]}" "$target" "set -Eeuo pipefail; test ! -e $(quote "$guide_release"); guide_tmp=$(quote "$guide_release.tmp-$GITHUB_RUN_ID"); rm -rf -- \"\$guide_tmp\"; mkdir -p \"\$guide_tmp\"; tar -xzf $(quote "$remote_guide_archive") -C \"\$guide_tmp\"; printf '%s\\n' $(quote "$guide_hash") > \"\$guide_tmp/.artifact-sha256\"; mv \"\$guide_tmp\" $(quote "$guide_release"); rm -f -- $(quote "$remote_guide_archive")"
+          fi
+        else
+          echo "Mitra guide ${guide_hash:0:12} already exists on the server; skipping upload"
+        fi
 
         if [[ "$RUN_BACKUP" == 'true' ]]; then
           echo "Running database backup"
@@ -95,5 +122,5 @@ runs:
         fi
 
         echo "Activating release"
-        remote_command="set -Eeuo pipefail; release_dir=$(quote "$DEPLOY_ROOT/releases/$release_id"); rm -rf -- \"\$release_dir\"; mkdir -p \"\$release_dir\"; tar -xzf $(quote "$DEPLOY_ROOT/incoming/$release_id.tgz") -C \"\$release_dir\"; rm -f $(quote "$DEPLOY_ROOT/incoming/$release_id.tgz"); DEPLOY_ROOT=$(quote "$DEPLOY_ROOT") RELEASE_ID=$(quote "$release_id") EXPECTED_ENVIRONMENT=$(quote "$EXPECTED_ENVIRONMENT") EXPECTED_HOST=$(quote "$EXPECTED_HOST") HEALTH_URL=$(quote "$HEALTH_URL") SMOKE_URL=$(quote "$SMOKE_URL") GITHUB_SHA=$(quote "$GITHUB_SHA") bash \"\$release_dir/deploy/release-deploy.sh\""
+        remote_command="set -Eeuo pipefail; release_dir=$(quote "$DEPLOY_ROOT/releases/$release_id"); rm -rf -- \"\$release_dir\"; mkdir -p \"\$release_dir\"; tar -xzf $(quote "$remote_archive") -C \"\$release_dir\"; DEPLOY_ROOT=$(quote "$DEPLOY_ROOT") RELEASE_ID=$(quote "$release_id") GUIDE_HASH=$(quote "$guide_hash") EXPECTED_ENVIRONMENT=$(quote "$EXPECTED_ENVIRONMENT") EXPECTED_HOST=$(quote "$EXPECTED_HOST") HEALTH_URL=$(quote "$HEALTH_URL") SMOKE_URL=$(quote "$SMOKE_URL") GITHUB_SHA=$(quote "$GITHUB_SHA") bash \"\$release_dir/deploy/release-deploy.sh\"; rm -f $(quote "$remote_archive")"
         ssh "${ssh_args[@]}" "$target" "bash -lc $(quote "$remote_command")"

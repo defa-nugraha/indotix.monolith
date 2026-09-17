@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 DEPLOY_ROOT="${DEPLOY_ROOT:?DEPLOY_ROOT is required}"
 RELEASE_ID="${RELEASE_ID:?RELEASE_ID is required}"
+GUIDE_HASH="${GUIDE_HASH:?GUIDE_HASH is required}"
 EXPECTED_ENVIRONMENT="${EXPECTED_ENVIRONMENT:?EXPECTED_ENVIRONMENT is required}"
 EXPECTED_HOST="${EXPECTED_HOST:?EXPECTED_HOST is required}"
 HEALTH_URL="${HEALTH_URL:?HEALTH_URL is required}"
@@ -11,6 +12,7 @@ RUN_MIGRATIONS="${RUN_MIGRATIONS:-1}"
 
 [[ "$(id -u)" != '0' ]] || { echo 'Release deployment must not run as root.' >&2; exit 1; }
 [[ "$RELEASE_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || { echo 'Invalid release ID.' >&2; exit 64; }
+[[ "$GUIDE_HASH" =~ ^[a-f0-9]{64}$ ]] || { echo 'Invalid guide hash.' >&2; exit 64; }
 
 RELEASE_DIR="${DEPLOY_ROOT}/releases/${RELEASE_ID}"
 SHARED_DIR="${DEPLOY_ROOT}/shared"
@@ -47,6 +49,7 @@ trap rollback_on_error ERR
 [[ -d "$RELEASE_DIR" && -f "$RELEASE_DIR/artisan" ]] || { echo "Invalid release directory: ${RELEASE_DIR}" >&2; exit 1; }
 [[ -f "${SHARED_DIR}/.env" ]] || { echo 'Missing shared/.env.' >&2; exit 1; }
 [[ -d "${SHARED_DIR}/storage" ]] || { echo 'Missing shared/storage.' >&2; exit 1; }
+[[ -f "${SHARED_DIR}/public/guide-releases/${GUIDE_HASH}/index.html" ]] || { echo 'Missing shared Mitra guide.' >&2; exit 1; }
 [[ "$(read_env APP_ENV)" == "$EXPECTED_ENVIRONMENT" ]] || { echo 'APP_ENV guard rejected deployment.' >&2; exit 1; }
 [[ "$(php -r 'echo parse_url($argv[1], PHP_URL_HOST) ?: "";' "$(read_env APP_URL)")" == "$EXPECTED_HOST" ]] || { echo 'APP_URL guard rejected deployment.' >&2; exit 1; }
 if [[ "$EXPECTED_ENVIRONMENT" == 'production' && "$(read_env APP_DEBUG)" != 'false' ]]; then
@@ -58,6 +61,9 @@ ln -sfn "${SHARED_DIR}/.env" "${RELEASE_DIR}/.env"
 rm -rf "${RELEASE_DIR}/storage" "${RELEASE_DIR}/public/storage"
 ln -s "${SHARED_DIR}/storage" "${RELEASE_DIR}/storage"
 ln -s "${SHARED_DIR}/storage/app/public" "${RELEASE_DIR}/public/storage"
+rm -rf "${RELEASE_DIR}/public/guides"
+mkdir -p "${RELEASE_DIR}/public/guides"
+ln -s "${SHARED_DIR}/public/guide-releases/${GUIDE_HASH}" "${RELEASE_DIR}/public/guides/mitra"
 
 cd "$RELEASE_DIR"
 php artisan package:discover --ansi
