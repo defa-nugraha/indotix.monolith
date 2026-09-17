@@ -86,6 +86,7 @@ use App\Http\Controllers\Affiliate\SupportController;
 use App\Http\Controllers\Affiliate\TermsController;
 use App\Http\Controllers\PasskeyAssociationController;
 use App\Http\Controllers\Auth\MobileEmailVerificationController;
+use App\Http\Controllers\Auth\PublicEmailVerificationController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ChatController;
@@ -131,6 +132,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/.well-known/assetlinks.json', [PasskeyAssociationController::class, 'assetLinks']);
+Route::get('/panduan/mitra', App\Http\Controllers\PublicMitraGuideController::class)
+    ->name('public.guides.mitra');
 Route::get('/.well-known/apple-app-site-association', [PasskeyAssociationController::class, 'appleAppSiteAssociation']);
 
 Route::get('/', [PublicHomeController::class, 'index'])
@@ -151,6 +154,14 @@ Route::get(
     ->middleware(['signed', 'throttle:6,1'])
     ->whereNumber('id')
     ->name('mobile.verification.verify');
+
+Route::get(
+    '/email/verify-link/{id}/{hash}',
+    PublicEmailVerificationController::class,
+)
+    ->middleware(['signed', 'throttle:6,1'])
+    ->whereNumber('id')
+    ->name('public.verification.verify');
 
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified', 'admin'])
@@ -502,6 +513,9 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra-wisata.store');
     Route::get('admin/mitra-wisata/{user}', [MitraWisataController::class, 'show'])
         ->name('admin.mitra-wisata.show');
+    Route::get('admin/mitra-wisata/{user}/documents/{type}', [App\Http\Controllers\MitraWisataSensitiveDocumentController::class, 'showAdmin'])
+        ->where('type', 'ktp|selfie|legal')
+        ->name('admin.mitra-wisata.documents.show');
     Route::delete('admin/mitra-wisata/{user}', [MitraWisataController::class, 'destroy'])
         ->name('admin.mitra-wisata.destroy');
     Route::post('admin/mitra-wisata/{user}/verify', [MitraWisataController::class, 'verify'])
@@ -548,8 +562,10 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::get('admin/wisata/exceptions', [WisataExceptionController::class, 'index'])
         ->name('admin.wisata.exceptions.index');
     Route::post('admin/wisata/bookings/{booking}/cancel', [WisataExceptionController::class, 'cancel'])
+        ->middleware('throttle:10,1')
         ->name('admin.wisata.bookings.cancel');
     Route::post('admin/wisata/bookings/{booking}/refund', [WisataExceptionController::class, 'refund'])
+        ->middleware('throttle:10,1')
         ->name('admin.wisata.bookings.refund');
     Route::post('admin/wisata/disputes/{dispute}', [WisataExceptionController::class, 'resolveDispute'])
         ->name('admin.wisata.disputes.update');
@@ -928,6 +944,9 @@ Route::prefix('mitra/wisata')
             ->name('destination.edit');
         Route::put('destination', [DestinationController::class, 'update'])
             ->name('destination.update');
+        Route::get('documents/{type}', [App\Http\Controllers\MitraWisataSensitiveDocumentController::class, 'showOwn'])
+            ->where('type', 'ktp|selfie|legal')
+            ->name('documents.show');
 
         Route::get('tickets', [App\Http\Controllers\Mitra\Wisata\TicketController::class, 'index'])
             ->name('tickets.index');
@@ -1196,6 +1215,7 @@ Route::middleware(['auth', 'verified', 'user', 'affiliate.user', 'user.activity'
     Route::get('payouts', [App\Http\Controllers\Affiliate\PayoutController::class, 'index'])
         ->name('payouts');
     Route::post('payouts', [App\Http\Controllers\Affiliate\PayoutController::class, 'store'])
+        ->middleware('throttle:5,1')
         ->name('payouts.store');
     Route::get('notifications', [NotificationController::class, 'index'])
         ->name('notifications');
@@ -1313,13 +1333,13 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
         ->middleware('maintenance.transactions')
         ->name('wisata.booking.voucher.remove');
     Route::post('/wisata/booking/confirm', [WisataBookingController::class, 'confirm'])
-        ->middleware('maintenance.transactions')
+        ->middleware(['maintenance.transactions', 'throttle:10,1'])
         ->name('wisata.booking.confirm');
     Route::get('/wisata/booking/{booking}/payment', [WisataBookingController::class, 'payment'])
         ->middleware('maintenance.transactions')
         ->name('wisata.booking.payment');
     Route::post('/wisata/booking/{booking}/payment', [WisataBookingController::class, 'pay'])
-        ->middleware('maintenance.transactions')
+        ->middleware(['maintenance.transactions', 'throttle:10,1'])
         ->name('wisata.booking.pay');
     Route::get('/wisata/booking/{booking}/ticket', [WisataBookingController::class, 'ticket'])
         ->name('wisata.booking.ticket');

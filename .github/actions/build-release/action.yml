@@ -46,13 +46,30 @@ runs:
         npm run build
         rm -f .env
         archive="$RUNNER_TEMP/indotix-release.tgz"
+        guide_archive="$RUNNER_TEMP/indotix-guide.tgz"
         rm -f "$archive"
-        tar --exclude-vcs --exclude=.env --exclude=.env.* --exclude=node_modules --exclude=storage --exclude=tests --exclude=docs --exclude=database/database.sqlite -czf "$archive" .
+        rm -f "$guide_archive"
+
+        guide_dir="public/guides/mitra"
+        [[ -f "$guide_dir/index.html" ]] || { echo 'Published Mitra guide is missing.' >&2; exit 1; }
+        guide_hash="$({ cd "$guide_dir"; find . -type f -print0 | sort -z | xargs -0 sha256sum; } | sha256sum | cut -d ' ' -f 1)"
+        [[ "$guide_hash" =~ ^[a-f0-9]{64}$ ]] || { echo 'Unable to calculate Mitra guide hash.' >&2; exit 1; }
+
+        tar -C "$guide_dir" -cf - . | gzip -9n > "$guide_archive"
+        tar --exclude-vcs --exclude=.env --exclude=.env.* --exclude=node_modules --exclude=storage --exclude=tests --exclude=docs --exclude=database/database.sqlite --exclude=./public/guides -cf - . | gzip -9n > "$archive"
         mv "$archive" indotix-release.tgz
+        mv "$guide_archive" indotix-guide.tgz
+        printf '%s\n' "$guide_hash" > indotix-guide.sha256
+
+        stat -c 'Application artifact size: %s bytes' indotix-release.tgz
+        stat -c 'Guide artifact size: %s bytes' indotix-guide.tgz
 
     - uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.artifact-name }}
-        path: indotix-release.tgz
+        path: |
+          indotix-release.tgz
+          indotix-guide.tgz
+          indotix-guide.sha256
         if-no-files-found: error
         retention-days: 7

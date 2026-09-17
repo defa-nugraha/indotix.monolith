@@ -8,6 +8,7 @@ use App\Models\WisataBooking;
 use App\Models\WisataCommissionRule;
 use App\Models\WisataPayout;
 use App\Support\AdminDataScope;
+use App\Services\WisataFinanceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -108,7 +109,7 @@ class WisataFinanceController extends Controller
         ]);
     }
 
-    public function generatePayout(Request $request): RedirectResponse
+    public function generatePayout(Request $request, WisataFinanceService $finance): RedirectResponse
     {
         $destinationRule = \Illuminate\Validation\Rule::exists('mitra_wisata_onboardings', 'id');
         if (! AdminDataScope::canViewAll($request->user())) {
@@ -124,24 +125,11 @@ class WisataFinanceController extends Controller
             'period_end' => ['required', 'date'],
         ]);
 
-        $total = WisataBooking::query()
-            ->where('mitra_wisata_onboarding_id', $data['mitra_wisata_onboarding_id'])
-            ->whereBetween('visit_date', [$data['period_start'], $data['period_end']])
-            ->whereIn('status', ['paid', 'completed'])
-            ->sum('total_price');
-
-        $commission = (int) round($total * 0.1);
-        $net = max(0, $total - $commission);
-
-        WisataPayout::create([
-            'mitra_wisata_onboarding_id' => $data['mitra_wisata_onboarding_id'],
-            'period_start' => $data['period_start'],
-            'period_end' => $data['period_end'],
-            'total_gmv' => $total,
-            'commission_amount' => $commission,
-            'net_payout' => $net,
-            'status' => 'pending',
-        ]);
+        $finance->createPayout(
+            (int) $data['mitra_wisata_onboarding_id'],
+            $data['period_start'],
+            $data['period_end'],
+        );
 
         return back()->with('status', 'payout-created');
     }
@@ -189,7 +177,7 @@ class WisataFinanceController extends Controller
             ->whereIn('status', ['pending', 'approved'])
             ->sum('net_payout');
 
-        $revenue = (int) round($gmv * 0.1);
+        $revenue = max(0, (int) round(($gmv - $refund) * 0.1));
 
         return Inertia::render('admin/wisata/finance/reports', [
             'metrics' => [

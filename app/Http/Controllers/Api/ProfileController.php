@@ -45,7 +45,24 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        $data = $request->validate($this->profileRules($user->id));
+        $rules = $this->profileRules($user->id);
+        $requestedEmail = trim((string) $request->input('email', ''));
+        $emailIsChanging = $requestedEmail !== ''
+            && strcasecmp($requestedEmail, (string) $user->email) !== 0;
+
+        if ($emailIsChanging) {
+            $rules['current_password'] = ['required', 'string'];
+        }
+
+        $data = $request->validate($rules);
+
+        if ($emailIsChanging && ! Hash::check((string) $data['current_password'], (string) $user->password)) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'current_password' => 'Password saat ini tidak sesuai.',
+            ]);
+        }
+
+        unset($data['current_password']);
 
         $user->fill($data);
 

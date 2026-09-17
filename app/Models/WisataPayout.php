@@ -11,10 +11,13 @@ class WisataPayout extends Model
 
     protected $fillable = [
         'mitra_wisata_onboarding_id',
+        'idempotency_key',
         'period_start',
         'period_end',
         'total_gmv',
+        'gross_refund_amount',
         'commission_amount',
+        'prior_adjustment_amount',
         'net_payout',
         'status',
         'notes',
@@ -24,7 +27,9 @@ class WisataPayout extends Model
         'period_start' => 'date',
         'period_end' => 'date',
         'total_gmv' => 'integer',
+        'gross_refund_amount' => 'integer',
         'commission_amount' => 'integer',
+        'prior_adjustment_amount' => 'integer',
         'net_payout' => 'integer',
     ];
 

@@ -18,7 +18,8 @@ fi
 getent group "$PHP_FPM_GROUP" >/dev/null || { echo "Unknown PHP-FPM group: ${PHP_FPM_GROUP}" >&2; exit 1; }
 install -d -o "$DEPLOY_USER" -g "$PHP_FPM_GROUP" -m 750 "$DEPLOY_ROOT"
 install -d -o "$DEPLOY_USER" -g "$PHP_FPM_GROUP" -m 750 \
-    "$DEPLOY_ROOT/releases" "$DEPLOY_ROOT/shared"
+    "$DEPLOY_ROOT/releases" "$DEPLOY_ROOT/shared" \
+    "$DEPLOY_ROOT/shared/public" "$DEPLOY_ROOT/shared/public/guide-releases"
 install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" -m 750 \
     "$DEPLOY_ROOT/incoming" "$DEPLOY_ROOT/backups"
 install -d -o "$DEPLOY_USER" -g "$PHP_FPM_GROUP" -m 775 \

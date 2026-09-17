@@ -16,6 +16,7 @@ use App\Models\WisataTicket;
 use App\Models\WisataBookingItem;
 use App\Models\Voucher;
 use App\Services\MidtransService;
+use App\Services\WisataPaymentLifecycleService;
 use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,7 +38,7 @@ class WisataBookingController extends Controller
         $data = $request->validate([
             'destination_id' => ['required', 'integer', 'exists:mitra_wisata_onboardings,id'],
             'ticket_id' => ['nullable', 'integer', 'exists:wisata_tickets,id'],
-            'visit_date' => ['required', 'date'],
+            'visit_date' => ['required', 'date', 'after_or_equal:today'],
             'quantity' => ['nullable', 'integer', 'min:1', 'max:'.self::MAX_TICKETS_PER_BOOKING],
             'items' => ['nullable', 'array'],
             'items.*.ticket_id' => ['required_with:items', 'integer', 'exists:wisata_tickets,id'],
@@ -158,7 +159,7 @@ class WisataBookingController extends Controller
         return back()->with('status', 'wisata-voucher-removed');
     }
 
-    public function confirm(Request $request, MidtransService $midtransService): RedirectResponse|\Illuminate\Http\JsonResponse|\Inertia\Response
+    public function confirm(Request $request, WisataPaymentLifecycleService $payments): RedirectResponse|\Illuminate\Http\JsonResponse|\Inertia\Response
     {
         $draft = $request->session()->get('wisata_booking_draft');
         if (! $draft) {
@@ -182,7 +183,7 @@ class WisataBookingController extends Controller
             $existingBooking = WisataBooking::query()->find($existingBookingId);
             if ($existingBooking) {
                 if ($request->expectsJson()) {
-                    $snap = $this->createSnapPayment($existingBooking, $midtransService);
+                    $snap = $this->createSnapPayment($existingBooking, $payments);
 
                     return response()->json([
                         'booking_id' => $this->encryptId($existingBooking->id),
@@ -191,7 +192,7 @@ class WisataBookingController extends Controller
                     ]);
                 }
 
-                $snap = $this->createSnapPayment($existingBooking, $midtransService);
+                $snap = $this->createSnapPayment($existingBooking, $payments);
 
                 return $this->reviewResponse($draft, [
                     'snapToken' => $snap['token'] ?? null,
@@ -325,7 +326,7 @@ class WisataBookingController extends Controller
 
         if ($request->expectsJson()) {
             try {
-                $snap = $this->createSnapPayment($booking, $midtransService);
+                $snap = $this->createSnapPayment($booking, $payments);
             } catch (\Throwable $exception) {
                 return response()->json([
                     'message' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.',
@@ -339,14 +340,14 @@ class WisataBookingController extends Controller
             ]);
         }
 
-        $snap = $this->createSnapPayment($booking, $midtransService);
+        $snap = $this->createSnapPayment($booking, $payments);
 
         return $this->reviewResponse($draft, [
             'snapToken' => $snap['token'] ?? null,
         ], $request);
     }
 
-    public function payment(Request $request, string $booking): Response|RedirectResponse
+    public function payment(Request $request, string $booking, WisataPaymentLifecycleService $payments): Response|RedirectResponse
     {
         $booking = $this->resolveBooking($booking);
 
@@ -361,10 +362,15 @@ class WisataBookingController extends Controller
         }
 
         if ($booking->isExpired()) {
-            $booking->update([
-                'status' => 'expired',
-                'payment_status' => 'expired',
-            ]);
+            try {
+                $payments->expireBooking($booking);
+            } catch (\Throwable $exception) {
+                Log::warning('Unable to synchronize expired wisata booking with Midtrans.', [
+                    'booking_id' => $booking->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+            $booking->refresh();
         }
 
         $booking->load('ticket', 'items.ticket', 'payments');
@@ -378,7 +384,7 @@ class WisataBookingController extends Controller
         ]);
     }
 
-    public function pay(Request $request, string $booking, MidtransService $midtransService): RedirectResponse
+    public function pay(Request $request, string $booking, WisataPaymentLifecycleService $payments): RedirectResponse
     {
         $booking = $this->resolveBooking($booking);
 
@@ -394,44 +400,33 @@ class WisataBookingController extends Controller
         }
 
         if ($booking->isExpired()) {
-            $booking->update(['status' => 'expired', 'payment_status' => 'expired']);
+            try {
+                $payments->expireBooking($booking);
+            } catch (\Throwable $exception) {
+                Log::warning('Unable to synchronize expired wisata booking with Midtrans.', [
+                    'booking_id' => $booking->id,
+                    'message' => $exception->getMessage(),
+                ]);
+            }
+
             return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)])
                 ->withErrors(['payment' => 'Booking sudah kedaluwarsa.']);
         }
 
-        if ($booking->status !== 'pending_payment') {
-            return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)]);
-        }
-
-        if ($booking->payments()->where('status', 'pending')->exists()) {
-            return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)]);
-        }
-
-        $orderId = sprintf('WISATA-%s-%s', $booking->id, now()->format('YmdHis'));
-        $payload = $this->buildSnapPayload($booking, $orderId);
-
         try {
-            $charge = $midtransService->snap($payload);
-        } catch (\Throwable $exception) {
+            $payments->createOrGetSnapPayment($booking);
+        } catch (RuntimeException $exception) {
             return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)])
-                ->withErrors(['payment' => 'Gagal menghubungi server pembayaran. Silakan coba lagi.']);
+                ->withErrors(['payment' => $exception->getMessage()]);
+        } catch (\Throwable $exception) {
+            Log::warning('Midtrans wisata payment creation failed', [
+                'booking_id' => $booking->id,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)])
+                ->withErrors(['payment' => 'Status pembuatan pembayaran belum dapat dipastikan. Silakan coba beberapa saat lagi.']);
         }
-
-        $payment = WisataPayment::create([
-            'wisata_booking_id' => $booking->id,
-            'provider' => 'midtrans',
-            'status' => 'pending',
-            'gross_amount' => (int) $booking->total_price,
-            'payment_type' => 'snap',
-            'transaction_id' => $charge['transaction_id'] ?? null,
-            'order_id' => $orderId,
-            'payload' => $charge,
-        ]);
-
-        $booking->update([
-            'midtrans_order_id' => $payment->order_id,
-            'payment_status' => $payment->status,
-        ]);
 
         return redirect()->route('wisata.booking.payment', ['booking' => $this->encryptId($booking->id)]);
     }
@@ -466,6 +461,12 @@ class WisataBookingController extends Controller
 
         if ((int) $booking->user_id !== (int) $request->user()->id) {
             return redirect()->route('home');
+        }
+
+        if (! in_array($booking->status, ['paid', 'completed'], true)) {
+            return redirect()
+                ->route('wisata.booking.show', ['booking' => $this->encryptId($booking->id)])
+                ->withErrors(['ticket' => 'Tiket hanya tersedia setelah pembayaran berhasil.']);
         }
 
         $booking->load('ticket', 'destination', 'items.ticket');
@@ -550,6 +551,18 @@ class WisataBookingController extends Controller
             if (! $ticket->is_active || $ticket->is_closed) {
                 throw ValidationException::withMessages([
                     'items' => "Tiket {$ticket->name} belum tersedia.",
+                ]);
+            }
+
+            $visitDate = \Carbon\Carbon::parse($draft['visit_date'])->startOfDay();
+            if ($ticket->valid_from && $visitDate->lt($ticket->valid_from->startOfDay())) {
+                throw ValidationException::withMessages([
+                    'items' => "Tiket {$ticket->name} belum berlaku pada tanggal kunjungan.",
+                ]);
+            }
+            if ($ticket->valid_until && $visitDate->gt($ticket->valid_until->startOfDay())) {
+                throw ValidationException::withMessages([
+                    'items' => "Masa berlaku tiket {$ticket->name} sudah berakhir untuk tanggal kunjungan.",
                 ]);
             }
 
@@ -707,13 +720,31 @@ class WisataBookingController extends Controller
             ->whereHas('booking', function ($query) use ($date) {
                 $query
                     ->whereDate('visit_date', $date)
-                    ->whereIn('status', ['pending_payment', 'paid', 'completed']);
+                    ->where(function ($statusQuery) {
+                        $statusQuery->whereIn('status', ['paid', 'completed'])
+                            ->orWhere(function ($pendingQuery) {
+                                $pendingQuery->where('status', 'pending_payment')
+                                    ->where(function ($deadlineQuery) {
+                                        $deadlineQuery->whereNull('payment_deadline')
+                                            ->orWhere('payment_deadline', '>', now());
+                                    });
+                            });
+                    });
             });
 
         $legacyQuery = WisataBooking::query()
             ->where('wisata_ticket_id', $ticket->id)
             ->whereDate('visit_date', $date)
-            ->whereIn('status', ['pending_payment', 'paid', 'completed'])
+            ->where(function ($statusQuery) {
+                $statusQuery->whereIn('status', ['paid', 'completed'])
+                    ->orWhere(function ($pendingQuery) {
+                        $pendingQuery->where('status', 'pending_payment')
+                            ->where(function ($deadlineQuery) {
+                                $deadlineQuery->whereNull('payment_deadline')
+                                    ->orWhere('payment_deadline', '>', now());
+                            });
+                    });
+            })
             ->whereDoesntHave('items');
 
         if ($lock) {
@@ -833,37 +864,18 @@ class WisataBookingController extends Controller
                 'email' => $booking->guest_email,
                 'phone' => $booking->guest_phone,
             ],
+            'expiry' => [
+                'duration' => max(1, (int) now()->diffInMinutes($booking->payment_deadline ?? now()->addMinutes(SystemSetting::wisataBookingTimeoutMinutes()))),
+                'unit' => 'minute',
+            ],
         ];
     }
 
-    private function createSnapPayment(WisataBooking $booking, MidtransService $midtransService): array
+    private function createSnapPayment(WisataBooking $booking, WisataPaymentLifecycleService $payments): array
     {
-        if ($booking->payments()->where('status', 'pending')->exists()) {
-            return (array) ($booking->payments()->latest()->value('payload') ?? []);
-        }
+        $payment = $payments->createOrGetSnapPayment($booking);
 
-        $orderId = sprintf('WISATA-%s-%s', $booking->id, now()->format('YmdHis'));
-        $payload = $this->buildSnapPayload($booking, $orderId);
-
-        $snap = $midtransService->snap($payload);
-
-        $payment = WisataPayment::create([
-            'wisata_booking_id' => $booking->id,
-            'provider' => 'midtrans',
-            'status' => 'pending',
-            'gross_amount' => (int) $booking->total_price,
-            'payment_type' => 'snap',
-            'transaction_id' => $snap['transaction_id'] ?? null,
-            'order_id' => $orderId,
-            'payload' => $snap,
-        ]);
-
-        $booking->update([
-            'midtrans_order_id' => $payment->order_id,
-            'payment_status' => $payment->status,
-        ]);
-
-        return $snap;
+        return (array) ($payment->payload ?? []);
     }
 
     private function completeFreeBooking(WisataBooking $booking): void

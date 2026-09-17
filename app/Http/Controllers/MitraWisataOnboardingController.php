@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MitraWisataOnboarding;
 use App\Services\MediaCompressionService;
+use App\Services\MitraWisataSensitiveDocumentService;
 use App\Support\CommissionInfo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,6 +46,11 @@ class MitraWisataOnboardingController extends Controller
 
         return Inertia::render('mitra/wisata-onboarding', [
             'onboarding' => $onboarding,
+            'sensitiveDocumentUrls' => [
+                'ktp' => $onboarding->ktp_path ? route('mitra.wisata.documents.show', ['type' => 'ktp']) : null,
+                'selfie' => $onboarding->selfie_ktp_path ? route('mitra.wisata.documents.show', ['type' => 'selfie']) : null,
+                'legal' => $onboarding->legal_doc_path ? route('mitra.wisata.documents.show', ['type' => 'legal']) : null,
+            ],
             'provinces' => $provinces,
             'cities' => $cities,
             'commissionInfo' => CommissionInfo::wisata($onboarding->id),
@@ -154,7 +160,7 @@ class MitraWisataOnboardingController extends Controller
         return back()->with('status', 'onboarding-saved');
     }
 
-    public function updateStepThree(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
+    public function updateStepThree(Request $request, MitraWisataSensitiveDocumentService $sensitiveDocuments): RedirectResponse
     {
         $user = $request->user();
         $this->ensureWisataMitra($request);
@@ -185,7 +191,6 @@ class MitraWisataOnboardingController extends Controller
             'bank_account_name' => $data['bank_account_name'] ?? $onboarding->bank_account_name,
         ]);
 
-        $folder = "mitra-wisata/{$user->id}";
         $uploads = [
             'ktp_file' => 'ktp_path',
             'selfie_ktp_file' => 'selfie_ktp_path',
@@ -194,12 +199,11 @@ class MitraWisataOnboardingController extends Controller
 
         foreach ($uploads as $input => $column) {
             if ($request->hasFile($input)) {
-                $old = $onboarding->{$column};
-                $path = $mediaCompression->store($request->file($input), $folder, 'public');
-                $onboarding->{$column} = $path;
-                if ($old) {
-                    Storage::disk('public')->delete($old);
-                }
+                $onboarding->{$column} = $sensitiveDocuments->store(
+                    $request->file($input),
+                    (int) $user->id,
+                    $onboarding->{$column},
+                );
             }
         }
 

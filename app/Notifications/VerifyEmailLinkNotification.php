@@ -35,12 +35,10 @@ class VerifyEmailLinkNotification extends VerifyEmail
 
     protected function verificationUrl($notifiable): string
     {
-        if (! $this->forMobileApp) {
-            return parent::verificationUrl($notifiable);
-        }
-
         return URL::temporarySignedRoute(
-            'mobile.verification.verify',
+            $this->forMobileApp
+                ? 'mobile.verification.verify'
+                : 'public.verification.verify',
             now()->addMinutes((int) config('auth.verification.expire', 60)),
             [
                 'id' => $notifiable->getKey(),

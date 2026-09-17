@@ -17,14 +17,16 @@ use App\Models\WisataAffiliateCommissionItem;
 use App\Models\SouvenirOrder;
 use App\Services\BookingService;
 use App\Services\MidtransService;
+use App\Services\WisataPaymentLifecycleService;
 use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class MidtransCallbackController extends Controller
 {
-    public function __invoke(Request $request, MidtransService $midtransService): Response
+    public function __invoke(Request $request, MidtransService $midtransService, WisataPaymentLifecycleService $wisataPayments): Response
     {
         $payload = $request->all();
 
@@ -46,6 +48,12 @@ class MidtransCallbackController extends Controller
             return response('OK', 200);
         }
 
+        $callbackLock = Cache::lock('midtrans:callback:'.hash('sha256', $orderId), 30);
+        if (! $callbackLock->get()) {
+            return response('Callback already processing', 409);
+        }
+
+        try {
         $payment = Payment::query()->where('order_id', $orderId)->latest()->first();
         $booking = $payment?->booking ?? Booking::query()->where('midtrans_order_id', $orderId)->first();
 
@@ -83,6 +91,13 @@ class MidtransCallbackController extends Controller
         }
 
         $status = $payload['transaction_status'] ?? null;
+        $isSuccessful = $statusCode === '200' && (
+            $status === 'settlement'
+            || (
+                $status === 'capture'
+                && (! array_key_exists('fraud_status', $payload) || $payload['fraud_status'] === 'accept')
+            )
+        );
 
         if (! $this->callbackAmountMatches(
             $grossAmount,
@@ -106,8 +121,14 @@ class MidtransCallbackController extends Controller
             return response('Amount mismatch', 422);
         }
 
+        if ($wisataPayment && $wisataBooking) {
+            $wisataPayments->handleProviderNotification($wisataPayment, $payload);
+
+            return response('OK', 200);
+        }
+
         if (
-            ! in_array($status, ['settlement', 'capture', 'success'], true)
+            ! $isSuccessful
             && $this->bookingAlreadyPaid($booking, $wisataBooking, $eventBooking, $academyBooking, $specialBooking, $souvenirOrder)
         ) {
             Log::info('Ignoring non-success Midtrans callback for paid booking', [
@@ -169,7 +190,23 @@ class MidtransCallbackController extends Controller
             ]);
         }
 
-        if ($booking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+        if ($isSuccessful && $this->bookingCannotTransitionToPaid(
+            $booking,
+            $wisataBooking,
+            $eventBooking,
+            $academyBooking,
+            $specialBooking,
+            $souvenirOrder
+        )) {
+            Log::critical('Midtrans reported a successful payment for a terminal booking', [
+                'order_id' => $orderId,
+                'status' => $status,
+            ]);
+
+            return response('OK', 200);
+        }
+
+        if ($booking && $isSuccessful) {
             $wasPaid = $booking->status === 'paid';
             $booking->update([
                 'status' => 'paid',
@@ -203,7 +240,7 @@ class MidtransCallbackController extends Controller
             }
         }
 
-        if ($wisataBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+        if ($wisataBooking && $isSuccessful) {
             $wasPaid = $wisataBooking->status === 'paid';
             $wisataBooking->update([
                 'status' => 'paid',
@@ -272,7 +309,7 @@ class MidtransCallbackController extends Controller
             }
         }
 
-        if ($eventBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+        if ($eventBooking && $isSuccessful) {
             $eventBooking->loadMissing('event', 'ticket');
             $wasPaid = $eventBooking->status === 'paid';
             $eventBooking->update([
@@ -319,7 +356,7 @@ class MidtransCallbackController extends Controller
             }
         }
 
-        if ($academyBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+        if ($academyBooking && $isSuccessful) {
             $wasPaid = $academyBooking->status === 'paid';
             $academyBooking->update([
                 'status' => 'paid',
@@ -356,7 +393,7 @@ class MidtransCallbackController extends Controller
             }
         }
 
-        if ($specialBooking && in_array($status, ['settlement', 'capture', 'success'], true)) {
+        if ($specialBooking && $isSuccessful) {
             $wasPaid = $specialBooking->status === 'paid';
             $specialBooking->update([
                 'status' => 'paid',
@@ -391,7 +428,7 @@ class MidtransCallbackController extends Controller
             }
         }
 
-        if ($souvenirOrder && in_array($status, ['settlement', 'capture', 'success'], true)) {
+        if ($souvenirOrder && $isSuccessful) {
             $wasPaid = $souvenirOrder->status === 'paid';
             $souvenirOrder->update([
                 'status' => 'paid',
@@ -594,6 +631,28 @@ class MidtransCallbackController extends Controller
         }
 
         return response('OK', 200);
+        } finally {
+            $callbackLock->release();
+        }
+    }
+
+    private function bookingCannotTransitionToPaid(
+        ?Booking $booking,
+        ?WisataBooking $wisataBooking,
+        ?EventBooking $eventBooking,
+        ?AcademyBooking $academyBooking,
+        ?SpecialProgramBooking $specialBooking,
+        ?SouvenirOrder $souvenirOrder
+    ): bool {
+        $terminalStatuses = ['cancelled', 'expired', 'completed', 'no_show'];
+
+        foreach ([$booking, $wisataBooking, $eventBooking, $academyBooking, $specialBooking, $souvenirOrder] as $record) {
+            if ($record && in_array((string) $record->status, $terminalStatuses, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function sendPaymentPush(int $userId, string $title, string $message, array $data = []): void
@@ -638,7 +697,15 @@ class MidtransCallbackController extends Controller
             return false;
         }
 
-        return (int) round((float) $grossAmount) === (int) round((float) $expected);
+        if (! preg_match('/\A([0-9]+)(?:\.([0-9]{1,2}))?\z/', $grossAmount, $matches)) {
+            return false;
+        }
+
+        if (isset($matches[2]) && (int) str_pad($matches[2], 2, '0') !== 0) {
+            return false;
+        }
+
+        return (int) $matches[1] === (int) $expected;
     }
 
     private function bookingAlreadyPaid(

@@ -6,14 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\WisataTicketScan;
 use App\Services\WisataTicketUsageService;
+use App\Support\PaginationOptions;
 use App\Support\QrCodeRenderer;
 use App\Support\WisataEntryQrTemplate;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\LaravelPdf\Facades\Pdf;
 
 class ScanController extends Controller
 {
@@ -49,7 +52,7 @@ class ScanController extends Controller
         }
 
         $scans = $query->latest('scanned_at')
-            ->paginate(\App\Support\PaginationOptions::perPage())
+            ->paginate(PaginationOptions::perPage())
             ->withQueryString()
             ->through(fn (WisataTicketScan $scan) => [
                 'id' => $scan->id,
@@ -84,7 +87,7 @@ class ScanController extends Controller
         ]);
     }
 
-    public function download(Request $request, WisataTicketUsageService $usageService)
+    public function download(Request $request, WisataTicketUsageService $usageService): HttpResponse
     {
         $destination = MitraWisataOnboarding::query()
             ->where('user_id', $request->user()->id)
@@ -93,17 +96,36 @@ class ScanController extends Controller
         $qrData = $usageService->buildMerchantQrData($destination);
         $destinationName = $destination->destination_name ?: 'Destinasi Wisata';
         $filename = 'qr-masuk-'.Str::slug($destinationName ?: 'wisata').'.pdf';
+        $template = WisataEntryQrTemplate::pdfPayload();
 
-        $pdf = Pdf::view('mitra-wisata-entry-qr', [
+        if (! extension_loaded('gd')) {
+            $template['top_logo_images'] = [];
+            $template['qr_logo_image'] = null;
+            $template['playstore_image'] = null;
+        }
+
+        $html = view('mitra-wisata-entry-qr', [
             'destinationName' => $destinationName,
             'qrImage' => QrCodeRenderer::dataUri($qrData, 520),
-            'template' => WisataEntryQrTemplate::pdfPayload(),
-        ])
-            ->format('a4');
+            'template' => $template,
+        ])->render();
 
-        return $request->boolean('inline')
-            ? $pdf->inline($filename)
-            : $pdf->download($filename);
+        $options = new Options;
+        $options->set('isRemoteEnabled', false);
+        $options->set('isHtml5ParserEnabled', true);
+
+        $pdf = new Dompdf($options);
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->loadHtml($html, 'UTF-8');
+        $pdf->render();
+
+        $disposition = $request->boolean('inline') ? 'inline' : 'attachment';
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => $disposition.'; filename="'.$filename.'"',
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -112,5 +134,4 @@ class ScanController extends Controller
             'booking_code' => 'Scan tiket oleh mitra sudah tidak digunakan. Minta user scan QR Masuk dari halaman tiket Indotix.',
         ]);
     }
-
 }

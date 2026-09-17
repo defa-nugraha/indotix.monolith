@@ -113,10 +113,16 @@ export default function MitraWisataDestination({
     destination,
     provinces,
     cities,
+    sensitiveDocumentUrls,
 }: {
     destination: Destination;
     provinces: Option[];
     cities: Option[];
+    sensitiveDocumentUrls: {
+        ktp?: string | null;
+        selfie?: string | null;
+        legal?: string | null;
+    };
 }) {
     const form = useForm({
         _method: 'put',
@@ -300,8 +306,11 @@ export default function MitraWisataDestination({
 
     const getPublicUrl = (path?: string | null) =>
         path ? `/storage/${path}` : null;
-    const renderExistingDocument = (path?: string | null) => {
-        const url = getPublicUrl(path);
+    const renderExistingDocument = (
+        path?: string | null,
+        protectedUrl?: string | null,
+    ) => {
+        const url = protectedUrl ?? null;
 
         return url ? (
             <a
@@ -832,7 +841,7 @@ export default function MitraWisataDestination({
                             </div>
                             <div className="grid gap-2">
                                 <Label>Upload Dokumen Legal</Label>
-                                {renderExistingDocument(destination.legal_doc_path)}
+                                {renderExistingDocument(destination.legal_doc_path, sensitiveDocumentUrls.legal)}
                                 <Input
                                     aria-label="Dokumen legal"
                                     type="file"
@@ -848,7 +857,7 @@ export default function MitraWisataDestination({
                             </div>
                             <div className="grid gap-2">
                                 <Label>Upload KTP</Label>
-                                {renderExistingDocument(destination.ktp_path)}
+                                {renderExistingDocument(destination.ktp_path, sensitiveDocumentUrls.ktp)}
                                 <Input
                                     aria-label="KTP penanggung jawab"
                                     type="file"
@@ -861,7 +870,7 @@ export default function MitraWisataDestination({
                             </div>
                             <div className="grid gap-2">
                                 <Label>Selfie + KTP</Label>
-                                {renderExistingDocument(destination.selfie_ktp_path)}
+                                {renderExistingDocument(destination.selfie_ktp_path, sensitiveDocumentUrls.selfie)}
                                 <Input
                                     aria-label="Selfie dengan KTP"
                                     type="file"

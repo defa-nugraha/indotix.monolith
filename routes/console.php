@@ -1,8 +1,12 @@
 <?php
 
 use App\Models\User;
+use App\Models\MitraWisataOnboarding;
 use App\Services\LegacyDatabaseCleanupService;
 use App\Services\RetiredSchemaCleanupService;
+use App\Services\WisataPaymentLifecycleService;
+use App\Services\MitraWisataSensitiveDocumentService;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
@@ -209,3 +213,71 @@ Artisan::command('indotix:drop-retired-schema
 
     return 0;
 })->purpose('Preview or execute destructive drop of retired non-wisata schema tables');
+
+
+Artisan::command('indotix:expire-wisata-payments {--limit=100}', function (WisataPaymentLifecycleService $payments): int {
+    $count = $payments->expireDueBookings(max(1, (int) $this->option('limit')));
+    $this->info("Expired/reconciled {$count} overdue wisata booking(s).");
+
+    return 0;
+})->purpose('Expire overdue Wisata payment reservations and synchronize Midtrans state');
+
+Artisan::command('indotix:reconcile-wisata-payments {--limit=50}', function (WisataPaymentLifecycleService $payments): int {
+    $count = $payments->reconcileRecentPayments(max(1, (int) $this->option('limit')));
+    $this->info("Reconciled {$count} recent Wisata payment/refund record(s).");
+
+    return 0;
+})->purpose('Reconcile recent Wisata payment and refund state with Midtrans');
+
+Schedule::command('indotix:expire-wisata-payments --limit=100')->everyMinute()->withoutOverlapping();
+Schedule::command('indotix:reconcile-wisata-payments --limit=50')->everyFiveMinutes()->withoutOverlapping();
+
+
+Artisan::command('indotix:migrate-wisata-sensitive-documents
+    {--mode=preview : preview or execute}
+    {--confirmation= : Required for execute}', function (MitraWisataSensitiveDocumentService $documents): int {
+    $mode = (string) ($this->option('mode') ?: 'preview');
+
+    if (! in_array($mode, ['preview', 'execute'], true)) {
+        $this->error('Mode harus preview atau execute.');
+
+        return 1;
+    }
+
+    if ($mode === 'execute' && $this->option('confirmation') !== 'MIGRATE_PRIVATE_DOCUMENTS') {
+        $this->error('Execute membutuhkan --confirmation=MIGRATE_PRIVATE_DOCUMENTS.');
+
+        return 1;
+    }
+
+    $records = MitraWisataOnboarding::query()
+        ->where(function ($query) {
+            $query->whereNotNull('ktp_path')
+                ->orWhereNotNull('selfie_ktp_path')
+                ->orWhereNotNull('legal_doc_path');
+        })
+        ->orderBy('id')
+        ->get();
+
+    $candidates = 0;
+    $moved = 0;
+
+    foreach ($records as $record) {
+        foreach (MitraWisataSensitiveDocumentService::TYPES as $column) {
+            $path = (string) ($record->{$column} ?? '');
+            if ($path !== '' && $documents->diskForPath($path) === 'public') {
+                $candidates++;
+            }
+        }
+
+        if ($mode === 'execute') {
+            $moved += $documents->migrateLegacyRecord($record);
+        }
+    }
+
+    $this->info($mode === 'preview'
+        ? "Sensitive document migration candidates: {$candidates}"
+        : "Sensitive documents moved and verified: {$moved}");
+
+    return 0;
+})->purpose('Safely migrate Mitra Wisata identity/legal files from public to private storage');

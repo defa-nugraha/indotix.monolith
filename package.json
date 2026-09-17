@@ -3,9 +3,10 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
-        "build:ssr": "vite build && vite build --ssr",
-        "dev": "vite",
+        "build": "npm run guide:publish && vite build",
+        "build:ssr": "npm run guide:publish && vite build && vite build --ssr",
+        "dev": "npm run guide:publish && vite",
+        "guide:publish": "node scripts/publish-mitra-guide.mjs",
         "format": "prettier --write resources/",
         "format:check": "prettier --check resources/",
         "lint": "eslint resources/js/components resources/js/hooks resources/js/layouts resources/js/lib resources/js/pages resources/js/types --fix",

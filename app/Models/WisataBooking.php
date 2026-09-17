@@ -94,6 +94,11 @@ class WisataBooking extends Model
         return $this->hasMany(WisataPayment::class, 'wisata_booking_id');
     }
 
+    public function refunds()
+    {
+        return $this->hasMany(WisataRefund::class, 'wisata_booking_id');
+    }
+
     public function isExpired(): bool
     {
         return $this->status === 'pending_payment'

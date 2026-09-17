@@ -158,6 +158,7 @@ it('rejects wisata ticket creation for another destination id', function () {
 
 it('stores wisata product photo from mitra destination form and uses it as public cover', function () {
     Storage::fake('public');
+    Storage::fake('local');
 
     $cityId = mitraProductTestCity();
     $owner = User::factory()->create([
@@ -223,7 +224,8 @@ it('stores wisata product photo from mitra destination form and uses it as publi
         ->and($destination->photo_product_path)->not->toBeNull()
         ->and($destination->ktp_path)->not->toBeNull();
     Storage::disk('public')->assertExists($destination->photo_product_path);
-    Storage::disk('public')->assertExists($destination->ktp_path);
+    Storage::disk('local')->assertExists($destination->ktp_path);
+    Storage::disk('public')->assertMissing($destination->ktp_path);
 
     $this->getJson('/api/products/wisata?q=Produk%20Foto')
         ->assertOk()

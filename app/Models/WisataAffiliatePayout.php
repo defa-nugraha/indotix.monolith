@@ -9,6 +9,7 @@ class WisataAffiliatePayout extends Model
 {
     protected $fillable = [
         'affiliate_id',
+        'idempotency_key',
         'period_start',
         'period_end',
         'total_commission',

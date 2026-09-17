@@ -20,9 +20,16 @@ use App\Models\WisataPayment;
 use App\Models\WisataTicket;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    Mail::fake();
+    Queue::fake();
+});
 
 function partnerBalanceMidtransPayload(string $orderId, int $grossAmount): array
 {

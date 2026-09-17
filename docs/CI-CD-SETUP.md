@@ -117,6 +117,18 @@ do not have this header. Correct the site root before deploying this change.
 Exclude `/up` from any Cloudflare cache-everything rule. A static file check
 alone is insufficient because PHP can still serve a different release.
 
+## Shared User Guide Assets
+
+The deployment stores versioned Mitra guide assets under
+`shared/public/guide-releases/<content-hash>` and links each application
+release to the matching guide version. The directory is created automatically.
+Do not remove `shared/public` during normal release cleanup or rollback.
+
+When the guide content is unchanged, deployment reuses the server copy and
+does not upload the screenshot archive again. On the first optimized deploy,
+the pipeline imports an identical guide from the active release when possible;
+otherwise it performs a one-time guide upload.
+
 ## Queue Workers
 
 If Supervisor manages `queue:work`, configure it to run from the stable

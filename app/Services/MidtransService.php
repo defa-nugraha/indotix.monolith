@@ -2,43 +2,70 @@
 
 namespace App\Services;
 
+use App\Exceptions\PaymentGatewayException;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use RuntimeException;
 
 class MidtransService
 {
     public function charge(array $payload): array
     {
-        $response = $this->client()->post($this->baseUrl().'/charge', $payload);
-
-        if (! $response->successful()) {
-            throw new RuntimeException('Midtrans charge failed: '.$response->body());
-        }
-
-        return $response->json();
+        return $this->json($this->client()->post($this->baseUrl().'/charge', $payload), 'charge');
     }
 
     public function status(string $orderId): array
     {
-        $response = $this->client()->get($this->baseUrl().'/'.$orderId.'/status');
+        return $this->json(
+            $this->client()->get($this->baseUrl().'/'.rawurlencode($orderId).'/status'),
+            'status',
+        );
+    }
 
-        if (! $response->successful()) {
-            throw new RuntimeException('Midtrans status failed: '.$response->body());
+    public function statusOrNull(string $orderId): ?array
+    {
+        try {
+            return $this->status($orderId);
+        } catch (PaymentGatewayException $exception) {
+            if ($exception->isNotFound()) {
+                return null;
+            }
+
+            throw $exception;
         }
-
-        return $response->json();
     }
 
     public function snap(array $payload): array
     {
-        $response = $this->client()->post($this->snapUrl().'/transactions', $payload);
+        return $this->json($this->client()->post($this->snapUrl().'/transactions', $payload), 'snap');
+    }
 
-        if (! $response->successful()) {
-            throw new RuntimeException('Midtrans snap failed: '.$response->body());
-        }
+    public function cancel(string $orderId): array
+    {
+        return $this->json(
+            $this->client()->post($this->baseUrl().'/'.rawurlencode($orderId).'/cancel'),
+            'cancel',
+        );
+    }
 
-        return $response->json();
+    public function expire(string $orderId): array
+    {
+        return $this->json(
+            $this->client()->post($this->baseUrl().'/'.rawurlencode($orderId).'/expire'),
+            'expire',
+        );
+    }
+
+    public function refund(string $orderId, string $refundKey, int $amount, string $reason): array
+    {
+        return $this->json(
+            $this->client()->post($this->baseUrl().'/'.rawurlencode($orderId).'/refund', [
+                'refund_key' => $refundKey,
+                'amount' => $amount,
+                'reason' => mb_substr($reason, 0, 255),
+            ]),
+            'refund',
+        );
     }
 
     public function validateSignature(string $orderId, string $statusCode, string $grossAmount, string $signature): bool
@@ -58,6 +85,22 @@ class MidtransService
             ->timeout((int) config('services.midtrans.timeout', 20))
             ->acceptJson()
             ->asJson();
+    }
+
+    private function json(Response $response, string $operation): array
+    {
+        $payload = $response->json();
+        $payload = is_array($payload) ? $payload : [];
+
+        if (! $response->successful()) {
+            throw new PaymentGatewayException(
+                'Midtrans '.$operation.' failed with HTTP '.$response->status().'.',
+                $response->status(),
+                $payload,
+            );
+        }
+
+        return $payload;
     }
 
     private function baseUrl(): string

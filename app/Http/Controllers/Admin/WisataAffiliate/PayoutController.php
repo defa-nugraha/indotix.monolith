@@ -8,6 +8,7 @@ use App\Models\WisataAffiliatePayout;
 use App\Models\WisataAffiliateAuditLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,7 +36,24 @@ class PayoutController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $payout = WisataAffiliatePayout::create($data);
+        $payout = DB::transaction(function () use ($data) {
+            $affiliate = WisataAffiliate::query()
+                ->whereKey($data['affiliate_id'])
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $key = hash('sha256', implode('|', [
+                $affiliate->id,
+                $data['period_start'] ?? '',
+                $data['period_end'] ?? '',
+                $data['total_commission'],
+            ]));
+
+            return WisataAffiliatePayout::query()->firstOrCreate(
+                ['idempotency_key' => $key],
+                [...$data, 'idempotency_key' => $key],
+            );
+        }, 3);
 
         WisataAffiliateAuditLog::create([
             'admin_id' => $request->user()?->id,

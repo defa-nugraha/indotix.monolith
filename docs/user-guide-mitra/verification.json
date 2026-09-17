@@ -1,0 +1,156 @@
+[
+  {
+    "name": "ticket-create-edit",
+    "result": "blocked",
+    "reason": "Missing target: field:Deskripsi on http://127.0.0.1:8017/mitra/wisata/tickets",
+    "at": "2026-09-14T14:34:18.992Z"
+  },
+  {
+    "name": "ticket-package",
+    "result": "blocked",
+    "reason": "Missing target: input[type=radio][value=package] on http://127.0.0.1:8017/mitra/wisata/tickets/create",
+    "at": "2026-09-14T14:34:22.412Z"
+  },
+  {
+    "name": "booking-detail-filter",
+    "result": "blocked",
+    "reason": "Missing target: table on http://127.0.0.1:8017/mitra/wisata/bookings/5",
+    "at": "2026-09-14T14:34:29.468Z"
+  },
+  {
+    "name": "review-reply",
+    "result": "passed",
+    "at": "2026-09-14T14:34:40.575Z"
+  },
+  {
+    "name": "dispute-create",
+    "result": "passed",
+    "at": "2026-09-14T14:34:52.645Z"
+  },
+  {
+    "name": "chat-send",
+    "result": "blocked",
+    "reason": "Missing target: textarea on http://127.0.0.1:8017/mitra/chat",
+    "at": "2026-09-14T14:34:55.804Z"
+  },
+  {
+    "name": "profile-save",
+    "result": "blocked",
+    "reason": "Profile not persisted.",
+    "at": "2026-09-14T14:35:03.697Z"
+  },
+  {
+    "name": "password-save",
+    "result": "passed",
+    "at": "2026-09-14T14:35:12.970Z"
+  },
+  {
+    "name": "guide-tour",
+    "result": "blocked",
+    "reason": "Missing target: text:Berikutnya on http://127.0.0.1:8017/mitra/dashboard",
+    "at": "2026-09-14T14:35:18.932Z"
+  },
+  {
+    "name": "logout",
+    "result": "passed",
+    "at": "2026-09-14T14:35:33.482Z"
+  },
+  {
+    "name": "register-email-link-type-onboarding-account",
+    "result": "blocked",
+    "reason": "Registration did not reach email verification."
+  },
+  {
+    "name": "register-email-link-type-onboarding-account",
+    "result": "blocked",
+    "reason": "Registration did not reach email verification: REGISTRASI\n\nBuat akun Indotix\n\nDaftarkan akun user atau mitra sesuai kebutuhan Anda.\n\nJENIS AKUN\nUser\nMitra\nDaftar dengan Google\natau daftar dengan email\nNama PIC*\nEmail aktif*\n\nThe email has already been taken.\n\nNomor HP/WhatsApp*\nNama usaha wisata\nPassword*\nKonfirmasi password*\nSaya telah membaca, memahami, dan menyetujui Syarat dan Ketentuan serta Kebijakan Privasi Indotix.*\nBuat akun\nSudah punya akun? Masuk"
+  },
+  {
+    "name": "ticket-package",
+    "result": "passed",
+    "at": "2026-09-14T14:49:57.941Z"
+  },
+  {
+    "name": "booking-detail-filter",
+    "result": "passed",
+    "at": "2026-09-14T14:50:06.643Z"
+  },
+  {
+    "name": "chat-send",
+    "result": "passed",
+    "at": "2026-09-14T14:50:16.804Z"
+  },
+  {
+    "name": "profile-save",
+    "result": "blocked",
+    "reason": "Profile value: 08000000000080000000001",
+    "at": "2026-09-14T14:50:24.988Z"
+  },
+  {
+    "name": "guide-tour",
+    "result": "passed",
+    "at": "2026-09-14T14:50:34.741Z"
+  },
+  {
+    "name": "register-email-link-type-onboarding-account",
+    "result": "blocked",
+    "reason": "ENOENT: no such file or directory, open '/tmp/indotix-guide-storage/logs/laravel.log'"
+  },
+  {
+    "name": "ticket-create-edit",
+    "result": "passed",
+    "at": "2026-09-14T14:56:05.134Z"
+  },
+  {
+    "name": "profile-save",
+    "result": "blocked",
+    "reason": "Profile value: 08000000000080000000001",
+    "at": "2026-09-14T14:56:12.480Z"
+  },
+  {
+    "name": "password-save",
+    "result": "passed",
+    "at": "2026-09-14T14:56:20.614Z"
+  },
+  {
+    "name": "onboarding-upload-submit",
+    "result": "observed",
+    "scope": "Three photo uploads and submission through actual UI; legal fields preloaded with non-sensitive documentation fixtures."
+  },
+  {
+    "name": "partner-terms-sign",
+    "result": "passed",
+    "scope": "Actual UI signature; local mailer only."
+  },
+  {
+    "name": "register-email-link-type-onboarding-account",
+    "result": "passed",
+    "at": "2026-09-14T15:01:35.487Z",
+    "scope": "UI register, local mail link, choose Wisata, save responsible data; external SMTP not tested"
+  },
+  {
+    "name": "profile-save",
+    "result": "passed",
+    "at": "2026-09-14T15:02:30.817Z"
+  },
+  {
+    "name": "password-save",
+    "result": "passed",
+    "at": "2026-09-14T15:02:41.263Z"
+  },
+  {
+    "name": "destination-save",
+    "result": "passed",
+    "at": "2026-09-15T00:59:58.239Z"
+  },
+  {
+    "name": "qr-pdf-download",
+    "result": "passed",
+    "at": "2026-09-15T01:00:18.398Z"
+  },
+  {
+    "name": "password-reset-email-and-login",
+    "result": "passed",
+    "scope": "Real password reset link from local mail log; login with new password and restoration through profile form. External inbox not tested."
+  }
+]

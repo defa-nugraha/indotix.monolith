@@ -1,14 +1,15 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import AppLayout from '@/layouts/app-layout';
-import type { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
+import Select from 'react-select';
+import Swal from 'sweetalert2';
 import CommissionInfoCard, {
     type CommissionInfo,
 } from '@/components/commission-info-card';
+import InputError from '@/components/input-error';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select as UiSelect,
     SelectContent,
@@ -16,9 +17,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import Swal from 'sweetalert2';
-import { CheckCircle2, XCircle } from 'lucide-react';
-import Select from 'react-select';
+import AppLayout from '@/layouts/app-layout';
+import type { BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard Mitra', href: '/mitra/dashboard' },
@@ -86,6 +86,7 @@ const roleOptions = [
     { id: 'pokdarwis', label: 'Marketing' },
     { id: 'staff', label: 'Staff Operasional' },
 ];
+const otherRoleId = 'other';
 
 const facilityOptions = [
     { id: 'parkir', label: 'Parkir' },
@@ -133,14 +134,31 @@ export default function MitraWisataOnboarding({
     cities,
     status,
     commissionInfo,
+    sensitiveDocumentUrls,
 }: {
     onboarding: Onboarding;
     provinces: Option[];
     cities: Option[];
     status?: string;
     commissionInfo?: CommissionInfo | null;
+    sensitiveDocumentUrls: {
+        ktp?: string | null;
+        selfie?: string | null;
+        legal?: string | null;
+    };
 }) {
     const [activeStep, setActiveStep] = useState(onboarding.current_step || 1);
+
+    const initialResponsibleRole = onboarding.responsible_role ?? '';
+    const hasCustomResponsibleRole =
+        initialResponsibleRole !== '' &&
+        !roleOptions.some((option) => option.id === initialResponsibleRole);
+    const [responsibleRoleOption, setResponsibleRoleOption] = useState(
+        hasCustomResponsibleRole ? otherRoleId : initialResponsibleRole,
+    );
+    const [customResponsibleRole, setCustomResponsibleRole] = useState(
+        hasCustomResponsibleRole ? initialResponsibleRole : '',
+    );
 
     const step1Form = useForm({
         responsible_name: onboarding.responsible_name ?? '',
@@ -220,9 +238,6 @@ export default function MitraWisataOnboarding({
         dropdownIndicator: (base: any) => ({ ...base, padding: '0 8px' }),
         menu: (base: any) => ({ ...base, zIndex: 50 }),
     };
-
-    const hasFile = (file?: File | null, path?: string | null) =>
-        Boolean(file || path);
 
     const [filePreviews, setFilePreviews] = useState<{
         gate?: string;
@@ -378,7 +393,8 @@ export default function MitraWisataOnboarding({
 
         return (
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 text-center">
-                <input aria-label="Wisata Onboarding input"
+                <input
+                    aria-label="Wisata Onboarding input"
                     id={id}
                     type="file"
                     accept={accept}
@@ -413,7 +429,10 @@ export default function MitraWisataOnboarding({
                             <p className="text-sm font-semibold text-slate-900">
                                 {label}
                                 {required ? (
-                                    <span aria-hidden="true" className="ml-0.5 text-red-600">
+                                    <span
+                                        aria-hidden="true"
+                                        className="ml-0.5 text-red-600"
+                                    >
                                         *
                                     </span>
                                 ) : null}
@@ -604,7 +623,9 @@ export default function MitraWisataOnboarding({
                             }}
                         >
                             <div className="grid gap-2">
-                                <Label required>Nama Lengkap Penanggung Jawab</Label>
+                                <Label required>
+                                    Nama Lengkap Penanggung Jawab
+                                </Label>
                                 <Input
                                     value={step1Form.data.responsible_name}
                                     onChange={(event) =>
@@ -638,13 +659,16 @@ export default function MitraWisataOnboarding({
                             <div className="grid gap-2 md:col-span-2">
                                 <Label required>Jabatan Penanggung Jawab</Label>
                                 <UiSelect
-                                    value={step1Form.data.responsible_role}
-                                    onValueChange={(value) =>
+                                    value={responsibleRoleOption}
+                                    onValueChange={(value) => {
+                                        setResponsibleRoleOption(value);
                                         step1Form.setData(
                                             'responsible_role',
-                                            value,
-                                        )
-                                    }
+                                            value === otherRoleId
+                                                ? customResponsibleRole
+                                                : value,
+                                        );
+                                    }}
                                 >
                                     <SelectTrigger>
                                         <SelectValue placeholder="Pilih jabatan" />
@@ -658,8 +682,29 @@ export default function MitraWisataOnboarding({
                                                 {item.label}
                                             </SelectItem>
                                         ))}
+                                        <SelectItem value={otherRoleId}>
+                                            Lainnya
+                                        </SelectItem>
                                     </SelectContent>
                                 </UiSelect>
+                                {responsibleRoleOption === otherRoleId && (
+                                    <Input
+                                        aria-label="Jabatan penanggung jawab lainnya"
+                                        value={customResponsibleRole}
+                                        onChange={(event) => {
+                                            const value = event.target.value;
+                                            setCustomResponsibleRole(value);
+                                            step1Form.setData(
+                                                'responsible_role',
+                                                value,
+                                            );
+                                        }}
+                                        placeholder="Masukkan jabatan lainnya"
+                                        maxLength={80}
+                                        required
+                                        autoFocus
+                                    />
+                                )}
                                 <InputError
                                     message={step1Form.errors.responsible_role}
                                 />
@@ -1008,7 +1053,8 @@ export default function MitraWisataOnboarding({
                                         }
                                         placeholder="Nomor petugas loket"
                                     />
-                                    <Input aria-label="Jam bisa dihubungi"
+                                    <Input
+                                        aria-label="Jam bisa dihubungi"
                                         value={step2Form.data.contact_hours}
                                         onChange={(event) =>
                                             step2Form.setData(
@@ -1147,7 +1193,8 @@ export default function MitraWisataOnboarding({
                                     fileName={step3Form.data.ktp_file?.name}
                                     previewUrl={
                                         filePreviews.ktp ??
-                                        getPublicUrl(onboarding.ktp_path)
+                                        sensitiveDocumentUrls.ktp ??
+                                        null
                                     }
                                     onChange={(file) =>
                                         handleFileChange(
@@ -1167,7 +1214,8 @@ export default function MitraWisataOnboarding({
                                     }
                                     previewUrl={
                                         filePreviews.selfie ??
-                                        getPublicUrl(onboarding.selfie_ktp_path)
+                                        sensitiveDocumentUrls.selfie ??
+                                        null
                                     }
                                     onChange={(file) =>
                                         handleFileChange(
@@ -1240,7 +1288,8 @@ export default function MitraWisataOnboarding({
                                     }
                                     previewUrl={
                                         filePreviews.legal ??
-                                        getPublicUrl(onboarding.legal_doc_path)
+                                        sensitiveDocumentUrls.legal ??
+                                        null
                                     }
                                     onChange={(file) =>
                                         handleFileChange(

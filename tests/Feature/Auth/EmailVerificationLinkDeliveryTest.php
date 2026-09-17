@@ -34,8 +34,55 @@ test('web registration sends verification link and does not create email otp', f
     Notification::assertSentTo(
         $user,
         VerifyEmailLinkNotification::class,
-        fn (VerifyEmailLinkNotification $notification) => ! $notification->isForMobileApp(),
+        function (VerifyEmailLinkNotification $notification) use ($user) {
+            $verificationUrl = $notification->toMail($user)->viewData['verificationUrl'];
+
+            return ! $notification->isForMobileApp()
+                && str_contains($verificationUrl, '/email/verify-link/');
+        },
     );
+});
+
+test('web signed link verifies email without browser authentication', function () {
+    Event::fake();
+
+    $user = User::factory()->unverified()->create();
+    $verificationUrl = URL::temporarySignedRoute(
+        'public.verification.verify',
+        now()->addMinutes(60),
+        [
+            'id' => $user->id,
+            'hash' => sha1($user->getEmailForVerification()),
+        ],
+    );
+
+    $this->get($verificationUrl)
+        ->assertOk()
+        ->assertSee('Email berhasil diverifikasi')
+        ->assertSee('Masuk ke Indotix');
+
+    expect(auth()->check())->toBeFalse();
+    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+    Event::assertDispatched(Verified::class);
+});
+
+test('web verification link rejects a mismatched email hash', function () {
+    Event::fake();
+
+    $user = User::factory()->unverified()->create();
+    $verificationUrl = URL::temporarySignedRoute(
+        'public.verification.verify',
+        now()->addMinutes(60),
+        [
+            'id' => $user->id,
+            'hash' => sha1('wrong@example.com'),
+        ],
+    );
+
+    $this->get($verificationUrl)->assertForbidden();
+
+    expect($user->fresh()->hasVerifiedEmail())->toBeFalse();
+    Event::assertNotDispatched(Verified::class);
 });
 
 test('old web otp routes redirect to verification link flow without sending otp', function () {
@@ -143,12 +190,14 @@ test('api registration sends verification link for a new unverified account', fu
     );
 });
 
-test('api registration for existing unverified email sends a new verification link', function () {
+test('api registration rejects an existing unverified email without mutating the account', function () {
     Notification::fake();
 
     $user = User::factory()->unverified()->create([
         'email' => 'verify-link-existing@example.com',
+        'phone' => '081200000001',
     ]);
+    $originalPassword = $user->password;
 
     EmailOtp::query()->create([
         'user_id' => $user->id,
@@ -160,25 +209,26 @@ test('api registration for existing unverified email sends a new verification li
     ]);
 
     $this->postJson('/api/auth/register', [
-        'name' => 'Verify Link Existing User',
+        'name' => 'Attacker Controlled Name',
         'email' => $user->email,
-        'phone' => '081234567891',
-        'password' => 'password123',
+        'phone' => '081299999999',
+        'password' => 'attacker-password',
         'terms_accepted' => true,
         'role' => 'user',
-        'device_name' => 'test-device',
+        'device_name' => 'attacker-device',
     ])
-        ->assertCreated()
-        ->assertJsonPath('requires_email_verification', true)
-        ->assertJsonPath('verification_method', 'link');
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Email sudah terdaftar. Silakan login untuk melanjutkan verifikasi.')
+        ->assertJsonMissingPath('token');
 
-    expect($user->fresh()->phone)->toBe('081234567891');
+    $fresh = $user->fresh();
 
-    Notification::assertSentTo(
-        $user,
-        VerifyEmailLinkNotification::class,
-        fn (VerifyEmailLinkNotification $notification) => $notification->isForMobileApp(),
-    );
+    expect($fresh->phone)->toBe('081200000001')
+        ->and($fresh->password)->toBe($originalPassword)
+        ->and($fresh->hasVerifiedEmail())->toBeFalse()
+        ->and(EmailOtp::query()->where('user_id', $user->id)->where('purpose', 'verify_email')->count())->toBe(1);
+
+    Notification::assertNothingSent();
 });
 
 test('api registration requires legal acceptance', function () {
