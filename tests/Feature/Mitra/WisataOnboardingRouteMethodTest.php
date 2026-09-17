@@ -31,3 +31,25 @@ it('accepts post requests for wisata onboarding document upload step', function 
         ->assertRedirect()
         ->assertSessionHas('status', 'onboarding-saved');
 });
+
+it('stores a custom responsible role from wisata onboarding', function () {
+    $user = User::factory()->create([
+        'role' => 'mitra',
+        'mitra_onboarding_type' => 'wisata',
+        'email_verified_at' => now(),
+    ]);
+
+    $this->actingAs($user)
+        ->post('/mitra/wisata/onboarding/step-1', [
+            'responsible_name' => 'Rani Prameswari',
+            'responsible_phone' => '081234567890',
+            'responsible_role' => 'Koordinator Lapangan',
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('status', 'onboarding-saved');
+
+    $this->assertDatabaseHas('mitra_wisata_onboardings', [
+        'user_id' => $user->id,
+        'responsible_role' => 'Koordinator Lapangan',
+    ]);
+});
