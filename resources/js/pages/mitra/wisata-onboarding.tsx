@@ -689,6 +689,7 @@ export default function MitraWisataOnboarding({
                                 </UiSelect>
                                 {responsibleRoleOption === otherRoleId && (
                                     <Input
+                                        aria-label="Jabatan penanggung jawab lainnya"
                                         value={customResponsibleRole}
                                         onChange={(event) => {
                                             const value = event.target.value;
