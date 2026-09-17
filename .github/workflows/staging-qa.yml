@@ -1,0 +1,36 @@
+name: Staging QA Sweep
+
+on:
+  push:
+    branches:
+      - qa/staging-full-20260917
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    name: Staging QA
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Ensure Chromium is available
+        run: npx puppeteer browsers install chrome
+      - name: Run staging QA sweep
+        run: node scripts/staging-qa.mjs
+      - name: Upload QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-qa-${{ github.sha }}
+          path: qa-artifacts/
+          if-no-files-found: error
+          retention-days: 14
