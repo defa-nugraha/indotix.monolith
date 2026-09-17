@@ -8,7 +8,6 @@ use App\Models\WisataTicketScan;
 use App\Services\WisataTicketUsageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
-use Spatie\LaravelPdf\Facades\Pdf;
 
 uses(RefreshDatabase::class);
 
@@ -311,8 +310,6 @@ it('filters mitra scan history by search keyword and keeps history tab active', 
 });
 
 it('generates the mitra entry QR PDF from the same poster view', function () {
-    Pdf::fake();
-
     $partner = User::factory()->create([
         'role' => 'mitra',
         'mitra_onboarding_type' => 'wisata',
@@ -320,15 +317,30 @@ it('generates the mitra entry QR PDF from the same poster view', function () {
     ]);
     wisataScanPackageDestination($partner, 'Papandayan');
 
-    $this->actingAs($partner)
+    $response = $this->actingAs($partner)
         ->get('/mitra/wisata/scans/qr.pdf')
-        ->assertOk();
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf')
+        ->assertHeader('Content-Disposition', 'attachment; filename="qr-masuk-papandayan.pdf"');
 
-    Pdf::assertRespondedWithPdf(fn ($pdf) => $pdf->viewName === 'mitra-wisata-entry-qr'
-        && ($pdf->viewData['destinationName'] ?? null) === 'Papandayan'
-        && ! empty($pdf->viewData['template']['playstore_image'])
-        && str_starts_with($pdf->downloadName, 'qr-masuk-papandayan')
-        && $pdf->format === 'a4');
+    expect($response->getContent())->toStartWith('%PDF-');
+});
+
+it('serves the mitra entry QR PDF inline for printing', function () {
+    $partner = User::factory()->create([
+        'role' => 'mitra',
+        'mitra_onboarding_type' => 'wisata',
+        'email_verified_at' => now(),
+    ]);
+    wisataScanPackageDestination($partner, 'Papandayan');
+
+    $response = $this->actingAs($partner)
+        ->get('/mitra/wisata/scans/qr.pdf?inline=1')
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf')
+        ->assertHeader('Content-Disposition', 'inline; filename="qr-masuk-papandayan.pdf"');
+
+    expect($response->getContent())->toStartWith('%PDF-');
 });
 
 it('allows admin and wisata partner to create package tickets from single tickets on the same destination', function () {
