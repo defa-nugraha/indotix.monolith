@@ -24,13 +24,13 @@ jobs:
         run: npm ci
       - name: Ensure Chromium is available
         run: npx puppeteer browsers install chrome
-      - name: Run staging QA sweep
-        run: node scripts/staging-qa.mjs
+      - name: Run staging QA verification pass
+        run: node scripts/staging-qa-v2.mjs
       - name: Upload QA evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: staging-qa-${{ github.sha }}
-          path: qa-artifacts/
+          name: staging-qa-v2-${{ github.sha }}
+          path: qa-artifacts-v2/
           if-no-files-found: error
           retention-days: 14
