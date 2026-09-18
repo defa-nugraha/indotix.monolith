@@ -381,6 +381,13 @@ class WisataPaymentLifecycleService
                 $reason ?: ($refund->booking?->refund_reason ?: 'Refund booking wisata Indotix'),
             );
 
+            // This response belongs to the refund request above. Preserve a provider
+            // refund_key when present, otherwise bind the response to the exact key
+            // that Indotix submitted so confirmation remains unambiguous.
+            if (! array_key_exists('refund_key', $response)) {
+                $response['refund_key'] = $refund->refund_key;
+            }
+
             $refund->update([
                 'status' => 'processing',
                 'provider_refund_id' => (string) ($response['refund_chargeback_id'] ?? $refund->provider_refund_id),
