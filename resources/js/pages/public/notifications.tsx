@@ -10,7 +10,7 @@ import {
     Filter,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
-import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { PublicFooter } from '@/components/public-footer';
 import PublicLayout from '@/layouts/public-layout';
 
 type NotificationItem = {
@@ -92,8 +92,8 @@ export default function Notifications({
                 />
             </Head>
 
-            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
-                <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8 md:px-8 lg:py-10">
+                <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-semibold text-slate-900">
@@ -131,7 +131,7 @@ export default function Notifications({
                     </div>
                 </div>
 
-                <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm">
+                <div className="mt-6 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                             <Filter className="h-4 w-4 text-sky-500" />
@@ -171,7 +171,7 @@ export default function Notifications({
                 </div>
 
                 {filteredNotifications.length === 0 && (
-                    <div className="mt-6 rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-sm">
+                    <div className="mt-6 rounded-2xl border border-slate-100 bg-white p-5 text-center shadow-sm sm:p-8">
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-50 text-sky-600">
                             <Bell className="h-6 w-6" />
                         </div>
@@ -191,7 +191,7 @@ export default function Notifications({
                             return (
                                 <div
                                     key={item.id}
-                                    className={`rounded-2xl bg-white p-5 shadow-sm ${item.is_read ? '' : 'border border-sky-100'}`}
+                                    className={`rounded-2xl bg-white p-4 shadow-sm sm:p-5 ${item.is_read ? '' : 'border border-sky-100'}`}
                                 >
                                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                         <div className="flex items-start gap-4">
@@ -206,7 +206,7 @@ export default function Notifications({
                                                         {item.title}
                                                     </h3>
                                                     {!item.is_read && (
-                                                        <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                                        <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[11px] font-semibold text-white">
                                                             BARU
                                                         </span>
                                                     )}
@@ -271,82 +271,7 @@ export default function Notifications({
                 )}
             </main>
 
-            <footer className="mt-10 border-t border-slate-200 bg-white">
-                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
-                    <div>
-                        <Link href="/">
-                            <img
-                                src="/logo.png"
-                                alt="Indotix"
-                                className="h-11 w-36 object-contain"
-                            />
-                        </Link>
-                        <p className="mt-3 text-sm text-slate-600">
-                            Neo Soho Capital 40th Floor
-                            <br />
-                            Jl. Tanjung Duren Raya No 1<br />
-                            Jakarta Barat, DKI Jakarta 11470
-                        </p>
-                        <p className="mt-4 text-sm text-slate-600">
-                            0812 9205 9888
-                        </p>
-                        <p className="text-sm text-slate-600">
-                            info@indotix.co.id
-                        </p>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Layanan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>Wisata</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Perusahaan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>
-                                <Link
-                                    href="/about"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Tentang Kami
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/jelajah"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Blog
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/faq"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    FAQ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/privacy-policy"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Kebijakan Privasi
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                    <FooterDownloadSocial />
-                </div>
-                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-                    © 2025 Indotix. All rights reserved.
-                </div>
-            </footer>
+            <PublicFooter />
         </PublicLayout>
     );
 }

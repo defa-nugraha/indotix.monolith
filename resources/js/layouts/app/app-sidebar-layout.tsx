@@ -102,7 +102,7 @@ export default function AppSidebarLayout({
     return (
         <AppShell variant="sidebar" className="theme-light">
             {isMitra ? <AppSidebarMitra /> : <AppSidebarAdmin />}
-            <AppContent variant="sidebar" className="overflow-x-hidden">
+            <AppContent variant="sidebar" className="min-w-0 overflow-x-clip">
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
                 {(isMitra || isAdminContext) && (
                     <FeatureSuggestion context={isMitra ? 'mitra' : 'admin'} />

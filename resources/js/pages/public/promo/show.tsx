@@ -172,7 +172,7 @@ export default function PromoShow({
                                         decoding="async"
                                     />
                                     <div className="absolute right-0 bottom-0 h-24 w-72 rounded-tl-[100%] bg-teal-700/80" />
-                                    <span className="absolute right-5 bottom-5 text-[10px] font-bold text-white/85">
+                                    <span className="absolute right-5 bottom-5 text-[11px] font-bold text-white/85">
                                         *S&K berlaku
                                     </span>
                                 </div>
@@ -295,7 +295,7 @@ export default function PromoShow({
                                         />
                                     </div>
                                     <div className="p-4">
-                                        <p className="text-[10px] font-black tracking-wider text-sky-600 uppercase">
+                                        <p className="text-[11px] font-black tracking-wider text-sky-600 uppercase">
                                             {item.category_label ??
                                                 'Promo Indotix'}
                                         </p>

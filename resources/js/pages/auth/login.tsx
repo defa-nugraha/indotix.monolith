@@ -39,9 +39,9 @@ export default function Login({
             <div className="pointer-events-none absolute top-0 right-[-10%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
             <div className="pointer-events-none absolute bottom-[-15%] left-[15%] h-80 w-80 rounded-full bg-amber-300/25 blur-[140px]" />
 
-            <div className="relative mx-auto flex min-h-svh max-w-md flex-col items-center justify-center px-6 py-14">
+            <div className="relative mx-auto flex min-h-svh max-w-md flex-col items-center justify-center px-4 py-8 sm:px-6 sm:py-12">
                 <div className="flex w-full max-w-md items-center justify-center">
-                    <div className="w-full animate-in rounded-3xl border border-sky-100/80 bg-white/90 p-8 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur duration-700 fade-in slide-in-from-bottom-4">
+                    <div className="w-full animate-in rounded-2xl border border-sky-100/80 bg-white/95 p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur duration-700 fade-in slide-in-from-bottom-4 sm:rounded-3xl sm:p-8">
                         <div className="mb-6 flex justify-center">
                             <img
                                 src="/logo.png"
@@ -136,7 +136,7 @@ export default function Login({
                                                         (current) => !current,
                                                     )
                                                 }
-                                                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-slate-400 transition hover:text-sky-600 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
+                                                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-slate-400 transition hover:text-sky-600 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:outline-none"
                                                 aria-label={
                                                     showPassword
                                                         ? 'Sembunyikan password'
@@ -190,6 +190,11 @@ export default function Login({
                                 {status}
                             </div>
                         )}
+
+                        <div className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-slate-500">
+                            <TextLink href="/terms-and-conditions">Syarat dan Ketentuan</TextLink>
+                            <TextLink href="/privacy-policy">Kebijakan Privasi</TextLink>
+                        </div>
                     </div>
                 </div>
             </div>

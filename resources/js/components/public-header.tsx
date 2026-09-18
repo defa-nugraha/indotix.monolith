@@ -263,7 +263,7 @@ export default function PublicHeader({
                 >
                     <div
                         className={cn(
-                            'flex h-10 min-w-0 flex-1 items-center rounded-full border px-3 transition-all focus-within:ring-2 focus-within:ring-blue-500/50',
+                            'flex h-11 min-w-0 flex-1 items-center rounded-full border px-3.5 transition-all focus-within:ring-2 focus-within:ring-blue-500/50',
                             transparent
                                 ? 'border-white/20 bg-white/10 text-white'
                                 : 'border-slate-200 bg-slate-50 text-slate-800',
@@ -283,7 +283,7 @@ export default function PublicHeader({
                                 search?.placeholder ?? 'Cari kota, destinasi...'
                             }
                             className={cn(
-                                'min-w-0 flex-1 border-none bg-transparent py-2 text-xs font-medium focus:outline-none',
+                                'min-w-0 flex-1 border-none bg-transparent py-2 text-sm font-medium focus:outline-none',
                                 transparent
                                     ? 'placeholder:text-white/70'
                                     : 'placeholder:text-slate-400',
@@ -411,7 +411,7 @@ export default function PublicHeader({
                     </Link>
 
                     <nav
-                        className="hidden items-center gap-6 text-sm font-medium md:flex"
+                        className="hidden items-center gap-3 text-sm font-medium md:flex xl:gap-5"
                         id="desktop-nav"
                     >
                         {mainNav.map((item) => {
@@ -424,7 +424,8 @@ export default function PublicHeader({
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'relative px-1 py-2 transition-colors hover:text-blue-500',
+                                        'relative inline-flex min-h-10 items-center px-1 py-2 transition-colors hover:text-blue-500',
+                                        (item.href === '/jelajah' || item.href === '/about') && 'hidden xl:inline-flex',
                                         active
                                             ? transparent
                                                 ? 'text-white after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:bg-white after:content-[""]'
@@ -442,16 +443,16 @@ export default function PublicHeader({
 
                     {showSearch &&
                         renderSearch(
-                            'hidden max-w-xs flex-1 md:flex lg:max-w-sm',
+                            'hidden max-w-[13rem] flex-1 lg:flex xl:max-w-xs 2xl:max-w-sm',
                         )}
 
-                    <div className="hidden items-center gap-4 md:flex">
+                    <div className="hidden items-center gap-2 md:flex xl:gap-4">
                         {!auth?.user && (
                             <div className="flex items-center gap-2">
                                 <Link
                                     href="/login"
                                     className={cn(
-                                        'rounded-full px-4 py-2 text-sm font-semibold transition',
+                                        'inline-flex min-h-10 items-center rounded-full px-4 py-2 text-sm font-semibold transition',
                                         transparent
                                             ? 'text-white hover:bg-white/10'
                                             : 'text-slate-700 hover:bg-slate-100',
@@ -461,7 +462,7 @@ export default function PublicHeader({
                                 </Link>
                                 <Link
                                     href="/register"
-                                    className="rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
+                                    className="inline-flex min-h-10 items-center rounded-full bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700"
                                 >
                                     Daftar
                                 </Link>
@@ -734,7 +735,7 @@ export default function PublicHeader({
                     className="hidden border-t border-slate-100 bg-white/90 md:block"
                     data-coach="public-categories"
                 >
-                    <div className="mx-auto flex w-full max-w-7xl items-center gap-3 overflow-x-auto px-4 py-3 text-sm font-semibold md:px-6 lg:px-8">
+                    <div className="mx-auto flex w-full max-w-7xl snap-x snap-proximity items-center gap-3 overflow-x-auto px-4 py-3 text-sm font-semibold [scrollbar-width:none] md:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden">
                         {resolvedCategories.map((item) => {
                             const active =
                                 item.active ?? isActivePath(item.href);
@@ -743,7 +744,7 @@ export default function PublicHeader({
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'flex items-center gap-2 rounded-full px-4 py-2 whitespace-nowrap transition',
+                                        'flex min-h-10 snap-start items-center gap-2 rounded-full px-4 py-2 whitespace-nowrap transition',
                                         active
                                             ? 'bg-sky-600 text-white shadow-sm'
                                             : 'bg-slate-50 text-slate-600 hover:bg-sky-50 hover:text-sky-700',
@@ -765,11 +766,11 @@ export default function PublicHeader({
                         isUser && 'hidden md:block',
                     )}
                 >
-                    <div className="mx-auto flex w-full max-w-7xl gap-2 overflow-x-auto px-4 py-3 md:flex-wrap md:overflow-visible md:px-6 lg:px-8">
+                    <div className="mx-auto flex w-full max-w-7xl snap-x snap-proximity gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] md:flex-wrap md:overflow-visible md:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden">
                         {chips.map((chip) => (
                             <span
                                 key={chip}
-                                className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-semibold whitespace-nowrap text-slate-600 shadow-sm"
+                                className="min-h-9 snap-start rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold whitespace-nowrap text-slate-600 shadow-sm"
                             >
                                 {chip}
                             </span>

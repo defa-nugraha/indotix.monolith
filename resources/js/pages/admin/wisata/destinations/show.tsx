@@ -215,8 +215,8 @@ export default function AdminWisataDestinationShow({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Detail Destinasi Wisata" />
-            <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+            <div className="workspace-page">
+                <section className="workspace-panel">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p className="text-xs font-semibold text-sky-600 uppercase">
@@ -262,7 +262,7 @@ export default function AdminWisataDestinationShow({
                         )}
                 </section>
 
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                <section className="workspace-panel">
                     <h2 className="text-lg font-semibold text-slate-900">
                         Detail Destinasi
                     </h2>
@@ -302,7 +302,7 @@ export default function AdminWisataDestinationShow({
                     </div>
 
                     <form
-                        className="mt-6 grid gap-4 md:grid-cols-2"
+                        className="mt-6 grid gap-4 lg:grid-cols-2"
                         onSubmit={(event) => {
                             event.preventDefault();
                             const form = new FormData(event.currentTarget);
