@@ -784,8 +784,10 @@ class WisataPaymentLifecycleService
     public function dispatchPendingPaidSideEffects(int $limit = 50): int
     {
         $outboxPaymentIds = WisataPaymentSideEffect::query()
+            ->whereNull('completed_at')
             ->select('wisata_payment_id')
             ->distinct()
+            ->orderBy('wisata_payment_id')
             ->limit($limit)
             ->pluck('wisata_payment_id');
 
