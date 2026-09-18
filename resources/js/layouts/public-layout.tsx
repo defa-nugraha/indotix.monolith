@@ -51,9 +51,9 @@ export default function PublicLayout({
         : null;
 
     useEffect(() => {
-        setReady(false);
-        const timer = setTimeout(() => setReady(true), 320);
-        return () => clearTimeout(timer);
+        // Render immediately after navigation. The previous artificial delay
+        // made fast pages feel slower and caused a visible skeleton flicker.
+        setReady(true);
     }, [url]);
 
     useEffect(() => {
