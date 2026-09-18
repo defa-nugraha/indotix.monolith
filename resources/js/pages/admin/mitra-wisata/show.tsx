@@ -1,9 +1,17 @@
 import { Head, router } from '@inertiajs/react';
+import {
+    CheckCircle2,
+    CircleDashed,
+    Clock3,
+    ShieldCheck,
+    WalletCards,
+    XCircle,
+} from 'lucide-react';
+import Swal from 'sweetalert2';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import Swal from 'sweetalert2';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Mitra Wisata', href: '/admin/mitra-wisata' },
@@ -74,6 +82,55 @@ const statusTone = (status?: string | null) => {
     return 'bg-slate-50 text-slate-600';
 };
 
+const verificationStatusMeta = (status?: string | null) => {
+    if (status === 'verified') {
+        return {
+            label: 'Terverifikasi',
+            description: 'Data dan dokumen destinasi telah disetujui admin.',
+            icon: CheckCircle2,
+            tone: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+            iconTone: 'text-emerald-600',
+        };
+    }
+
+    if (status === 'pending') {
+        return {
+            label: 'Menunggu Verifikasi',
+            description:
+                'Pengajuan siap diperiksa dan memerlukan keputusan admin.',
+            icon: Clock3,
+            tone: 'border-amber-200 bg-amber-50 text-amber-900',
+            iconTone: 'text-amber-600',
+        };
+    }
+
+    if (status === 'rejected') {
+        return {
+            label: 'Ditolak',
+            description:
+                'Pengajuan memerlukan perbaikan sebelum dapat disetujui.',
+            icon: XCircle,
+            tone: 'border-rose-200 bg-rose-50 text-rose-900',
+            iconTone: 'text-rose-600',
+        };
+    }
+
+    return {
+        label: 'Belum Diajukan',
+        description: 'Data masih berupa draft dan belum diajukan oleh mitra.',
+        icon: CircleDashed,
+        tone: 'border-slate-200 bg-slate-50 text-slate-800',
+        iconTone: 'text-slate-500',
+    };
+};
+
+const statusLabel = (status?: string | null) => {
+    if (status === 'verified') return 'Terverifikasi';
+    if (status === 'pending') return 'Menunggu Verifikasi';
+    if (status === 'rejected') return 'Ditolak';
+    return 'Belum Diajukan';
+};
+
 const imageUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
 
 const DocItem = ({
@@ -136,6 +193,10 @@ export default function AdminMitraWisataShow({
     provinceName,
     sensitiveDocumentUrls,
 }: Props) {
+    const verificationStatus = onboarding.verification_status ?? 'draft';
+    const verificationMeta = verificationStatusMeta(verificationStatus);
+    const VerificationIcon = verificationMeta.icon;
+
     const handleSuspend = async () => {
         const result = await Swal.fire({
             title: mitra.is_suspended ? 'Aktifkan mitra?' : 'Suspend mitra?',
@@ -188,17 +249,32 @@ export default function AdminMitraWisataShow({
         const result = await Swal.fire({
             title:
                 action === 'approve'
-                    ? 'Setujui mitra wisata?'
-                    : 'Tolak mitra wisata?',
+                    ? 'Verifikasi destinasi wisata?'
+                    : 'Tolak verifikasi destinasi?',
+            text:
+                action === 'approve'
+                    ? 'Status akan berubah menjadi Terverifikasi dan mitra dapat melanjutkan pengelolaan destinasi.'
+                    : undefined,
+            icon: action === 'approve' ? 'question' : 'warning',
             input: action === 'reject' ? 'textarea' : undefined,
             inputLabel: action === 'reject' ? 'Alasan penolakan' : undefined,
+            inputPlaceholder:
+                action === 'reject'
+                    ? 'Jelaskan data atau dokumen yang perlu diperbaiki'
+                    : undefined,
+            inputAttributes:
+                action === 'reject'
+                    ? { 'aria-label': 'Alasan penolakan verifikasi' }
+                    : undefined,
             inputValidator: (value: string | null) => {
                 if (action === 'reject' && !value) return 'Alasan wajib diisi.';
                 return null;
             },
             showCancelButton: true,
-            confirmButtonText: action === 'approve' ? 'Setujui' : 'Tolak',
+            confirmButtonText:
+                action === 'approve' ? 'Ya, Verifikasi' : 'Tolak Pengajuan',
             cancelButtonText: 'Batal',
+            confirmButtonColor: action === 'approve' ? '#0284c7' : '#e11d48',
         });
 
         if (!result.isConfirmed) return;
@@ -294,18 +370,22 @@ export default function AdminMitraWisataShow({
                             </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                            <Badge
-                                className={statusTone(
-                                    onboarding.verification_status,
-                                )}
-                            >
-                                {onboarding.verification_status}
-                            </Badge>
-                            <Badge
-                                className={statusTone(onboarding.payout_status)}
-                            >
-                                {onboarding.payout_status}
-                            </Badge>
+                            <div className="min-w-52 border-l-4 border-sky-500 pl-3">
+                                <p className="text-[11px] font-semibold text-slate-400 uppercase">
+                                    Status Verifikasi Destinasi
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-slate-900">
+                                    {verificationMeta.label}
+                                </p>
+                            </div>
+                            <div className="min-w-44 border-l border-slate-200 pl-3">
+                                <p className="text-[11px] font-semibold text-slate-400 uppercase">
+                                    Status Rekening Payout
+                                </p>
+                                <p className="mt-1 text-sm font-semibold text-slate-900">
+                                    {statusLabel(onboarding.payout_status)}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -447,30 +527,80 @@ export default function AdminMitraWisataShow({
 
                     <div className="space-y-6">
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-900">
-                                Aksi Verifikasi
-                            </h3>
+                            <div className="flex items-center gap-2">
+                                <ShieldCheck className="h-5 w-5 text-sky-600" />
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    Verifikasi Destinasi
+                                </h3>
+                            </div>
+                            <div
+                                className={`mt-4 rounded-lg border p-4 ${verificationMeta.tone}`}
+                                role="status"
+                            >
+                                <div className="flex items-start gap-3">
+                                    <VerificationIcon
+                                        className={`mt-0.5 h-5 w-5 shrink-0 ${verificationMeta.iconTone}`}
+                                    />
+                                    <div>
+                                        <p className="text-sm font-semibold">
+                                            {verificationMeta.label}
+                                        </p>
+                                        <p className="mt-1 text-xs leading-5 opacity-80">
+                                            {verificationMeta.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            {verificationStatus === 'rejected' &&
+                                onboarding.verification_reason && (
+                                    <div className="mt-3 rounded-lg border border-rose-100 bg-white px-4 py-3 text-xs leading-5 text-rose-700">
+                                        <span className="font-semibold">
+                                            Alasan penolakan:
+                                        </span>{' '}
+                                        {onboarding.verification_reason}
+                                    </div>
+                                )}
+                            <p className="mt-4 text-xs leading-5 text-slate-500">
+                                Periksa identitas, lokasi, foto, dan dokumen
+                                legalitas sebelum mengambil keputusan.
+                            </p>
                             <div className="mt-4 flex flex-col gap-3">
-                                <Button
-                                    className="bg-sky-600 text-white hover:bg-sky-700"
-                                    onClick={() => handleVerify('approve')}
-                                >
-                                    Setujui
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                                    onClick={() => handleVerify('reject')}
-                                >
-                                    Tolak
-                                </Button>
+                                {verificationStatus !== 'verified' && (
+                                    <Button
+                                        className="bg-sky-600 text-white hover:bg-sky-700"
+                                        onClick={() => handleVerify('approve')}
+                                    >
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        Verifikasi & Setujui
+                                    </Button>
+                                )}
+                                {verificationStatus !== 'rejected' && (
+                                    <Button
+                                        variant="outline"
+                                        className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                        onClick={() => handleVerify('reject')}
+                                    >
+                                        <XCircle className="h-4 w-4" />
+                                        {verificationStatus === 'verified'
+                                            ? 'Batalkan Verifikasi'
+                                            : 'Tolak & Minta Perbaikan'}
+                                    </Button>
+                                )}
                             </div>
                         </div>
 
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
-                            <h3 className="text-sm font-semibold text-slate-900">
-                                Payout
-                            </h3>
+                            <div className="flex items-center gap-2">
+                                <WalletCards className="h-5 w-5 text-sky-600" />
+                                <h3 className="text-sm font-semibold text-slate-900">
+                                    Rekening Payout
+                                </h3>
+                            </div>
+                            <Badge
+                                className={`mt-3 ${statusTone(onboarding.payout_status)}`}
+                            >
+                                {statusLabel(onboarding.payout_status)}
+                            </Badge>
                             <div className="mt-2 text-sm text-slate-600">
                                 <div>{onboarding.bank_name ?? '-'}</div>
                                 <div>
