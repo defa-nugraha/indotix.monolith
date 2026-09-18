@@ -34,13 +34,38 @@ class MidtransCallbackController extends Controller
         $statusCode = (string) ($payload['status_code'] ?? '');
         $grossAmount = (string) ($payload['gross_amount'] ?? '');
         $signature = (string) ($payload['signature_key'] ?? '');
+        $merchantId = (string) ($payload['merchant_id'] ?? '');
+        $currency = strtoupper((string) ($payload['currency'] ?? ''));
 
         if (! $orderId || ! $midtransService->validateSignature($orderId, $statusCode, $grossAmount, $signature)) {
             return response('Invalid signature', 400);
         }
 
+        $expectedCurrency = strtoupper((string) config('services.midtrans.currency', 'IDR'));
+        if ($currency !== '' && $currency !== $expectedCurrency) {
+            Log::warning('Midtrans callback currency mismatch.', [
+                'order_id' => $orderId,
+                'currency' => $currency,
+                'expected_currency' => $expectedCurrency,
+            ]);
+
+            return response('Currency mismatch', 422);
+        }
+
+        $expectedMerchantId = trim((string) config('services.midtrans.merchant_id', ''));
+        if (
+            $expectedMerchantId !== ''
+            && $merchantId !== ''
+            && ! hash_equals($expectedMerchantId, $merchantId)
+        ) {
+            Log::warning('Midtrans callback merchant mismatch.', [
+                'order_id' => $orderId,
+            ]);
+
+            return response('Merchant mismatch', 422);
+        }
+
         // Dashboard delivery probes are signed notifications without a customer booking.
-        $merchantId = (string) ($payload['merchant_id'] ?? '');
         if ($merchantId !== '' && preg_match(
             '/\Apayment_notif_test_'.preg_quote($merchantId, '/').'_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/i',
             $orderId
