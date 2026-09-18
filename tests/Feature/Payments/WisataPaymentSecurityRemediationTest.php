@@ -7,6 +7,7 @@ use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateCommissionItem;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
+use App\Models\WisataPaymentSideEffect;
 use App\Models\WisataPayout;
 use App\Models\WisataPayoutAdjustment;
 use App\Models\WisataRefund;
@@ -550,10 +551,75 @@ test('wisata signed webhook replay does not duplicate fulfillment', function () 
 
     expect($booking->fresh()->status)->toBe('paid')
         ->and($payment->fresh()->status)->toBe('settlement')
+        ->and($payment->fresh()->notification_dispatched_at)->not->toBeNull()
+        ->and(\App\Models\UserNotification::query()
+            ->where('user_id', $buyer->id)
+            ->where('type', 'wisata_payment_paid')
+            ->count())->toBe(1)
+        ->and(WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->count())->toBe(3)
+        ->and(WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->whereNotNull('completed_at')
+            ->count())->toBe(3);
+
+    Queue::assertPushed(\App\Jobs\SendPushNotificationJob::class, 1);
+    Mail::assertSent(\App\Mail\WisataTicketMail::class, 1);
+});
+
+test('paid side effect claim prevents concurrent duplicate dispatch and stale claim can recover', function () {
+    [$buyer, , , , $booking] = paymentSecurityFixture([
+        'status' => 'paid',
+        'payment_status' => 'settlement',
+        'payment_deadline' => null,
+    ]);
+
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'settlement',
+        'gross_amount' => 100000,
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'trx-side-effect-claim',
+        'order_id' => 'WISATA-SIDE-EFFECT-CLAIM',
+    ]);
+
+    WisataPaymentSideEffect::query()->create([
+        'wisata_payment_id' => $payment->id,
+        'effect_type' => 'push',
+        'status' => 'processing',
+        'attempts' => 1,
+        'claimed_at' => now(),
+    ]);
+
+    $service = paymentLifecycle(Mockery::mock(MidtransService::class));
+    $service->dispatchPendingPaidSideEffects();
+
+    Queue::assertNotPushed(\App\Jobs\SendPushNotificationJob::class);
+    expect($payment->fresh()->notification_dispatched_at)->toBeNull()
+        ->and(WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->where('effect_type', 'push')
+            ->value('status'))->toBe('processing')
         ->and(\App\Models\UserNotification::query()
             ->where('user_id', $buyer->id)
             ->where('type', 'wisata_payment_paid')
             ->count())->toBe(1);
+
+    WisataPaymentSideEffect::query()
+        ->where('wisata_payment_id', $payment->id)
+        ->where('effect_type', 'push')
+        ->update(['claimed_at' => now()->subMinutes(11)]);
+
+    $service->dispatchPendingPaidSideEffects();
+
+    Queue::assertPushed(\App\Jobs\SendPushNotificationJob::class, 1);
+    expect($payment->fresh()->notification_dispatched_at)->not->toBeNull()
+        ->and(WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->whereNotNull('completed_at')
+            ->count())->toBe(3);
 });
 
 test('late settlement never reactivates a cancelled wisata booking and queues compensation', function () {
