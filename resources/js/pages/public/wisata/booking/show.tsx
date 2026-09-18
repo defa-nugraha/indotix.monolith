@@ -142,7 +142,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                                 }`}
                             >
                                 <span
-                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
                                         index < 2
                                             ? 'bg-emerald-600 text-white'
                                             : 'bg-sky-600 text-white'
