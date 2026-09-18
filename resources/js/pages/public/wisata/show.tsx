@@ -391,7 +391,7 @@ export default function WisataShow({
                                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-50 text-sky-600 shadow-xs transition-all group-hover:scale-105">
                                                     <Icon className="h-5 w-5" />
                                                 </div>
-                                                <span className="line-clamp-2 text-[10px] font-bold tracking-tight text-slate-500">
+                                                <span className="line-clamp-2 text-[11px] font-bold tracking-tight text-slate-500">
                                                     {facility}
                                                 </span>
                                             </div>
@@ -415,7 +415,7 @@ export default function WisataShow({
                                 <MapPinned className="h-5 w-5 text-sky-600" />
                                 Jelajahi Area
                             </h3>
-                            <span className="rounded-full border border-sky-100 bg-sky-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-sky-600 uppercase">
+                            <span className="rounded-full border border-sky-100 bg-sky-50 px-2 py-0.5 text-[11px] font-bold tracking-wider text-sky-600 uppercase">
                                 Lokasi
                             </span>
                         </div>
@@ -527,7 +527,7 @@ export default function WisataShow({
                                                         {ticket.name}
                                                     </h4>
                                                     <span
-                                                        className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                                                        className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold ${
                                                             ticket.is_entry_ticket ===
                                                             false
                                                                 ? 'bg-amber-50 text-amber-700'
@@ -691,7 +691,7 @@ export default function WisataShow({
                             )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 pt-2 text-center text-[10px] font-bold text-slate-400">
+                        <div className="grid grid-cols-2 gap-2 pt-2 text-center text-[11px] font-bold text-slate-400">
                             <div className="flex items-center justify-center gap-1 border-r border-slate-100">
                                 <Check className="h-3.5 w-3.5 text-sky-500" />
                                 Harga terbaik
