@@ -354,9 +354,13 @@ body {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .public-mobile-nav-shell .public-whatsapp-float,
-    .public-mobile-nav-shell .public-guide-launcher {
+    .public-mobile-nav-shell .public-whatsapp-float {
         bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
+
+    .public-mobile-nav-shell .public-guide-launcher {
+        right: 1rem;
+        bottom: calc(8.25rem + env(safe-area-inset-bottom));
     }
 
     .public-mobile-nav-shell {
