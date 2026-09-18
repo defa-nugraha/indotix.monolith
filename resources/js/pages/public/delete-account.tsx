@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
+import { PublicFooter } from '@/components/public-footer';
 import PublicLayout from '@/layouts/public-layout';
-import { FooterDownloadSocial } from '@/components/footer-download-social';
 import { PublicSeo } from '@/components/public-seo';
 
 export default function DeleteAccountPage({ status }: { status?: string }) {
@@ -128,87 +128,7 @@ export default function DeleteAccountPage({ status }: { status?: string }) {
                 </div>
             </div>
 
-            <footer className="mt-10 border-t border-slate-200 bg-white">
-                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
-                    <div>
-                        <Link href="/">
-                            <img
-                                src="/logo.png"
-                                alt="Indotix"
-                                className="h-11 w-36 object-contain"
-                            />
-                        </Link>
-                        <p className="mt-3 text-sm text-slate-600">
-                            Neo Soho Capital 40th Floor
-                            <br />
-                            Jl. Tanjung Duren Raya No 1
-                            <br />
-                            Jakarta Barat, DKI Jakarta 11470
-                        </p>
-                        <p className="mt-4 text-sm text-slate-600">
-                            0812 9205 9888
-                        </p>
-                        <p className="text-sm text-slate-600">
-                            info@indotix.co.id
-                        </p>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Layanan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>Wisata</li>
-                            <li>Special Program</li>
-                            <li>Event</li>
-                            <li>Hotel</li>
-                            <li>Retail Shop</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Perusahaan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>
-                                <Link
-                                    href="/about"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Tentang Kami
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/jelajah"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Blog
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/faq"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    FAQ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/privacy-policy"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Kebijakan Privasi
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                    <FooterDownloadSocial />
-                </div>
-                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-                    © 2025 Indotix. All rights reserved.
-                </div>
-            </footer>
+            <PublicFooter />
         </PublicLayout>
     );
 }
