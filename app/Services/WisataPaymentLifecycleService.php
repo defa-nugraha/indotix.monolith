@@ -989,16 +989,60 @@ class WisataPaymentLifecycleService
             return false;
         }
 
-        $refundAmount = (int) round((float) (
-            $payload['refund_amount']
-            ?? data_get($payload, 'refunds.0.refund_amount')
-            ?? 0
-        ));
+        $refundKey = (string) $refund->refund_key;
+        $refunds = is_array($payload['refunds'] ?? null) ? $payload['refunds'] : [];
 
-        $bankConfirmed = ! empty($payload['bank_confirmed_at'])
-            || ! empty(data_get($payload, 'refunds.0.bank_confirmed_at'));
+        foreach ($refunds as $providerRefund) {
+            if (! is_array($providerRefund) || (string) ($providerRefund['refund_key'] ?? '') !== $refundKey) {
+                continue;
+            }
 
-        return $bankConfirmed && ($refundAmount === 0 || $refundAmount >= (int) $refund->amount);
+            $refundAmount = $this->parseIdrAmount($providerRefund['refund_amount'] ?? null);
+
+            return ! empty($providerRefund['bank_confirmed_at'])
+                && $refundAmount !== null
+                && $refundAmount >= (int) $refund->amount;
+        }
+
+        if ((string) ($payload['refund_key'] ?? '') !== $refundKey) {
+            return false;
+        }
+
+        $refundAmount = $this->parseIdrAmount($payload['refund_amount'] ?? null);
+
+        return ! empty($payload['bank_confirmed_at'])
+            && $refundAmount !== null
+            && $refundAmount >= (int) $refund->amount;
+    }
+
+    private function parseIdrAmount(mixed $value): ?int
+    {
+        if (is_int($value)) {
+            return $value >= 0 ? $value : null;
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+        if (! preg_match('/\\A([0-9]+)(?:\\.([0-9]{1,2}))?\\z/', $value, $matches)) {
+            return null;
+        }
+
+        if (isset($matches[2]) && (int) str_pad($matches[2], 2, '0') !== 0) {
+            return null;
+        }
+
+        $integer = ltrim($matches[1], '0');
+        $integer = $integer === '' ? '0' : $integer;
+        $max = (string) PHP_INT_MAX;
+
+        if (strlen($integer) > strlen($max) || (strlen($integer) === strlen($max) && strcmp($integer, $max) > 0)) {
+            return null;
+        }
+
+        return (int) $integer;
     }
 
     private function activeKey(WisataBooking $booking): string
