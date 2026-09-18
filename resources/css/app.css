@@ -319,12 +319,16 @@ body {
     }
 
     [data-slot='sidebar-inset'] table {
-        min-width: 44rem;
+        min-width: 38rem;
     }
 
-    [data-slot='sidebar-inset'] th,
-    [data-slot='sidebar-inset'] td {
+    [data-slot='sidebar-inset'] th {
         white-space: nowrap;
+    }
+
+    [data-slot='sidebar-inset'] td {
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
 
     [data-slot='sidebar-inset'] td:first-child,
@@ -701,6 +705,60 @@ body {
 }
 
 @layer components {
+    .workspace-page {
+        @apply flex min-w-0 flex-1 flex-col gap-4 bg-[#f6fbff] p-4 sm:gap-5 sm:p-5 lg:gap-6 lg:px-8 lg:py-8;
+    }
+
+    .workspace-panel {
+        @apply min-w-0 rounded-2xl border border-sky-100/80 bg-white/95 p-4 shadow-sm sm:rounded-3xl sm:p-5 lg:p-6;
+    }
+
+    .workspace-page-header {
+        @apply flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between;
+    }
+
+    .workspace-page-title {
+        @apply text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl;
+    }
+
+    .workspace-page-description {
+        @apply mt-1 max-w-3xl text-sm leading-6 text-slate-500;
+    }
+
+    .workspace-filter-grid {
+        @apply grid gap-3 sm:grid-cols-2 xl:grid-cols-4;
+    }
+
+    .workspace-table-wrap {
+        @apply max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-slate-200 bg-white;
+        scrollbar-gutter: stable;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .workspace-table {
+        @apply w-full text-sm;
+    }
+
+    .workspace-table thead {
+        @apply bg-slate-50/90 text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+
+    .workspace-table th {
+        @apply whitespace-nowrap px-4 py-3 text-left align-middle;
+    }
+
+    .workspace-table td {
+        @apply px-4 py-3 align-middle text-slate-700;
+    }
+
+    .workspace-empty-state {
+        @apply flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 px-5 py-10 text-center;
+    }
+
+    .workspace-actions {
+        @apply flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center;
+    }
+
     [data-action-loading='true'] {
         pointer-events: none;
         opacity: 0.72;
