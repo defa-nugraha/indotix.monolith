@@ -100,7 +100,7 @@ export default function BlogIndex({
                                 )}
                             </div>
                             <div className="p-2.5 sm:p-4">
-                                <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[10px] text-slate-500 sm:gap-2 sm:text-xs">
+                                <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-[11px] text-slate-500 sm:gap-2 sm:text-xs">
                                     {post.category && (
                                         <span className="truncate">
                                             {post.category}
