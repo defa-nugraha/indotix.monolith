@@ -339,7 +339,7 @@ export default function WisataSearch({
                                     <button
                                         type="button"
                                         onClick={resetFilters}
-                                        className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider text-sky-600 uppercase hover:text-sky-700"
+                                        className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wider text-sky-600 uppercase hover:text-sky-700"
                                     >
                                         <RotateCcw className="h-3 w-3" />
                                         Reset
@@ -416,7 +416,7 @@ export default function WisataSearch({
                                                 <label className="text-xs font-bold text-slate-800 sm:text-sm">
                                                     Rentang Harga
                                                 </label>
-                                                <span className="text-[10px] font-bold text-slate-400">
+                                                <span className="text-[11px] font-bold text-slate-400">
                                                     Maksimal
                                                 </span>
                                             </div>
@@ -575,7 +575,7 @@ export default function WisataSearch({
                                                                 <ImageOff className="h-8 w-8" />
                                                             </div>
                                                         )}
-                                                        <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/45 px-2 py-0.5 text-[9px] font-bold text-white backdrop-blur-xs">
+                                                        <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/45 px-2 py-0.5 text-[11px] font-bold text-white backdrop-blur-xs">
                                                             <MapPin className="h-3 w-3 text-sky-400" />
                                                             <span>
                                                                 {item.city_name ??
@@ -620,7 +620,7 @@ export default function WisataSearch({
                                                                     {price > 0
                                                                         ? `Rp ${price.toLocaleString('id-ID')}`
                                                                         : 'Tiket belum tersedia'}
-                                                                    <span className="text-[10px] font-normal text-slate-400">
+                                                                    <span className="text-[11px] font-normal text-slate-400">
                                                                         {' '}
                                                                         / orang
                                                                     </span>
