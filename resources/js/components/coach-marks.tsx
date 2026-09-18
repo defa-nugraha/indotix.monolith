@@ -791,8 +791,9 @@ export default function CoachMarks({ context }: Props) {
         setActiveIndex(0);
         scrollSnapshotRef.current = null;
 
-        const timer = window.setTimeout(() => startGuide(false), 850);
-        return () => window.clearTimeout(timer);
+        // Keep tours discoverable without interrupting the user on page load.
+        // Users can explicitly open the contextual guide from the launcher.
+        return undefined;
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [path, context, role]);
 
@@ -911,11 +912,11 @@ export default function CoachMarks({ context }: Props) {
     })();
     const launcherPositionClass =
         context === 'public'
-            ? 'left-4 bottom-4 md:left-5 md:bottom-5'
+            ? 'right-4 bottom-24 md:right-6 md:bottom-24'
             : 'right-5 bottom-5';
     const launcherSizeClass =
         context === 'public'
-            ? 'h-10 w-10 justify-center p-0 md:h-auto md:w-auto md:px-4 md:py-3'
+            ? 'h-10 w-10 justify-center p-0'
             : 'px-4 py-3';
     const launcherZIndexClass = context === 'public' ? 'z-[40]' : 'z-[110]';
 
@@ -1011,7 +1012,7 @@ export default function CoachMarks({ context }: Props) {
                 aria-label="Tampilkan panduan halaman"
             >
                 <HelpCircle className="h-5 w-5" />
-                <span className="hidden sm:inline">Panduan</span>
+                {context !== 'public' && <span>Panduan</span>}
             </button>
         </>
     );
