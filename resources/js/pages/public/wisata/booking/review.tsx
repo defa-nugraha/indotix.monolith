@@ -203,7 +203,7 @@ export default function WisataBookingReview({
                                 }`}
                             >
                                 <span
-                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
                                         index === 0
                                             ? 'bg-sky-600 text-white'
                                             : 'bg-slate-200 text-slate-500'
@@ -450,7 +450,7 @@ export default function WisataBookingReview({
                                 <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-700">
                                     <div className="flex items-center justify-between gap-3">
                                         <div>
-                                            <p className="text-[10px] font-bold uppercase text-emerald-500">
+                                            <p className="text-[11px] font-bold uppercase text-emerald-500">
                                                 Voucher aktif
                                             </p>
                                             <p className="mt-1 font-black">
