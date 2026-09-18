@@ -129,7 +129,7 @@ export default function WisataBookingPayment({
                                 }`}
                             >
                                 <span
-                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
                                         index === 0
                                             ? 'bg-emerald-600 text-white'
                                             : index === 1
@@ -163,7 +163,7 @@ export default function WisataBookingPayment({
 
                     <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left sm:p-6">
                         <div className="border-b border-slate-200/60 pb-3">
-                            <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                            <span className="block text-[11px] font-bold tracking-wider text-slate-400 uppercase">
                                 Kode Booking
                             </span>
                             <span className="mt-0.5 block font-mono text-base font-black tracking-tight text-slate-800 sm:text-lg">
@@ -172,7 +172,7 @@ export default function WisataBookingPayment({
                         </div>
 
                         <div className="border-b border-slate-200/60 pb-3">
-                            <span className="block text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+                            <span className="block text-[11px] font-bold tracking-wider text-slate-400 uppercase">
                                 Total yang harus dibayar
                             </span>
                             <span className="mt-0.5 block text-lg font-black tracking-tight text-blue-600 sm:text-xl">
@@ -181,7 +181,7 @@ export default function WisataBookingPayment({
                         </div>
 
                         <div className="space-y-2 text-xs text-slate-600">
-                            <h5 className="flex items-center gap-1.5 text-[10px] font-extrabold tracking-wider text-slate-800 uppercase">
+                            <h5 className="flex items-center gap-1.5 text-[11px] font-extrabold tracking-wider text-slate-800 uppercase">
                                 <CreditCard className="h-3.5 w-3.5 text-blue-500" />
                                 Cara membayar:
                             </h5>
@@ -223,7 +223,7 @@ export default function WisataBookingPayment({
                                     },
                                 );
                             }}
-                            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 text-xs font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50"
+                            className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-blue-600 min-h-11 py-3 text-xs font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50"
                             disabled={form.processing}
                         >
                             {form.processing ? (
@@ -245,7 +245,7 @@ export default function WisataBookingPayment({
                         </button>
                     </div>
 
-                    <div className="flex items-start gap-2.5 rounded-xl border border-amber-100 bg-amber-50 p-3 text-left text-[10px] font-medium text-amber-800">
+                    <div className="flex items-start gap-2.5 rounded-xl border border-amber-100 bg-amber-50 p-3 text-left text-[11px] font-medium text-amber-800">
                         <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
                         <p>
                             Selesaikan pembayaran sebelum batas waktu agar
