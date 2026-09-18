@@ -8,7 +8,6 @@ import {
     XCircle,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -75,13 +74,6 @@ type Props = {
     };
 };
 
-const statusTone = (status?: string | null) => {
-    if (status === 'verified') return 'bg-emerald-50 text-emerald-700';
-    if (status === 'pending') return 'bg-amber-50 text-amber-700';
-    if (status === 'rejected') return 'bg-red-50 text-red-700';
-    return 'bg-slate-50 text-slate-600';
-};
-
 const verificationStatusMeta = (status?: string | null) => {
     if (status === 'verified') {
         return {
@@ -124,11 +116,47 @@ const verificationStatusMeta = (status?: string | null) => {
     };
 };
 
-const statusLabel = (status?: string | null) => {
-    if (status === 'verified') return 'Terverifikasi';
-    if (status === 'pending') return 'Menunggu Verifikasi';
-    if (status === 'rejected') return 'Ditolak';
-    return 'Belum Diajukan';
+const payoutStatusMeta = (status?: string | null) => {
+    if (status === 'verified') {
+        return {
+            label: 'Terverifikasi',
+            description: 'Rekening payout telah diperiksa dan disetujui admin.',
+            icon: CheckCircle2,
+            tone: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+            iconTone: 'text-emerald-600',
+        };
+    }
+
+    if (status === 'pending') {
+        return {
+            label: 'Menunggu Verifikasi',
+            description:
+                'Data rekening siap diperiksa dan memerlukan keputusan admin.',
+            icon: Clock3,
+            tone: 'border-amber-200 bg-amber-50 text-amber-900',
+            iconTone: 'text-amber-600',
+        };
+    }
+
+    if (status === 'rejected') {
+        return {
+            label: 'Ditolak',
+            description:
+                'Data rekening perlu diperbaiki sebelum dapat digunakan untuk payout.',
+            icon: XCircle,
+            tone: 'border-rose-200 bg-rose-50 text-rose-900',
+            iconTone: 'text-rose-600',
+        };
+    }
+
+    return {
+        label: 'Belum Diajukan',
+        description:
+            'Data rekening payout masih berupa draft dan belum diajukan.',
+        icon: CircleDashed,
+        tone: 'border-slate-200 bg-slate-50 text-slate-800',
+        iconTone: 'text-slate-500',
+    };
 };
 
 const imageUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
@@ -196,6 +224,9 @@ export default function AdminMitraWisataShow({
     const verificationStatus = onboarding.verification_status ?? 'draft';
     const verificationMeta = verificationStatusMeta(verificationStatus);
     const VerificationIcon = verificationMeta.icon;
+    const payoutStatus = onboarding.payout_status ?? 'draft';
+    const payoutMeta = payoutStatusMeta(payoutStatus);
+    const PayoutStatusIcon = payoutMeta.icon;
 
     const handleSuspend = async () => {
         const result = await Swal.fire({
@@ -303,16 +334,34 @@ export default function AdminMitraWisataShow({
 
     const handlePayout = async (action: 'approve' | 'reject') => {
         const result = await Swal.fire({
-            title: action === 'approve' ? 'Setujui payout?' : 'Tolak payout?',
+            title:
+                action === 'approve'
+                    ? 'Verifikasi rekening payout?'
+                    : 'Tolak verifikasi rekening?',
+            text:
+                action === 'approve'
+                    ? 'Status rekening akan berubah menjadi Terverifikasi dan dapat digunakan untuk proses payout.'
+                    : undefined,
+            icon: action === 'approve' ? 'question' : 'warning',
             input: action === 'reject' ? 'textarea' : undefined,
             inputLabel: action === 'reject' ? 'Alasan penolakan' : undefined,
+            inputPlaceholder:
+                action === 'reject'
+                    ? 'Jelaskan data rekening yang perlu diperbaiki'
+                    : undefined,
+            inputAttributes:
+                action === 'reject'
+                    ? { 'aria-label': 'Alasan penolakan rekening payout' }
+                    : undefined,
             inputValidator: (value: string | null) => {
                 if (action === 'reject' && !value) return 'Alasan wajib diisi.';
                 return null;
             },
             showCancelButton: true,
-            confirmButtonText: action === 'approve' ? 'Setujui' : 'Tolak',
+            confirmButtonText:
+                action === 'approve' ? 'Ya, Verifikasi' : 'Tolak Rekening',
             cancelButtonText: 'Batal',
+            confirmButtonColor: action === 'approve' ? '#0284c7' : '#e11d48',
         });
 
         if (!result.isConfirmed) return;
@@ -383,7 +432,7 @@ export default function AdminMitraWisataShow({
                                     Status Rekening Payout
                                 </p>
                                 <p className="mt-1 text-sm font-semibold text-slate-900">
-                                    {statusLabel(onboarding.payout_status)}
+                                    {payoutMeta.label}
                                 </p>
                             </div>
                         </div>
@@ -596,32 +645,85 @@ export default function AdminMitraWisataShow({
                                     Rekening Payout
                                 </h3>
                             </div>
-                            <Badge
-                                className={`mt-3 ${statusTone(onboarding.payout_status)}`}
+                            <div
+                                className={`mt-4 rounded-lg border p-4 ${payoutMeta.tone}`}
+                                role="status"
                             >
-                                {statusLabel(onboarding.payout_status)}
-                            </Badge>
-                            <div className="mt-2 text-sm text-slate-600">
-                                <div>{onboarding.bank_name ?? '-'}</div>
-                                <div>
-                                    {onboarding.bank_account_number ?? '-'}
+                                <div className="flex items-start gap-3">
+                                    <PayoutStatusIcon
+                                        className={`mt-0.5 h-5 w-5 shrink-0 ${payoutMeta.iconTone}`}
+                                    />
+                                    <div>
+                                        <p className="text-sm font-semibold">
+                                            {payoutMeta.label}
+                                        </p>
+                                        <p className="mt-1 text-xs leading-5 opacity-80">
+                                            {payoutMeta.description}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>{onboarding.bank_account_name ?? '-'}</div>
                             </div>
+                            {payoutStatus === 'rejected' &&
+                                onboarding.payout_reason && (
+                                    <div className="mt-3 rounded-lg border border-rose-100 bg-white px-4 py-3 text-xs leading-5 text-rose-700">
+                                        <span className="font-semibold">
+                                            Alasan penolakan:
+                                        </span>{' '}
+                                        {onboarding.payout_reason}
+                                    </div>
+                                )}
+                            <dl className="mt-4 divide-y divide-slate-100 rounded-lg border border-slate-100 bg-slate-50/60 px-4 text-sm">
+                                <div className="grid gap-1 py-3 sm:grid-cols-[8rem_1fr]">
+                                    <dt className="text-xs font-semibold text-slate-500">
+                                        Bank
+                                    </dt>
+                                    <dd className="font-medium text-slate-800">
+                                        {onboarding.bank_name ?? '-'}
+                                    </dd>
+                                </div>
+                                <div className="grid gap-1 py-3 sm:grid-cols-[8rem_1fr]">
+                                    <dt className="text-xs font-semibold text-slate-500">
+                                        Nomor rekening
+                                    </dt>
+                                    <dd className="font-medium break-all text-slate-800">
+                                        {onboarding.bank_account_number ?? '-'}
+                                    </dd>
+                                </div>
+                                <div className="grid gap-1 py-3 sm:grid-cols-[8rem_1fr]">
+                                    <dt className="text-xs font-semibold text-slate-500">
+                                        Atas nama
+                                    </dt>
+                                    <dd className="font-medium text-slate-800">
+                                        {onboarding.bank_account_name ?? '-'}
+                                    </dd>
+                                </div>
+                            </dl>
+                            <p className="mt-4 text-xs leading-5 text-slate-500">
+                                Periksa nama bank, nomor rekening, dan nama
+                                pemilik rekening sebelum mengambil keputusan.
+                            </p>
                             <div className="mt-4 flex flex-col gap-3">
-                                <Button
-                                    className="bg-sky-600 text-white hover:bg-sky-700"
-                                    onClick={() => handlePayout('approve')}
-                                >
-                                    Setujui Payout
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    className="border-rose-200 text-rose-600 hover:bg-rose-50"
-                                    onClick={() => handlePayout('reject')}
-                                >
-                                    Tolak Payout
-                                </Button>
+                                {payoutStatus !== 'verified' && (
+                                    <Button
+                                        className="bg-sky-600 text-white hover:bg-sky-700"
+                                        onClick={() => handlePayout('approve')}
+                                    >
+                                        <CheckCircle2 className="h-4 w-4" />
+                                        Verifikasi Rekening
+                                    </Button>
+                                )}
+                                {payoutStatus !== 'rejected' && (
+                                    <Button
+                                        variant="outline"
+                                        className="border-rose-200 text-rose-600 hover:bg-rose-50"
+                                        onClick={() => handlePayout('reject')}
+                                    >
+                                        <XCircle className="h-4 w-4" />
+                                        {payoutStatus === 'verified'
+                                            ? 'Batalkan Verifikasi Rekening'
+                                            : 'Tolak & Minta Perbaikan'}
+                                    </Button>
+                                )}
                             </div>
                         </div>
 
