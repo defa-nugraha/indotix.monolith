@@ -75,8 +75,8 @@ export default function MitraWisataTicketsIndex({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Produk Tiket Wisata" />
-            <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+            <div className="workspace-page">
+                <section className="workspace-panel">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <p className="text-xs font-semibold text-sky-600 uppercase">
@@ -102,12 +102,12 @@ export default function MitraWisataTicketsIndex({
                     </div>
                 </section>
 
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                <section className="workspace-panel">
                     <div
-                        className="overflow-hidden rounded-2xl border border-slate-100"
+                        className="workspace-table-wrap"
                         data-coach="mitra-ticket-table"
                     >
-                        <table className="w-full text-sm">
+                        <table className="workspace-table">
                             <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
                                     <th className="px-4 py-3 text-left">
