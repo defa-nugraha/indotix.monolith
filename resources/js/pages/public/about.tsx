@@ -64,8 +64,8 @@ export default function AboutPage({
                 }}
             />
 
-            <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-8">
-                <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-8 md:px-8 lg:py-10">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
                     <nav className="text-xs text-slate-500">
                         <Link
                             href="/"
@@ -76,7 +76,7 @@ export default function AboutPage({
                         <span className="mx-2">/</span>
                         <span className="text-slate-700">Tentang Kami</span>
                     </nav>
-                    <h1 className="mt-2 text-3xl font-semibold text-slate-900">
+                    <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
                         {about?.title ?? 'Tentang Indotix'}
                     </h1>
                     <p className="mt-2 text-sm text-slate-600">
