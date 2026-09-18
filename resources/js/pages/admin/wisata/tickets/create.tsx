@@ -126,8 +126,8 @@ export default function AdminWisataTicketCreate({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tambah Tiket Wisata" />
-            <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+            <div className="workspace-page">
+                <section className="workspace-panel">
                     <h1 className="text-2xl font-semibold text-slate-900">
                         Tambah Produk Tiket
                     </h1>
@@ -136,7 +136,7 @@ export default function AdminWisataTicketCreate({
                     </p>
 
                     <form
-                        className="mt-6 grid gap-4 md:grid-cols-2"
+                        className="mt-6 grid gap-4 lg:grid-cols-2"
                         onSubmit={(event) => {
                             event.preventDefault();
                             form.transform((data) => ({
