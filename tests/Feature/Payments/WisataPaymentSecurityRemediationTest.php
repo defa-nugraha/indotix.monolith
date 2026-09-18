@@ -273,6 +273,107 @@ test('valid full refund is provider confirmed and duplicate request is idempoten
         ->and($payment->fresh()->status)->toBe('settlement');
 });
 
+test('refund confirmation must match the current refund key', function () {
+    [, , , , $booking] = paymentSecurityFixture([
+        'status' => 'paid',
+        'payment_status' => 'settlement',
+        'payment_deadline' => null,
+        'refund_status' => 'pending',
+    ]);
+
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'settlement',
+        'gross_amount' => 100000,
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'trx-refund-key-match',
+        'order_id' => 'WISATA-REFUND-KEY-MATCH',
+    ]);
+
+    $refund = WisataRefund::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'wisata_payment_id' => $payment->id,
+        'refund_key' => 'TARGET-REFUND-KEY',
+        'amount' => 100000,
+        'status' => 'processing',
+        'provider_action' => 'refund',
+    ]);
+
+    $gateway = Mockery::mock(MidtransService::class);
+    $gateway->shouldReceive('statusOrNull')->once()->andReturn([
+        'status_code' => '200',
+        'transaction_status' => 'refund',
+        'refund_amount' => '200000.00',
+        'refunds' => [
+            [
+                'refund_key' => 'HISTORICAL-REFUND-KEY',
+                'refund_amount' => '100000.00',
+                'bank_confirmed_at' => now()->subMinute()->toDateTimeString(),
+            ],
+            [
+                'refund_key' => 'TARGET-REFUND-KEY',
+                'refund_amount' => '100000.00',
+            ],
+        ],
+    ]);
+    $gateway->shouldNotReceive('refund');
+
+    expect(fn () => paymentLifecycle($gateway)->processRefund($refund))
+        ->toThrow(RuntimeException::class);
+
+    expect($refund->fresh()->status)->toBe('unknown')
+        ->and($booking->fresh()->refund_status)->toBe('pending');
+});
+
+test('refund confirmation rejects fractional IDR amounts instead of float rounding', function () {
+    [, , , , $booking] = paymentSecurityFixture([
+        'status' => 'paid',
+        'payment_status' => 'settlement',
+        'payment_deadline' => null,
+        'refund_status' => 'pending',
+    ]);
+
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'settlement',
+        'gross_amount' => 100000,
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'trx-refund-exact-amount',
+        'order_id' => 'WISATA-REFUND-EXACT-AMOUNT',
+    ]);
+
+    $refund = WisataRefund::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'wisata_payment_id' => $payment->id,
+        'refund_key' => 'EXACT-REFUND-KEY',
+        'amount' => 100000,
+        'status' => 'processing',
+        'provider_action' => 'refund',
+    ]);
+
+    $gateway = Mockery::mock(MidtransService::class);
+    $gateway->shouldReceive('statusOrNull')->once()->andReturn([
+        'status_code' => '200',
+        'transaction_status' => 'refund',
+        'refunds' => [
+            [
+                'refund_key' => 'EXACT-REFUND-KEY',
+                'refund_amount' => '99999.99',
+                'bank_confirmed_at' => now()->toDateTimeString(),
+            ],
+        ],
+    ]);
+    $gateway->shouldNotReceive('refund');
+
+    expect(fn () => paymentLifecycle($gateway)->processRefund($refund))
+        ->toThrow(RuntimeException::class);
+
+    expect($refund->fresh()->status)->toBe('unknown')
+        ->and($booking->fresh()->refund_status)->toBe('pending');
+});
+
 test('refund rejects unpaid booking and amount above paid amount', function () {
     [, , , , $unpaid] = paymentSecurityFixture();
     $gateway = Mockery::mock(MidtransService::class);
