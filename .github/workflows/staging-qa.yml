@@ -70,34 +70,39 @@ jobs:
 
           [$script, $adminPassword, $userPassword, $mitraPassword] = $argv;
 
-          DB::transaction(function () use ($adminPassword, $userPassword, $mitraPassword): void {
+          $onlyExisting = static function (string $table, array $values): array {
+              $columns = array_flip(Schema::getColumnListing($table));
+              return array_intersect_key($values, $columns);
+          };
+
+          DB::transaction(function () use ($adminPassword, $userPassword, $mitraPassword, $onlyExisting): void {
               $admin = User::query()->updateOrCreate(
                   ['email' => 'qa.e2e.admin@indotix.id'],
-                  [
+                  $onlyExisting('users', [
                       'name' => 'QA E2E Admin',
                       'phone' => '081200000001',
                       'password' => Hash::make($adminPassword),
                       'role' => 'admin',
                       'email_verified_at' => now(),
                       'is_suspended' => false,
-                  ]
+                  ])
               );
 
               $user = User::query()->updateOrCreate(
                   ['email' => 'qa.e2e.user@indotix.id'],
-                  [
+                  $onlyExisting('users', [
                       'name' => 'QA E2E User',
                       'phone' => '081200000002',
                       'password' => Hash::make($userPassword),
                       'role' => 'user',
                       'email_verified_at' => now(),
                       'is_suspended' => false,
-                  ]
+                  ])
               );
 
               $mitra = User::query()->updateOrCreate(
                   ['email' => 'qa.e2e.mitra@indotix.id'],
-                  [
+                  $onlyExisting('users', [
                       'name' => 'QA E2E Mitra',
                       'phone' => '081200000003',
                       'password' => Hash::make($mitraPassword),
@@ -105,12 +110,12 @@ jobs:
                       'mitra_onboarding_type' => 'wisata',
                       'email_verified_at' => now(),
                       'is_suspended' => false,
-                  ]
+                  ])
               );
 
               $destination = MitraWisataOnboarding::query()->updateOrCreate(
                   ['user_id' => $mitra->id],
-                  [
+                  $onlyExisting('mitra_wisata_onboardings', [
                       'current_step' => 3,
                       'responsible_name' => 'QA E2E Mitra',
                       'responsible_phone' => '081200000003',
@@ -138,7 +143,7 @@ jobs:
                       'is_suspended' => false,
                       'is_temporarily_closed' => false,
                       'content_hidden' => false,
-                  ]
+                  ])
               );
 
               $single = WisataTicket::query()->updateOrCreate(
@@ -146,7 +151,7 @@ jobs:
                       'mitra_wisata_onboarding_id' => $destination->id,
                       'name' => 'QA E2E General Admission',
                   ],
-                  [
+                  $onlyExisting('wisata_tickets', [
                       'description' => 'Single ticket fixture for staging QA',
                       'price' => 10000,
                       'quota' => 1000,
@@ -162,7 +167,7 @@ jobs:
                       'max_order_quantity' => 20,
                       'is_active' => true,
                       'is_closed' => false,
-                  ]
+                  ])
               );
 
               WisataTicket::query()->updateOrCreate(
@@ -170,7 +175,7 @@ jobs:
                       'mitra_wisata_onboarding_id' => $destination->id,
                       'name' => 'QA E2E Family Package',
                   ],
-                  [
+                  $onlyExisting('wisata_tickets', [
                       'description' => 'Package fixture for staging QA',
                       'price' => 20000,
                       'quota' => 500,
@@ -188,7 +193,7 @@ jobs:
                       'max_order_quantity' => 10,
                       'is_active' => true,
                       'is_closed' => false,
-                  ]
+                  ])
               );
 
               echo json_encode([
@@ -203,7 +208,7 @@ jobs:
 
           scp -q             -i "$HOME/.ssh/indotix_qa"             -P "$SSH_PORT"             -o BatchMode=yes             -o IdentitiesOnly=yes             -o StrictHostKeyChecking=yes             /tmp/indotix-qa-fixture.php             "$SSH_USER@$SSH_HOST:$DEPLOY_ROOT/incoming/indotix-qa-fixture.php"
 
-          ssh             -i "$HOME/.ssh/indotix_qa"             -p "$SSH_PORT"             -o BatchMode=yes             -o IdentitiesOnly=yes             -o StrictHostKeyChecking=yes             "$SSH_USER@$SSH_HOST"             "APP_ROOT='$DEPLOY_ROOT/current' php '$DEPLOY_ROOT/incoming/indotix-qa-fixture.php' '$QA_ADMIN_PASSWORD' '$QA_USER_PASSWORD' '$QA_MITRA_PASSWORD'; rm -f '$DEPLOY_ROOT/incoming/indotix-qa-fixture.php'"
+          ssh             -i "$HOME/.ssh/indotix_qa"             -p "$SSH_PORT"             -o BatchMode=yes             -o IdentitiesOnly=yes             -o StrictHostKeyChecking=yes             "$SSH_USER@$SSH_HOST"             "set -e; APP_ROOT='$DEPLOY_ROOT/current' php '$DEPLOY_ROOT/incoming/indotix-qa-fixture.php' '$QA_ADMIN_PASSWORD' '$QA_USER_PASSWORD' '$QA_MITRA_PASSWORD'; rm -f '$DEPLOY_ROOT/incoming/indotix-qa-fixture.php'"
 
   qa:
     name: Full staging QA
