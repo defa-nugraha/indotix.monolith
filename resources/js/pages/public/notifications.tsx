@@ -92,8 +92,8 @@ export default function Notifications({
                 />
             </Head>
 
-            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
-                <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8 md:px-8 lg:py-10">
+                <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
                             <h1 className="text-2xl font-semibold text-slate-900">
@@ -131,7 +131,7 @@ export default function Notifications({
                     </div>
                 </div>
 
-                <div className="mt-6 rounded-2xl bg-white p-5 shadow-sm">
+                <div className="mt-6 rounded-2xl bg-white p-4 shadow-sm sm:p-5">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
                             <Filter className="h-4 w-4 text-sky-500" />
@@ -171,7 +171,7 @@ export default function Notifications({
                 </div>
 
                 {filteredNotifications.length === 0 && (
-                    <div className="mt-6 rounded-2xl border border-slate-100 bg-white p-8 text-center shadow-sm">
+                    <div className="mt-6 rounded-2xl border border-slate-100 bg-white p-5 text-center shadow-sm sm:p-8">
                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sky-50 text-sky-600">
                             <Bell className="h-6 w-6" />
                         </div>
@@ -191,7 +191,7 @@ export default function Notifications({
                             return (
                                 <div
                                     key={item.id}
-                                    className={`rounded-2xl bg-white p-5 shadow-sm ${item.is_read ? '' : 'border border-sky-100'}`}
+                                    className={`rounded-2xl bg-white p-4 shadow-sm sm:p-5 ${item.is_read ? '' : 'border border-sky-100'}`}
                                 >
                                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                         <div className="flex items-start gap-4">
