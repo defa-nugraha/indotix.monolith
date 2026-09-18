@@ -444,10 +444,10 @@ export default function PromoIndex({
                                         <div className="absolute top-1/2 -right-3 h-6 w-6 -translate-y-1/2 rounded-full bg-slate-50 ring-1 ring-sky-100 lg:h-7 lg:w-7 lg:bg-[#f4f6f8]" />
                                         <div className="grid grid-cols-[1fr_auto]">
                                             <div className="p-3.5 lg:p-5">
-                                                <p className="text-[10px] font-black tracking-widest text-sky-600 uppercase lg:hidden">
+                                                <p className="text-[11px] font-black tracking-widest text-sky-600 uppercase lg:hidden">
                                                     Voucher Indotix
                                                 </p>
-                                                <div className="hidden items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[10px] font-black tracking-widest text-sky-700 uppercase lg:inline-flex">
+                                                <div className="hidden items-center gap-2 rounded-full bg-sky-50 px-3 py-1 text-[11px] font-black tracking-widest text-sky-700 uppercase lg:inline-flex">
                                                     <BadgePercent className="h-3.5 w-3.5" />
                                                     Voucher Indotix
                                                 </div>
@@ -521,7 +521,7 @@ export default function PromoIndex({
                                             </div>
                                             <div className="flex w-20 flex-col items-center justify-center border-l border-dashed border-sky-100 bg-sky-600 px-3 text-center text-white lg:w-24">
                                                 <Gift className="h-6 w-6" />
-                                                <span className="mt-2 text-[10px] leading-tight font-black uppercase">
+                                                <span className="mt-2 text-[11px] leading-tight font-black uppercase">
                                                     Hemat
                                                 </span>
                                             </div>
@@ -567,7 +567,7 @@ export default function PromoIndex({
                                             </div>
                                             <div className="flex items-center justify-between gap-3 p-4">
                                                 <div>
-                                                    <p className="text-[10px] font-black tracking-wider text-sky-600 uppercase">
+                                                    <p className="text-[11px] font-black tracking-wider text-sky-600 uppercase">
                                                         {promo.category_label ??
                                                             'Promo pilihan'}
                                                     </p>
