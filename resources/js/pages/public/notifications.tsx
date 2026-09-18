@@ -206,7 +206,7 @@ export default function Notifications({
                                                         {item.title}
                                                     </h3>
                                                     {!item.is_read && (
-                                                        <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                                        <span className="rounded-full bg-sky-600 px-2 py-0.5 text-[11px] font-semibold text-white">
                                                             BARU
                                                         </span>
                                                     )}
