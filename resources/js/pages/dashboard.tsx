@@ -239,14 +239,14 @@ export default function Dashboard({
                 />
             </Head>
 
-            <div className="relative flex flex-1 flex-col gap-6 overflow-x-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
+            <div className="workspace-page relative overflow-x-clip font-['Plus_Jakarta_Sans'] text-slate-900">
                 <div className="pointer-events-none absolute top-12 -left-32 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
                 <div className="pointer-events-none absolute top-0 right-[-10%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
                 <div className="pointer-events-none absolute bottom-[-15%] left-[20%] h-80 w-80 rounded-full bg-amber-300/20 blur-[140px]" />
 
                 <section
                     data-coach="dashboard-hero"
-                    className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur"
+                    className="workspace-panel relative overflow-hidden bg-white/85 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur"
                 >
                     <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
                         <div className="space-y-3">
@@ -264,7 +264,7 @@ export default function Dashboard({
 
                     <div
                         data-coach="dashboard-metrics"
-                        className="mt-6 grid gap-4 lg:grid-cols-3"
+                        className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
                     >
                         {summaryCards.map((item) => (
                             <div
@@ -292,10 +292,10 @@ export default function Dashboard({
                     </div>
                 </section>
 
-                <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+                <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr] xl:gap-6">
                     <section
                         data-coach="dashboard-activity"
-                        className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
+                        className="workspace-panel"
                     >
                         <div className="flex items-start justify-between gap-4">
                             <div>
@@ -347,7 +347,7 @@ export default function Dashboard({
 
                     <section
                         data-coach="dashboard-status"
-                        className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
+                        className="workspace-panel"
                     >
                         <div>
                             <p className="text-xs font-semibold text-sky-600 uppercase">
