@@ -394,10 +394,10 @@ export default function PublicHeader({
             )}
         >
             <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-                <div className="flex h-20 items-center justify-between gap-4">
+                <div className="flex h-[72px] items-center gap-4 xl:gap-5">
                     <Link
                         href="/"
-                        className="group flex items-center gap-2"
+                        className="group flex shrink-0 items-center gap-2"
                         data-skip-action-loading="true"
                     >
                         <img
@@ -411,7 +411,7 @@ export default function PublicHeader({
                     </Link>
 
                     <nav
-                        className="hidden items-center gap-3 text-sm font-medium md:flex xl:gap-5"
+                        className="hidden min-w-0 items-center gap-1 text-sm font-medium lg:flex xl:gap-1.5"
                         id="desktop-nav"
                     >
                         {mainNav.map((item) => {
@@ -424,15 +424,15 @@ export default function PublicHeader({
                                     key={item.href}
                                     href={item.href}
                                     className={cn(
-                                        'relative inline-flex min-h-10 items-center px-1 py-2 transition-colors hover:text-blue-500',
+                                        'relative inline-flex min-h-10 items-center rounded-lg px-2.5 py-2 transition-colors xl:px-3',
                                         (item.href === '/jelajah' || item.href === '/about') && 'hidden xl:inline-flex',
                                         active
                                             ? transparent
-                                                ? 'text-white after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:bg-white after:content-[""]'
-                                                : 'text-blue-600 after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:bg-blue-600 after:content-[""]'
+                                                ? 'bg-white/15 text-white'
+                                                : 'bg-sky-50 text-sky-700'
                                             : transparent
-                                              ? 'text-white/90'
-                                              : 'text-slate-600',
+                                              ? 'text-white/90 hover:bg-white/10 hover:text-white'
+                                              : 'text-slate-600 hover:bg-slate-50 hover:text-sky-700',
                                     )}
                                 >
                                     {item.label}
@@ -443,10 +443,12 @@ export default function PublicHeader({
 
                     {showSearch &&
                         renderSearch(
-                            'hidden max-w-[13rem] flex-1 lg:flex xl:max-w-xs 2xl:max-w-sm',
+                            isUser
+                                ? 'hidden w-56 shrink-0 2xl:flex'
+                                : 'hidden w-56 shrink-0 lg:flex xl:w-64',
                         )}
 
-                    <div className="hidden items-center gap-2 md:flex xl:gap-4">
+                    <div className="ml-auto hidden shrink-0 items-center gap-2 md:flex">
                         {!auth?.user && (
                             <div className="flex items-center gap-2">
                                 <Link
@@ -472,41 +474,67 @@ export default function PublicHeader({
                             <div
                                 data-coach="public-user-menu"
                                 className={cn(
-                                    'flex items-center gap-4 text-sm font-semibold',
+                                    'flex items-center gap-1.5 text-sm font-semibold',
                                     transparent
                                         ? 'text-white/90'
                                         : 'text-slate-600',
                                 )}
                             >
+                                <div
+                                    className={cn(
+                                        'mx-1 h-7 w-px',
+                                        transparent
+                                            ? 'bg-white/20'
+                                            : 'bg-slate-200',
+                                    )}
+                                    aria-hidden="true"
+                                />
+
                                 {userMenu
                                     .filter((item) => item.show)
-                                    .map((item) => (
-                                        <Link
-                                            key={item.href}
-                                            href={item.href}
-                                            className={cn(
-                                                'flex items-center gap-2',
-                                                transparent
-                                                    ? 'hover:text-white'
-                                                    : 'hover:text-sky-600',
-                                                isActivePath(item.href) &&
-                                                    (transparent
-                                                        ? 'text-white'
-                                                        : 'text-sky-600'),
-                                            )}
-                                        >
-                                            <item.icon className="h-4 w-4" />
-                                            {item.label}
-                                            {item.href === '/notifications' &&
-                                                Boolean(
-                                                    unread_notifications,
-                                                ) && (
-                                                    <span className="ml-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                                                        {unread_notifications}
+                                    .map((item) => {
+                                        const active = isActivePath(item.href);
+                                        const isProfile =
+                                            item.href === '/settings/profile';
+
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={item.href}
+                                                aria-label={item.label}
+                                                title={item.label}
+                                                className={cn(
+                                                    'relative inline-flex min-h-10 items-center justify-center rounded-xl transition-colors',
+                                                    isProfile
+                                                        ? 'gap-2 px-3'
+                                                        : 'size-10',
+                                                    transparent
+                                                        ? active
+                                                            ? 'bg-white/15 text-white'
+                                                            : 'text-white/85 hover:bg-white/10 hover:text-white'
+                                                        : active
+                                                          ? 'bg-sky-50 text-sky-700'
+                                                          : 'text-slate-600 hover:bg-slate-50 hover:text-sky-700',
+                                                )}
+                                            >
+                                                <item.icon className="h-[18px] w-[18px] shrink-0" />
+                                                {isProfile && (
+                                                    <span className="hidden 2xl:inline">
+                                                        Profile
                                                     </span>
                                                 )}
-                                        </Link>
-                                    ))}
+                                                {item.href ===
+                                                    '/notifications' &&
+                                                    Boolean(
+                                                        unread_notifications,
+                                                    ) && (
+                                                        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+                                                            {unread_notifications}
+                                                        </span>
+                                                    )}
+                                            </Link>
+                                        );
+                                    })}
                             </div>
                         )}
                         {isNonUser && (
