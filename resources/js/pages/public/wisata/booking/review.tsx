@@ -1,6 +1,4 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
-import Swal from 'sweetalert2';
 import {
     CalendarCheck,
     ClipboardCheck,
@@ -9,8 +7,10 @@ import {
     Ticket,
     User,
 } from 'lucide-react';
-import { Label } from '@/components/ui/label';
+import { useEffect, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
 import { PublicFooter } from '@/components/public-footer';
+import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
@@ -60,6 +60,7 @@ type Props = {
     snapClientKey: string;
     snapScriptUrl: string;
     snapToken?: string | null;
+    hasUnpaidBooking: boolean;
 };
 
 declare global {
@@ -81,6 +82,7 @@ export default function WisataBookingReview({
     snapClientKey,
     snapScriptUrl,
     snapToken: initialSnapToken,
+    hasUnpaidBooking,
 }: Props) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage()
         .props as {
@@ -249,12 +251,30 @@ export default function WisataBookingReview({
                         </div>
                         <form
                             className="mt-6 space-y-4"
-                            onSubmit={(event) => {
+                            onSubmit={async (event) => {
                                 event.preventDefault();
                                 if (guardPurchaseByRole(role)) {
                                     return;
                                 }
+                                if (loading || form.processing) return;
+                                if (hasUnpaidBooking) {
+                                    const result = await Swal.fire({
+                                        icon: 'info',
+                                        title: 'Masih ada pesanan yang belum dibayar',
+                                        text: 'Tidak apa-apa, kamu tetap bisa membuat pesanan baru. Pesanan sebelumnya masih dapat dibayar melalui Riwayat. Lanjutkan pesanan ini?',
+                                        showCancelButton: true,
+                                        confirmButtonText:
+                                            'Ya, buat pesanan baru',
+                                        cancelButtonText: 'Kembali',
+                                        confirmButtonColor: '#0284c7',
+                                    });
+                                    if (!result.isConfirmed) return;
+                                }
                                 setLoading(true);
+                                form.transform((data) => ({
+                                    ...data,
+                                    confirm_new_booking: hasUnpaidBooking,
+                                }));
                                 form.post('/wisata/booking/confirm', {
                                     preserveScroll: true,
                                     onError: (errors) => {
@@ -359,7 +379,9 @@ export default function WisataBookingReview({
                                 <button
                                     type="submit"
                                     className="w-full rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-sky-700 disabled:opacity-70 sm:w-auto"
-                                    disabled={loading || !hasPhone}
+                                    disabled={
+                                        loading || form.processing || !hasPhone
+                                    }
                                 >
                                     {loading
                                         ? 'Memproses...'
@@ -471,7 +493,7 @@ export default function WisataBookingReview({
                                 </div>
                             ) : (
                                 <form
-                                    className="mt-3 flex flex-col gap-2 sm:flex-row lg:flex-col"
+                                    className="mt-4 flex flex-col gap-3"
                                     onSubmit={(event) => {
                                         event.preventDefault();
                                         voucherForm.post('/wisata/booking/voucher', {
@@ -494,7 +516,7 @@ export default function WisataBookingReview({
                                     }}
                                 >
                                     <input
-                                        className="h-11 flex-1 rounded-xl border border-slate-200 px-3 text-sm focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
+                                        className="block h-12 w-full min-w-0 shrink-0 rounded-xl border border-slate-200 bg-white px-4 text-base leading-normal focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
                                         aria-label="Kode voucher"
                                         required
                                         placeholder="Masukkan kode voucher"
@@ -508,7 +530,7 @@ export default function WisataBookingReview({
                                     />
                                     <button
                                         type="submit"
-                                        className="h-11 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-70"
+                                        className="min-h-12 w-full rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-70"
                                         disabled={voucherForm.processing}
                                     >
                                         Terapkan

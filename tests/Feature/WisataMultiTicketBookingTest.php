@@ -162,6 +162,63 @@ test('user can book multiple wisata ticket types in one order', function () {
         ->assertJsonPath('tickets.1.is_entry_ticket', false);
 });
 
+test('a different wisata order requires acknowledgment but never reuses an unpaid order', function () {
+    [$destination, $ticket] = createWisataMultiTicketFixture();
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+        'phone' => '081234567890',
+    ]);
+    $visitDate = now()->addDays(2)->toDateString();
+
+    $this->mock(MidtransService::class, function ($mock) {
+        $mock->shouldReceive('snap')->twice()->andReturn(
+            ['token' => 'first-token', 'redirect_url' => 'https://payments.test/first'],
+            ['token' => 'second-token', 'redirect_url' => 'https://payments.test/second'],
+        );
+    });
+
+    $prepare = fn (int $quantity) => $this->actingAs($user)
+        ->post('/wisata/booking/prepare', [
+            'destination_id' => $destination->id,
+            'ticket_id' => $ticket->id,
+            'visit_date' => $visitDate,
+            'quantity' => $quantity,
+        ])->assertRedirect('/wisata/booking/review');
+
+    $prepare(1);
+    $this->postJson('/wisata/booking/confirm', [
+        'guest_name' => $user->name,
+        'guest_email' => $user->email,
+    ])->assertOk()->assertJsonPath('snap_token', 'first-token');
+
+    $first = WisataBooking::query()->sole();
+    $prepare(2);
+    $this->get('/wisata/booking/review')
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/wisata/booking/review')
+            ->where('hasUnpaidBooking', true)
+            ->where('pricing.quantity', 2));
+
+    $this->postJson('/wisata/booking/confirm', [
+        'guest_name' => $user->name,
+        'guest_email' => $user->email,
+    ])->assertUnprocessable()->assertJsonValidationErrors('booking');
+    expect(WisataBooking::query()->count())->toBe(1);
+
+    $this->postJson('/wisata/booking/confirm', [
+        'guest_name' => $user->name,
+        'guest_email' => $user->email,
+        'confirm_new_booking' => true,
+    ])->assertOk()->assertJsonPath('snap_token', 'second-token');
+
+    expect(WisataBooking::query()->count())->toBe(2);
+    $second = WisataBooking::query()->where('id', '!=', $first->id)->sole();
+    expect($first->fresh()->status)->toBe('pending_payment')
+        ->and($second->quantity)->toBe(2)
+        ->and($second->booking_code)->not->toBe($first->booking_code);
+});
+
 test('guest booking draft survives login and continues to wisata review', function () {
     [$destination, $regular] = createWisataMultiTicketFixture();
     $visitDate = now()->addDays(2)->toDateString();
