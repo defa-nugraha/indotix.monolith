@@ -121,6 +121,7 @@ use App\Http\Controllers\PublicSouvenirController;
 use App\Http\Controllers\PublicSpecialProgramController;
 use App\Http\Controllers\PublicWisataController;
 use App\Http\Controllers\PublicWisataHistoryController;
+use App\Http\Controllers\PublicTransactionFinishController;
 use App\Http\Controllers\RoomInventoryController;
 use App\Http\Controllers\RoomTypeController;
 use App\Http\Controllers\SitemapController;
@@ -1141,6 +1142,8 @@ Route::get('/retail-shop', [PublicSouvenirController::class, 'index'])
     ->name('souvenir.search');
 
 Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function () {
+    Route::get('/transaction/finish', [PublicTransactionFinishController::class, 'show'])
+        ->name('transaction.finish');
     Route::get('/retail-shop/checkout', [SouvenirBookingController::class, 'review'])
         ->middleware('maintenance.transactions')
         ->name('souvenir.checkout.review');
