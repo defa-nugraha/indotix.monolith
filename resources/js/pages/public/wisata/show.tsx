@@ -17,16 +17,16 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { ProductDescription } from '@/components/product-description';
+import { PublicFooter } from '@/components/public-footer';
 import { PublicSeo } from '@/components/public-seo';
 import ReviewSection from '@/components/reviews/review-section';
-import { Label } from '@/components/ui/label';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { PublicFooter } from '@/components/public-footer';
+import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
 
@@ -503,7 +503,20 @@ export default function WisataShow({
                             <Label required className="block text-xs font-bold tracking-wider text-slate-700 uppercase">
                                 Pilihan Tiket
                             </Label>
-                            <div className="space-y-3.5">
+                            <div
+                                className={
+                                    tickets.length > 4
+                                        ? 'max-h-[min(52vh,24rem)] space-y-3.5 overflow-y-auto overscroll-contain pr-1 focus-visible:outline-2 focus-visible:outline-sky-500'
+                                        : 'space-y-3.5'
+                                }
+                                tabIndex={tickets.length > 4 ? 0 : undefined}
+                                role={tickets.length > 4 ? 'region' : undefined}
+                                aria-label={
+                                    tickets.length > 4
+                                        ? 'Daftar pilihan tiket'
+                                        : undefined
+                                }
+                            >
                                 {tickets.map((ticket) => {
                                     const quantity =
                                         ticketQuantities[ticket.id] ?? 0;
