@@ -10,6 +10,7 @@ use App\Models\WisataTicket;
 use App\Models\Voucher;
 use App\Services\MidtransService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -217,6 +218,34 @@ test('a different wisata order requires acknowledgment but never reuses an unpai
     expect($first->fresh()->status)->toBe('pending_payment')
         ->and($second->quantity)->toBe(2)
         ->and($second->booking_code)->not->toBe($first->booking_code);
+});
+
+test('paid user can download a wisata ticket without a browser process', function () {
+    [$destination, $ticket] = createWisataMultiTicketFixture();
+    $user = User::factory()->create([
+        'role' => 'user',
+        'email_verified_at' => now(),
+    ]);
+    $booking = WisataBooking::query()->create([
+        'user_id' => $user->id,
+        'mitra_wisata_onboarding_id' => $destination->id,
+        'wisata_ticket_id' => $ticket->id,
+        'booking_code' => 'WISATA-PDF-'.str()->upper(str()->random(10)),
+        'visit_date' => now()->addDay()->toDateString(),
+        'quantity' => 1,
+        'unit_price' => 100000,
+        'total_price' => 100000,
+        'status' => 'paid',
+        'payment_status' => 'settlement',
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get('/wisata/booking/'.Crypt::encryptString((string) $booking->id).'/ticket');
+
+    $response->assertOk()
+        ->assertHeader('content-type', 'application/pdf')
+        ->assertHeader('content-disposition', 'attachment; filename="tiket-wisata-'.$booking->id.'.pdf"');
+    expect($response->getContent())->toStartWith('%PDF');
 });
 
 test('guest booking draft survives login and continues to wisata review', function () {
