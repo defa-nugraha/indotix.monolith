@@ -17,6 +17,7 @@ use App\Models\WisataBookingItem;
 use App\Models\Voucher;
 use App\Services\MidtransService;
 use App\Services\WisataPaymentLifecycleService;
+use App\Services\WisataTicketPdfService;
 use App\Services\ProductReviewService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,6 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Spatie\LaravelPdf\Facades\Pdf;
 
 class WisataBookingController extends Controller
 {
@@ -440,7 +440,7 @@ class WisataBookingController extends Controller
         ]);
     }
 
-    public function ticket(Request $request, string $booking)
+    public function ticket(Request $request, string $booking, WisataTicketPdfService $ticketPdf)
     {
         $booking = $this->resolveBooking($booking);
 
@@ -458,9 +458,11 @@ class WisataBookingController extends Controller
 
         $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
 
-        return Pdf::view('wisata-ticket', [
-            'booking' => $booking,
-        ])->download($filename);
+        return response($ticketPdf->render($booking), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
     }
 
     private function normalizeTicketSelections(array $data): array

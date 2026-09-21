@@ -17,6 +17,7 @@ use App\Models\WisataPayment;
 use App\Models\WisataTicket;
 use App\Services\MidtransService;
 use App\Services\WisataPaymentLifecycleService;
+use App\Services\WisataTicketPdfService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -24,7 +25,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use RuntimeException;
-use Spatie\LaravelPdf\Facades\Pdf;
 
 class WisataBookingController extends Controller
 {
@@ -319,7 +319,7 @@ class WisataBookingController extends Controller
         return response()->json(['booking' => $this->bookingPayload($booking)]);
     }
 
-    public function ticket(Request $request, string $booking)
+    public function ticket(Request $request, string $booking, WisataTicketPdfService $ticketPdf)
     {
         $booking = $this->resolveBooking($booking);
 
@@ -335,9 +335,11 @@ class WisataBookingController extends Controller
 
         $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
 
-        return Pdf::view('wisata-ticket', [
-            'booking' => $booking,
-        ])->download($filename);
+        return response($ticketPdf->render($booking), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ]);
     }
 
     private function buildTicketSummary(array $data, MitraWisataOnboarding $destination, bool $lock = false): array
