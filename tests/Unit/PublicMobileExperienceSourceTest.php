@@ -80,7 +80,7 @@ test('public home follows the tourism design without dummy promo rails', functio
         ->toContain('homeContent.blog.eyebrow')
         ->toContain('Baca artikel')
         ->toContain('mb-10 sm:mb-14')
-        ->toContain('{companyName}')
+        ->toContain('<PublicFooter contact={contact} className="mt-0" />')
         ->not->toContain('absolute top-6 left-1/4 -rotate-12 animate-bounce')
         ->not->toContain('Lihat semua promo')
         ->not->toContain('homeContent.categories.map')
@@ -191,7 +191,7 @@ test('public listing pages keep mobile card layouts compact and paginated', func
         ->toContain('const mobilePromoRailClass =')
         ->toContain('className={mobileVoucherRailClass}')
         ->toContain('className={mobilePromoRailClass}')
-        ->toContain('text-[10px] font-black tracking-widest text-sky-600 uppercase lg:hidden')
+        ->toContain('text-[11px] font-black tracking-widest text-sky-600 uppercase lg:hidden')
         ->toContain('mt-3 hidden space-y-1 text-xs font-medium text-slate-500');
 
     expect($blog)

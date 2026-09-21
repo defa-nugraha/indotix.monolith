@@ -190,6 +190,9 @@ test('user converted from mitra wisata to custom role can still see owned wisata
         'verification_status' => 'verified',
         'is_suspended' => false,
         'created_by' => $originalAdmin->id,
+        'photo_product_path' => 'mitra-wisata/existing/product.jpg',
+        'photo_gate_path' => 'mitra-wisata/existing/gate.jpg',
+        'photo_area_path' => 'mitra-wisata/existing/area.jpg',
     ]);
     $otherDestination = MitraWisataOnboarding::query()->create([
         'user_id' => $otherUser->id,
@@ -270,6 +273,9 @@ test('super admin can update wisata destination owned by non mitra user', functi
         'verification_status' => 'verified',
         'created_by' => $owner->id,
         'updated_by' => $owner->id,
+        'photo_product_path' => 'mitra-wisata/existing/product.jpg',
+        'photo_gate_path' => 'mitra-wisata/existing/gate.jpg',
+        'photo_area_path' => 'mitra-wisata/existing/area.jpg',
     ]);
 
     $this->actingAs($admin)

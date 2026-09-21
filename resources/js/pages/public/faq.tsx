@@ -7,8 +7,8 @@ import {
     Star,
     Ticket,
 } from 'lucide-react';
+import { PublicFooter } from '@/components/public-footer';
 import PublicLayout from '@/layouts/public-layout';
-import { FooterDownloadSocial } from '@/components/footer-download-social';
 import { PublicSeo } from '@/components/public-seo';
 
 type Faq = {
@@ -73,8 +73,8 @@ export default function FaqPage({ faqs = [] }: { faqs: Faq[] }) {
                     })),
                 }}
             />
-            <div className="mx-auto w-full max-w-5xl px-4 py-10 md:px-8">
-                <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+            <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-8 md:px-8 lg:py-10">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:rounded-3xl sm:p-8">
                     <nav className="text-xs text-slate-500">
                         <Link
                             href="/"
@@ -85,7 +85,7 @@ export default function FaqPage({ faqs = [] }: { faqs: Faq[] }) {
                         <span className="mx-2">/</span>
                         <span className="text-slate-700">FAQ</span>
                     </nav>
-                    <h1 className="text-3xl font-semibold text-slate-900">
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
                         FAQ
                     </h1>
                     <p className="mt-2 text-sm text-slate-600">
@@ -128,86 +128,7 @@ export default function FaqPage({ faqs = [] }: { faqs: Faq[] }) {
                 </div>
             </div>
 
-            <footer className="mt-10 border-t border-slate-200 bg-white">
-                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
-                    <div>
-                        <Link href="/">
-                            <img
-                                src="/logo.png"
-                                alt="Indotix"
-                                className="h-11 w-36 object-contain"
-                            />
-                        </Link>
-                        <p className="mt-3 text-sm text-slate-600">
-                            Neo Soho Capital 40th Floor
-                            <br />
-                            Jl. Tanjung Duren Raya No 1<br />
-                            Jakarta Barat, DKI Jakarta 11470
-                        </p>
-                        <p className="mt-4 text-sm text-slate-600">
-                            0812 9205 9888
-                        </p>
-                        <p className="text-sm text-slate-600">
-                            info@indotix.co.id
-                        </p>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Layanan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>Wisata</li>
-                            <li>Special Program</li>
-                            <li>Event</li>
-                            <li>Hotel</li>
-                            <li>Retail Shop</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Perusahaan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>
-                                <Link
-                                    href="/about"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Tentang Kami
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/jelajah"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Blog
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/faq"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    FAQ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/privacy-policy"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Kebijakan Privasi
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                    <FooterDownloadSocial />
-                </div>
-                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-                    © 2025 Indotix. All rights reserved.
-                </div>
-            </footer>
+            <PublicFooter />
         </PublicLayout>
     );
 }

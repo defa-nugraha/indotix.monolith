@@ -38,6 +38,8 @@ return [
     'midtrans' => [
         'server_key' => env('MIDTRANS_SERVER_KEY'),
         'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'merchant_id' => env('MIDTRANS_MERCHANT_ID'),
+        'currency' => env('MIDTRANS_CURRENCY', 'IDR'),
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
         'connect_timeout' => (int) env('MIDTRANS_CONNECT_TIMEOUT', 5),
         'timeout' => (int) env('MIDTRANS_TIMEOUT', 20),

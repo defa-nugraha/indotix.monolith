@@ -7,6 +7,7 @@ use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateCommissionItem;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
+use App\Models\WisataPaymentSideEffect;
 use App\Models\WisataPayout;
 use App\Models\WisataPayoutAdjustment;
 use App\Models\WisataRefund;
@@ -273,6 +274,107 @@ test('valid full refund is provider confirmed and duplicate request is idempoten
         ->and($payment->fresh()->status)->toBe('settlement');
 });
 
+test('refund confirmation must match the current refund key', function () {
+    [, , , , $booking] = paymentSecurityFixture([
+        'status' => 'paid',
+        'payment_status' => 'settlement',
+        'payment_deadline' => null,
+        'refund_status' => 'pending',
+    ]);
+
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'settlement',
+        'gross_amount' => 100000,
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'trx-refund-key-match',
+        'order_id' => 'WISATA-REFUND-KEY-MATCH',
+    ]);
+
+    $refund = WisataRefund::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'wisata_payment_id' => $payment->id,
+        'refund_key' => 'TARGET-REFUND-KEY',
+        'amount' => 100000,
+        'status' => 'processing',
+        'provider_action' => 'refund',
+    ]);
+
+    $gateway = Mockery::mock(MidtransService::class);
+    $gateway->shouldReceive('statusOrNull')->once()->andReturn([
+        'status_code' => '200',
+        'transaction_status' => 'refund',
+        'refund_amount' => '200000.00',
+        'refunds' => [
+            [
+                'refund_key' => 'HISTORICAL-REFUND-KEY',
+                'refund_amount' => '100000.00',
+                'bank_confirmed_at' => now()->subMinute()->toDateTimeString(),
+            ],
+            [
+                'refund_key' => 'TARGET-REFUND-KEY',
+                'refund_amount' => '100000.00',
+            ],
+        ],
+    ]);
+    $gateway->shouldNotReceive('refund');
+
+    expect(fn () => paymentLifecycle($gateway)->processRefund($refund))
+        ->toThrow(RuntimeException::class);
+
+    expect($refund->fresh()->status)->toBe('unknown')
+        ->and($booking->fresh()->refund_status)->toBe('pending');
+});
+
+test('refund confirmation rejects fractional IDR amounts instead of float rounding', function () {
+    [, , , , $booking] = paymentSecurityFixture([
+        'status' => 'paid',
+        'payment_status' => 'settlement',
+        'payment_deadline' => null,
+        'refund_status' => 'pending',
+    ]);
+
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'settlement',
+        'gross_amount' => 100000,
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'trx-refund-exact-amount',
+        'order_id' => 'WISATA-REFUND-EXACT-AMOUNT',
+    ]);
+
+    $refund = WisataRefund::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'wisata_payment_id' => $payment->id,
+        'refund_key' => 'EXACT-REFUND-KEY',
+        'amount' => 100000,
+        'status' => 'processing',
+        'provider_action' => 'refund',
+    ]);
+
+    $gateway = Mockery::mock(MidtransService::class);
+    $gateway->shouldReceive('statusOrNull')->once()->andReturn([
+        'status_code' => '200',
+        'transaction_status' => 'refund',
+        'refunds' => [
+            [
+                'refund_key' => 'EXACT-REFUND-KEY',
+                'refund_amount' => '99999.99',
+                'bank_confirmed_at' => now()->toDateTimeString(),
+            ],
+        ],
+    ]);
+    $gateway->shouldNotReceive('refund');
+
+    expect(fn () => paymentLifecycle($gateway)->processRefund($refund))
+        ->toThrow(RuntimeException::class);
+
+    expect($refund->fresh()->status)->toBe('unknown')
+        ->and($booking->fresh()->refund_status)->toBe('pending');
+});
+
 test('refund rejects unpaid booking and amount above paid amount', function () {
     [, , , , $unpaid] = paymentSecurityFixture();
     $gateway = Mockery::mock(MidtransService::class);
@@ -449,10 +551,75 @@ test('wisata signed webhook replay does not duplicate fulfillment', function () 
 
     expect($booking->fresh()->status)->toBe('paid')
         ->and($payment->fresh()->status)->toBe('settlement')
+        ->and($payment->fresh()->notification_dispatched_at)->not->toBeNull()
+        ->and(\App\Models\UserNotification::query()
+            ->where('user_id', $buyer->id)
+            ->where('type', 'wisata_payment_paid')
+            ->count())->toBe(1)
+        ->and(WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->count())->toBe(3)
+        ->and(WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->whereNotNull('completed_at')
+            ->count())->toBe(3);
+
+    Queue::assertPushed(\App\Jobs\SendPushNotificationJob::class, 1);
+    Mail::assertSent(\App\Mail\WisataTicketMail::class, 1);
+});
+
+test('paid side effect claim prevents concurrent duplicate dispatch and stale claim can recover', function () {
+    [$buyer, , , , $booking] = paymentSecurityFixture([
+        'status' => 'paid',
+        'payment_status' => 'settlement',
+        'payment_deadline' => null,
+    ]);
+
+    $payment = WisataPayment::query()->create([
+        'wisata_booking_id' => $booking->id,
+        'provider' => 'midtrans',
+        'status' => 'settlement',
+        'gross_amount' => 100000,
+        'payment_type' => 'bank_transfer',
+        'transaction_id' => 'trx-side-effect-claim',
+        'order_id' => 'WISATA-SIDE-EFFECT-CLAIM',
+    ]);
+
+    WisataPaymentSideEffect::query()->create([
+        'wisata_payment_id' => $payment->id,
+        'effect_type' => 'push',
+        'status' => 'processing',
+        'attempts' => 1,
+        'claimed_at' => now(),
+    ]);
+
+    $service = paymentLifecycle(Mockery::mock(MidtransService::class));
+    $service->dispatchPendingPaidSideEffects();
+
+    Queue::assertNotPushed(\App\Jobs\SendPushNotificationJob::class);
+    expect($payment->fresh()->notification_dispatched_at)->toBeNull()
+        ->and(WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->where('effect_type', 'push')
+            ->value('status'))->toBe('processing')
         ->and(\App\Models\UserNotification::query()
             ->where('user_id', $buyer->id)
             ->where('type', 'wisata_payment_paid')
             ->count())->toBe(1);
+
+    WisataPaymentSideEffect::query()
+        ->where('wisata_payment_id', $payment->id)
+        ->where('effect_type', 'push')
+        ->update(['claimed_at' => now()->subMinutes(11)]);
+
+    $service->dispatchPendingPaidSideEffects();
+
+    Queue::assertPushed(\App\Jobs\SendPushNotificationJob::class, 1);
+    expect($payment->fresh()->notification_dispatched_at)->not->toBeNull()
+        ->and(WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->whereNotNull('completed_at')
+            ->count())->toBe(3);
 });
 
 test('late settlement never reactivates a cancelled wisata booking and queues compensation', function () {

@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -170,6 +171,7 @@ class WisataBookingController extends Controller
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
             'special_request' => ['nullable', 'string', 'max:1000'],
+            'confirm_new_booking' => ['sometimes', 'boolean'],
         ]);
 
         $profilePhone = $request->user()?->phone;
@@ -178,26 +180,10 @@ class WisataBookingController extends Controller
         }
         $data['guest_phone'] = $profilePhone;
 
-        $existingBookingId = $request->session()->get('wisata_booking_pending');
-        if ($existingBookingId) {
-            $existingBooking = WisataBooking::query()->find($existingBookingId);
-            if ($existingBooking) {
-                if ($request->expectsJson()) {
-                    $snap = $this->createSnapPayment($existingBooking, $payments);
-
-                    return response()->json([
-                        'booking_id' => $this->encryptId($existingBooking->id),
-                        'snap_token' => $snap['token'] ?? null,
-                        'redirect_url' => $snap['redirect_url'] ?? null,
-                    ]);
-                }
-
-                $snap = $this->createSnapPayment($existingBooking, $payments);
-
-                return $this->reviewResponse($draft, [
-                    'snapToken' => $snap['token'] ?? null,
-                ], $request);
-            }
+        if ($this->hasUnpaidBooking((int) $request->user()->id) && ! ($data['confirm_new_booking'] ?? false)) {
+            throw ValidationException::withMessages([
+                'booking' => 'Kamu masih punya pesanan yang menunggu pembayaran. Konfirmasi dulu jika ingin membuat pesanan baru.',
+            ]);
         }
 
         $booking = DB::transaction(function () use ($draft, $data, $request) {
@@ -241,7 +227,7 @@ class WisataBookingController extends Controller
                 'user_id' => $request->user()->id,
                 'mitra_wisata_onboarding_id' => $draft['destination_id'],
                 'wisata_ticket_id' => $primaryItem['ticket_id'],
-                'booking_code' => strtoupper('WISATA-'.$request->user()->id.'-'.now()->format('ymdHis')),
+                'booking_code' => strtoupper('WISATA-'.$request->user()->id.'-'.now()->format('ymdHis').'-'.Str::random(8)),
                 'visit_date' => $draft['visit_date'],
                 'quantity' => $summary['quantity'],
                 'unit_price' => $primaryItem['unit_price'],
@@ -278,7 +264,6 @@ class WisataBookingController extends Controller
             $this->completeFreeBooking($booking);
             $request->session()->forget('wisata_booking_draft');
             $request->session()->forget('pending_voucher_code');
-            $request->session()->forget('wisata_booking_pending');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -322,7 +307,7 @@ class WisataBookingController extends Controller
 
         $request->session()->forget('wisata_booking_draft');
         $request->session()->forget('pending_voucher_code');
-        $request->session()->put('wisata_booking_pending', $booking->id);
+        $request->session()->forget('wisata_booking_pending');
 
         if ($request->expectsJson()) {
             try {
@@ -706,11 +691,24 @@ class WisataBookingController extends Controller
             ],
             'voucher' => $voucherPayload,
             'pendingVoucherCode' => $pendingVoucherCode,
+            'hasUnpaidBooking' => $userId > 0 && $this->hasUnpaidBooking($userId),
             'snapClientKey' => (string) config('services.midtrans.client_key', ''),
             'snapScriptUrl' => config('services.midtrans.is_production')
                 ? 'https://app.midtrans.com/snap/snap.js'
                 : 'https://app.sandbox.midtrans.com/snap/snap.js',
         ], $extra));
+    }
+
+    private function hasUnpaidBooking(int $userId): bool
+    {
+        return WisataBooking::query()
+            ->where('user_id', $userId)
+            ->where('status', 'pending_payment')
+            ->where(function ($query) {
+                $query->whereNull('payment_deadline')
+                    ->orWhere('payment_deadline', '>', now());
+            })
+            ->exists();
     }
 
     private function availableTickets(WisataTicket $ticket, string $date, bool $lock = false): int

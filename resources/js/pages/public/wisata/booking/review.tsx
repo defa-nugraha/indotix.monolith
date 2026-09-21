@@ -1,6 +1,4 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
-import Swal from 'sweetalert2';
 import {
     CalendarCheck,
     ClipboardCheck,
@@ -9,7 +7,9 @@ import {
     Ticket,
     User,
 } from 'lucide-react';
-import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { useEffect, useRef, useState } from 'react';
+import Swal from 'sweetalert2';
+import { PublicFooter } from '@/components/public-footer';
 import { Label } from '@/components/ui/label';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
@@ -60,6 +60,7 @@ type Props = {
     snapClientKey: string;
     snapScriptUrl: string;
     snapToken?: string | null;
+    hasUnpaidBooking: boolean;
 };
 
 declare global {
@@ -81,6 +82,7 @@ export default function WisataBookingReview({
     snapClientKey,
     snapScriptUrl,
     snapToken: initialSnapToken,
+    hasUnpaidBooking,
 }: Props) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage()
         .props as {
@@ -203,7 +205,7 @@ export default function WisataBookingReview({
                                 }`}
                             >
                                 <span
-                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+                                    className={`flex h-5 w-5 items-center justify-center rounded-full text-[11px] ${
                                         index === 0
                                             ? 'bg-sky-600 text-white'
                                             : 'bg-slate-200 text-slate-500'
@@ -249,12 +251,30 @@ export default function WisataBookingReview({
                         </div>
                         <form
                             className="mt-6 space-y-4"
-                            onSubmit={(event) => {
+                            onSubmit={async (event) => {
                                 event.preventDefault();
                                 if (guardPurchaseByRole(role)) {
                                     return;
                                 }
+                                if (loading || form.processing) return;
+                                if (hasUnpaidBooking) {
+                                    const result = await Swal.fire({
+                                        icon: 'info',
+                                        title: 'Masih ada pesanan yang belum dibayar',
+                                        text: 'Tidak apa-apa, kamu tetap bisa membuat pesanan baru. Pesanan sebelumnya masih dapat dibayar melalui Riwayat. Lanjutkan pesanan ini?',
+                                        showCancelButton: true,
+                                        confirmButtonText:
+                                            'Ya, buat pesanan baru',
+                                        cancelButtonText: 'Kembali',
+                                        confirmButtonColor: '#0284c7',
+                                    });
+                                    if (!result.isConfirmed) return;
+                                }
                                 setLoading(true);
+                                form.transform((data) => ({
+                                    ...data,
+                                    confirm_new_booking: hasUnpaidBooking,
+                                }));
                                 form.post('/wisata/booking/confirm', {
                                     preserveScroll: true,
                                     onError: (errors) => {
@@ -359,7 +379,9 @@ export default function WisataBookingReview({
                                 <button
                                     type="submit"
                                     className="w-full rounded-2xl bg-sky-600 px-6 py-3 text-sm font-bold text-white shadow-md transition hover:bg-sky-700 disabled:opacity-70 sm:w-auto"
-                                    disabled={loading || !hasPhone}
+                                    disabled={
+                                        loading || form.processing || !hasPhone
+                                    }
                                 >
                                     {loading
                                         ? 'Memproses...'
@@ -450,7 +472,7 @@ export default function WisataBookingReview({
                                 <div className="mt-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-700">
                                     <div className="flex items-center justify-between gap-3">
                                         <div>
-                                            <p className="text-[10px] font-bold uppercase text-emerald-500">
+                                            <p className="text-[11px] font-bold uppercase text-emerald-500">
                                                 Voucher aktif
                                             </p>
                                             <p className="mt-1 font-black">
@@ -471,7 +493,7 @@ export default function WisataBookingReview({
                                 </div>
                             ) : (
                                 <form
-                                    className="mt-3 flex flex-col gap-2 sm:flex-row lg:flex-col"
+                                    className="mt-4 flex flex-col gap-3"
                                     onSubmit={(event) => {
                                         event.preventDefault();
                                         voucherForm.post('/wisata/booking/voucher', {
@@ -494,7 +516,7 @@ export default function WisataBookingReview({
                                     }}
                                 >
                                     <input
-                                        className="h-11 flex-1 rounded-xl border border-slate-200 px-3 text-sm focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
+                                        className="block h-12 w-full min-w-0 shrink-0 rounded-xl border border-slate-200 bg-white px-4 text-base leading-normal focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
                                         aria-label="Kode voucher"
                                         required
                                         placeholder="Masukkan kode voucher"
@@ -508,7 +530,7 @@ export default function WisataBookingReview({
                                     />
                                     <button
                                         type="submit"
-                                        className="h-11 rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-70"
+                                        className="min-h-12 w-full rounded-xl bg-sky-600 px-4 text-sm font-semibold text-white shadow-sm disabled:opacity-70"
                                         disabled={voucherForm.processing}
                                     >
                                         Terapkan
@@ -519,86 +541,7 @@ export default function WisataBookingReview({
                     </aside>
                 </section>
             </main>
-            <footer className="mt-10 border-t border-slate-200 bg-white">
-                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
-                    <div>
-                        <Link href="/">
-                            <img
-                                src="/logo.png"
-                                alt="Indotix"
-                                className="h-11 w-36 object-contain"
-                            />
-                        </Link>
-                        <p className="mt-3 text-sm text-slate-600">
-                            Neo Soho Capital 40th Floor
-                            <br />
-                            Jl. Tanjung Duren Raya No 1<br />
-                            Jakarta Barat, DKI Jakarta 11470
-                        </p>
-                        <p className="mt-4 text-sm text-slate-600">
-                            0812 9205 9888
-                        </p>
-                        <p className="text-sm text-slate-600">
-                            info@indotix.co.id
-                        </p>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Layanan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>Wisata</li>
-                            <li>Special Program</li>
-                            <li>Event</li>
-                            <li>Hotel</li>
-                            <li>Retail Shop</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Perusahaan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>
-                                <Link
-                                    href="/about"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Tentang Kami
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/jelajah"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Blog
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/faq"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    FAQ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/privacy-policy"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Kebijakan Privasi
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                    <FooterDownloadSocial />
-                </div>
-                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-                    © 2025 Indotix. All rights reserved.
-                </div>
-            </footer>
+            <PublicFooter />
         </PublicLayout>
     );
 }

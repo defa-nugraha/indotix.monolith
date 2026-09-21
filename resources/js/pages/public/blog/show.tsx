@@ -212,7 +212,7 @@ export default function BlogShow({
                                                                         key={
                                                                             tag
                                                                         }
-                                                                        className="rounded-full bg-sky-50 px-2 py-0.5 text-[10px] font-semibold text-sky-600"
+                                                                        className="rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-600"
                                                                     >
                                                                         #{tag}
                                                                     </span>

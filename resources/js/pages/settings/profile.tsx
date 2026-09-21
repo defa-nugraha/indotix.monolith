@@ -5,7 +5,7 @@ import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileCo
 import InputError from '@/components/input-error';
 import { Label } from '@/components/ui/label';
 import { Mail, Phone, UserCircle } from 'lucide-react';
-import { FooterDownloadSocial } from '@/components/footer-download-social';
+import { PublicFooter } from '@/components/public-footer';
 import PublicLayout from '@/layouts/public-layout';
 import { formRoute } from '@/lib/form-route';
 
@@ -51,10 +51,10 @@ export default function Profile({
                 />
             </Head>
 
-            <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
+            <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8 md:px-8 lg:py-10">
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                     <div className="space-y-6">
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
                             <h1 className="text-2xl font-semibold text-slate-900">
                                 Profil Saya
                             </h1>
@@ -64,7 +64,7 @@ export default function Profile({
                             </p>
                         </div>
 
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
                             <h2 className="text-lg font-semibold text-slate-900">
                                 Informasi Pribadi
                             </h2>
@@ -232,7 +232,7 @@ export default function Profile({
                             </Form>
                         </div>
 
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
                             <h2 className="text-lg font-semibold text-slate-900">
                                 Akun & Keamanan
                             </h2>
@@ -274,7 +274,7 @@ export default function Profile({
                     </div>
 
                     <aside className="space-y-6">
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
                             <div className="flex items-center gap-3">
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sky-100 text-sky-600">
                                     <UserCircle className="h-6 w-6" />
@@ -295,7 +295,7 @@ export default function Profile({
                         </div>
 
                         {affiliate_menu && (
-                            <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
                                 <h3 className="text-sm font-semibold text-slate-900">
                                     Afiliasi Wisata
                                 </h3>
@@ -314,7 +314,7 @@ export default function Profile({
                             </div>
                         )}
 
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">
                             <h3 className="text-sm font-semibold text-slate-900">
                                 Kontak Bantuan
                             </h3>
@@ -335,8 +335,8 @@ export default function Profile({
                     </aside>
                 </div>
                 {passwordOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-                        <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-3 py-4 backdrop-blur-[2px] sm:px-4">
+                        <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-4 shadow-xl sm:p-6">
                             <div className="flex items-start justify-between">
                                 <div>
                                     <h3 className="text-lg font-semibold text-slate-900">
@@ -470,8 +470,8 @@ export default function Profile({
                     </div>
                 )}
                 {isCustomerRole && deleteOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
-                        <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 px-3 py-4 backdrop-blur-[2px] sm:px-4">
+                        <div className="max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-4 shadow-xl sm:p-6">
                             <div className="flex items-start justify-between">
                                 <div>
                                     <h3 className="text-lg font-semibold text-slate-900">
@@ -593,86 +593,7 @@ export default function Profile({
                 )}
             </main>
 
-            <footer className="mt-10 border-t border-slate-200 bg-white">
-                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
-                    <div>
-                        <Link href="/">
-                            <img
-                                src="/logo.png"
-                                alt="Indotix"
-                                className="h-11 w-36 object-contain"
-                            />
-                        </Link>
-                        <p className="mt-3 text-sm text-slate-600">
-                            Neo Soho Capital 40th Floor
-                            <br />
-                            Jl. Tanjung Duren Raya No 1<br />
-                            Jakarta Barat, DKI Jakarta 11470
-                        </p>
-                        <p className="mt-4 text-sm text-slate-600">
-                            0812 9205 9888
-                        </p>
-                        <p className="text-sm text-slate-600">
-                            info@indotix.co.id
-                        </p>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Layanan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>Wisata</li>
-                            <li>Special Program</li>
-                            <li>Event</li>
-                            <li>Hotel</li>
-                            <li>Retail Shop</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Perusahaan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>
-                                <Link
-                                    href="/about"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Tentang Kami
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/jelajah"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Blog
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/faq"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    FAQ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/privacy-policy"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Kebijakan Privasi
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                    <FooterDownloadSocial />
-                </div>
-                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-                    © 2025 Indotix. All rights reserved.
-                </div>
-            </footer>
+            <PublicFooter />
         </PublicLayout>
     );
 }

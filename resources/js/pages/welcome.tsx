@@ -51,8 +51,6 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { FooterAddress } from '@/components/footer-address';
-import { FooterDownloadSocial } from '@/components/footer-download-social';
 import {
     PublicPartOfSection,
     PublicPartnerSection,
@@ -65,6 +63,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { PublicFooter } from '@/components/public-footer';
 import PublicLayout from '@/layouts/public-layout';
 
 type Banner = { id: number; image_path: string; link_url?: string | null };
@@ -1490,91 +1489,7 @@ export default function Welcome({
                 )}
             </main>
 
-            <footer className="mt-0 border-t border-slate-200 bg-white">
-                <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
-                    <div>
-                        <Link href="/">
-                            <img
-                                src="/logo.png"
-                                alt="Indotix"
-                                className="h-11 w-36 object-contain"
-                            />
-                        </Link>
-                        <p className="mt-3 text-sm font-semibold text-slate-900">
-                            {companyName}
-                        </p>
-                        <FooterAddress contact={contact} />
-                        <p className="mt-4 text-sm text-slate-600">
-                            {contact?.phone ?? '0812 9205 9888'}
-                        </p>
-                        <p className="text-sm text-slate-600">
-                            {contact?.email ?? 'info@indotix.co.id'}
-                        </p>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Layanan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>Wisata</li>
-                            <li>Tiket destinasi</li>
-                            <li>Taman hiburan</li>
-                            <li>Wisata keluarga</li>
-                            <li>Wisata edukasi</li>
-                        </ul>
-                    </div>
-                    <div>
-                        <h4 className="text-sm font-semibold text-slate-900">
-                            Perusahaan
-                        </h4>
-                        <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                            <li>
-                                <Link
-                                    href="/about"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Tentang Kami
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/jelajah"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Blog
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/faq"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    FAQ
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    href="/privacy-policy"
-                                    className="transition hover:text-sky-600"
-                                >
-                                    Kebijakan Privasi
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                    <FooterDownloadSocial
-                        downloadUrl={contact?.download_url}
-                        facebookUrl={contact?.facebook_url}
-                        instagramUrl={contact?.instagram_url}
-                        twitterUrl={contact?.twitter_url}
-                        tiktokUrl={contact?.tiktok_url}
-                        youtubeUrl={contact?.youtube_url}
-                    />
-                </div>
-                <div className="border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-                    © 2025 Indotix. All rights reserved.
-                </div>
-            </footer>
+            <PublicFooter contact={contact} className="mt-0" />
         </PublicLayout>
     );
 }

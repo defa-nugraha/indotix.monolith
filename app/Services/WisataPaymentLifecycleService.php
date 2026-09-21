@@ -10,6 +10,7 @@ use App\Models\UserNotification;
 use App\Models\WisataAffiliateCommissionItem;
 use App\Models\WisataBooking;
 use App\Models\WisataPayment;
+use App\Models\WisataPaymentSideEffect;
 use App\Models\WisataRefund;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,10 @@ class WisataPaymentLifecycleService
         'expiry_pending',
         'expiry_unknown',
     ];
+
+    private const PAID_SIDE_EFFECT_TYPES = ['in_app', 'push', 'email'];
+
+    private const SIDE_EFFECT_CLAIM_TTL_MINUTES = 10;
 
     public function __construct(
         private readonly MidtransService $midtrans,
@@ -381,6 +386,13 @@ class WisataPaymentLifecycleService
                 $reason ?: ($refund->booking?->refund_reason ?: 'Refund booking wisata Indotix'),
             );
 
+            // This response belongs to the refund request above. Preserve a provider
+            // refund_key when present, otherwise bind the response to the exact key
+            // that Indotix submitted so confirmation remains unambiguous.
+            if (! array_key_exists('refund_key', $response)) {
+                $response['refund_key'] = $refund->refund_key;
+            }
+
             $refund->update([
                 'status' => 'processing',
                 'provider_refund_id' => (string) ($response['refund_chargeback_id'] ?? $refund->provider_refund_id),
@@ -679,6 +691,8 @@ class WisataPaymentLifecycleService
             }
 
             if ($booking->status === 'paid' || $booking->status === 'completed') {
+                $this->ensurePaidSideEffectRows($lockedPayment->id, (bool) $booking->guest_email);
+
                 return false;
             }
 
@@ -700,12 +714,15 @@ class WisataPaymentLifecycleService
                     'reason' => null,
                 ]);
 
+            // Persist the outbox records in the same transaction as the paid state.
+            // Callback and reconciliation can then race safely without creating
+            // duplicate logical side effects.
+            $this->ensurePaidSideEffectRows($lockedPayment->id, (bool) $booking->guest_email);
+
             return true;
         }, 3);
 
-        if ($transitioned) {
-            $this->dispatchPaidSideEffects($payment->fresh(['booking']));
-        }
+        $this->dispatchPaidSideEffects($payment->fresh(['booking']));
 
         return $transitioned;
     }
@@ -715,60 +732,226 @@ class WisataPaymentLifecycleService
         $payment = $payment->fresh(['booking']);
         $booking = $payment->booking;
 
-        if (! $booking || $payment->notification_dispatched_at) {
+        if (
+            ! $booking
+            || ! in_array((string) $booking->status, ['paid', 'completed'], true)
+            || ! in_array((string) $payment->status, ['settlement', 'capture'], true)
+            || $payment->notification_dispatched_at
+        ) {
             return;
         }
 
-        $encryptedId = Crypt::encryptString((string) $booking->id);
-        $alreadyNotified = UserNotification::query()
-            ->where('user_id', $booking->user_id)
-            ->where('type', 'wisata_payment_paid')
-            ->where('data->booking_db_id', $booking->id)
-            ->exists();
+        $this->ensurePaidSideEffectRows($payment->id, (bool) $booking->guest_email);
 
-        if (! $alreadyNotified) {
-            UserNotification::query()->create([
-                'user_id' => $booking->user_id,
-                'title' => 'Pembayaran tiket berhasil',
-                'message' => 'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
-                'type' => 'wisata_payment_paid',
-                'data' => [
-                    'booking_id' => $encryptedId,
-                    'booking_db_id' => $booking->id,
-                    'type' => 'wisata',
-                    'category' => 'wisata',
-                ],
-            ]);
-        }
+        foreach (self::PAID_SIDE_EFFECT_TYPES as $effectType) {
+            if ($effectType === 'email' && ! $booking->guest_email) {
+                continue;
+            }
 
-        SendPushNotificationJob::dispatch(
-            $booking->user_id,
-            'Pembayaran tiket berhasil',
-            'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
-            [
-                'booking_id' => $encryptedId,
-                'type' => 'wisata',
-                'category' => 'wisata',
-                'notification_type' => 'wisata_payment_paid',
-            ],
-            ['booking_id' => $booking->id, 'payment_id' => $payment->id],
-        );
+            $effect = $this->claimPaidSideEffect($payment->id, $effectType);
+            if (! $effect) {
+                continue;
+            }
 
-        if ($booking->guest_email) {
             try {
-                Mail::to($booking->guest_email)->send(new WisataTicketMail($booking));
+                $this->performPaidSideEffect($payment, $booking, $effectType);
+                $this->completePaidSideEffect($effect->id);
             } catch (Throwable $exception) {
-                Log::warning('Failed to send wisata ticket email', [
-                    'booking_id' => $booking->id,
+                $this->failPaidSideEffect($effect->id, $exception);
+
+                Log::warning('Wisata paid side effect failed.', [
                     'payment_id' => $payment->id,
+                    'booking_id' => $booking->id,
+                    'effect_type' => $effectType,
                     'error' => $this->safeError($exception),
                 ]);
-
-                return;
             }
         }
 
-        $payment->update(['notification_dispatched_at' => now()]);
+        $hasOutstanding = WisataPaymentSideEffect::query()
+            ->where('wisata_payment_id', $payment->id)
+            ->whereNull('completed_at')
+            ->exists();
+
+        if (! $hasOutstanding) {
+            WisataPayment::query()
+                ->whereKey($payment->id)
+                ->whereNull('notification_dispatched_at')
+                ->update(['notification_dispatched_at' => now()]);
+        }
+    }
+
+    public function dispatchPendingPaidSideEffects(int $limit = 50): int
+    {
+        $outboxPaymentIds = WisataPaymentSideEffect::query()
+            ->whereNull('completed_at')
+            ->select('wisata_payment_id')
+            ->distinct()
+            ->orderBy('wisata_payment_id')
+            ->limit($limit)
+            ->pluck('wisata_payment_id');
+
+        $payments = WisataPayment::query()
+            ->where('provider', 'midtrans')
+            ->whereIn('status', ['settlement', 'capture'])
+            ->whereNull('notification_dispatched_at')
+            ->whereHas('booking', fn ($query) => $query->whereIn('status', ['paid', 'completed']))
+            ->where(function ($query) use ($outboxPaymentIds) {
+                $query->where('created_at', '>=', now()->subDays(7));
+
+                if ($outboxPaymentIds->isNotEmpty()) {
+                    $query->orWhereIn('id', $outboxPaymentIds);
+                }
+            })
+            ->orderBy('id')
+            ->limit($limit)
+            ->get();
+
+        foreach ($payments as $payment) {
+            $this->dispatchPaidSideEffects($payment);
+        }
+
+        return $payments->count();
+    }
+
+    private function ensurePaidSideEffectRows(int $paymentId, bool $hasEmail): void
+    {
+        $now = now();
+        $rows = [];
+
+        foreach (self::PAID_SIDE_EFFECT_TYPES as $effectType) {
+            if ($effectType === 'email' && ! $hasEmail) {
+                continue;
+            }
+
+            $rows[] = [
+                'wisata_payment_id' => $paymentId,
+                'effect_type' => $effectType,
+                'status' => 'pending',
+                'attempts' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        if ($rows !== []) {
+            DB::table('wisata_payment_side_effects')->insertOrIgnore($rows);
+        }
+    }
+
+    private function claimPaidSideEffect(int $paymentId, string $effectType): ?WisataPaymentSideEffect
+    {
+        return DB::transaction(function () use ($paymentId, $effectType) {
+            $effect = WisataPaymentSideEffect::query()
+                ->where('wisata_payment_id', $paymentId)
+                ->where('effect_type', $effectType)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $effect || $effect->completed_at) {
+                return null;
+            }
+
+            if (
+                $effect->status === 'processing'
+                && $effect->claimed_at
+                && $effect->claimed_at->isAfter(now()->subMinutes(self::SIDE_EFFECT_CLAIM_TTL_MINUTES))
+            ) {
+                return null;
+            }
+
+            $effect->update([
+                'status' => 'processing',
+                'attempts' => (int) $effect->attempts + 1,
+                'claimed_at' => now(),
+                'last_error' => null,
+            ]);
+
+            return $effect->fresh();
+        }, 3);
+    }
+
+    private function performPaidSideEffect(
+        WisataPayment $payment,
+        WisataBooking $booking,
+        string $effectType,
+    ): void {
+        $encryptedId = Crypt::encryptString((string) $booking->id);
+
+        if ($effectType === 'in_app') {
+            $alreadyNotified = UserNotification::query()
+                ->where('user_id', $booking->user_id)
+                ->where('type', 'wisata_payment_paid')
+                ->where('data->booking_db_id', $booking->id)
+                ->exists();
+
+            if (! $alreadyNotified) {
+                UserNotification::query()->create([
+                    'user_id' => $booking->user_id,
+                    'title' => 'Pembayaran tiket berhasil',
+                    'message' => 'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
+                    'type' => 'wisata_payment_paid',
+                    'data' => [
+                        'booking_id' => $encryptedId,
+                        'booking_db_id' => $booking->id,
+                        'type' => 'wisata',
+                        'category' => 'wisata',
+                    ],
+                ]);
+            }
+
+            return;
+        }
+
+        if ($effectType === 'push') {
+            SendPushNotificationJob::dispatch(
+                $booking->user_id,
+                'Pembayaran tiket berhasil',
+                'Pembayaran kamu sudah diterima. Tiket wisata aktif.',
+                [
+                    'booking_id' => $encryptedId,
+                    'type' => 'wisata',
+                    'category' => 'wisata',
+                    'notification_type' => 'wisata_payment_paid',
+                ],
+                [
+                    'booking_id' => $booking->id,
+                    'payment_id' => $payment->id,
+                    'side_effect' => 'paid_push',
+                ],
+            );
+
+            return;
+        }
+
+        if ($effectType === 'email' && $booking->guest_email) {
+            Mail::to($booking->guest_email)->send(new WisataTicketMail($booking));
+
+            return;
+        }
+
+        if ($effectType !== 'email') {
+            throw new RuntimeException('Unknown wisata paid side effect type.');
+        }
+    }
+
+    private function completePaidSideEffect(int $effectId): void
+    {
+        WisataPaymentSideEffect::query()->whereKey($effectId)->update([
+            'status' => 'completed',
+            'completed_at' => now(),
+            'claimed_at' => null,
+            'last_error' => null,
+        ]);
+    }
+
+    private function failPaidSideEffect(int $effectId, Throwable $exception): void
+    {
+        WisataPaymentSideEffect::query()->whereKey($effectId)->update([
+            'status' => 'failed',
+            'claimed_at' => null,
+            'last_error' => $this->safeError($exception),
+        ]);
     }
 
     private function finalizeCancellation(
@@ -989,16 +1172,60 @@ class WisataPaymentLifecycleService
             return false;
         }
 
-        $refundAmount = (int) round((float) (
-            $payload['refund_amount']
-            ?? data_get($payload, 'refunds.0.refund_amount')
-            ?? 0
-        ));
+        $refundKey = (string) $refund->refund_key;
+        $refunds = is_array($payload['refunds'] ?? null) ? $payload['refunds'] : [];
 
-        $bankConfirmed = ! empty($payload['bank_confirmed_at'])
-            || ! empty(data_get($payload, 'refunds.0.bank_confirmed_at'));
+        foreach ($refunds as $providerRefund) {
+            if (! is_array($providerRefund) || (string) ($providerRefund['refund_key'] ?? '') !== $refundKey) {
+                continue;
+            }
 
-        return $bankConfirmed && ($refundAmount === 0 || $refundAmount >= (int) $refund->amount);
+            $refundAmount = $this->parseIdrAmount($providerRefund['refund_amount'] ?? null);
+
+            return ! empty($providerRefund['bank_confirmed_at'])
+                && $refundAmount !== null
+                && $refundAmount >= (int) $refund->amount;
+        }
+
+        if ((string) ($payload['refund_key'] ?? '') !== $refundKey) {
+            return false;
+        }
+
+        $refundAmount = $this->parseIdrAmount($payload['refund_amount'] ?? null);
+
+        return ! empty($payload['bank_confirmed_at'])
+            && $refundAmount !== null
+            && $refundAmount >= (int) $refund->amount;
+    }
+
+    private function parseIdrAmount(mixed $value): ?int
+    {
+        if (is_int($value)) {
+            return $value >= 0 ? $value : null;
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+        if (! preg_match('/\\A([0-9]+)(?:\\.([0-9]{1,2}))?\\z/', $value, $matches)) {
+            return null;
+        }
+
+        if (isset($matches[2]) && (int) str_pad($matches[2], 2, '0') !== 0) {
+            return null;
+        }
+
+        $integer = ltrim($matches[1], '0');
+        $integer = $integer === '' ? '0' : $integer;
+        $max = (string) PHP_INT_MAX;
+
+        if (strlen($integer) > strlen($max) || (strlen($integer) === strlen($max) && strcmp($integer, $max) > 0)) {
+            return null;
+        }
+
+        return (int) $integer;
     }
 
     private function activeKey(WisataBooking $booking): string

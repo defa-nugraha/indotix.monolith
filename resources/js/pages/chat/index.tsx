@@ -160,7 +160,7 @@ export default function ChatIndex({
             <Head title="Live Chat" />
 
             <main className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
-                <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                <div className="grid min-w-0 gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-6">
                     <aside className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="text-sm font-semibold text-slate-900">
@@ -196,7 +196,7 @@ export default function ChatIndex({
                                                 'Customer Service'}
                                         </span>
                                         {Boolean(item.unread_count) && (
-                                            <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-semibold text-white">
+                                            <span className="rounded-full bg-rose-500 px-2 py-0.5 text-[11px] font-semibold text-white">
                                                 {item.unread_count}
                                             </span>
                                         )}
@@ -212,9 +212,9 @@ export default function ChatIndex({
                         </div>
                     </aside>
 
-                    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                    <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
                         {!activeId && (
-                            <div className="flex h-[420px] items-center justify-center text-sm text-slate-500">
+                            <div className="flex min-h-72 items-center justify-center text-sm text-slate-500 sm:min-h-[420px]">
                                 Pilih percakapan untuk mulai chat.
                             </div>
                         )}
@@ -245,7 +245,7 @@ export default function ChatIndex({
                                             node.clientHeight;
                                         isAtBottomRef.current = distance < 120;
                                     }}
-                                    className="mt-4 h-[360px] overflow-y-auto pr-2"
+                                    className="mt-4 h-[55dvh] min-h-72 max-h-[32rem] overflow-y-auto overscroll-contain pr-1 sm:pr-2"
                                 >
                                     {localMessages.map((msg) => (
                                         <div
@@ -253,7 +253,7 @@ export default function ChatIndex({
                                             className={`mb-3 flex ${msg.is_me ? 'justify-end' : 'justify-start'}`}
                                         >
                                             <div
-                                                className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
+                                                className={`max-w-[88%] sm:max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
                                                     msg.is_me
                                                         ? 'bg-sky-600 text-white'
                                                         : 'bg-slate-100 text-slate-700'
@@ -261,7 +261,7 @@ export default function ChatIndex({
                                             >
                                                 <div>{msg.body}</div>
                                                 <div
-                                                    className={`mt-1 text-[10px] ${msg.is_me ? 'text-white/70' : 'text-slate-400'}`}
+                                                    className={`mt-1 text-[11px] ${msg.is_me ? 'text-white/70' : 'text-slate-400'}`}
                                                 >
                                                     {msg.created_at}
                                                 </div>

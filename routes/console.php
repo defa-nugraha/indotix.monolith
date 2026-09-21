@@ -229,7 +229,15 @@ Artisan::command('indotix:reconcile-wisata-payments {--limit=50}', function (Wis
     return 0;
 })->purpose('Reconcile recent Wisata payment and refund state with Midtrans');
 
+Artisan::command('indotix:dispatch-wisata-payment-effects {--limit=50}', function (WisataPaymentLifecycleService $payments): int {
+    $count = $payments->dispatchPendingPaidSideEffects(max(1, (int) $this->option('limit')));
+    $this->info("Dispatched/retried {$count} Wisata paid payment side-effect batch item(s).");
+
+    return 0;
+})->purpose('Dispatch durable Wisata paid-payment outbox side effects');
+
 Schedule::command('indotix:expire-wisata-payments --limit=100')->everyMinute()->withoutOverlapping();
+Schedule::command('indotix:dispatch-wisata-payment-effects --limit=50')->everyMinute()->withoutOverlapping();
 Schedule::command('indotix:reconcile-wisata-payments --limit=50')->everyFiveMinutes()->withoutOverlapping();
 
 

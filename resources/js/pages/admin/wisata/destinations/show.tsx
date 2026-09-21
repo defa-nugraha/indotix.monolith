@@ -1,12 +1,12 @@
 import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import Select from 'react-select';
+import Swal from 'sweetalert2';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Label } from '@/components/ui/label';
-import Swal from 'sweetalert2';
-import Select from 'react-select';
 
 type Option = { id: string; label: string };
 type CitySelectOption = { value: string; label: string };
@@ -106,7 +106,8 @@ export default function AdminWisataDestinationShow({
     };
     const getPublicUrl = (path?: string | null) =>
         path ? `/storage/${path}` : null;
-    const initialDestinationType = destination.destination_type ?? '';
+    const initialDestinationType =
+        destination.destination_type || destinationTypeOptions[0].value;
     const hasCustomDestinationType =
         initialDestinationType !== '' &&
         !destinationTypeOptions.some(
@@ -215,8 +216,8 @@ export default function AdminWisataDestinationShow({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Detail Destinasi Wisata" />
-            <div className="flex flex-1 flex-col gap-6 bg-[#f6fbff] px-6 py-8">
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+            <div className="workspace-page">
+                <section className="workspace-panel">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p className="text-xs font-semibold text-sky-600 uppercase">
@@ -262,7 +263,7 @@ export default function AdminWisataDestinationShow({
                         )}
                 </section>
 
-                <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                <section className="workspace-panel">
                     <h2 className="text-lg font-semibold text-slate-900">
                         Detail Destinasi
                     </h2>
@@ -302,7 +303,7 @@ export default function AdminWisataDestinationShow({
                     </div>
 
                     <form
-                        className="mt-6 grid gap-4 md:grid-cols-2"
+                        className="mt-6 grid gap-4 lg:grid-cols-2"
                         onSubmit={(event) => {
                             event.preventDefault();
                             const form = new FormData(event.currentTarget);
@@ -320,6 +321,17 @@ export default function AdminWisataDestinationShow({
                                     ? '/admin/wisata/destinations'
                                     : `/admin/wisata/destinations/${destination.encrypted_id}`,
                                 form,
+                                {
+                                    onError: (errors) => {
+                                        const message =
+                                            Object.values(errors)[0];
+                                        void Swal.fire({
+                                            icon: 'error',
+                                            title: 'Destinasi belum tersimpan',
+                                            text: message ?? 'Periksa kembali data destinasi.',
+                                        });
+                                    },
+                                },
                             );
                         }}
                     >
@@ -485,9 +497,9 @@ export default function AdminWisataDestinationShow({
                         </div>
                         <div className="grid gap-4 md:col-span-2 md:grid-cols-3">
                             <div>
-                                <label className="text-sm font-medium text-slate-700">
+                                <Label required className="text-slate-700">
                                     Foto Produk
-                                </label>
+                                </Label>
                                 {destination.photo_product_path && (
                                     <img
                                         src={
@@ -503,6 +515,7 @@ export default function AdminWisataDestinationShow({
                                     aria-label="Photo Product File"
                                     type="file"
                                     name="photo_product_file"
+                                    required={!destination.photo_product_path}
                                     accept="image/*"
                                     className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
@@ -511,9 +524,9 @@ export default function AdminWisataDestinationShow({
                                 </p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-slate-700">
+                                <Label required className="text-slate-700">
                                     Foto Gerbang
-                                </label>
+                                </Label>
                                 {destination.photo_gate_path && (
                                     <img
                                         src={
@@ -528,6 +541,7 @@ export default function AdminWisataDestinationShow({
                                 <input aria-label="Photo Gate File"
                                     type="file"
                                     name="photo_gate_file"
+                                    required={!destination.photo_gate_path}
                                     accept="image/*"
                                     className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />
@@ -536,9 +550,9 @@ export default function AdminWisataDestinationShow({
                                 </p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-slate-700">
+                                <Label required className="text-slate-700">
                                     Foto Area Utama
-                                </label>
+                                </Label>
                                 {destination.photo_area_path && (
                                     <img
                                         src={
@@ -553,6 +567,7 @@ export default function AdminWisataDestinationShow({
                                 <input aria-label="Photo Area File"
                                     type="file"
                                     name="photo_area_file"
+                                    required={!destination.photo_area_path}
                                     accept="image/*"
                                     className="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                 />

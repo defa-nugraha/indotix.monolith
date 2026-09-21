@@ -151,7 +151,7 @@ class WisataDestinationController extends Controller
 
     public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
-        $data = $this->validateDestination($request, true);
+        $data = $this->validateDestination($request);
         $destination = new MitraWisataOnboarding();
         $destination->fill(Arr::except($data, [
             'photo_gate_file',
@@ -177,7 +177,7 @@ class WisataDestinationController extends Controller
     {
         $destination = $this->resolveDestination($destination);
         AdminDataScope::authorizeCreatedByOrUser($destination, $request);
-        $data = $this->validateDestination($request, false);
+        $data = $this->validateDestination($request, $destination);
 
         $payload = Arr::except($data, [
             'photo_gate_file',
@@ -322,8 +322,9 @@ class WisataDestinationController extends Controller
         return MitraWisataOnboarding::query()->findOrFail($id);
     }
 
-    private function validateDestination(Request $request, bool $creating): array
+    private function validateDestination(Request $request, ?MitraWisataOnboarding $destination = null): array
     {
+        $creating = $destination === null;
         $mitraRule = Rule::exists('users', 'id');
         if (! AdminDataScope::canViewAll($request->user())) {
             $userId = $request->user()?->id ?? 0;
@@ -353,15 +354,18 @@ class WisataDestinationController extends Controller
             'contact_hours' => ['nullable', 'string', 'max:100'],
             'verification_status' => ['nullable', 'in:draft,pending,verified,rejected'],
             'is_live' => ['nullable', 'boolean'],
-            'photo_gate_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
-            'photo_area_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_gate_file' => [Rule::requiredIf(! $destination?->photo_gate_path), 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_area_file' => [Rule::requiredIf(! $destination?->photo_area_path), 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'photo_ticket_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
-            'photo_product_file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
+            'photo_product_file' => [Rule::requiredIf(! $destination?->photo_product_path), 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'photo_other_files' => ['nullable', 'array', 'max:'.self::MAX_OTHER_PHOTO_COUNT],
             'photo_other_files.*' => ['file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:'.self::MAX_IMAGE_KILOBYTES],
             'photo_other_remove' => ['nullable', 'array', 'max:'.self::MAX_OTHER_PHOTO_COUNT],
             'photo_other_remove.*' => ['string'],
         ], [
+            'photo_gate_file.required' => 'Foto gerbang wajib diunggah.',
+            'photo_area_file.required' => 'Foto area utama wajib diunggah.',
+            'photo_product_file.required' => 'Foto produk wajib diunggah.',
             'photo_gate_file.max' => 'Ukuran foto gerbang maksimal 5 MB.',
             'photo_area_file.max' => 'Ukuran foto area utama maksimal 5 MB.',
             'photo_ticket_file.max' => 'Ukuran foto loket maksimal 5 MB.',
