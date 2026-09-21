@@ -1,13 +1,12 @@
 import { Link } from '@inertiajs/react';
-import { MapPinned } from 'lucide-react';
-import PublicLayout from '@/layouts/public-layout';
-import { PublicSeo } from '@/components/public-seo';
 import {
     PublicFooter,
     PublicTrustSection,
     type PublicContact,
     type PublicTrustContent,
 } from '@/components/public-page-sections';
+import { PublicSeo } from '@/components/public-seo';
+import PublicLayout from '@/layouts/public-layout';
 
 type AboutPage = {
     title: string;
@@ -23,26 +22,8 @@ export default function AboutPage({
     homeContent?: PublicTrustContent | null;
     contact?: PublicContact | null;
 }) {
-    const categories = [
-        { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
-    ];
-
-    const chips = [
-        'Alam',
-        'Budaya',
-        'Edukasi',
-        'Kuliner',
-        'Desa Wisata',
-        'Religi',
-        'Pantai',
-        'Gunung',
-        'Taman Nasional',
-        'Air Terjun',
-        'Danau',
-    ];
-
     return (
-        <PublicLayout categories={categories} chips={chips}>
+        <PublicLayout showCategories={false} showChips={false}>
             <PublicSeo
                 title={`${about?.title ?? 'Tentang Kami'} - Indotix`}
                 description="Kenali Indotix sebagai platform pemesanan tiket wisata dan destinasi rekreasi pilihan di Indonesia."

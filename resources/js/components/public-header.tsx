@@ -1,5 +1,4 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
     BadgePercent,
     Bell,
@@ -13,6 +12,7 @@ import {
     UserCircle,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import {
     Sheet,
     SheetClose,
@@ -68,8 +68,8 @@ export default function PublicHeader({
     chips = [],
     search,
     showSearch = true,
-    showCategories = true,
-    showChips = true,
+    showCategories = false,
+    showChips = false,
     transparent = false,
 }: PublicHeaderProps) {
     const { auth, unread_notifications, affiliate_menu } = usePage().props as {
