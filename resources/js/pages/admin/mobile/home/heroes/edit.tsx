@@ -120,7 +120,9 @@ export default function MobileHeroEdit({
                                 className="aspect-video w-full rounded-lg object-cover"
                             />
                         )}
+                        <Label htmlFor="hero-media">Media Hero</Label>
                         <Input
+                            id="hero-media"
                             type="file"
                             accept={
                                 form.data.media_type === 'video'
@@ -140,8 +142,11 @@ export default function MobileHeroEdit({
                     </div>
                     {form.data.media_type === 'video' && (
                         <div className="grid gap-2">
-                            <Label>Poster / Fallback</Label>
+                            <Label htmlFor="hero-poster">
+                                Poster / Fallback
+                            </Label>
                             <Input
+                                id="hero-poster"
                                 type="file"
                                 accept="image/jpeg,image/png,image/webp"
                                 onChange={(event) =>
@@ -155,7 +160,9 @@ export default function MobileHeroEdit({
                         </div>
                     )}
                     <div className="grid grid-cols-3 gap-3">
+                        <Label htmlFor="hero-sort-order">Urutan</Label>
                         <Input
+                            id="hero-sort-order"
                             type="number"
                             value={form.data.sort_order}
                             onChange={(event) =>
@@ -165,14 +172,18 @@ export default function MobileHeroEdit({
                                 )
                             }
                         />
+                        <Label htmlFor="hero-starts-at">Mulai tayang</Label>
                         <Input
+                            id="hero-starts-at"
                             type="datetime-local"
                             value={form.data.starts_at}
                             onChange={(event) =>
                                 form.setData('starts_at', event.target.value)
                             }
                         />
+                        <Label htmlFor="hero-ends-at">Selesai tayang</Label>
                         <Input
+                            id="hero-ends-at"
                             type="datetime-local"
                             value={form.data.ends_at}
                             onChange={(event) =>

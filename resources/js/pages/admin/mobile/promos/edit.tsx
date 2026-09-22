@@ -92,7 +92,9 @@ export default function MobilePromoEdit({
                         alt={promo.alt_text ?? promo.name}
                         className="aspect-[2.26/1] w-full rounded-lg object-cover"
                     />
+                    <Label htmlFor="promo-image">Gambar Promo</Label>
                     <Input
+                        id="promo-image"
                         type="file"
                         accept="image/jpeg,image/png,image/webp"
                         onChange={(e) =>
