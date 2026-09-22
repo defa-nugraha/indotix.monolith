@@ -209,7 +209,7 @@ export function AppSidebarAdmin() {
         {
             feature: 'public_home',
             href: '/admin/public/home',
-            label: 'Home Content',
+            label: 'Halaman Home',
         },
         {
             feature: 'public_entry_qr',
