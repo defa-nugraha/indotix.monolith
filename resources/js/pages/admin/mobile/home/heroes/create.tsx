@@ -10,14 +10,20 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Mobile App', href: '/admin/mobile/home' },
     { title: 'Tambah Hero', href: '/admin/mobile/home/heroes/create' },
 ];
+const mobileCtaDestinations = [
+    { value: '', label: 'Tanpa tujuan (banner tetap statis)' },
+    { value: '/home', label: 'Beranda Mobile' },
+    { value: '/wisata', label: 'Jelajah Wisata' },
+    { value: '/promo', label: 'Promo Wisata' },
+];
 export default function MobileHeroCreate() {
     const form = useForm({
-        eyebrow: 'Ayo berangkat',
+        eyebrow: '',
         title: '',
         highlight_title: '',
         description: '',
-        cta_label: 'Mulai Jelajah',
-        cta_url: '/wisata',
+        cta_label: '',
+        cta_url: '',
         media_type: 'image',
         media: null as File | null,
         poster: null as File | null,
@@ -79,7 +85,25 @@ function HeroForm({
                         label="Description"
                     />
                     <TextField form={form} name="cta_label" label="CTA Label" />
-                    <TextField form={form} name="cta_url" label="CTA URL" />
+                    <div className="grid gap-2">
+                        <Label htmlFor="hero-cta-url">Tujuan CTA di Mobile</Label>
+                        <select
+                            id="hero-cta-url"
+                            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            value={form.data.cta_url}
+                            onChange={(event) => form.setData('cta_url', event.target.value)}
+                        >
+                            {mobileCtaDestinations.map((destination) => (
+                                <option key={destination.value} value={destination.value}>
+                                    {destination.label}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-muted-foreground">
+                            Jika CTA Label kosong, seluruh Hero akan membuka tujuan ini saat diketuk.
+                        </p>
+                        <InputError message={form.errors.cta_url} />
+                    </div>
                     <div className="grid gap-2">
                         <Label>Media Type</Label>
                         <select
@@ -115,9 +139,9 @@ function HeroForm({
                             }
                         />
                         <p className="text-xs text-muted-foreground">
-                            Video portrait MP4/WebM, rekomendasi 1080 x 1920 dan
-                            5–15 detik. GIF/Image gunakan komposisi portrait
-                            mobile.
+                            Video MP4/WebM, rekomendasi 1080 x 1200–1220 dan
+                            5–15 detik agar sesuai area Hero Mobile. GIF/Image
+                            gunakan komposisi mobile dengan rasio serupa.
                         </p>
                         <InputError message={form.errors.media} />
                     </div>

@@ -28,6 +28,12 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Mobile App', href: '/admin/mobile/home' },
     { title: 'Edit Hero', href: '#' },
 ];
+const mobileCtaDestinations = [
+    { value: '', label: 'Tanpa tujuan (banner tetap statis)' },
+    { value: '/home', label: 'Beranda Mobile' },
+    { value: '/wisata', label: 'Jelajah Wisata' },
+    { value: '/promo', label: 'Promo Wisata' },
+];
 
 const textFields: Array<{ name: HeroTextField; label: string }> = [
     { name: 'eyebrow', label: 'Eyebrow' },
@@ -35,7 +41,6 @@ const textFields: Array<{ name: HeroTextField; label: string }> = [
     { name: 'highlight_title', label: 'Highlight' },
     { name: 'description', label: 'Description' },
     { name: 'cta_label', label: 'CTA Label' },
-    { name: 'cta_url', label: 'CTA URL' },
 ];
 
 export default function MobileHeroEdit({
@@ -91,6 +96,25 @@ export default function MobileHeroEdit({
                         </div>
                     ))}
                     <div className="grid gap-2">
+                        <Label htmlFor="hero-cta-url">Tujuan CTA di Mobile</Label>
+                        <select
+                            id="hero-cta-url"
+                            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            value={form.data.cta_url}
+                            onChange={(event) => form.setData('cta_url', event.target.value)}
+                        >
+                            {mobileCtaDestinations.map((destination) => (
+                                <option key={destination.value} value={destination.value}>
+                                    {destination.label}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-muted-foreground">
+                            Jika CTA Label kosong, seluruh Hero akan membuka tujuan ini saat diketuk.
+                        </p>
+                        <InputError message={form.errors.cta_url} />
+                    </div>
+                    <div className="grid gap-2">
                         <Label>Media Type</Label>
                         <select
                             className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
@@ -139,6 +163,10 @@ export default function MobileHeroEdit({
                             }
                         />
                         <InputError message={form.errors.media} />
+                        <p className="text-xs text-muted-foreground">
+                            Rekomendasi media Mobile: 1080 x 1200–1220 px. Media
+                            menggunakan cover pada area Hero responsif.
+                        </p>
                     </div>
                     {form.data.media_type === 'video' && (
                         <div className="grid gap-2">

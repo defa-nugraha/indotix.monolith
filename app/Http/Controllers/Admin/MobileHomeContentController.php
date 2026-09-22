@@ -81,7 +81,7 @@ class MobileHomeContentController extends Controller
         };
         $data = $request->validate([
             'eyebrow' => ['nullable', 'string', 'max:255'],
-            'title' => ['required', 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
             'highlight_title' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'cta_label' => ['nullable', 'string', 'max:255'],
