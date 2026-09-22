@@ -1,9 +1,12 @@
 import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import MobileCtaDestinationDialog, {
+    type CtaDestinationGroup,
+} from '@/components/admin/mobile-cta-destination-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 
 type HeroTextField =
@@ -21,6 +24,7 @@ type HeroFormData = Record<HeroTextField, string> & {
     starts_at: string;
     ends_at: string;
     is_active: boolean;
+    _method: string;
 };
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -28,13 +32,6 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Mobile App', href: '/admin/mobile/home' },
     { title: 'Edit Hero', href: '#' },
 ];
-const mobileCtaDestinations = [
-    { value: '', label: 'Tanpa tujuan (banner tetap statis)' },
-    { value: '/home', label: 'Beranda Mobile' },
-    { value: '/wisata', label: 'Jelajah Wisata' },
-    { value: '/promo', label: 'Promo Wisata' },
-];
-
 const textFields: Array<{ name: HeroTextField; label: string }> = [
     { name: 'eyebrow', label: 'Eyebrow' },
     { name: 'title', label: 'Headline' },
@@ -45,8 +42,10 @@ const textFields: Array<{ name: HeroTextField; label: string }> = [
 
 export default function MobileHeroEdit({
     hero,
+    ctaDestinations = [],
 }: {
     hero: Record<string, any>;
+    ctaDestinations?: CtaDestinationGroup[];
 }) {
     const form = useForm<HeroFormData>({
         eyebrow: hero.eyebrow ?? '',
@@ -62,11 +61,11 @@ export default function MobileHeroEdit({
         starts_at: hero.starts_at ? String(hero.starts_at).slice(0, 16) : '',
         ends_at: hero.ends_at ? String(hero.ends_at).slice(0, 16) : '',
         is_active: hero.is_active !== false,
+        _method: 'put',
     });
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
         form.post(`/admin/mobile/home/heroes/${hero.id}`, {
-            method: 'put',
             forceFormData: true,
         });
     };
@@ -95,22 +94,15 @@ export default function MobileHeroEdit({
                             <InputError message={form.errors[name]} />
                         </div>
                     ))}
-                    <div className="grid gap-2">
-                        <Label htmlFor="hero-cta-url">Tujuan CTA di Mobile</Label>
-                        <select
-                            id="hero-cta-url"
-                            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                            value={form.data.cta_url}
-                            onChange={(event) => form.setData('cta_url', event.target.value)}
-                        >
-                            {mobileCtaDestinations.map((destination) => (
-                                <option key={destination.value} value={destination.value}>
-                                    {destination.label}
-                                </option>
-                            ))}
-                        </select>
+                    <MobileCtaDestinationDialog
+                        value={form.data.cta_url}
+                        groups={ctaDestinations}
+                        onChange={(value) => form.setData('cta_url', value)}
+                    />
+                    <div>
                         <p className="text-xs text-muted-foreground">
-                            Jika CTA Label kosong, seluruh Hero akan membuka tujuan ini saat diketuk.
+                            Jika CTA Label kosong, seluruh Hero akan membuka
+                            tujuan ini saat diketuk.
                         </p>
                         <InputError message={form.errors.cta_url} />
                     </div>

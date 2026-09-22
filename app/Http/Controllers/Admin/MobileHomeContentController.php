@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\MitraWisataOnboarding;
 use App\Models\MobileHomeHero;
+use App\Models\Voucher;
 use App\Rules\MobileContentUrl;
 use App\Support\MobileHomeContent;
 use Illuminate\Http\RedirectResponse;
@@ -24,7 +26,9 @@ class MobileHomeContentController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('admin/mobile/home/heroes/create');
+        return Inertia::render('admin/mobile/home/heroes/create', [
+            'ctaDestinations' => $this->ctaDestinations(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -43,7 +47,10 @@ class MobileHomeContentController extends Controller
 
     public function edit(MobileHomeHero $hero): Response
     {
-        return Inertia::render('admin/mobile/home/heroes/edit', ['hero' => $this->present($hero)]);
+        return Inertia::render('admin/mobile/home/heroes/edit', [
+            'hero' => $this->present($hero),
+            'ctaDestinations' => $this->ctaDestinations(),
+        ]);
     }
 
     public function update(Request $request, MobileHomeHero $hero): RedirectResponse
@@ -126,5 +133,52 @@ class MobileHomeContentController extends Controller
                 Storage::disk('public')->delete($path);
             }
         }
+    }
+
+    private function ctaDestinations(): array
+    {
+        $menuDestinations = [
+            ['value' => '', 'label' => 'Tanpa tujuan (banner tetap statis)'],
+            ['value' => '/home', 'label' => 'Beranda'],
+            ['value' => '/wisata', 'label' => 'Jelajah Wisata'],
+            ['value' => '/promo', 'label' => 'Promo & Voucher'],
+            ['value' => '/history', 'label' => 'Riwayat Pesanan'],
+            ['value' => '/tickets/scan', 'label' => 'Scan Tiket'],
+            ['value' => '/chat', 'label' => 'Chat Bantuan'],
+            ['value' => '/profile', 'label' => 'Akun / Profil'],
+        ];
+
+        $products = MitraWisataOnboarding::query()
+            ->publiclyVisible()
+            ->whereNotNull('slug')
+            ->orderBy('destination_name')
+            ->get(['id', 'destination_name', 'slug'])
+            ->map(fn (MitraWisataOnboarding $destination) => [
+                'value' => '/wisata/'.$destination->slug,
+                'label' => $destination->destination_name,
+                'meta' => 'Produk wisata',
+            ])
+            ->values()
+            ->all();
+
+        $vouchers = Voucher::query()
+            ->where(function ($query) {
+                $query->whereNull('hotel_id')->orWhere('hotel_id', 0);
+            })
+            ->orderBy('code')
+            ->get(['id', 'code', 'is_active'])
+            ->map(fn (Voucher $voucher) => [
+                'value' => '/promo/voucher/'.$voucher->code,
+                'label' => $voucher->code,
+                'meta' => $voucher->is_active ? 'Voucher aktif' : 'Voucher nonaktif',
+            ])
+            ->values()
+            ->all();
+
+        return [
+            ['key' => 'menu', 'label' => 'Menu Mobile', 'options' => $menuDestinations],
+            ['key' => 'products', 'label' => 'Produk Wisata', 'options' => $products],
+            ['key' => 'vouchers', 'label' => 'Voucher', 'options' => $vouchers],
+        ];
     }
 }

@@ -1,22 +1,23 @@
 import { Head, useForm } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
+import MobileCtaDestinationDialog, {
+    type CtaDestinationGroup,
+} from '@/components/admin/mobile-cta-destination-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/input-error';
+import AppLayout from '@/layouts/app-layout';
 import type { BreadcrumbItem } from '@/types';
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Mobile App', href: '/admin/mobile/home' },
     { title: 'Tambah Hero', href: '/admin/mobile/home/heroes/create' },
 ];
-const mobileCtaDestinations = [
-    { value: '', label: 'Tanpa tujuan (banner tetap statis)' },
-    { value: '/home', label: 'Beranda Mobile' },
-    { value: '/wisata', label: 'Jelajah Wisata' },
-    { value: '/promo', label: 'Promo Wisata' },
-];
-export default function MobileHeroCreate() {
+export default function MobileHeroCreate({
+    ctaDestinations = [],
+}: {
+    ctaDestinations?: CtaDestinationGroup[];
+}) {
     const form = useForm({
         eyebrow: '',
         title: '',
@@ -37,6 +38,7 @@ export default function MobileHeroCreate() {
             title="Tambah Hero Media"
             form={form}
             action="/admin/mobile/home/heroes"
+            ctaDestinations={ctaDestinations}
         />
     );
 }
@@ -44,10 +46,12 @@ function HeroForm({
     title,
     form,
     action,
+    ctaDestinations,
 }: {
     title: string;
     form: any;
     action: string;
+    ctaDestinations: CtaDestinationGroup[];
 }) {
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -85,22 +89,15 @@ function HeroForm({
                         label="Description"
                     />
                     <TextField form={form} name="cta_label" label="CTA Label" />
-                    <div className="grid gap-2">
-                        <Label htmlFor="hero-cta-url">Tujuan CTA di Mobile</Label>
-                        <select
-                            id="hero-cta-url"
-                            className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
-                            value={form.data.cta_url}
-                            onChange={(event) => form.setData('cta_url', event.target.value)}
-                        >
-                            {mobileCtaDestinations.map((destination) => (
-                                <option key={destination.value} value={destination.value}>
-                                    {destination.label}
-                                </option>
-                            ))}
-                        </select>
+                    <MobileCtaDestinationDialog
+                        value={form.data.cta_url}
+                        groups={ctaDestinations}
+                        onChange={(value) => form.setData('cta_url', value)}
+                    />
+                    <div>
                         <p className="text-xs text-muted-foreground">
-                            Jika CTA Label kosong, seluruh Hero akan membuka tujuan ini saat diketuk.
+                            Jika CTA Label kosong, seluruh Hero akan membuka
+                            tujuan ini saat diketuk.
                         </p>
                         <InputError message={form.errors.cta_url} />
                     </div>
