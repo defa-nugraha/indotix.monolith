@@ -136,7 +136,7 @@ function HeroForm({
                             }
                         />
                         <p className="text-xs text-muted-foreground">
-                            Video MP4/WebM, rekomendasi 1080 x 1200–1220 dan
+                            Video MP4/WebM, rekomendasi 1080 x 1140 px dan
                             5–15 detik agar sesuai area Hero Mobile. GIF/Image
                             gunakan komposisi mobile dengan rasio serupa.
                         </p>

@@ -156,7 +156,7 @@ export default function MobileHeroEdit({
                         />
                         <InputError message={form.errors.media} />
                         <p className="text-xs text-muted-foreground">
-                            Rekomendasi media Mobile: 1080 x 1200–1220 px. Media
+                            Rekomendasi media Mobile: 1080 x 1140 px. Media
                             menggunakan cover pada area Hero responsif.
                         </p>
                     </div>
