@@ -31,6 +31,8 @@ use App\Http\Controllers\Admin\EventTicketController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FinanceReportController;
 use App\Http\Controllers\Admin\HomeContentController;
+use App\Http\Controllers\Admin\MobileHomeContentController;
+use App\Http\Controllers\Admin\MobilePromoBannerController;
 use App\Http\Controllers\Admin\MitraController;
 use App\Http\Controllers\Admin\MitraWisataController;
 use App\Http\Controllers\Admin\NotificationControlController;
@@ -756,6 +758,31 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.public.home.edit');
     Route::put('admin/public/home', [HomeContentController::class, 'update'])
         ->name('admin.public.home.update');
+
+    Route::get('admin/mobile/home', [MobileHomeContentController::class, 'index'])
+        ->name('admin.mobile.home.index');
+    Route::get('admin/mobile/home/heroes/create', [MobileHomeContentController::class, 'create'])
+        ->name('admin.mobile.home.heroes.create');
+    Route::post('admin/mobile/home/heroes', [MobileHomeContentController::class, 'store'])
+        ->name('admin.mobile.home.heroes.store');
+    Route::get('admin/mobile/home/heroes/{hero}/edit', [MobileHomeContentController::class, 'edit'])
+        ->name('admin.mobile.home.heroes.edit');
+    Route::put('admin/mobile/home/heroes/{hero}', [MobileHomeContentController::class, 'update'])
+        ->name('admin.mobile.home.heroes.update');
+    Route::delete('admin/mobile/home/heroes/{hero}', [MobileHomeContentController::class, 'destroy'])
+        ->name('admin.mobile.home.heroes.destroy');
+    Route::get('admin/mobile/promos', [MobilePromoBannerController::class, 'index'])
+        ->name('admin.mobile.promos.index');
+    Route::get('admin/mobile/promos/create', [MobilePromoBannerController::class, 'create'])
+        ->name('admin.mobile.promos.create');
+    Route::post('admin/mobile/promos', [MobilePromoBannerController::class, 'store'])
+        ->name('admin.mobile.promos.store');
+    Route::get('admin/mobile/promos/{promo}/edit', [MobilePromoBannerController::class, 'edit'])
+        ->name('admin.mobile.promos.edit');
+    Route::put('admin/mobile/promos/{promo}', [MobilePromoBannerController::class, 'update'])
+        ->name('admin.mobile.promos.update');
+    Route::delete('admin/mobile/promos/{promo}', [MobilePromoBannerController::class, 'destroy'])
+        ->name('admin.mobile.promos.destroy');
     Route::get('admin/public/entry-qr', [WisataEntryQrTemplateController::class, 'edit'])
         ->name('admin.public.entry-qr.edit');
     Route::put('admin/public/entry-qr', [WisataEntryQrTemplateController::class, 'update'])

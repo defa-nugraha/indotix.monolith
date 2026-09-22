@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PublicBanner;
-use App\Support\HomePageContent;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -31,10 +30,4 @@ class PublicBannerController extends Controller
         ]);
     }
 
-    public function mobileHome(Request $request): JsonResponse
-    {
-        return response()->json([
-            'mobile_home' => HomePageContent::mobileHomePayload(),
-        ]);
-    }
 }

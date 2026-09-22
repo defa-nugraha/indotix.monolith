@@ -146,17 +146,6 @@ class HomePageContent
         'part_of_eyebrow' => 'Part of',
         'part_of_title' => 'El John Group',
         'part_of_description' => 'Indotix adalah bagian dari ekosistem El John Group di berbagai industri.',
-        'mobile_top_banner_title' => 'Liburan Seru, Momen Tak Terlupakan',
-        'mobile_top_banner_subtitle' => 'Temukan destinasi impian & dapatkan tiket terbaik di Indotix!',
-        'mobile_top_banner_cta_label' => 'Jelajahi Sekarang',
-        'mobile_top_banner_media_url' => '',
-        'mobile_top_banner_link_url' => '/wisata',
-        'mobile_promo_banner_title' => 'Diskon Spesial Liburan Akhir Pekan',
-        'mobile_promo_banner_subtitle' => 'Hemat hingga',
-        'mobile_promo_banner_highlight' => '30%',
-        'mobile_promo_banner_cta_label' => 'Lihat Promo',
-        'mobile_promo_banner_media_url' => '',
-        'mobile_promo_banner_link_url' => '/promo',
     ];
 
     private const IMAGE_UPLOAD_FIELDS = [
@@ -165,8 +154,6 @@ class HomePageContent
         'special_promo_card_1_image_url' => 'special_promo_card_1_image_url_file',
         'special_promo_card_2_image_url' => 'special_promo_card_2_image_url_file',
         'special_promo_card_3_image_url' => 'special_promo_card_3_image_url_file',
-        'mobile_top_banner_media_url' => 'mobile_top_banner_media_url_file',
-        'mobile_promo_banner_media_url' => 'mobile_promo_banner_media_url_file',
     ];
 
     private const VIDEO_UPLOAD_FIELDS = [
@@ -261,32 +248,6 @@ class HomePageContent
                 'description' => $values['part_of_description'],
                 'logos' => self::publicPartOfLogos(),
             ],
-            'mobile_home' => self::mobileHomePayload($values),
-        ];
-    }
-
-    public static function mobileHomePayload(?array $values = null): array
-    {
-        $values ??= self::values();
-
-        return [
-            'top_banner' => [
-                'title' => $values['mobile_top_banner_title'],
-                'subtitle' => $values['mobile_top_banner_subtitle'],
-                'cta_label' => $values['mobile_top_banner_cta_label'],
-                'media_url' => $values['mobile_top_banner_media_url'],
-                'media_type' => self::mediaType($values['mobile_top_banner_media_url']),
-                'link_url' => $values['mobile_top_banner_link_url'],
-            ],
-            'promo_banner' => [
-                'title' => $values['mobile_promo_banner_title'],
-                'subtitle' => $values['mobile_promo_banner_subtitle'],
-                'highlight' => $values['mobile_promo_banner_highlight'],
-                'cta_label' => $values['mobile_promo_banner_cta_label'],
-                'media_url' => $values['mobile_promo_banner_media_url'],
-                'media_type' => self::mediaType($values['mobile_promo_banner_media_url']),
-                'link_url' => $values['mobile_promo_banner_link_url'],
-            ],
         ];
     }
 
@@ -356,8 +317,6 @@ class HomePageContent
             if (in_array($fileKey, [
                 'special_promo_video_poster_url_file',
                 'special_promo_video_2_poster_url_file',
-                'mobile_top_banner_media_url_file',
-                'mobile_promo_banner_media_url_file',
             ], true)) {
                 $rules[$fileKey] = [
                     'nullable',
@@ -385,10 +344,7 @@ class HomePageContent
 
         foreach (self::IMAGE_UPLOAD_FIELDS as $valueKey => $fileKey) {
             if (($data[$fileKey] ?? null) instanceof UploadedFile) {
-                $data[$valueKey] = Storage::url(
-                    $data[$fileKey]->store('home-content', 'public')
-                );
-
+                $data[$valueKey] = Storage::url($data[$fileKey]->store('home-content', 'public'));
                 self::deleteLocalPublicFile($existingValues[$valueKey] ?? null);
             } elseif (array_key_exists($valueKey, $data) && trim((string) $data[$valueKey]) === '') {
                 self::deleteLocalPublicFile($existingValues[$valueKey] ?? null);
@@ -397,10 +353,7 @@ class HomePageContent
 
         foreach (self::VIDEO_UPLOAD_FIELDS as $valueKey => $fileKey) {
             if (($data[$fileKey] ?? null) instanceof UploadedFile) {
-                $data[$valueKey] = Storage::url(
-                    $data[$fileKey]->store('home-content', 'public')
-                );
-
+                $data[$valueKey] = Storage::url($data[$fileKey]->store('home-content', 'public'));
                 self::deleteLocalPublicFile($existingValues[$valueKey] ?? null);
             } elseif (array_key_exists($valueKey, $data) && trim((string) $data[$valueKey]) === '') {
                 self::deleteLocalPublicFile($existingValues[$valueKey] ?? null);
@@ -410,11 +363,7 @@ class HomePageContent
         foreach (self::DEFAULTS as $key => $default) {
             SystemSetting::query()->updateOrCreate(
                 ['key' => "home_{$key}"],
-                [
-                    'value' => (string) ($data[$key] ?? $default),
-                    'type' => 'string',
-                    'updated_by' => $userId,
-                ],
+                ['value' => (string) ($data[$key] ?? $default), 'type' => 'string', 'updated_by' => $userId],
             );
         }
     }

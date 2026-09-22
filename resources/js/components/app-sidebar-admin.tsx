@@ -209,7 +209,7 @@ export function AppSidebarAdmin() {
         {
             feature: 'public_home',
             href: '/admin/public/home',
-            label: 'Halaman Home',
+            label: 'Home Content',
         },
         {
             feature: 'public_entry_qr',
@@ -245,6 +245,10 @@ export function AppSidebarAdmin() {
     const visiblePublicMenuItems = publicMenuItems.filter((item) =>
         hasAnyPermission([item.feature]),
     );
+    const showMobileSection = hasFeaturePermission('mobile_home_content');
+    const isMobileSectionActive =
+        isCurrentUrl('/admin/mobile/home') ||
+        isCurrentUrl('/admin/mobile/promos');
     const isWisataSectionActive =
         isCurrentUrl('/admin/wisata/destinations') ||
         isCurrentUrl('/admin/wisata/tickets') ||
@@ -1579,6 +1583,33 @@ export function AppSidebarAdmin() {
                                                     </SidebarMenuSubButton>
                                                 </SidebarMenuSubItem>
                                             ))}
+                                    </SidebarMenuSub>
+                                </CollapsibleContent>
+                            </Collapsible>
+                        </SidebarMenuItem>
+                    )}
+                    {showMobileSection && (
+                        <SidebarMenuItem>
+                            <Collapsible defaultOpen={isMobileSectionActive}>
+                                <CollapsibleTrigger asChild>
+                                    <SidebarMenuButton>
+                                        <MonitorPlay />
+                                        <span>Mobile App</span>
+                                        <ChevronDown className="ml-auto size-4" />
+                                    </SidebarMenuButton>
+                                </CollapsibleTrigger>
+                                <CollapsibleContent>
+                                    <SidebarMenuSub>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mobile/home')}>
+                                                <Link href="/admin/mobile/home">Home Content</Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
+                                        <SidebarMenuSubItem>
+                                            <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mobile/promos')}>
+                                                <Link href="/admin/mobile/promos">Promo Banners</Link>
+                                            </SidebarMenuSubButton>
+                                        </SidebarMenuSubItem>
                                     </SidebarMenuSub>
                                 </CollapsibleContent>
                             </Collapsible>
