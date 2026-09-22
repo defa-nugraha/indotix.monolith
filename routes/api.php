@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\PasskeyController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\PublicBannerController;
+use App\Http\Controllers\Api\MobileHomeController;
+use App\Http\Controllers\Api\MobileVoucherController;
 use App\Http\Controllers\Api\PublicContactController;
 use App\Http\Controllers\Api\PublicFaqController;
 use App\Http\Controllers\Api\PublicPrivacyPolicyController;
@@ -123,8 +125,12 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/ticket-scans')->
 
 Route::get('banners', [PublicBannerController::class, 'index'])
     ->middleware('api.public-cache:300');
-Route::get('mobile/home', [PublicBannerController::class, 'mobileHome'])
+Route::get('mobile/home', [MobileHomeController::class, 'index'])
     ->middleware('api.public-cache:300');
+Route::get('mobile/vouchers', [MobileVoucherController::class, 'index'])
+    ->middleware('api.public-cache:60');
+Route::get('mobile/vouchers/{code}', [MobileVoucherController::class, 'show'])
+    ->middleware('api.public-cache:60');
 Route::get('public/contact', [PublicContactController::class, 'show'])
     ->middleware('api.public-cache:300');
 Route::get('faqs', [PublicFaqController::class, 'index'])

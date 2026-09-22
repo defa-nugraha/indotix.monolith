@@ -42,7 +42,6 @@ test('admin can manage dynamic public home content', function () {
             ->where('content.icon_options.Gift', HomePageContent::ICON_OPTIONS['Gift'])
             ->where('content.icon_options.TreePalm', HomePageContent::ICON_OPTIONS['TreePalm'])
             ->where('content.image_upload_fields.special_promo_card_1_image_url', 'special_promo_card_1_image_url_file')
-            ->where('content.image_upload_fields.mobile_top_banner_media_url', 'mobile_top_banner_media_url_file')
             ->where('content.video_upload_fields.special_promo_video_url', 'special_promo_video_url_file')
             ->has('partOfLogos', 0)
             ->where('voucherOptions.0.code', 'HOMEPROMO12')
@@ -57,10 +56,6 @@ test('admin can manage dynamic public home content', function () {
     $payload['special_promo_card_1_title'] = 'Wisata keluarga';
     $payload['special_promo_card_1_image_url'] = '/storage/promo/family.jpg';
     $payload['special_promo_card_1_link_url'] = "/promo/voucher/{$voucher->code}";
-    $payload['mobile_top_banner_title'] = 'Liburan Seru Bersama Indotix';
-    $payload['mobile_top_banner_media_url'] = '/storage/mobile/home-hero.webm';
-    $payload['mobile_promo_banner_title'] = 'Diskon Spesial Akhir Pekan';
-    $payload['mobile_promo_banner_media_url'] = '/storage/mobile/weekend.gif';
     $payload['featured_link_label'] = 'Jelajah semua wisata';
 
     $this->actingAs($admin)
@@ -73,8 +68,6 @@ test('admin can manage dynamic public home content', function () {
         ->and(SystemSetting::query()->where('key', 'home_special_promo_title')->value('value'))->toBe('Promo spesial akhir pekan')
         ->and(SystemSetting::query()->where('key', 'home_special_promo_video_url')->value('value'))->toBe('/storage/promo-videos/weekend.mp4')
         ->and(SystemSetting::query()->where('key', 'home_special_promo_card_1_image_url')->value('value'))->toBe('/storage/promo/family.jpg')
-        ->and(SystemSetting::query()->where('key', 'home_mobile_top_banner_media_url')->value('value'))->toBe('/storage/mobile/home-hero.webm')
-        ->and(SystemSetting::query()->where('key', 'home_mobile_promo_banner_media_url')->value('value'))->toBe('/storage/mobile/weekend.gif')
         ->and(SystemSetting::query()->where('key', 'home_featured_link_label')->value('value'))->toBe('Jelajah semua wisata');
 
     PublicPartner::query()->create([
@@ -115,10 +108,6 @@ test('admin can manage dynamic public home content', function () {
             ->where('homeContent.special_promo.cards.0.image_url', '/storage/promo/family.jpg')
             ->where('homeContent.special_promo.cards.0.voucher_code', 'HOMEPROMO12')
             ->where('homeContent.special_promo.cards.0.voucher_remaining_count', 8)
-            ->where('homeContent.mobile_home.top_banner.title', 'Liburan Seru Bersama Indotix')
-            ->where('homeContent.mobile_home.top_banner.media_type', 'video')
-            ->where('homeContent.mobile_home.promo_banner.title', 'Diskon Spesial Akhir Pekan')
-            ->where('homeContent.mobile_home.promo_banner.media_type', 'image')
             ->where('homeContent.featured.link_label', 'Jelajah semua wisata')
             ->where('homeContent.part_of.logos.0.name', 'Logo Part of Aktif')
             ->where('homeContent.part_of.logos.0.image_url', '/storage/public-part-of-logos/part-of-aktif.png')
@@ -127,11 +116,6 @@ test('admin can manage dynamic public home content', function () {
             ->where('partners.0.image_url', '/storage/public-partners/partner-aktif.png')
             ->missing('partners.1'));
 
-    $this->getJson('/api/mobile/home')
-        ->assertOk()
-        ->assertJsonPath('mobile_home.top_banner.title', 'Liburan Seru Bersama Indotix')
-        ->assertJsonPath('mobile_home.top_banner.media_type', 'video')
-        ->assertJsonPath('mobile_home.promo_banner.media_url', '/storage/mobile/weekend.gif');
 });
 
 test('admin can manage public home part of logos from home content tab', function () {

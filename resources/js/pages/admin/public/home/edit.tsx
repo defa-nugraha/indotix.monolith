@@ -146,69 +146,6 @@ const categoryFields: Field[] = Array.from({ length: 10 }, (_, index) => {
 
 const sections: { title: string; description: string; fields: Field[] }[] = [
     {
-        title: 'Banner Mobile Apps',
-        description:
-            'Mengatur banner khusus yang tampil di halaman home aplikasi mobile.',
-        fields: [
-            {
-                key: 'mobile_top_banner_title',
-                label: 'Judul banner atas',
-                hint: 'Maksimal 255 karakter. Gunakan kalimat singkat agar layout mobile tetap rapi.',
-            },
-            {
-                key: 'mobile_top_banner_subtitle',
-                label: 'Deskripsi banner atas',
-                hint: 'Maksimal 255 karakter.',
-            },
-            {
-                key: 'mobile_top_banner_cta_label',
-                label: 'Teks tombol banner atas',
-            },
-            {
-                key: 'mobile_top_banner_media_url',
-                label: 'Media banner atas',
-                type: 'media',
-                hint: 'Format JPG, PNG, WebP, GIF, MP4, WebM, atau OGG. Maksimal 100 MB.',
-            },
-            {
-                key: 'mobile_top_banner_link_url',
-                label: 'Link tujuan banner atas',
-                type: 'url',
-                placeholder: '/wisata',
-            },
-            {
-                key: 'mobile_promo_banner_title',
-                label: 'Judul banner promo',
-                hint: 'Maksimal 255 karakter.',
-            },
-            {
-                key: 'mobile_promo_banner_subtitle',
-                label: 'Teks kecil banner promo',
-            },
-            {
-                key: 'mobile_promo_banner_highlight',
-                label: 'Teks highlight promo',
-                placeholder: '30%',
-            },
-            {
-                key: 'mobile_promo_banner_cta_label',
-                label: 'Teks tombol banner promo',
-            },
-            {
-                key: 'mobile_promo_banner_media_url',
-                label: 'Media banner promo',
-                type: 'media',
-                hint: 'Format JPG, PNG, WebP, GIF, MP4, WebM, atau OGG. Maksimal 100 MB.',
-            },
-            {
-                key: 'mobile_promo_banner_link_url',
-                label: 'Link tujuan banner promo',
-                type: 'url',
-                placeholder: '/promo',
-            },
-        ],
-    },
-    {
         title: 'Kategori wisata',
         description:
             'Mengatur menu kategori wisata yang muncul di bawah banner halaman home.',
@@ -871,102 +808,6 @@ export default function HomeContentEdit({
         );
     };
 
-    const renderMobileBannerSection = () => (
-        <div className="space-y-6">
-            <section className="rounded-3xl border border-sky-100 bg-sky-50/70 p-5">
-                <div className="flex items-start gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
-                        <Smartphone className="h-5 w-5" />
-                    </span>
-                    <div>
-                        <h3 className="text-base font-semibold text-slate-950">
-                            Banner khusus aplikasi mobile
-                        </h3>
-                        <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
-                            Banner ini hanya dipakai oleh mobile apps. Banner
-                            atas tampil setelah kolom pencarian, sedangkan
-                            banner promo tampil setelah kategori wisata. Media
-                            dapat berupa foto, GIF, atau video pendek.
-                        </p>
-                    </div>
-                </div>
-            </section>
-
-            <div className="grid gap-5 xl:grid-cols-2">
-                <section className="rounded-3xl border border-slate-200 bg-white p-5">
-                    <div className="mb-5 flex items-start gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-600 text-white shadow-sm">
-                            <ImageIcon className="h-5 w-5" />
-                        </span>
-                        <div>
-                            <p className="text-xs font-semibold tracking-wide text-sky-700 uppercase">
-                                Banner 1
-                            </p>
-                            <h3 className="text-base font-semibold text-slate-950">
-                                Banner atas aplikasi
-                            </h3>
-                            <p className="mt-1 text-sm text-slate-600">
-                                Gunakan gambar/video yang kuat sebagai hero
-                                utama di halaman home mobile.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        {renderFieldByKey(
-                            'mobile_top_banner_media_url',
-                            'grid gap-2',
-                            'aspect-[16/9] w-full rounded-2xl object-cover',
-                        )}
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {renderFieldByKey('mobile_top_banner_title')}
-                            {renderFieldByKey('mobile_top_banner_cta_label')}
-                        </div>
-                        {renderFieldByKey('mobile_top_banner_subtitle')}
-                        {renderFieldByKey('mobile_top_banner_link_url')}
-                    </div>
-                </section>
-
-                <section className="rounded-3xl border border-slate-200 bg-white p-5">
-                    <div className="mb-5 flex items-start gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-600 text-white shadow-sm">
-                            <BadgePercent className="h-5 w-5" />
-                        </span>
-                        <div>
-                            <p className="text-xs font-semibold tracking-wide text-cyan-700 uppercase">
-                                Banner 2
-                            </p>
-                            <h3 className="text-base font-semibold text-slate-950">
-                                Banner promo setelah kategori
-                            </h3>
-                            <p className="mt-1 text-sm text-slate-600">
-                                Dipakai untuk highlight promo cepat seperti
-                                diskon akhir pekan atau campaign wisata.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        {renderFieldByKey(
-                            'mobile_promo_banner_media_url',
-                            'grid gap-2',
-                            'aspect-[16/7] w-full rounded-2xl object-cover',
-                        )}
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {renderFieldByKey('mobile_promo_banner_title')}
-                            {renderFieldByKey('mobile_promo_banner_highlight')}
-                        </div>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {renderFieldByKey('mobile_promo_banner_subtitle')}
-                            {renderFieldByKey('mobile_promo_banner_cta_label')}
-                        </div>
-                        {renderFieldByKey('mobile_promo_banner_link_url')}
-                    </div>
-                </section>
-            </div>
-        </div>
-    );
-
     const renderPromoSpecialSection = () => {
         const promoCards = [
             {
@@ -1499,9 +1340,7 @@ export default function HomeContentEdit({
                                 </p>
                             </div>
 
-                            {activeSection.title === 'Banner Mobile Apps' ? (
-                                renderMobileBannerSection()
-                            ) : activeSection.title === 'Promo Spesial Untukmu' ? (
+                            {activeSection.title === 'Promo Spesial Untukmu' ? (
                                 renderPromoSpecialSection()
                             ) : activeSection.title === 'Part of' ? (
                                 renderPartOfSection()

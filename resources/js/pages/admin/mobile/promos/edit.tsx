@@ -1,0 +1,151 @@
+import { Head, useForm } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import InputError from '@/components/input-error';
+import type { BreadcrumbItem } from '@/types';
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Mobile App', href: '/admin/mobile/promos' },
+    { title: 'Edit Promo', href: '#' },
+];
+export default function MobilePromoEdit({
+    promo,
+}: {
+    promo: Record<string, any>;
+}) {
+    const form = useForm({
+        name: promo.name ?? '',
+        alt_text: promo.alt_text ?? '',
+        target_url: promo.target_url ?? '',
+        sort_order: promo.sort_order ?? 0,
+        starts_at: promo.starts_at ? String(promo.starts_at).slice(0, 16) : '',
+        ends_at: promo.ends_at ? String(promo.ends_at).slice(0, 16) : '',
+        is_active: promo.is_active !== false,
+        image: null as File | null,
+    });
+    return (
+        <AppLayout breadcrumbs={breadcrumbs}>
+            <Head title="Edit Mobile Promo" />
+            <main className="min-h-full bg-[#f6fbff] p-6 font-['Plus_Jakarta_Sans'] text-slate-900">
+                <form
+                    className="grid max-w-2xl gap-4 rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        form.post(`/admin/mobile/promos/${promo.id}`, {
+                            method: 'put',
+                            forceFormData: true,
+                        });
+                    }}
+                >
+                    <h1 className="text-2xl font-semibold">
+                        Edit Mobile Promo
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                        Perubahan ini hanya memengaruhi aplikasi Mobile Indotix.
+                        Kosongkan file untuk mempertahankan gambar saat ini.
+                    </p>
+                    <Field
+                        label="Nama internal"
+                        value={form.data.name}
+                        error={form.errors.name}
+                        onChange={(v) => form.setData('name', v)}
+                    />
+                    <Field
+                        label="Alt text"
+                        value={form.data.alt_text}
+                        error={form.errors.alt_text}
+                        onChange={(v) => form.setData('alt_text', v)}
+                    />
+                    <Field
+                        label="Target URL"
+                        value={form.data.target_url}
+                        error={form.errors.target_url}
+                        onChange={(v) => form.setData('target_url', v)}
+                    />
+                    <Field
+                        label="Urutan"
+                        type="number"
+                        value={String(form.data.sort_order)}
+                        error={form.errors.sort_order}
+                        onChange={(v) => form.setData('sort_order', Number(v))}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                        <Field
+                            label="Mulai"
+                            type="datetime-local"
+                            value={form.data.starts_at}
+                            error={form.errors.starts_at}
+                            onChange={(v) => form.setData('starts_at', v)}
+                        />
+                        <Field
+                            label="Selesai"
+                            type="datetime-local"
+                            value={form.data.ends_at}
+                            error={form.errors.ends_at}
+                            onChange={(v) => form.setData('ends_at', v)}
+                        />
+                    </div>
+                    <img
+                        src={promo.image_url}
+                        alt={promo.alt_text ?? promo.name}
+                        className="aspect-[2.26/1] w-full rounded-lg object-cover"
+                    />
+                    <Label htmlFor="promo-image">Gambar Promo</Label>
+                    <Input
+                        id="promo-image"
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(e) =>
+                            form.setData('image', e.target.files?.[0] ?? null)
+                        }
+                    />
+                    <InputError message={form.errors.image} />
+                    <label className="flex gap-2 text-sm">
+                        <input
+                            type="checkbox"
+                            checked={form.data.is_active}
+                            onChange={(e) =>
+                                form.setData('is_active', e.target.checked)
+                            }
+                        />{' '}
+                        Aktif
+                    </label>
+                    <Button
+                        type="submit"
+                        className="bg-sky-600 text-white hover:bg-sky-700"
+                        disabled={form.processing}
+                    >
+                        Simpan
+                    </Button>
+                </form>
+            </main>
+        </AppLayout>
+    );
+}
+function Field({
+    label,
+    value,
+    error,
+    onChange,
+    type = 'text',
+}: {
+    label: string;
+    value: string;
+    error?: string;
+    onChange: (value: string) => void;
+    type?: string;
+}) {
+    return (
+        <div className="grid gap-2">
+            <Label>{label}</Label>
+            <Input
+                type={type}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+            />
+            <InputError message={error} />
+        </div>
+    );
+}

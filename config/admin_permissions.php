@@ -305,6 +305,12 @@ return [
             'patterns' => ['admin.public.banners.*'],
             'paths' => ['admin/public/banners*'],
         ],
+        'mobile_home_content' => [
+            'label' => 'Mobile App - Home Content',
+            'parent' => 'Mobile App',
+            'patterns' => ['admin.mobile.home.*', 'admin.mobile.promos.*'],
+            'paths' => ['admin/mobile/home*', 'admin/mobile/promos*'],
+        ],
         'public_promo_items' => [
             'label' => 'Konten Publik - Promo Spesial',
             'parent' => 'Konten Publik',
