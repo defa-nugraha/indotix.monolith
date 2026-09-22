@@ -169,7 +169,7 @@ class MobileHomeContentController extends Controller
                 ->publiclyVisible()
                 ->whereNotNull('slug')
                 ->orderBy('destination_name')
-                ->select(['id', 'destination_name', 'slug'])])
+                ->select(['mitra_wisata_onboardings.id', 'destination_name', 'slug'])])
             ->orderBy('code')
             ->get(['id', 'code', 'is_active', 'discount_type', 'discount_value', 'min_transaction', 'quota_total', 'quota_used', 'starts_at', 'ends_at'])
             ->map(function (Voucher $voucher) {
