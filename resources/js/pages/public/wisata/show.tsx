@@ -292,6 +292,18 @@ export default function WisataShow({
         });
     };
 
+    const addToCart = () => {
+        if (!canBook) return;
+        router.post('/wisata/cart/add', {
+            destination_id: destination.id,
+            visit_date: visitDate,
+            items: selectedTicketItems.map((item) => ({
+                ticket_id: item.ticket.id,
+                quantity: item.quantity,
+            })),
+        });
+    };
+
     return (
         <PublicLayout
             categories={categories}
@@ -695,6 +707,14 @@ export default function WisataShow({
                                       : entryTicketRequired
                                         ? 'Pilih Tiket Masuk'
                                         : 'Kuota Tidak Cukup'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={addToCart}
+                                disabled={!canBook}
+                                className="w-full rounded-2xl border border-sky-200 bg-white py-3 text-center text-sm font-bold text-sky-700 transition-colors hover:bg-sky-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400"
+                            >
+                                Tambahkan ke Keranjang
                             </button>
                             {entryTicketRequired && (
                                 <p className="text-center text-xs font-semibold text-amber-700">

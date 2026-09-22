@@ -60,7 +60,7 @@ function HeroForm({
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={title} />
-            <main className="min-h-full bg-[#f6fbff] p-6 font-['Plus_Jakarta_Sans'] text-slate-900">
+            <main className="min-h-full bg-[#f6fbff] p-6 font-sans text-slate-900">
                 <form
                     onSubmit={submit}
                     className="grid max-w-3xl gap-4 rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm"

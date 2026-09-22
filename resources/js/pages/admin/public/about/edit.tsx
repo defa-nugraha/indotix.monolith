@@ -37,7 +37,7 @@ export default function AboutEdit({ about }: { about: AboutPage }) {
                 />
             </Head>
 
-            <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
+            <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-sans text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <h1 className="text-2xl font-semibold text-slate-900">Tentang Kami</h1>
                     <p className="mt-2 text-sm text-slate-600">Kelola konten Tentang Kami yang tampil di halaman publik.</p>
