@@ -165,13 +165,41 @@ class MobileHomeContentController extends Controller
             ->where(function ($query) {
                 $query->whereNull('hotel_id')->orWhere('hotel_id', 0);
             })
+            ->with(['wisataDestinations' => fn ($query) => $query
+                ->publiclyVisible()
+                ->whereNotNull('slug')
+                ->orderBy('destination_name')
+                ->select(['id', 'destination_name', 'slug'])])
             ->orderBy('code')
-            ->get(['id', 'code', 'is_active'])
-            ->map(fn (Voucher $voucher) => [
+            ->get(['id', 'code', 'is_active', 'discount_type', 'discount_value', 'min_transaction', 'quota_total', 'quota_used', 'starts_at', 'ends_at'])
+            ->map(function (Voucher $voucher) {
+                $destinations = $voucher->wisataDestinations->map(fn (MitraWisataOnboarding $destination) => [
+                    'value' => '/wisata/'.$destination->slug,
+                    'label' => $destination->destination_name,
+                    'meta' => 'Produk wisata',
+                ])->values()->all();
+
+                return [
                 'value' => '/promo/voucher/'.$voucher->code,
                 'label' => $voucher->code,
                 'meta' => $voucher->is_active ? 'Voucher aktif' : 'Voucher nonaktif',
-            ])
+                'kind' => 'voucher',
+                'details' => [
+                    'Kode' => $voucher->code,
+                    'Status' => $voucher->is_active ? 'Aktif' : 'Nonaktif',
+                    'Diskon' => $voucher->discount_type === 'fixed'
+                        ? 'Rp '.number_format((int) $voucher->discount_value, 0, ',', '.')
+                        : (int) $voucher->discount_value.'%',
+                    'Minimum transaksi' => 'Rp '.number_format((int) ($voucher->min_transaction ?? 0), 0, ',', '.'),
+                    'Kuota' => (int) $voucher->quota_total > 0
+                        ? max(0, (int) $voucher->quota_total - (int) $voucher->quota_used).' tersisa'
+                        : 'Tidak dibatasi',
+                    'Periode' => ($voucher->starts_at?->toDateString() ?? 'Sekarang').' - '.($voucher->ends_at?->toDateString() ?? 'Tidak dibatasi'),
+                    'Produk' => count($destinations) > 0 ? implode(', ', array_column($destinations, 'label')) : 'Semua produk wisata',
+                ],
+                'destinations' => $destinations,
+                ];
+            })
             ->values()
             ->all();
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\SystemSetting;
 use App\Models\UserNotification;
+use App\Models\Voucher;
 use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateCommission;
 use App\Models\WisataAffiliateCommissionItem;
@@ -52,6 +53,7 @@ class WisataBookingController extends Controller
             'items' => ['nullable', 'array', 'min:1', 'max:20'],
             'items.*.ticket_id' => ['required_with:items', 'string'],
             'items.*.quantity' => ['required_with:items', 'integer', 'min:1', 'max:20'],
+            'voucher_code' => ['nullable', 'string', 'max:50'],
         ]);
 
         $destinationId = $this->resolveEntityId($data['destination_id']);
@@ -81,6 +83,13 @@ class WisataBookingController extends Controller
                 'unit_price' => (int) $primaryItem['unit_price'],
                 'quantity' => (int) $summary['quantity'],
                 'total' => (int) $summary['total'],
+                'subtotal' => (int) $summary['subtotal'],
+                'discount_amount' => (int) $summary['discount_amount'],
+                'voucher' => $summary['voucher'] ? [
+                    'code' => $summary['voucher']->code,
+                    'discount_type' => $summary['voucher']->discount_type,
+                    'discount_value' => (int) $summary['voucher']->discount_value,
+                ] : null,
                 'items' => $summary['items'],
                 'ticket_kind' => $primaryItem['ticket_kind'] ?? 'single',
                 'package_items' => $primaryItem['package_items'] ?? [],
@@ -101,6 +110,7 @@ class WisataBookingController extends Controller
             'guest_name' => ['required', 'string', 'max:255'],
             'guest_email' => ['required', 'email', 'max:255'],
             'special_request' => ['nullable', 'string', 'max:1000'],
+            'voucher_code' => ['nullable', 'string', 'max:50'],
             'referral_code' => ['nullable', 'string', 'max:50'],
         ]);
 
@@ -129,8 +139,14 @@ class WisataBookingController extends Controller
 
         try {
             $booking = DB::transaction(function () use ($request, $data, $destination, $link) {
-                $summary = $this->buildTicketSummary($data, $destination, true);
+                $summary = $this->buildTicketSummary($data, $destination, true, (int) $request->user()->id);
                 $primaryItem = $summary['items'][0];
+                $voucher = $summary['voucher'];
+
+                if ($voucher) {
+                    $voucher->quota_used = (int) $voucher->quota_used + 1;
+                    $voucher->save();
+                }
 
                 $order = WisataBooking::create([
                     'user_id' => $request->user()->id,
@@ -140,6 +156,12 @@ class WisataBookingController extends Controller
                     'visit_date' => $data['visit_date'],
                     'quantity' => $summary['quantity'],
                     'unit_price' => $primaryItem['unit_price'],
+                    'subtotal_price' => $summary['subtotal'],
+                    'voucher_id' => $voucher?->id,
+                    'voucher_code' => $voucher?->code,
+                    'discount_type' => $voucher?->discount_type,
+                    'discount_value' => $voucher?->discount_value,
+                    'discount_amount' => $summary['discount_amount'],
                     'total_price' => $summary['total'],
                     'status' => 'pending_payment',
                     'payment_status' => 'pending',
@@ -342,7 +364,7 @@ class WisataBookingController extends Controller
         ]);
     }
 
-    private function buildTicketSummary(array $data, MitraWisataOnboarding $destination, bool $lock = false): array
+    private function buildTicketSummary(array $data, MitraWisataOnboarding $destination, bool $lock = false, ?int $userId = null): array
     {
         $selections = $this->normalizeTicketSelections($data);
         $ticketIds = array_column($selections, 'ticket_id');
@@ -416,11 +438,88 @@ class WisataBookingController extends Controller
             throw new RuntimeException('Tiket terusan hanya dapat dipesan bersama tiket masuk.');
         }
 
+        $subtotal = array_sum(array_column($items, 'subtotal'));
+        $voucher = $this->resolveWisataVoucher($data['voucher_code'] ?? null, $destination, $subtotal, $userId, $lock);
+        $discountAmount = $voucher
+            ? $this->calculateDiscountAmount($subtotal, $voucher)
+            : 0;
+
         return [
             'items' => $items,
             'quantity' => array_sum(array_column($items, 'quantity')),
-            'total' => array_sum(array_column($items, 'subtotal')),
+            'subtotal' => $subtotal,
+            'discount_amount' => $discountAmount,
+            'voucher' => $voucher,
+            'total' => max(0, $subtotal - $discountAmount),
         ];
+    }
+
+    private function resolveWisataVoucher(?string $code, MitraWisataOnboarding $destination, int $subtotal, ?int $userId, bool $lock): ?Voucher
+    {
+        $normalized = strtoupper(trim((string) $code));
+        if ($normalized === '') {
+            return null;
+        }
+
+        $query = Voucher::query()
+            ->where('code', $normalized)
+            ->where('is_active', true)
+            ->where(function ($query) {
+                $query->whereNull('hotel_id')->orWhere('hotel_id', 0);
+            });
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+        $voucher = $query->first();
+
+        $today = now()->toDateString();
+        if (! $voucher || ($voucher->starts_at && $voucher->starts_at->toDateString() > $today) || ($voucher->ends_at && $voucher->ends_at->toDateString() < $today)) {
+            throw new RuntimeException('Voucher tidak valid atau sudah tidak berlaku.');
+        }
+        if ($voucher->quota_total > 0 && $voucher->quota_used >= $voucher->quota_total) {
+            throw new RuntimeException('Voucher sudah habis.');
+        }
+        if ($voucher->min_transaction > 0 && $subtotal < $voucher->min_transaction) {
+            throw new RuntimeException('Minimum transaksi belum memenuhi syarat voucher.');
+        }
+
+        $hasDestinationScope = $voucher->wisataDestinations()->exists();
+        if ($hasDestinationScope && ! $voucher->wisataDestinations()->whereKey($destination->id)->exists()) {
+            throw new RuntimeException('Voucher tidak berlaku untuk destinasi ini.');
+        }
+        if ($userId && ! $this->canUseWisataVoucher($voucher, $userId)) {
+            throw new RuntimeException('Voucher sudah mencapai limit penggunaan untuk akun ini.');
+        }
+
+        return $voucher;
+    }
+
+    private function calculateDiscountAmount(int $subtotal, Voucher $voucher): int
+    {
+        if ($voucher->discount_type === 'fixed') {
+            return min($subtotal, (int) $voucher->discount_value);
+        }
+
+        return min($subtotal, (int) round($subtotal * ((int) $voucher->discount_value / 100)));
+    }
+
+    private function canUseWisataVoucher(Voucher $voucher, int $userId): bool
+    {
+        if ((int) $voucher->max_per_user_per_day <= 0) {
+            return true;
+        }
+
+        $query = WisataBooking::query()
+            ->where('voucher_id', $voucher->id)
+            ->where('user_id', $userId);
+        if ($voucher->starts_at) {
+            $query->whereDate('created_at', '>=', $voucher->starts_at->toDateString());
+        }
+        if ($voucher->ends_at) {
+            $query->whereDate('created_at', '<=', $voucher->ends_at->toDateString());
+        }
+
+        return $query->count() < (int) $voucher->max_per_user_per_day;
     }
 
     private function normalizeTicketSelections(array $data): array
@@ -480,6 +579,10 @@ class WisataBookingController extends Controller
             'total' => $booking->total_price,
             'status' => $booking->status,
             'payment_status' => $booking->payment_status,
+            'voucher' => $booking->voucher_code ? [
+                'code' => $booking->voucher_code,
+                'discount_amount' => (int) ($booking->discount_amount ?? 0),
+            ] : null,
             'payment_deadline' => $booking->payment_deadline?->toIso8601String(),
             'ticket' => [
                 'id' => $booking->ticket?->id,
