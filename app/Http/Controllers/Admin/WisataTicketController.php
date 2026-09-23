@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\WisataTicket;
 use App\Support\AdminDataScope;
+use App\Support\PaginationOptions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,7 +42,7 @@ class WisataTicketController extends Controller
                     });
                 })
                 ->orderBy('destination_name')
-                ->paginate(\App\Support\PaginationOptions::perPage())
+                ->paginate(PaginationOptions::perPage())
                 ->withQueryString()
                 ->through(fn (MitraWisataOnboarding $destination) => $this->destinationRow($destination));
 
@@ -87,19 +89,21 @@ class WisataTicketController extends Controller
         }
 
         $tickets = $query->latest('id')
-            ->paginate(\App\Support\PaginationOptions::perPage())
+            ->paginate(PaginationOptions::perPage())
             ->withQueryString()
             ->through(function (WisataTicket $ticket) {
                 return [
                     'id' => $ticket->id,
                     'name' => $ticket->name,
                     'price' => $ticket->price,
+                    'weekend_price' => $ticket->weekend_price,
                     'quota' => $ticket->quota,
                     'max_quota_override' => $ticket->max_quota_override,
                     'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
                     'max_order_quantity' => $ticket->max_order_quantity,
                     'ticket_kind' => $ticket->ticket_kind ?? 'single',
                     'is_entry_ticket' => (bool) ($ticket->is_entry_ticket ?? true),
+                    'is_weekend' => (bool) $ticket->is_weekend,
                     'package_items' => $ticket->package_items ?? [],
                     'is_active' => $ticket->is_active,
                     'destination' => [
@@ -156,7 +160,7 @@ class WisataTicketController extends Controller
             ->get(['id', 'destination_name'])
             ->map(fn ($item) => [
                 'id' => $item->id,
-                'label' => $item->destination_name ?? 'Destinasi #' . $item->id,
+                'label' => $item->destination_name ?? 'Destinasi #'.$item->id,
             ])
             ->all();
 
@@ -194,6 +198,7 @@ class WisataTicketController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
+            'weekend_price' => ['nullable', 'integer', 'min:0'],
             'quota' => ['required', 'integer', 'min:0'],
             'daily_quota' => ['nullable', 'integer', 'min:0'],
             'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
@@ -209,7 +214,14 @@ class WisataTicketController extends Controller
             'refund_policy' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
             'is_closed' => ['nullable', 'boolean'],
+            'is_weekend' => ['nullable', 'boolean'],
         ]);
+
+        if ($request->boolean('is_weekend') && ($data['weekend_price'] ?? null) === null) {
+            throw ValidationException::withMessages([
+                'weekend_price' => 'Harga weekend wajib diisi untuk tiket dengan harga weekend.',
+            ]);
+        }
 
         $ticketKind = $data['ticket_kind'] ?? 'single';
         $packageItems = $this->normalizePackageItems(
@@ -226,6 +238,7 @@ class WisataTicketController extends Controller
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'price' => $price,
+            'weekend_price' => $request->boolean('is_weekend') ? $data['weekend_price'] : null,
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
             'min_order_quantity' => $data['min_order_quantity'] ?? 1,
@@ -239,6 +252,7 @@ class WisataTicketController extends Controller
             'refund_policy' => $data['refund_policy'] ?? null,
             'is_active' => (bool) ($data['is_active'] ?? false),
             'is_closed' => (bool) ($data['is_closed'] ?? false),
+            'is_weekend' => (bool) ($data['is_weekend'] ?? false),
         ]);
 
         return redirect()->route('admin.wisata.tickets.index')->with('status', 'ticket-created');
@@ -254,6 +268,7 @@ class WisataTicketController extends Controller
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'description' => ['sometimes', 'nullable', 'string'],
             'price' => ['sometimes', 'required', 'integer', 'min:0'],
+            'weekend_price' => ['nullable', 'integer', 'min:0'],
             'quota' => ['sometimes', 'required', 'integer', 'min:0'],
             'daily_quota' => ['sometimes', 'nullable', 'integer', 'min:0'],
             'ticket_type' => ['sometimes', 'nullable', 'in:perorangan,grup'],
@@ -262,11 +277,20 @@ class WisataTicketController extends Controller
             'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
             'max_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20', 'gte:min_order_quantity'],
             'is_closed' => ['nullable', 'boolean'],
+            'is_weekend' => ['nullable', 'boolean'],
         ]);
 
         if (array_key_exists('price', $data) && ($ticket->ticket_kind ?? 'single') === 'package') {
             $data['price'] = $this->calculatePackagePrice($ticket->package_items ?? []);
         }
+
+        $data['is_weekend'] = (bool) ($data['is_weekend'] ?? false);
+        if ($data['is_weekend'] && ($data['weekend_price'] ?? null) === null) {
+            throw ValidationException::withMessages([
+                'weekend_price' => 'Harga weekend wajib diisi untuk tiket dengan harga weekend.',
+            ]);
+        }
+        $data['weekend_price'] = $data['is_weekend'] ? (int) $data['weekend_price'] : null;
 
         $ticket->update($data);
 
@@ -308,7 +332,7 @@ class WisataTicketController extends Controller
             ->values();
 
         if ($normalized->isEmpty()) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'package_items' => 'Paket wisata wajib berisi minimal satu tiket reguler.',
             ]);
         }
@@ -322,7 +346,7 @@ class WisataTicketController extends Controller
             ->all();
 
         if ($normalized->pluck('ticket_id')->diff($validTicketIds)->isNotEmpty()) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'package_items' => 'Paket hanya boleh berisi tiket reguler dari destinasi yang sama.',
             ]);
         }

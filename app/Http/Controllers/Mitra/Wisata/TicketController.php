@@ -27,6 +27,7 @@ class TicketController extends Controller
                 'id' => $ticket->id,
                 'name' => $ticket->name,
                 'price' => $ticket->price,
+                'weekend_price' => $ticket->weekend_price,
                 'quota' => $ticket->quota,
                 'daily_quota' => $ticket->daily_quota,
                 'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
@@ -40,6 +41,7 @@ class TicketController extends Controller
                 'refund_policy' => $ticket->refund_policy,
                 'is_active' => $ticket->is_active,
                 'is_closed' => $ticket->is_closed,
+                'is_weekend' => (bool) $ticket->is_weekend,
             ]);
 
         return Inertia::render('mitra/wisata/tickets/index', [
@@ -76,6 +78,7 @@ class TicketController extends Controller
                 'name' => $ticket->name,
                 'description' => $ticket->description,
                 'price' => $ticket->price,
+                'weekend_price' => $ticket->weekend_price,
                 'quota' => $ticket->quota,
                 'daily_quota' => $ticket->daily_quota,
                 'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
@@ -88,6 +91,7 @@ class TicketController extends Controller
                 'refund_policy' => $ticket->refund_policy,
                 'is_active' => $ticket->is_active,
                 'is_closed' => $ticket->is_closed,
+                'is_weekend' => (bool) $ticket->is_weekend,
             ] : null,
             'componentTickets' => WisataTicket::query()
                 ->where('mitra_wisata_onboarding_id', $destination->id)
@@ -114,6 +118,7 @@ class TicketController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
+            'weekend_price' => ['nullable', 'integer', 'min:0'],
             'quota' => ['required', 'integer', 'min:0'],
             'daily_quota' => ['nullable', 'integer', 'min:0'],
             'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
@@ -129,7 +134,14 @@ class TicketController extends Controller
             'refund_policy' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
             'is_closed' => ['nullable', 'boolean'],
+            'is_weekend' => ['nullable', 'boolean'],
         ]);
+
+        if ($request->boolean('is_weekend') && ($data['weekend_price'] ?? null) === null) {
+            throw ValidationException::withMessages([
+                'weekend_price' => 'Harga weekend wajib diisi untuk tiket dengan harga weekend.',
+            ]);
+        }
 
         $ticketKind = $data['ticket_kind'] ?? 'single';
         $packageItems = $this->normalizePackageItems(
@@ -146,6 +158,7 @@ class TicketController extends Controller
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'price' => $price,
+            'weekend_price' => $request->boolean('is_weekend') ? $data['weekend_price'] : null,
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
             'min_order_quantity' => $data['min_order_quantity'] ?? 1,
@@ -159,6 +172,7 @@ class TicketController extends Controller
             'refund_policy' => $data['refund_policy'] ?? null,
             'is_active' => (bool) ($data['is_active'] ?? false),
             'is_closed' => (bool) ($data['is_closed'] ?? false),
+            'is_weekend' => (bool) ($data['is_weekend'] ?? false),
         ]);
 
         return redirect()->route('mitra.wisata.tickets.index')->with('status', 'ticket-created');
@@ -178,6 +192,7 @@ class TicketController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
+            'weekend_price' => ['nullable', 'integer', 'min:0'],
             'quota' => ['required', 'integer', 'min:0'],
             'daily_quota' => ['nullable', 'integer', 'min:0'],
             'min_order_quantity' => ['nullable', 'integer', 'min:1', 'max:20'],
@@ -193,7 +208,14 @@ class TicketController extends Controller
             'refund_policy' => ['nullable', 'string', 'max:255'],
             'is_active' => ['nullable', 'boolean'],
             'is_closed' => ['nullable', 'boolean'],
+            'is_weekend' => ['nullable', 'boolean'],
         ]);
+
+        if ($request->boolean('is_weekend') && ($data['weekend_price'] ?? null) === null) {
+            throw ValidationException::withMessages([
+                'weekend_price' => 'Harga weekend wajib diisi untuk tiket dengan harga weekend.',
+            ]);
+        }
 
         $ticketKind = $data['ticket_kind'] ?? 'single';
         $packageItems = $this->normalizePackageItems(
@@ -210,6 +232,7 @@ class TicketController extends Controller
             'name' => $data['name'],
             'description' => $data['description'] ?? null,
             'price' => $price,
+            'weekend_price' => $request->boolean('is_weekend') ? $data['weekend_price'] : null,
             'quota' => $data['quota'],
             'daily_quota' => $data['daily_quota'] ?? null,
             'min_order_quantity' => $data['min_order_quantity'] ?? 1,
@@ -223,6 +246,7 @@ class TicketController extends Controller
             'refund_policy' => $data['refund_policy'] ?? null,
             'is_active' => (bool) ($data['is_active'] ?? false),
             'is_closed' => (bool) ($data['is_closed'] ?? false),
+            'is_weekend' => (bool) ($data['is_weekend'] ?? false),
         ]);
 
         return back()->with('status', 'ticket-updated');

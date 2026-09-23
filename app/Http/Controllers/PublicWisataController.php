@@ -9,8 +9,8 @@ use App\Models\WisataAffiliateLink;
 use App\Models\WisataBooking;
 use App\Models\WisataBookingItem;
 use App\Models\WisataTicket;
-use App\Services\ProductReviewService;
 use App\Services\Discovery\DiscoveryService;
+use App\Services\ProductReviewService;
 use App\Support\HomePageContent;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -128,6 +128,8 @@ class PublicWisataController extends Controller
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
         ])->validate();
 
+        $visitDate = Carbon::parse($data['visit_date'], config('app.timezone'))->startOfDay();
+
         $ticketModels = WisataTicket::query()
             ->where('mitra_wisata_onboarding_id', $destination->id)
             ->where('is_active', true)
@@ -148,7 +150,7 @@ class PublicWisataController extends Controller
             : collect();
 
         $tickets = $ticketModels
-            ->map(function (WisataTicket $ticket) use ($data, $packageTicketLookup) {
+            ->map(function (WisataTicket $ticket) use ($data, $packageTicketLookup, $visitDate) {
                 $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);
@@ -171,7 +173,7 @@ class PublicWisataController extends Controller
                     'id' => $ticket->id,
                     'name' => $ticket->name,
                     'description' => $ticket->description,
-                    'price' => $ticket->price,
+                    'price' => $ticket->priceForVisitDate($visitDate),
                     'available' => $available,
                     'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
                     'max_order_quantity' => $ticket->max_order_quantity,

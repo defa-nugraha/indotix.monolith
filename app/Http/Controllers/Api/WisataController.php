@@ -32,6 +32,8 @@ class WisataController extends Controller
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
         ])->validate();
 
+        $visitDate = Carbon::parse($data['visit_date'], config('app.timezone'))->startOfDay();
+
         $destinations = MitraWisataOnboarding::query()
             ->publiclyVisible()
             ->when($data['q'] ?? null, fn ($query, $term) => $query->where('destination_name', 'like', "%{$term}%"))
@@ -46,10 +48,10 @@ class WisataController extends Controller
             ->get()
             ->groupBy('mitra_wisata_onboarding_id');
 
-        $results = $destinations->map(function (MitraWisataOnboarding $destination) use ($tickets, $data) {
+        $results = $destinations->map(function (MitraWisataOnboarding $destination) use ($tickets, $data, $visitDate) {
             $items = $tickets->get($destination->id, collect());
 
-            $ticketRows = $items->map(function (WisataTicket $ticket) use ($data) {
+            $ticketRows = $items->map(function (WisataTicket $ticket) use ($data, $visitDate) {
                 $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);
@@ -59,10 +61,11 @@ class WisataController extends Controller
                 }
 
                 $encryptedTicketId = Crypt::encryptString((string) $ticket->id);
+
                 return [
                     'id' => $encryptedTicketId,
                     'name' => $ticket->name,
-                    'price' => $ticket->price,
+                    'price' => $ticket->priceForVisitDate($visitDate),
                     'available' => $available,
                     'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
                     'max_order_quantity' => $ticket->max_order_quantity,
@@ -128,12 +131,14 @@ class WisataController extends Controller
             'quantity' => ['required', 'integer', 'min:1', 'max:20'],
         ])->validate();
 
+        $visitDate = Carbon::parse($data['visit_date'], config('app.timezone'))->startOfDay();
+
         $tickets = WisataTicket::query()
             ->where('mitra_wisata_onboarding_id', $destination->id)
             ->where('is_active', true)
             ->where('is_closed', false)
             ->get()
-            ->map(function (WisataTicket $ticket) use ($data) {
+            ->map(function (WisataTicket $ticket) use ($data, $visitDate) {
                 $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);
@@ -142,7 +147,7 @@ class WisataController extends Controller
                     'id' => Crypt::encryptString((string) $ticket->id),
                     'name' => $ticket->name,
                     'description' => $ticket->description,
-                    'price' => $ticket->price,
+                    'price' => $ticket->priceForVisitDate($visitDate),
                     'available' => $available,
                     'min_order_quantity' => max(1, (int) ($ticket->min_order_quantity ?? 1)),
                     'max_order_quantity' => $ticket->max_order_quantity,

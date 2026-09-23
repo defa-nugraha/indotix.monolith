@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\MitraWisataOnboarding;
 use App\Models\WisataTicket;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -93,6 +94,7 @@ class WisataCartController extends Controller
             return ['destination' => null, 'visitDate' => null, 'items' => [], 'summary' => ['subtotal' => 0, 'quantity' => 0]];
         }
         $tickets = WisataTicket::query()->whereIn('id', collect($cart['items'] ?? [])->pluck('ticket_id'))->get()->keyBy('id');
+        $visitDate = Carbon::parse($cart['visit_date'], config('app.timezone'))->startOfDay();
         $destination = MitraWisataOnboarding::query()->find($cart['destination_id']);
         $items = collect($cart['items'] ?? [])->map(function (array $item) use ($tickets) {
             $ticket = $tickets->get($item['ticket_id']);
@@ -101,7 +103,9 @@ class WisataCartController extends Controller
             }
             $quantity = (int) $item['quantity'];
 
-            return ['ticket_id' => $ticket->id, 'name' => $ticket->name, 'quantity' => $quantity, 'unit_price' => (int) $ticket->price, 'subtotal' => (int) $ticket->price * $quantity];
+            $unitPrice = $ticket->priceForVisitDate($visitDate);
+
+            return ['ticket_id' => $ticket->id, 'name' => $ticket->name, 'quantity' => $quantity, 'unit_price' => $unitPrice, 'subtotal' => $unitPrice * $quantity];
         })->filter()->values()->all();
 
         return ['destination' => $destination ? ['name' => $destination->destination_name, 'id' => $destination->id] : null, 'visitDate' => $cart['visit_date'] ?? null, 'items' => $items, 'summary' => ['subtotal' => collect($items)->sum('subtotal'), 'quantity' => collect($items)->sum('quantity')]];

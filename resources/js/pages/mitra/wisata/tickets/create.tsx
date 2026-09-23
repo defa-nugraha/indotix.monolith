@@ -21,6 +21,7 @@ type Ticket = {
     name: string;
     description: string | null;
     price: number;
+    weekend_price: number | null;
     quota: number;
     daily_quota: number | null;
     min_order_quantity: number;
@@ -34,6 +35,7 @@ type Ticket = {
     refund_policy: string | null;
     is_active: boolean;
     is_closed: boolean;
+    is_weekend: boolean;
 };
 
 type ComponentTicket = {
@@ -75,6 +77,7 @@ export default function MitraWisataTicketCreate({
         name: ticket?.name ?? '',
         description: ticket?.description ?? '',
         price: ticket?.price?.toString() ?? '',
+        weekend_price: ticket?.weekend_price?.toString() ?? '',
         quota: ticket?.quota?.toString() ?? '',
         daily_quota: ticket?.daily_quota?.toString() ?? '',
         min_order_quantity: ticket?.min_order_quantity?.toString() ?? '1',
@@ -88,6 +91,7 @@ export default function MitraWisataTicketCreate({
         refund_policy: ticket?.refund_policy ?? '',
         is_active: ticket?.is_active ?? false,
         is_closed: ticket?.is_closed ?? false,
+        is_weekend: ticket?.is_weekend ?? false,
     });
     const [priceDisplay, setPriceDisplay] = useState(
         formatCurrencyInput(ticket?.price ?? ''),
@@ -279,6 +283,28 @@ export default function MitraWisataTicketCreate({
                             )}
                             <InputError message={form.errors.price} />
                         </div>
+                        {form.data.is_weekend && (
+                            <div className="grid gap-2">
+                                <Label required>Harga Weekend (Sabtu-Minggu)</Label>
+                                <Input
+                                    required
+                                    type="text"
+                                    inputMode="numeric"
+                                    value={form.data.weekend_price}
+                                    onChange={(event) =>
+                                        form.setData(
+                                            'weekend_price',
+                                            parseCurrencyToDigits(event.target.value),
+                                        )
+                                    }
+                                    placeholder="15.000"
+                                />
+                                <p className="text-xs text-slate-500">
+                                    Harga normal tetap digunakan Senin-Jumat.
+                                </p>
+                                <InputError message={form.errors.weekend_price} />
+                            </div>
+                        )}
                         <div className="grid gap-2">
                             <Label required>Kuota Total</Label>
                             <Input
@@ -623,6 +649,24 @@ export default function MitraWisataTicketCreate({
                                 Tutup penjualan sementara
                             </label>
                         </div>
+                        <label className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50/60 p-4 text-sm md:col-span-2">
+                            <input
+                                type="checkbox"
+                                checked={form.data.is_weekend}
+                                onChange={(event) =>
+                                    form.setData('is_weekend', event.target.checked)
+                                }
+                                className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                            />
+                            <span>
+                                <span className="block font-semibold text-slate-800">
+                                    Tiket khusus weekend
+                                </span>
+                                <span className="mt-1 block text-xs leading-relaxed text-slate-500">
+                                    Tiket tetap tampil setiap hari. Harga weekend digunakan otomatis pada Sabtu dan Minggu.
+                                </span>
+                            </span>
+                        </label>
                         <div className="flex flex-col gap-2 sm:flex-row md:col-span-2">
                             <Button
                                 type="submit"

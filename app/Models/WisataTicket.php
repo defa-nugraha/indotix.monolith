@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $name
  * @property string|null $description
  * @property int $price
+ * @property int|null $weekend_price
  * @property int|null $quota
  * @property int|null $daily_quota
  * @property string|null $ticket_type
@@ -32,6 +34,7 @@ class WisataTicket extends Model
         'name',
         'description',
         'price',
+        'weekend_price',
         'quota',
         'ticket_type',
         'ticket_kind',
@@ -46,10 +49,12 @@ class WisataTicket extends Model
         'max_order_quantity',
         'is_active',
         'is_closed',
+        'is_weekend',
     ];
 
     protected $casts = [
         'price' => 'integer',
+        'weekend_price' => 'integer',
         'quota' => 'integer',
         'daily_quota' => 'integer',
         'max_quota_override' => 'integer',
@@ -59,6 +64,7 @@ class WisataTicket extends Model
         'is_entry_ticket' => 'boolean',
         'is_active' => 'boolean',
         'is_closed' => 'boolean',
+        'is_weekend' => 'boolean',
         'valid_from' => 'date',
         'valid_until' => 'date',
     ];
@@ -76,5 +82,14 @@ class WisataTicket extends Model
     public function bookingItems()
     {
         return $this->hasMany(WisataBookingItem::class, 'wisata_ticket_id');
+    }
+
+    public function priceForVisitDate(CarbonInterface $visitDate): int
+    {
+        if ((bool) $this->is_weekend && $visitDate->isWeekend() && $this->weekend_price !== null) {
+            return (int) $this->weekend_price;
+        }
+
+        return (int) $this->price;
     }
 }
