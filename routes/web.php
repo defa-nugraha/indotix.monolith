@@ -7,27 +7,28 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController;
 use App\Http\Controllers\Admin\FinanceReportController;
 use App\Http\Controllers\Admin\HomeContentController;
+use App\Http\Controllers\Admin\MitraWisataController;
 use App\Http\Controllers\Admin\MobileHomeContentController;
 use App\Http\Controllers\Admin\MobilePromoBannerController;
-use App\Http\Controllers\Admin\MitraWisataController;
 use App\Http\Controllers\Admin\NotificationControlController;
+use App\Http\Controllers\Admin\PartnerTermsDocumentController;
 use App\Http\Controllers\Admin\PayoutController;
 use App\Http\Controllers\Admin\PrivacyPolicyController;
-use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\PromoItemController;
 use App\Http\Controllers\Admin\PublicBannerController;
 use App\Http\Controllers\Admin\PublicContactController;
 use App\Http\Controllers\Admin\PublicPartnerController;
 use App\Http\Controllers\Admin\PublicPartOfLogoController;
-use App\Http\Controllers\Admin\RoleManagementController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\Admin\WisataAffiliate\AffiliateController;
+use App\Http\Controllers\Admin\WisataAffiliate\AuditController;
 use App\Http\Controllers\Admin\WisataAffiliate\CampaignController;
 use App\Http\Controllers\Admin\WisataAffiliate\CommissionLogController;
 use App\Http\Controllers\Admin\WisataAffiliate\ExceptionController;
 use App\Http\Controllers\Admin\WisataAffiliate\PerformanceController;
+use App\Http\Controllers\Admin\WisataAffiliate\SettingController;
 use App\Http\Controllers\Admin\WisataContentController;
 use App\Http\Controllers\Admin\WisataDestinationController;
 use App\Http\Controllers\Admin\WisataEntryQrTemplateController;
@@ -44,7 +45,6 @@ use App\Http\Controllers\Affiliate\ReferralController;
 use App\Http\Controllers\Affiliate\RegisterController;
 use App\Http\Controllers\Affiliate\SupportController;
 use App\Http\Controllers\Affiliate\TermsController;
-use App\Http\Controllers\PasskeyAssociationController;
 use App\Http\Controllers\Auth\MobileEmailVerificationController;
 use App\Http\Controllers\Auth\PublicEmailVerificationController;
 use App\Http\Controllers\Auth\SocialAuthController;
@@ -52,22 +52,29 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\MidtransCallbackController;
 use App\Http\Controllers\Mitra\PartnerTermsSignatureController;
 use App\Http\Controllers\Mitra\ReviewController;
+use App\Http\Controllers\Mitra\Wisata\BookingController;
 use App\Http\Controllers\Mitra\Wisata\DestinationController;
 use App\Http\Controllers\Mitra\Wisata\DisputeController;
+use App\Http\Controllers\Mitra\Wisata\FinanceController;
+use App\Http\Controllers\Mitra\Wisata\ScanController;
+use App\Http\Controllers\Mitra\Wisata\TicketController;
 use App\Http\Controllers\MitraWisataOnboardingController;
+use App\Http\Controllers\MitraWisataSensitiveDocumentController;
+use App\Http\Controllers\PasskeyAssociationController;
 use App\Http\Controllers\PublicAboutController;
 use App\Http\Controllers\PublicDeleteAccountController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicHistoryController;
 use App\Http\Controllers\PublicHomeController;
+use App\Http\Controllers\PublicMitraGuideController;
 use App\Http\Controllers\PublicNotificationController;
-use App\Http\Controllers\PublicWisataTicketScanController;
 use App\Http\Controllers\PublicPrivacyPolicyController;
 use App\Http\Controllers\PublicPromoController;
 use App\Http\Controllers\PublicReviewController;
+use App\Http\Controllers\PublicTransactionFinishController;
 use App\Http\Controllers\PublicWisataController;
 use App\Http\Controllers\PublicWisataHistoryController;
-use App\Http\Controllers\PublicTransactionFinishController;
+use App\Http\Controllers\PublicWisataTicketScanController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WisataBookingController;
 use App\Http\Controllers\WisataCartController;
@@ -75,7 +82,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/.well-known/assetlinks.json', [PasskeyAssociationController::class, 'assetLinks']);
-Route::get('/panduan/mitra', App\Http\Controllers\PublicMitraGuideController::class)
+Route::get('/panduan/mitra', PublicMitraGuideController::class)
     ->name('public.guides.mitra');
 Route::get('/.well-known/apple-app-site-association', [PasskeyAssociationController::class, 'appleAppSiteAssociation']);
 
@@ -136,7 +143,7 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra-wisata.store');
     Route::get('admin/mitra-wisata/{user}', [MitraWisataController::class, 'show'])
         ->name('admin.mitra-wisata.show');
-    Route::get('admin/mitra-wisata/{user}/documents/{type}', [App\Http\Controllers\MitraWisataSensitiveDocumentController::class, 'showAdmin'])
+    Route::get('admin/mitra-wisata/{user}/documents/{type}', [MitraWisataSensitiveDocumentController::class, 'showAdmin'])
         ->where('type', 'ktp|selfie|legal')
         ->name('admin.mitra-wisata.documents.show');
     Route::delete('admin/mitra-wisata/{user}', [MitraWisataController::class, 'destroy'])
@@ -147,6 +154,14 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra-wisata.payout');
     Route::post('admin/mitra-wisata/{user}/suspend', [MitraWisataController::class, 'suspend'])
         ->name('admin.mitra-wisata.suspend');
+    Route::get('admin/mitra-documents', [PartnerTermsDocumentController::class, 'index'])
+        ->name('admin.mitra-documents.index');
+    Route::post('admin/mitra-documents', [PartnerTermsDocumentController::class, 'store'])
+        ->name('admin.mitra-documents.store');
+    Route::get('admin/mitra-documents/{document}/file', [PartnerTermsDocumentController::class, 'file'])
+        ->name('admin.mitra-documents.file');
+    Route::delete('admin/mitra-documents/{document}', [PartnerTermsDocumentController::class, 'destroy'])
+        ->name('admin.mitra-documents.destroy');
 
     Route::get('admin/wisata/destinations', [WisataDestinationController::class, 'index'])
         ->name('admin.wisata.destinations.index');
@@ -263,11 +278,11 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
     Route::post('admin/wisata/affiliates/exceptions', [ExceptionController::class, 'store'])
         ->name('admin.wisata.affiliates.exceptions.store');
 
-    Route::get('admin/wisata/affiliates/system/audit', [App\Http\Controllers\Admin\WisataAffiliate\AuditController::class, 'index'])
+    Route::get('admin/wisata/affiliates/system/audit', [AuditController::class, 'index'])
         ->name('admin.wisata.affiliates.audit.index');
-    Route::get('admin/wisata/affiliates/system/settings', [App\Http\Controllers\Admin\WisataAffiliate\SettingController::class, 'index'])
+    Route::get('admin/wisata/affiliates/system/settings', [SettingController::class, 'index'])
         ->name('admin.wisata.affiliates.settings.index');
-    Route::post('admin/wisata/affiliates/system/settings', [App\Http\Controllers\Admin\WisataAffiliate\SettingController::class, 'update'])
+    Route::post('admin/wisata/affiliates/system/settings', [SettingController::class, 'update'])
         ->name('admin.wisata.affiliates.settings.update');
 
     Route::get('admin/wisata/affiliates/{affiliate}', [AffiliateController::class, 'show'])
@@ -492,36 +507,36 @@ Route::prefix('mitra/wisata')
             ->name('destination.edit');
         Route::put('destination', [DestinationController::class, 'update'])
             ->name('destination.update');
-        Route::get('documents/{type}', [App\Http\Controllers\MitraWisataSensitiveDocumentController::class, 'showOwn'])
+        Route::get('documents/{type}', [MitraWisataSensitiveDocumentController::class, 'showOwn'])
             ->where('type', 'ktp|selfie|legal')
             ->name('documents.show');
 
-        Route::get('tickets', [App\Http\Controllers\Mitra\Wisata\TicketController::class, 'index'])
+        Route::get('tickets', [TicketController::class, 'index'])
             ->name('tickets.index');
-        Route::get('tickets/create', [App\Http\Controllers\Mitra\Wisata\TicketController::class, 'create'])
+        Route::get('tickets/create', [TicketController::class, 'create'])
             ->name('tickets.create');
-        Route::post('tickets', [App\Http\Controllers\Mitra\Wisata\TicketController::class, 'store'])
+        Route::post('tickets', [TicketController::class, 'store'])
             ->name('tickets.store');
-        Route::put('tickets/{ticket}', [App\Http\Controllers\Mitra\Wisata\TicketController::class, 'update'])
+        Route::put('tickets/{ticket}', [TicketController::class, 'update'])
             ->name('tickets.update');
-        Route::delete('tickets/{ticket}', [App\Http\Controllers\Mitra\Wisata\TicketController::class, 'destroy'])
+        Route::delete('tickets/{ticket}', [TicketController::class, 'destroy'])
             ->name('tickets.destroy');
 
-        Route::get('bookings', [App\Http\Controllers\Mitra\Wisata\BookingController::class, 'index'])
+        Route::get('bookings', [BookingController::class, 'index'])
             ->name('bookings.index');
-        Route::get('bookings/{booking}', [App\Http\Controllers\Mitra\Wisata\BookingController::class, 'show'])
+        Route::get('bookings/{booking}', [BookingController::class, 'show'])
             ->name('bookings.show');
 
-        Route::get('scans', [App\Http\Controllers\Mitra\Wisata\ScanController::class, 'index'])
+        Route::get('scans', [ScanController::class, 'index'])
             ->name('scans.index');
-        Route::get('scans/qr.pdf', [App\Http\Controllers\Mitra\Wisata\ScanController::class, 'download'])
+        Route::get('scans/qr.pdf', [ScanController::class, 'download'])
             ->name('scans.pdf');
-        Route::post('scans', [App\Http\Controllers\Mitra\Wisata\ScanController::class, 'store'])
+        Route::post('scans', [ScanController::class, 'store'])
             ->name('scans.store');
 
-        Route::get('finance/summary', [App\Http\Controllers\Mitra\Wisata\FinanceController::class, 'summary'])
+        Route::get('finance/summary', [FinanceController::class, 'summary'])
             ->name('finance.summary');
-        Route::get('finance/payouts', [App\Http\Controllers\Mitra\Wisata\FinanceController::class, 'payouts'])
+        Route::get('finance/payouts', [FinanceController::class, 'payouts'])
             ->name('finance.payouts');
 
         Route::get('notifications', [App\Http\Controllers\Mitra\Wisata\NotificationController::class, 'index'])

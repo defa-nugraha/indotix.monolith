@@ -7,10 +7,11 @@ use App\Models\PartnerTermsDocument;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rules\File;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\File;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PartnerTermsDocumentController extends Controller
 {
@@ -32,7 +33,9 @@ class PartnerTermsDocumentController extends Controller
                         'label' => $this->label($type),
                         'id' => $document?->id,
                         'title' => $document?->title,
-                        'file_url' => $document?->file_path ? Storage::url($document->file_path) : null,
+                        'file_url' => $document?->file_path
+                            ? route('admin.mitra-documents.file', $document)
+                            : null,
                         'uploaded_by' => $document?->uploader?->name,
                         'updated_at' => $document?->updated_at?->toDateTimeString(),
                         'signatures_count' => $document?->signatures_count ?? 0,
@@ -90,6 +93,21 @@ class PartnerTermsDocumentController extends Controller
         $document->delete();
 
         return back()->with('status', 'partner-terms-deleted');
+    }
+
+    public function file(PartnerTermsDocument $document): BinaryFileResponse
+    {
+        abort_unless($document->file_path, 404);
+
+        $disk = Storage::disk('public');
+        abort_unless($disk->exists($document->file_path), 404);
+
+        return response()->file($disk->path($document->file_path), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.basename($document->file_path).'"',
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     private function label(string $type): string

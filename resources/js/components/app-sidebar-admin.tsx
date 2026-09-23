@@ -212,6 +212,11 @@ export function AppSidebarAdmin() {
             label: 'Halaman Home',
         },
         {
+            feature: 'public_banners',
+            href: '/admin/public/banners',
+            label: 'Banner Website',
+        },
+        {
             feature: 'public_entry_qr',
             href: '/admin/public/entry-qr',
             label: 'QR Masuk Mitra',
@@ -1566,23 +1571,20 @@ export function AppSidebarAdmin() {
                                 </CollapsibleTrigger>
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
-                                        {visiblePublicMenuItems
-                                            .map((item) => (
-                                                <SidebarMenuSubItem
-                                                    key={item.href}
+                                        {visiblePublicMenuItems.map((item) => (
+                                            <SidebarMenuSubItem key={item.href}>
+                                                <SidebarMenuSubButton
+                                                    asChild
+                                                    isActive={isCurrentUrl(
+                                                        item.href,
+                                                    )}
                                                 >
-                                                    <SidebarMenuSubButton
-                                                        asChild
-                                                        isActive={isCurrentUrl(
-                                                            item.href,
-                                                        )}
-                                                    >
-                                                        <Link href={item.href}>
-                                                            {item.label}
-                                                        </Link>
-                                                    </SidebarMenuSubButton>
-                                                </SidebarMenuSubItem>
-                                            ))}
+                                                    <Link href={item.href}>
+                                                        {item.label}
+                                                    </Link>
+                                                </SidebarMenuSubButton>
+                                            </SidebarMenuSubItem>
+                                        ))}
                                     </SidebarMenuSub>
                                 </CollapsibleContent>
                             </Collapsible>
@@ -1601,13 +1603,27 @@ export function AppSidebarAdmin() {
                                 <CollapsibleContent>
                                     <SidebarMenuSub>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mobile/home')}>
-                                                <Link href="/admin/mobile/home">Home Content</Link>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl(
+                                                    '/admin/mobile/home',
+                                                )}
+                                            >
+                                                <Link href="/admin/mobile/home">
+                                                    Home Content
+                                                </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                         <SidebarMenuSubItem>
-                                            <SidebarMenuSubButton asChild isActive={isCurrentUrl('/admin/mobile/promos')}>
-                                                <Link href="/admin/mobile/promos">Promo Banners</Link>
+                                            <SidebarMenuSubButton
+                                                asChild
+                                                isActive={isCurrentUrl(
+                                                    '/admin/mobile/promos',
+                                                )}
+                                            >
+                                                <Link href="/admin/mobile/promos">
+                                                    Promo Banners
+                                                </Link>
                                             </SidebarMenuSubButton>
                                         </SidebarMenuSubItem>
                                     </SidebarMenuSub>
