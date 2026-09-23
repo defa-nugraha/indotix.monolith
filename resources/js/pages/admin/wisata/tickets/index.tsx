@@ -78,14 +78,6 @@ const verificationTone = (status?: string | null) => {
     return 'bg-slate-50 text-slate-600';
 };
 
-const escapeHtml = (value: string) =>
-    value
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
 function PaginationLinks({ links }: { links?: PaginationLink[] }) {
     if (!links || links.length === 0) return null;
 
@@ -118,17 +110,6 @@ export default function AdminWisataTicketsIndex({
 }: Props) {
     const hasSelectedDestination = Boolean(selectedDestination);
 
-    const submitFilters = (form: HTMLFormElement) => {
-        const data = new FormData(form);
-        router.get(
-            '/admin/wisata/tickets',
-            Object.fromEntries(data.entries()),
-            {
-                preserveState: true,
-            },
-        );
-    };
-
     const handleUpdate = (
         ticketId: number,
         payload: Record<string, string | number | boolean | null>,
@@ -148,6 +129,17 @@ export default function AdminWisataTicketsIndex({
                     text: 'Tidak dapat memperbarui tiket.',
                 }),
         });
+    };
+
+    const submitFilters = (form: HTMLFormElement) => {
+        const data = new FormData(form);
+        router.get(
+            '/admin/wisata/tickets',
+            Object.fromEntries(data.entries()),
+            {
+                preserveState: true,
+            },
+        );
     };
 
     const handleDelete = async (ticketId: number) => {
@@ -185,84 +177,8 @@ export default function AdminWisataTicketsIndex({
         });
     };
 
-    const handleEditTicket = async (ticket: TicketRow) => {
-        const result = await Swal.fire({
-            title: 'Edit tiket wisata',
-            html: `
-                <div class="grid gap-3 text-left">
-                    <label class="grid gap-1 text-xs font-semibold text-slate-600">
-                        <span>Nama tiket</span>
-                        <input id="ticket-name" class="swal2-input !mx-0 !mt-1 !w-full" value="${escapeHtml(String(ticket.name))}" maxlength="255">
-                    </label>
-                    <label class="grid gap-1 text-xs font-semibold text-slate-600">
-                        <span>Harga weekend</span>
-                        <input id="ticket-weekend-price" type="number" min="0" class="swal2-input !mx-0 !mt-1 !w-full" value="${ticket.weekend_price ?? ''}">
-                    </label>
-                    <label class="grid gap-1 text-xs font-semibold text-slate-600">
-                        <span>Harga</span>
-                        <input id="ticket-price" type="number" min="0" class="swal2-input !mx-0 !mt-1 !w-full" value="${ticket.price}" ${ticket.ticket_kind === 'package' ? 'disabled' : ''}>
-                        ${ticket.ticket_kind === 'package' ? '<small class="text-slate-500">Harga paket dihitung otomatis dari tiket satuan.</small>' : ''}
-                    </label>
-                    <label class="grid gap-1 text-xs font-semibold text-slate-600">
-                        <span>Kuota</span>
-                        <input id="ticket-quota" type="number" min="0" class="swal2-input !mx-0 !mt-1 !w-full" value="${ticket.quota}">
-                    </label>
-                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                        <input id="ticket-active" type="checkbox" ${ticket.is_active ? 'checked' : ''}>
-                        <span>Tiket aktif</span>
-                    </label>
-                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-600">
-                        <input id="ticket-weekend" type="checkbox" ${ticket.is_weekend ? 'checked' : ''}>
-                        <span>Khusus weekend</span>
-                    </label>
-                </div>
-            `,
-            width: 560,
-            showCancelButton: true,
-            confirmButtonText: 'Simpan',
-            cancelButtonText: 'Batal',
-            focusConfirm: false,
-            preConfirm: () => {
-                const name = (document.getElementById('ticket-name') as HTMLInputElement | null)?.value.trim() ?? '';
-                const price = Number((document.getElementById('ticket-price') as HTMLInputElement | null)?.value ?? ticket.price);
-                const quota = Number((document.getElementById('ticket-quota') as HTMLInputElement | null)?.value ?? ticket.quota);
-                const isActive = Boolean((document.getElementById('ticket-active') as HTMLInputElement | null)?.checked);
-                const isWeekend = Boolean((document.getElementById('ticket-weekend') as HTMLInputElement | null)?.checked);
-                const weekendPriceInput = (document.getElementById('ticket-weekend-price') as HTMLInputElement | null)?.value ?? '';
-                const weekendPrice = weekendPriceInput === '' ? null : Number(weekendPriceInput);
-
-                if (!name) {
-                    Swal.showValidationMessage('Nama tiket wajib diisi.');
-                    return false;
-                }
-                if (!Number.isInteger(price) || price < 0) {
-                    Swal.showValidationMessage('Harga wajib angka 0 atau lebih.');
-                    return false;
-                }
-                if (!Number.isInteger(quota) || quota < 0) {
-                    Swal.showValidationMessage('Kuota wajib angka 0 atau lebih.');
-                    return false;
-                }
-                if (isWeekend && (weekendPrice === null || !Number.isInteger(weekendPrice) || weekendPrice < 0)) {
-                    Swal.showValidationMessage('Harga weekend wajib diisi.');
-                    return false;
-                }
-                const normalizedWeekendPrice = weekendPrice ?? 0;
-
-                return {
-                    name,
-                    price,
-                    quota,
-                    is_active: isActive,
-                    is_weekend: isWeekend,
-                    weekend_price: isWeekend ? normalizedWeekendPrice : null,
-                };
-            },
-        });
-
-        if (!result.isConfirmed || !result.value) return;
-
-        handleUpdate(ticket.id, result.value as Record<string, string | number | boolean | null>);
+    const handleEditTicket = (ticket: TicketRow) => {
+        router.visit(`/admin/wisata/tickets/${ticket.id}/edit`);
     };
 
     return (

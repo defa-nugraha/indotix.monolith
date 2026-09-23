@@ -229,6 +229,8 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.wisata.tickets.index');
     Route::get('admin/wisata/tickets/create', [WisataTicketController::class, 'create'])
         ->name('admin.wisata.tickets.create');
+    Route::get('admin/wisata/tickets/{ticket}/edit', [WisataTicketController::class, 'edit'])
+        ->name('admin.wisata.tickets.edit');
     Route::post('admin/wisata/tickets', [WisataTicketController::class, 'store'])
         ->name('admin.wisata.tickets.store');
     Route::put('admin/wisata/tickets/{ticket}', [WisataTicketController::class, 'update'])
