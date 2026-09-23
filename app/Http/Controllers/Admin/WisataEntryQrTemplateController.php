@@ -29,6 +29,9 @@ class WisataEntryQrTemplateController extends Controller
             ->mapWithKeys(fn (int $limit, string $key) => [$key => ['required', 'string', "max:{$limit}"]])
             ->all();
 
+        // Keep older admin forms compatible while using the configured default.
+        $textRules['customer_service'] = ['sometimes', 'string', 'max:40'];
+
         $imageRules = collect(WisataEntryQrTemplate::IMAGE_KEYS)
             ->mapWithKeys(fn (string $key) => [$key => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048']])
             ->all();
@@ -48,6 +51,7 @@ class WisataEntryQrTemplateController extends Controller
         foreach (WisataEntryQrTemplate::IMAGE_KEYS as $key) {
             if ($request->boolean("remove_{$key}")) {
                 WisataEntryQrTemplate::removeImage($key, $request->user()?->id);
+
                 continue;
             }
 

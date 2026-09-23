@@ -36,6 +36,7 @@ it('allows admin to manage wisata entry qr template content', function () {
             'footer_step_one' => 'Scan QR',
             'footer_step_two' => 'Pilih Tiket',
             'footer_step_three' => 'Validasi',
+            'customer_service' => 'Customer Service: 089123456789',
             'top_logo_1' => fakeQrTemplatePng('logo-1.png'),
             'top_logo_2' => fakeQrTemplatePng('logo-2.png'),
             'top_logo_3' => fakeQrTemplatePng('logo-3.png'),
@@ -45,6 +46,7 @@ it('allows admin to manage wisata entry qr template content', function () {
         ->assertSessionHas('status', 'entry-qr-template-updated');
 
     expect(SystemSetting::query()->where('key', 'wisata_entry_qr_scan_label')->value('value'))->toBe('Scan Masuk');
+    expect(SystemSetting::query()->where('key', 'wisata_entry_qr_customer_service')->value('value'))->toBe('Customer Service: 089123456789');
     expect(SystemSetting::query()->where('key', 'wisata_entry_qr_top_logo_1')->value('value'))->toStartWith('wisata-entry-qr/');
     expect(SystemSetting::query()->where('key', 'wisata_entry_qr_qr_logo')->value('value'))->toStartWith('wisata-entry-qr/');
 });

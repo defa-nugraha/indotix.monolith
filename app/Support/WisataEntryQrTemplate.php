@@ -17,6 +17,7 @@ class WisataEntryQrTemplate
         'footer_step_one' => 16,
         'footer_step_two' => 16,
         'footer_step_three' => 16,
+        'customer_service' => 40,
     ];
 
     public const IMAGE_KEYS = [
@@ -39,6 +40,7 @@ class WisataEntryQrTemplate
         'footer_step_one' => 'Scan QR',
         'footer_step_two' => 'Pilih Tiket',
         'footer_step_three' => 'Validasi',
+        'customer_service' => 'Customer Service: 089...',
         'top_logo_1' => 'logo.png',
         'top_logo_2' => null,
         'top_logo_3' => null,
@@ -194,6 +196,20 @@ class WisataEntryQrTemplate
 
     private static function imageDataUri(?string $path): ?string
     {
+        // Dompdf does not paint the gradients in the default SVG background.
+        if ($path === 'images/qr/entry-mountain-bg.svg') {
+            $path = 'images/qr/entry-mountain-print.jpg';
+        }
+
+        // Print-safe copies retain the default branding on hosts without GD.
+        if (! extension_loaded('gd')) {
+            $path = match ($path) {
+                'logo.png' => 'images/qr/print-logo.jpg',
+                'images/playstore.png' => 'images/qr/print-playstore.jpg',
+                default => $path,
+            };
+        }
+
         if (! $path || str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
             return null;
         }

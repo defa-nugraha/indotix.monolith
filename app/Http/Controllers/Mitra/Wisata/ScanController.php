@@ -98,12 +98,6 @@ class ScanController extends Controller
         $filename = 'qr-masuk-'.Str::slug($destinationName ?: 'wisata').'.pdf';
         $template = WisataEntryQrTemplate::pdfPayload();
 
-        if (! extension_loaded('gd')) {
-            $template['top_logo_images'] = [];
-            $template['qr_logo_image'] = null;
-            $template['playstore_image'] = null;
-        }
-
         $html = view('mitra-wisata-entry-qr', [
             'destinationName' => $destinationName,
             'qrImage' => QrCodeRenderer::dataUri($qrData, 520),
