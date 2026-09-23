@@ -10,6 +10,28 @@ import Swal from 'sweetalert2';
 import { formatCurrencyInput, parseCurrencyToDigits } from '@/lib/currency';
 
 type Option = { id: number; label: string };
+type Ticket = {
+    id: number;
+    mitra_wisata_onboarding_id: number;
+    name: string;
+    description: string | null;
+    price: number;
+    weekend_price: number | null;
+    quota: number;
+    daily_quota: number | null;
+    min_order_quantity: number;
+    max_order_quantity: number | null;
+    ticket_type: string;
+    ticket_kind: string;
+    is_entry_ticket: boolean;
+    package_items: Array<{ ticket_id: number; quantity: number }>;
+    valid_from: string | null;
+    valid_until: string | null;
+    refund_policy: string | null;
+    is_active: boolean;
+    is_closed: boolean;
+    is_weekend: boolean;
+};
 type ComponentTicket = {
     id: number;
     destination_id: number;
@@ -20,6 +42,7 @@ type PackageItemInput = { ticket_id: string; quantity: string };
 
 type Props = {
     destinations: Option[];
+    ticket?: Ticket | null;
     componentTickets: ComponentTicket[];
 };
 
@@ -31,30 +54,43 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 export default function AdminWisataTicketCreate({
     destinations,
+    ticket,
     componentTickets,
 }: Props) {
+    const initialPackageItems = ticket?.package_items?.length
+        ? ticket.package_items.map((item) => ({
+              ticket_id: item.ticket_id.toString(),
+              quantity: item.quantity.toString(),
+          }))
+        : [{ ticket_id: '', quantity: '1' }];
+
     const form = useForm({
-        mitra_wisata_onboarding_id: destinations[0]?.id?.toString() ?? '',
-        name: '',
-        description: '',
-        price: '',
-        weekend_price: '',
-        quota: '',
-        daily_quota: '',
-        min_order_quantity: '1',
-        max_order_quantity: '',
-        ticket_type: 'perorangan',
-        ticket_kind: 'single',
-        is_entry_ticket: true,
-        package_items: [{ ticket_id: '', quantity: '1' }] as PackageItemInput[],
-        valid_from: '',
-        valid_until: '',
-        refund_policy: '',
-        is_active: false,
-        is_closed: false,
-        is_weekend: false,
+        mitra_wisata_onboarding_id:
+            ticket?.mitra_wisata_onboarding_id?.toString() ??
+            destinations[0]?.id?.toString() ??
+            '',
+        name: ticket?.name ?? '',
+        description: ticket?.description ?? '',
+        price: ticket?.price?.toString() ?? '',
+        weekend_price: ticket?.weekend_price?.toString() ?? '',
+        quota: ticket?.quota?.toString() ?? '',
+        daily_quota: ticket?.daily_quota?.toString() ?? '',
+        min_order_quantity: ticket?.min_order_quantity?.toString() ?? '1',
+        max_order_quantity: ticket?.max_order_quantity?.toString() ?? '',
+        ticket_type: ticket?.ticket_type ?? 'perorangan',
+        ticket_kind: ticket?.ticket_kind ?? 'single',
+        is_entry_ticket: ticket?.is_entry_ticket ?? true,
+        package_items: initialPackageItems as PackageItemInput[],
+        valid_from: ticket?.valid_from ?? '',
+        valid_until: ticket?.valid_until ?? '',
+        refund_policy: ticket?.refund_policy ?? '',
+        is_active: ticket?.is_active ?? false,
+        is_closed: ticket?.is_closed ?? false,
+        is_weekend: ticket?.is_weekend ?? false,
     });
-    const [priceDisplay, setPriceDisplay] = useState('');
+    const [priceDisplay, setPriceDisplay] = useState(
+        formatCurrencyInput(ticket?.price ?? ''),
+    );
 
     const handlePriceChange = (value: string) => {
         setPriceDisplay(formatCurrencyInput(value));
@@ -89,6 +125,55 @@ export default function AdminWisataTicketCreate({
         const total = packageTotalFor(items, destinationId);
         form.setData('price', total.toString());
         setPriceDisplay(formatCurrencyInput(total.toString()));
+    };
+
+    const handleSubmit = () => {
+        form.transform((data) => ({
+            ...data,
+            price: Number(data.price || 0),
+            weekend_price: data.weekend_price
+                ? Number(data.weekend_price)
+                : null,
+            quota: Number(data.quota || 0),
+            daily_quota: data.daily_quota ? Number(data.daily_quota) : null,
+            min_order_quantity: Number(data.min_order_quantity || 1),
+            max_order_quantity: data.max_order_quantity
+                ? Number(data.max_order_quantity)
+                : null,
+            package_items:
+                data.ticket_kind === 'package'
+                    ? data.package_items
+                          .filter(
+                              (item) =>
+                                  item.ticket_id && Number(item.quantity) > 0,
+                          )
+                          .map((item) => ({
+                              ticket_id: Number(item.ticket_id),
+                              quantity: Number(item.quantity),
+                          }))
+                    : [],
+        }));
+
+        const options = {
+            onSuccess: () =>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Tersimpan',
+                    text: ticket ? 'Tiket diperbarui.' : 'Tiket dibuat.',
+                }).then(() => router.visit('/admin/wisata/tickets')),
+            onError: () =>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: 'Tidak dapat menyimpan tiket.',
+                }),
+        };
+
+        if (ticket?.id) {
+            form.put(`/admin/wisata/tickets/${ticket.id}`, options);
+        } else {
+            form.post('/admin/wisata/tickets', options);
+        }
     };
 
     const updatePackageItem = (
@@ -127,48 +212,23 @@ export default function AdminWisataTicketCreate({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tambah Tiket Wisata" />
+            <Head title={`${ticket ? 'Edit' : 'Tambah'} Tiket Wisata`} />
             <div className="workspace-page">
                 <section className="workspace-panel">
                     <h1 className="text-2xl font-semibold text-slate-900">
-                        Tambah Produk Tiket
+                        {ticket ? 'Edit' : 'Tambah'} Produk Tiket
                     </h1>
                     <p className="text-sm text-slate-500">
-                        Buat tiket wisata untuk destinasi terverifikasi.
+                        {ticket
+                            ? 'Perbarui detail tiket wisata dan destinasi yang terkait.'
+                            : 'Buat tiket wisata untuk destinasi terverifikasi.'}
                     </p>
 
                     <form
                         className="mt-6 grid gap-4 lg:grid-cols-2"
                         onSubmit={(event) => {
                             event.preventDefault();
-                            form.transform((data) => ({
-                                ...data,
-                                package_items:
-                                    data.ticket_kind === 'package'
-                                        ? data.package_items.filter(
-                                              (item) =>
-                                                  item.ticket_id &&
-                                                  Number(item.quantity) > 0,
-                                          )
-                                        : [],
-                            }));
-                            form.post('/admin/wisata/tickets', {
-                                onSuccess: () => {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Berhasil',
-                                        text: 'Tiket berhasil dibuat.',
-                                    }).then(() => {
-                                        router.visit('/admin/wisata/tickets');
-                                    });
-                                },
-                                onError: () =>
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Gagal',
-                                        text: 'Tidak dapat membuat tiket.',
-                                    }),
-                            });
+                            handleSubmit();
                         }}
                     >
                         <div className="grid gap-2 md:col-span-2">
@@ -261,6 +321,24 @@ export default function AdminWisataTicketCreate({
                             )}
                             <InputError message={form.errors.price} />
                         </div>
+                        <label className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50/60 p-4 text-sm md:col-span-2">
+                            <input
+                                type="checkbox"
+                                checked={form.data.is_weekend}
+                                onChange={(event) =>
+                                    form.setData('is_weekend', event.target.checked)
+                                }
+                                className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                            />
+                            <span>
+                                <span className="block font-semibold text-slate-800">
+                                    Tiket khusus weekend
+                                </span>
+                                <span className="mt-1 block text-xs leading-relaxed text-slate-500">
+                                    Tiket tetap tampil setiap hari. Harga weekend digunakan otomatis pada Sabtu dan Minggu.
+                                </span>
+                            </span>
+                        </label>
                         {form.data.is_weekend && (
                             <div className="grid gap-2">
                                 <Label required>Harga Weekend (Sabtu-Minggu)</Label>
@@ -634,24 +712,6 @@ export default function AdminWisataTicketCreate({
                             />
                             <span className="text-sm text-slate-700">
                                 Tutup penjualan sementara
-                            </span>
-                        </label>
-                        <label className="flex items-start gap-3 rounded-2xl border border-sky-100 bg-sky-50/60 p-4 text-sm md:col-span-2">
-                            <input
-                                type="checkbox"
-                                checked={form.data.is_weekend}
-                                onChange={(event) =>
-                                    form.setData('is_weekend', event.target.checked)
-                                }
-                                className="mt-1 h-4 w-4 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
-                            />
-                            <span>
-                                <span className="block font-semibold text-slate-800">
-                                    Tiket khusus weekend
-                                </span>
-                                <span className="mt-1 block text-xs leading-relaxed text-slate-500">
-                                    Tiket tetap tampil setiap hari. Harga weekend digunakan otomatis pada Sabtu dan Minggu.
-                                </span>
                             </span>
                         </label>
                         <div className="flex flex-col gap-2 sm:flex-row md:col-span-2">
