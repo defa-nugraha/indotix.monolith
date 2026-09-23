@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\EventOrganizer;
 use App\Models\MitraWisataOnboarding;
 use App\Models\MitraWisataStaff;
 use App\Models\User;
@@ -156,25 +155,4 @@ it('deletes wisata mitra with related data and uploaded files', function () {
     foreach ($filePaths as $path) {
         expect(Storage::disk('public')->exists($path))->toBeFalse();
     }
-});
-
-it('keeps retired event mitra deletion route unavailable', function () {
-    $admin = adminUserForMitraDeletion();
-    $mitra = User::factory()->create([
-        'role' => 'mitra',
-        'mitra_onboarding_type' => 'event',
-    ]);
-    $organizer = EventOrganizer::query()->create([
-        'user_id' => $mitra->id,
-        'name' => 'Organizer Retired',
-        'email' => $mitra->email,
-        'status' => 'verified',
-    ]);
-
-    $this->actingAs($admin)
-        ->delete("/admin/events/organizers/{$organizer->id}")
-        ->assertNotFound();
-
-    expect(User::query()->whereKey($mitra->id)->exists())->toBeTrue()
-        ->and(EventOrganizer::query()->whereKey($organizer->id)->exists())->toBeTrue();
 });

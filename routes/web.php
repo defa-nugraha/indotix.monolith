@@ -66,6 +66,7 @@ use App\Http\Controllers\PublicDeleteAccountController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicHistoryController;
 use App\Http\Controllers\PublicHomeController;
+use App\Http\Controllers\PublicBlogController;
 use App\Http\Controllers\PublicMitraGuideController;
 use App\Http\Controllers\PublicNotificationController;
 use App\Http\Controllers\PublicPrivacyPolicyController;
@@ -94,6 +95,10 @@ Route::get('/promo/voucher/{voucher:code}', [PublicPromoController::class, 'sele
     ->name('promo.voucher.select');
 Route::get('/promo/{promoItem:slug}', [PublicPromoController::class, 'show'])
     ->name('promo.show');
+Route::get('/jelajah', [PublicBlogController::class, 'index'])
+    ->name('public.blog.index');
+Route::get('/jelajah/{post:slug}', [PublicBlogController::class, 'show'])
+    ->name('public.blog.show');
 Route::get('/sitemap.xml', SitemapController::class)
     ->name('sitemap');
 

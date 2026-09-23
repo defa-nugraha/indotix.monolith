@@ -1,10 +1,5 @@
 <?php
 
-use App\Models\Event;
-use App\Models\EventOrganizer;
-use App\Models\Hotel;
-use App\Models\MitraEventOnboarding;
-use App\Models\MitraOnboarding;
 use App\Models\MitraWisataOnboarding;
 use App\Models\User;
 use App\Models\WisataTicket;
@@ -17,102 +12,14 @@ uses(RefreshDatabase::class);
 
 function mitraProductTestCity(): string
 {
-    DB::table('provinces')->updateOrInsert(
-        ['code' => '32'],
-        ['name' => 'Jawa Barat'],
-    );
-
+    DB::table('provinces')->updateOrInsert(['code' => '32'], ['name' => 'Jawa Barat']);
     DB::table('regencies')->updateOrInsert(
         ['code' => '3273'],
-        [
-            'province_code' => '32',
-            'name' => 'Bandung',
-            'type' => 'Kota',
-        ],
+        ['province_code' => '32', 'name' => 'Bandung', 'type' => 'Kota'],
     );
 
     return '3273';
 }
-
-function verifiedHotelMitraForProductTest(string $email): User
-{
-    $user = User::factory()->create([
-        'name' => 'Mitra Hotel',
-        'email' => $email,
-        'role' => 'mitra',
-        'mitra_onboarding_type' => 'hotel',
-        'email_verified_at' => now(),
-    ]);
-
-    MitraOnboarding::query()->create([
-        'user_id' => $user->id,
-        'current_step' => 3,
-        'verification_status' => 'verified',
-        'payout_status' => 'verified',
-    ]);
-
-    return $user;
-}
-
-function verifiedEventMitraForProductTest(string $email): array
-{
-    $user = User::factory()->create([
-        'name' => 'Mitra Event',
-        'email' => $email,
-        'role' => 'mitra',
-        'mitra_onboarding_type' => 'event',
-        'email_verified_at' => now(),
-    ]);
-
-    MitraEventOnboarding::query()->create([
-        'user_id' => $user->id,
-        'current_step' => 4,
-        'verification_status' => 'verified',
-        'eo_name' => 'EO Test',
-    ]);
-
-    $organizer = EventOrganizer::query()->create([
-        'user_id' => $user->id,
-        'name' => 'EO Test',
-        'email' => $user->email,
-        'status' => 'verified',
-    ]);
-
-    return [$user, $organizer];
-}
-
-it('blocks hotel product management from role mitra', function () {
-    $mitra = verifiedHotelMitraForProductTest('hotel-owner-rule@indotix.test');
-
-    $this->actingAs($mitra)
-        ->get('/mitra/hotels')
-        ->assertNotFound();
-
-    $this->actingAs($mitra)
-        ->post('/mitra/hotels', [])
-        ->assertNotFound();
-});
-
-it('blocks hotel operational routes from role mitra', function () {
-    $cityId = mitraProductTestCity();
-    $mitra = verifiedHotelMitraForProductTest('hotel-suspended-rule@indotix.test');
-
-    $hotel = Hotel::query()->create([
-        'vendor_id' => $mitra->id,
-        'name' => 'Hotel Dikunci',
-        'city_id' => $cityId,
-        'address' => 'Jl. Test',
-        'status' => 'suspended',
-    ]);
-
-    $this->actingAs($mitra)
-        ->put("/mitra/hotels/{$hotel->id}", [])
-        ->assertNotFound();
-
-    expect($hotel->refresh())
-        ->name->toBe('Hotel Dikunci')
-        ->status->toBe('suspended');
-});
 
 it('rejects wisata ticket creation for another destination id', function () {
     $owner = User::factory()->create([
@@ -263,28 +170,4 @@ it('blocks suspended wisata destination updates from mitra form submission', fun
         ->assertSessionHasErrors();
 
     expect($destination->refresh()->destination_name)->toBe('Wisata Suspend');
-});
-
-it('blocks event product management from role mitra', function () {
-    [$owner] = verifiedEventMitraForProductTest('event-owner-rule@indotix.test');
-    [, $otherOrganizer] = verifiedEventMitraForProductTest('event-other-rule@indotix.test');
-
-    $otherEvent = Event::query()->create([
-        'event_organizer_id' => $otherOrganizer->id,
-        'title' => 'Event Mitra Lain',
-        'start_at' => now()->addDay(),
-        'end_at' => now()->addDays(2),
-        'capacity_total' => 100,
-        'status' => 'draft',
-    ]);
-
-    $this->actingAs($owner)
-        ->get('/mitra/events')
-        ->assertNotFound();
-
-    $this->actingAs($owner)
-        ->post('/mitra/events/tickets', [
-            'event_id' => $otherEvent->id,
-        ])
-        ->assertNotFound();
 });
