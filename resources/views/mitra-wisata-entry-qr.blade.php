@@ -52,26 +52,30 @@
             top: 3mm;
             left: 3mm;
             width: 204mm;
-            height: 108mm;
+            height: 40%;
             overflow: hidden;
-            background: #087bc9;
+            background: #0b55c7;
             color: #ffffff;
         }
         .hero-bg {
             position: absolute;
-            top: 0;
-            right: 0;
+            inset: 0;
             width: 100%;
             height: 100%;
-            opacity: .34;
+            object-fit: cover;
+            opacity: .42;
         }
         .logo-shell {
             position: absolute;
             top: 0;
             left: 0;
-            width: 69mm;
-            height: 27mm;
-            padding: 6mm 8mm;
+            width: 34%;
+            height: 16%;
+            padding: 3mm 5mm;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 2mm;
             background: #ffffff;
             border-bottom-right-radius: 16mm;
             color: #0785ca;
@@ -80,55 +84,59 @@
         }
         .logo-shell img {
             display: inline-block;
-            max-width: 46mm;
-            max-height: 15mm;
-            margin-right: 2mm;
+            width: auto;
+            height: 100%;
+            max-width: 100%;
+            object-fit: contain;
             vertical-align: middle;
         }
+        .logo-count-2 img,
+        .logo-count-3 img { max-width: 30%; }
         .scan-pill {
             position: absolute;
-            top: 9mm;
-            right: 9mm;
-            padding: 4mm 8mm;
+            top: 3.7%;
+            right: 4%;
+            padding: 3mm 6mm;
             border: .4mm solid #8ddcf5;
             border-radius: 10mm;
             background: #1167c8;
-            font-size: 5.2mm;
+            font-size: 4.8mm;
             font-weight: bold;
         }
         .title-area {
             position: absolute;
-            top: 39mm;
-            left: 12mm;
-            width: 160mm;
+            top: 20.2%;
+            left: 6%;
+            width: 78%;
         }
         .title {
             margin: 0;
-            max-height: 30mm;
+            max-height: 24mm;
             overflow: hidden;
-            font-size: 12mm;
+            font-size: 10.5mm;
             line-height: 1.05;
             font-weight: bold;
             text-transform: uppercase;
         }
         .accent-line {
-            width: 18mm;
-            height: 1.5mm;
-            margin-top: 5mm;
+            width: 14mm;
+            height: 1.3mm;
+            margin-top: 4mm;
             background: #7de8ff;
         }
         .lead {
             width: 145mm;
-            margin: 5mm 0 0;
-            font-size: 5mm;
+            max-width: 100%;
+            margin: 4mm 0 0;
+            font-size: 4.4mm;
             line-height: 1.35;
         }
         .body-panel {
             position: absolute;
-            top: 101mm;
+            top: 35.5%;
+            right: 3mm;
+            bottom: 12.5%;
             left: 3mm;
-            width: 204mm;
-            height: 162mm;
             border-top-left-radius: 16mm;
             border-top-right-radius: 16mm;
             background: #ffffff;
@@ -136,33 +144,34 @@
         }
         .qr-wrap {
             position: absolute;
-            top: 12mm;
-            left: 66mm;
-            width: 72mm;
-            height: 72mm;
-            padding: 6mm;
+            top: 3.6%;
+            left: 34%;
+            width: 32%;
+            height: 65mm;
+            padding: 3mm;
             border: 1.3mm solid #1687e8;
             background: #ffffff;
         }
         .qr-wrap > img {
             display: block;
-            width: 60mm;
-            height: 60mm;
+            width: 100%;
+            height: 100%;
         }
         .qr-logo {
             position: absolute;
-            top: 31mm;
-            left: 31mm;
+            top: 50%;
+            left: 50%;
             width: 10mm;
             height: 10mm;
             padding: 1mm;
             background: #ffffff;
+            transform: translate(-50%, -50%);
         }
         .qr-logo img { width: 8mm; height: 8mm; }
         .check {
             position: absolute;
-            top: 76mm;
-            left: 94mm;
+            right: 50%;
+            bottom: -7mm;
             width: 16mm;
             height: 16mm;
             border-radius: 8mm;
@@ -171,33 +180,34 @@
             font-size: 9mm;
             font-weight: bold;
             line-height: 16mm;
+            transform: translateX(50%);
         }
         .main-copy {
             position: absolute;
-            top: 105mm;
-            left: 16mm;
-            width: 172mm;
+            top: 100mm;
+            left: 7%;
+            width: 86%;
         }
         .main-copy h2 {
             margin: 0;
             color: #123a75;
-            font-size: 5.5mm;
+            font-size: 4.8mm;
             line-height: 1.2;
         }
         .main-copy p {
-            margin: 3mm auto 0;
+            margin: 2.5mm auto 0;
             max-width: 145mm;
             color: #526987;
-            font-size: 4mm;
+            font-size: 3.5mm;
             line-height: 1.4;
         }
         .promo {
             position: absolute;
-            top: 135mm;
-            left: 15mm;
-            width: 174mm;
+            top: 126mm;
+            left: 8%;
+            width: 84%;
             height: 19mm;
-            padding: 3mm 5mm;
+            padding: 3mm 4mm;
             border: .35mm solid #dceffd;
             border-radius: 5mm;
             background: #f7fbff;
@@ -214,14 +224,15 @@
         }
         .footer {
             position: absolute;
-            top: 263mm;
+            right: 3mm;
+            bottom: 3mm;
             left: 3mm;
             width: 204mm;
-            height: 31mm;
+            height: 12.5%;
             background: #087dcc;
             color: #ffffff;
         }
-        .footer table { width: 100%; height: 31mm; border-collapse: collapse; }
+        .footer table { width: 100%; height: 100%; border-collapse: collapse; }
         .footer td {
             width: 33.333%;
             padding-top: 8mm;
@@ -249,7 +260,7 @@
             @if($backgroundImage)
                 <img src="{{ $backgroundImage }}" alt="" class="hero-bg">
             @endif
-            <div class="logo-shell">
+            <div class="logo-shell logo-count-{{ count($topLogoImages) }}">
                 @forelse($topLogoImages as $topLogoImage)
                     <img src="{{ $topLogoImage }}" alt="Logo">
                 @empty
@@ -270,8 +281,8 @@
                 @if($qrLogoImage)
                     <span class="qr-logo"><img src="{{ $qrLogoImage }}" alt=""></span>
                 @endif
+                <div class="check">&#10003;</div>
             </div>
-            <div class="check">&#10003;</div>
 
             <div class="main-copy">
                 <h2>&gt;&gt; {{ $mainTitle }} &lt;&lt;</h2>

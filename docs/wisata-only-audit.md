@@ -93,7 +93,7 @@ Flutter product shell
 
 ## Database dan package
 
-Migration history non-wisata tetap dipertahankan pada tahap ini agar deployment existing tidak rusak. Tidak ada package yang dihapus: `composer.json`, `composer.lock`, `package.json`, dan lockfile belum diubah karena belum ada dependency yang terbukti hanya dipakai modul yang dihapus. Flutter dependency juga belum dihapus karena product shell masih memuat import non-wisata.
+Migration dan seeder non-wisata yang terisolasi sudah dihapus. Migration Hotel/booking generik masih dipertahankan karena foreign key voucher, service legacy, dan model shared masih menggunakannya. Tidak ada package yang dihapus: `composer.json`, `composer.lock`, `package.json`, dan lockfile belum diubah karena belum ada dependency yang terbukti hanya dipakai modul yang dihapus. Flutter dependency juga belum dihapus karena product shell masih memuat import non-wisata.
 
 ## Validasi yang dilakukan
 
@@ -115,7 +115,9 @@ File atau modul yang keterkaitannya belum terbukti aman sengaja tidak dihapus. T
 
 ## Perubahan yang sengaja tidak dilakukan
 
-- Tidak ada migration/drop tabel, penghapusan data, atau perubahan dependency package.
+- Tidak ada migration database yang dijalankan, drop tabel, penghapusan data, atau perubahan dependency package.
+- Migration source yang dihapus adalah kelompok Event, Special Program, Souvenir, Academy, dan retail ownership; Blog dipertahankan karena masih digunakan oleh Jelajah Indotix. Seeder demo untuk modul yang dihapus juga dikeluarkan dari `DatabaseSeeder`.
+- Tidak ada tabel existing yang di-drop. Migration yang sudah pernah diterapkan pada production tetap tercatat di database; penghapusan file hanya memengaruhi source repository dan fresh-install migration path.
 - Tidak ada perubahan pada Flutter feature folder non-wisata karena `HomeScreen`, `ProductDetailScreen`, `HistoryScreen`, dan `ProductCategory` masih menjadi shared product shell.
 - Blog, public content, voucher, chat, profile, history, Midtrans callback, notification, payout, dan cleanup service tidak dihapus karena masih mempunyai route, import, kontrak UI, atau dependency account/transaksi wisata.
 - Perubahan kerja pengguna yang sudah ada, termasuk cart wisata, mobile home content, admin pages, dan styling, tidak dibatalkan.
