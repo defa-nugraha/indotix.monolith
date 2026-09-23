@@ -29,7 +29,12 @@ export function PublicFooter({ contact, className }: Props) {
     const year = new Date().getFullYear();
 
     return (
-        <footer className={cn('mt-10 border-t border-slate-200 bg-white', className)}>
+        <footer
+            className={cn(
+                'mt-10 border-t border-slate-200 bg-white',
+                className,
+            )}
+        >
             <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 md:px-8 lg:grid-cols-4">
                 <div className="sm:col-span-2 lg:col-span-1">
                     <Link
@@ -48,12 +53,16 @@ export function PublicFooter({ contact, className }: Props) {
                     <FooterAddress contact={contact} />
                     <div className="mt-4 space-y-1 text-sm text-slate-600">
                         <p>{contact?.phone ?? '0812 9205 9888'}</p>
-                        <p className="break-all">{contact?.email ?? 'info@indotix.co.id'}</p>
+                        <p className="break-all">
+                            {contact?.email ?? 'info@indotix.co.id'}
+                        </p>
                     </div>
                 </div>
 
                 <nav aria-label="Layanan Indotix">
-                    <h4 className="text-sm font-semibold text-slate-900">Layanan</h4>
+                    <h4 className="text-sm font-semibold text-slate-900">
+                        Layanan
+                    </h4>
                     <ul className="mt-2 space-y-1">
                         <li>
                             <Link href="/wisata" className={footerLinkClass}>
@@ -61,7 +70,10 @@ export function PublicFooter({ contact, className }: Props) {
                             </Link>
                         </li>
                         <li>
-                            <Link href="/wisata?ticket_kind=package" className={footerLinkClass}>
+                            <Link
+                                href="/wisata?ticket_kind=package"
+                                className={footerLinkClass}
+                            >
                                 Paket Wisata
                             </Link>
                         </li>
@@ -75,30 +87,53 @@ export function PublicFooter({ contact, className }: Props) {
                                 Jelajah
                             </Link>
                         </li>
+                        <li>
+                            <Link
+                                href="/panduan/mitra"
+                                className={footerLinkClass}
+                            >
+                                Panduan Mitra
+                            </Link>
+                        </li>
                     </ul>
                 </nav>
 
                 <nav aria-label="Informasi perusahaan">
-                    <h4 className="text-sm font-semibold text-slate-900">Perusahaan</h4>
+                    <h4 className="text-sm font-semibold text-slate-900">
+                        Perusahaan
+                    </h4>
                     <ul className="mt-2 space-y-1">
                         <li>
-                            <Link href="/about" className={footerLinkClass}>Tentang Kami</Link>
+                            <Link href="/about" className={footerLinkClass}>
+                                Tentang Kami
+                            </Link>
                         </li>
                         <li>
-                            <Link href="/faq" className={footerLinkClass}>FAQ</Link>
+                            <Link href="/faq" className={footerLinkClass}>
+                                FAQ
+                            </Link>
                         </li>
                         <li>
-                            <Link href="/terms-and-conditions" className={footerLinkClass}>
+                            <Link
+                                href="/terms-and-conditions"
+                                className={footerLinkClass}
+                            >
                                 Syarat dan Ketentuan
                             </Link>
                         </li>
                         <li>
-                            <Link href="/privacy-policy" className={footerLinkClass}>
+                            <Link
+                                href="/privacy-policy"
+                                className={footerLinkClass}
+                            >
                                 Kebijakan Privasi
                             </Link>
                         </li>
                         <li>
-                            <Link href="/delete-account" className={footerLinkClass}>
+                            <Link
+                                href="/delete-account"
+                                className={footerLinkClass}
+                            >
                                 Penghapusan Akun
                             </Link>
                         </li>

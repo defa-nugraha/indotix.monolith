@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\PushTokenController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\WisataBookingController;
+use App\Http\Controllers\Api\WisataCartController;
 use App\Http\Controllers\Api\WisataController;
 use App\Http\Controllers\Api\WisataTicketScanController;
 use Illuminate\Support\Facades\Route;
@@ -116,6 +117,14 @@ Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/bookings')->grou
     Route::post('{booking}/pay', [WisataBookingController::class, 'pay'])->middleware(['maintenance.transactions', 'throttle:10,1']);
     Route::post('{booking}/cancel', [WisataBookingController::class, 'cancel'])->middleware('throttle:10,1');
     Route::get('{booking}/ticket', [WisataBookingController::class, 'ticket']);
+});
+
+Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/cart')->group(function () {
+    Route::get('/', [WisataCartController::class, 'index']);
+    Route::post('add', [WisataCartController::class, 'add'])->middleware('throttle:30,1');
+    Route::post('update', [WisataCartController::class, 'update'])->middleware('throttle:60,1');
+    Route::post('remove', [WisataCartController::class, 'remove'])->middleware('throttle:60,1');
+    Route::post('clear', [WisataCartController::class, 'clear'])->middleware('throttle:30,1');
 });
 
 Route::middleware(['auth:sanctum', 'verified'])->prefix('wisata/ticket-scans')->group(function () {

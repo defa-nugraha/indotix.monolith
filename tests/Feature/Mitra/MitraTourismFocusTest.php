@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\ChatConversation;
-use App\Models\MitraOnboarding;
 use App\Models\MitraWisataOnboarding;
 use App\Models\PartnerTermsDocument;
 use App\Models\User;
@@ -74,70 +73,6 @@ function tourismFocusBooking(User $customer, MitraWisataOnboarding $destination,
     ]);
 }
 
-it('lets mitra choose only wisata onboarding type', function () {
-    $mitra = tourismFocusMitra('mitra-type-choice@indotix.test', null);
-
-    $this->actingAs($mitra)
-        ->post('/mitra/onboarding/type', ['type' => 'hotel'])
-        ->assertSessionHasErrors('type');
-
-    expect($mitra->refresh()->mitra_onboarding_type)->toBeNull();
-
-    $this->actingAs($mitra)
-        ->post('/mitra/onboarding/type', ['type' => 'wisata'])
-        ->assertRedirect(route('mitra.wisata.onboarding'));
-
-    expect($mitra->refresh()->mitra_onboarding_type)->toBe('wisata');
-});
-
-it('renders dashboard as wisata focused for legacy non wisata mitra', function () {
-    $mitra = tourismFocusMitra('legacy-hotel-dashboard@indotix.test', 'hotel');
-
-    $this->actingAs($mitra)
-        ->get('/mitra/dashboard')
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('mitra/dashboard')
-            ->where('onboardingType', null)
-            ->where('metrics', [])
-            ->where('statusCards', []));
-});
-
-it('blocks non wisata direct routes for role mitra', function () {
-    $hotelMitra = tourismFocusMitra('blocked-hotel-route@indotix.test', 'hotel');
-    MitraOnboarding::query()->create([
-        'user_id' => $hotelMitra->id,
-        'current_step' => 3,
-        'verification_status' => 'verified',
-        'payout_status' => 'verified',
-    ]);
-
-    foreach ([
-        '/mitra/onboarding',
-        '/mitra/event/onboarding',
-        '/mitra/hotels',
-        '/mitra/bookings',
-        '/mitra/events',
-        '/mitra/events/tickets',
-    ] as $url) {
-        $this->actingAs($hotelMitra)
-            ->get($url)
-            ->assertNotFound();
-    }
-
-    $this->actingAs($hotelMitra)
-        ->get('/mitra/wisata/onboarding')
-            ->assertForbidden();
-
-    $this->actingAs($hotelMitra)
-        ->post('/mitra/onboarding/step-1', [])
-        ->assertNotFound();
-
-    $this->actingAs($hotelMitra)
-        ->post('/mitra/event/onboarding/step-1', [])
-        ->assertNotFound();
-});
-
 it('keeps wisata booking list and detail scoped to owned destination', function () {
     [$owner, $ownedDestination] = tourismFocusVerifiedDestination('booking-owner@indotix.test');
     [, $otherDestination] = tourismFocusVerifiedDestination('booking-other@indotix.test');
@@ -199,25 +134,15 @@ it('hides and blocks non wisata mitra chat conversations', function () {
 it('only allows verified wisata mitra to sign partner terms', function () {
     Storage::fake('public');
 
-    $hotelMitra = tourismFocusMitra('hotel-terms-blocked@indotix.test', 'hotel');
-    MitraOnboarding::query()->create([
-        'user_id' => $hotelMitra->id,
-        'current_step' => 3,
-        'verification_status' => 'verified',
-        'payout_status' => 'verified',
-    ]);
-
-    $path = UploadedFile::fake()
-        ->create('terms.pdf', 128, 'application/pdf')
-        ->store('partner-terms', 'public');
-
+    [$mitra] = tourismFocusVerifiedDestination('terms-wisata@indotix.test');
+    $path = UploadedFile::fake()->create('terms.pdf', 128, 'application/pdf')->store('partner-terms', 'public');
     PartnerTermsDocument::query()->create([
-        'business_type' => 'hotel',
-        'title' => 'S&K Mitra Hotel',
+        'business_type' => 'wisata',
+        'title' => 'S&K Mitra Wisata',
         'file_path' => $path,
     ]);
 
-    $this->actingAs($hotelMitra)
+    $this->actingAs($mitra)
         ->post('/mitra/terms/sign', ['accepted' => true])
-        ->assertForbidden();
+        ->assertRedirect();
 });

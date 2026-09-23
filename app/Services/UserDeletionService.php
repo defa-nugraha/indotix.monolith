@@ -2,17 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\AcademyBooking;
-use App\Models\Booking;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\EmailOtp;
-use App\Models\EventBooking;
-use App\Models\EventDispute;
 use App\Models\ProductReview;
 use App\Models\SearchLog;
-use App\Models\SouvenirOrder;
-use App\Models\SpecialProgramBooking;
 use App\Models\User;
 use App\Models\UserAddress;
 use App\Models\UserDeviceToken;
@@ -46,15 +40,9 @@ class UserDeletionService
                 ->each
                 ->delete();
             WisataReview::query()->where('user_id', $user->id)->delete();
-            EventDispute::query()->where('user_id', $user->id)->delete();
             WisataDispute::query()->where('user_id', $user->id)->delete();
 
-            SouvenirOrder::query()->where('user_id', $user->id)->delete();
-            Booking::query()->where('user_id', $user->id)->delete();
             WisataBooking::query()->where('user_id', $user->id)->delete();
-            EventBooking::query()->where('user_id', $user->id)->delete();
-            AcademyBooking::query()->where('user_id', $user->id)->delete();
-            SpecialProgramBooking::query()->where('user_id', $user->id)->delete();
 
             UserAddress::query()->where('user_id', $user->id)->delete();
             UserNotification::query()->where('user_id', $user->id)->delete();

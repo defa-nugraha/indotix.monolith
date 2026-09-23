@@ -1,7 +1,6 @@
 <?php
 
 use App\Mail\PartnerTermsSignedMail;
-use App\Models\MitraOnboarding;
 use App\Models\MitraWisataOnboarding;
 use App\Models\PartnerTermsDocument;
 use App\Models\PartnerTermsSignature;
@@ -55,6 +54,32 @@ test('admin terms document upload only accepts pdf', function () {
             'document' => fakeTestImage('terms.png'),
         ])
         ->assertSessionHasErrors('document');
+});
+
+test('admin can view partner terms pdf inline', function () {
+    Storage::fake('public');
+
+    $admin = User::factory()->create([
+        'role' => 'admin',
+        'email_verified_at' => now(),
+    ]);
+
+    $path = UploadedFile::fake()
+        ->create('terms.pdf', 128, 'application/pdf')
+        ->store('partner-terms', 'public');
+
+    $document = PartnerTermsDocument::query()->create([
+        'business_type' => 'wisata',
+        'title' => 'S&K Mitra Wisata',
+        'file_path' => $path,
+        'uploaded_by' => $admin->id,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.mitra-documents.file', $document))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf')
+        ->assertHeader('Content-Disposition', 'inline; filename="'.basename($path).'"');
 });
 
 test('verified partner sees terms requirement and can sign it', function () {

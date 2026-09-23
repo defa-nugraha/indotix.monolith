@@ -1,0 +1,19 @@
+import { Head, Link, router } from '@inertiajs/react';
+import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
+import PublicLayout from '@/layouts/public-layout';
+
+type Item = { ticket_id: number; name: string; quantity: number; unit_price: number; subtotal: number };
+
+export default function WisataCart({ destination, visitDate, items, summary }: { destination: { id: number; name: string } | null; visitDate: string | null; items: Item[]; summary: { subtotal: number; quantity: number } }) {
+    const money = (value: number) => `Rp ${value.toLocaleString('id-ID')}`;
+    return <PublicLayout categories={[]} chips={[]} showCategories={false} showChips={false}>
+        <Head title="Keranjang Tiket Wisata" />
+        <main className="mx-auto min-h-[70vh] max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+            <div className="mb-8 flex items-center gap-3"><ShoppingCart className="h-7 w-7 text-sky-600" /><div><p className="text-xs font-bold tracking-wide text-sky-600 uppercase">Wisata</p><h1 className="text-2xl font-bold text-slate-900">Keranjang Tiket</h1></div></div>
+            {items.length === 0 ? <div className="rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center"><p className="font-semibold text-slate-700">Keranjang tiket masih kosong.</p><Link href="/wisata" className="mt-4 inline-flex rounded-full bg-sky-600 px-5 py-3 text-sm font-bold text-white">Jelajahi Wisata</Link></div> : <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+                <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="mb-5 border-b border-slate-100 pb-4"><h2 className="font-bold text-slate-900">{destination?.name}</h2><p className="mt-1 text-sm text-slate-500">Tanggal kunjungan: {visitDate}</p></div>{items.map((item) => <div key={item.ticket_id} className="flex items-center justify-between gap-4 border-b border-slate-100 py-4 last:border-0"><div className="min-w-0"><p className="font-semibold text-slate-800">{item.name}</p><p className="text-sm text-slate-500">{money(item.unit_price)} / tiket</p></div><div className="flex items-center gap-3"><div className="flex items-center gap-2 rounded-full border border-slate-200 px-2 py-1"><button aria-label="Kurangi" onClick={() => router.post('/wisata/cart/update', { ticket_id: item.ticket_id, quantity: Math.max(0, item.quantity - 1) })}><Minus className="h-4 w-4" /></button><span className="min-w-5 text-center text-sm font-bold">{item.quantity}</span><button aria-label="Tambah" onClick={() => router.post('/wisata/cart/update', { ticket_id: item.ticket_id, quantity: item.quantity + 1 })}><Plus className="h-4 w-4" /></button></div><span className="w-28 text-right font-bold text-slate-900">{money(item.subtotal)}</span><button aria-label="Hapus tiket" className="text-rose-500" onClick={() => router.post('/wisata/cart/remove', { ticket_id: item.ticket_id })}><Trash2 className="h-4 w-4" /></button></div></div>)}</section>
+                <aside className="h-fit rounded-3xl border border-slate-200 bg-white p-5 shadow-sm"><div className="flex justify-between text-sm text-slate-600"><span>Total tiket</span><span>{summary.quantity}</span></div><div className="mt-3 flex justify-between text-lg font-bold text-slate-900"><span>Subtotal</span><span>{money(summary.subtotal)}</span></div><button className="mt-5 flex w-full justify-center rounded-2xl bg-sky-600 px-4 py-3 text-sm font-bold text-white" onClick={() => router.post('/wisata/booking/prepare', { destination_id: destination?.id, ticket_id: items[0].ticket_id, visit_date: visitDate, quantity: summary.quantity, from_cart: true, items: items.map((item) => ({ ticket_id: item.ticket_id, quantity: item.quantity })) })}>Lanjutkan Pemesanan</button><button className="mt-3 w-full text-sm font-semibold text-slate-500" onClick={() => router.post('/wisata/cart/clear')}>Kosongkan</button></aside>
+            </div>}
+        </main>
+    </PublicLayout>;
+}

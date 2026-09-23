@@ -47,7 +47,7 @@ export default function PartnerEdit({ partner }: { partner: Partner }) {
                 />
             </Head>
 
-            <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
+            <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-sans text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <h1 className="text-2xl font-semibold text-slate-900">Edit Partner</h1>
                     <form

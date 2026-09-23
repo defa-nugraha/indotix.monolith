@@ -39,20 +39,49 @@ export function FooterDownloadSocial({
     className,
 }: FooterDownloadSocialProps) {
     const links = [
-        { key: 'facebook', label: 'Facebook', href: sanitizeUrl(facebookUrl), icon: SOCIAL_ICONS.facebook },
-        { key: 'instagram', label: 'Instagram', href: sanitizeUrl(instagramUrl), icon: SOCIAL_ICONS.instagram },
-        { key: 'twitter', label: 'X', href: sanitizeUrl(twitterUrl), icon: SOCIAL_ICONS.twitter },
-        { key: 'tiktok', label: 'TikTok', href: sanitizeUrl(tiktokUrl), icon: SOCIAL_ICONS.tiktok },
-        { key: 'youtube', label: 'YouTube', href: sanitizeUrl(youtubeUrl), icon: SOCIAL_ICONS.youtube },
+        {
+            key: 'facebook',
+            label: 'Facebook',
+            href: sanitizeUrl(facebookUrl),
+            icon: SOCIAL_ICONS.facebook,
+        },
+        {
+            key: 'instagram',
+            label: 'Instagram',
+            href: sanitizeUrl(instagramUrl),
+            icon: SOCIAL_ICONS.instagram,
+        },
+        {
+            key: 'twitter',
+            label: 'X',
+            href: sanitizeUrl(twitterUrl),
+            icon: SOCIAL_ICONS.twitter,
+        },
+        {
+            key: 'tiktok',
+            label: 'TikTok',
+            href: sanitizeUrl(tiktokUrl),
+            icon: SOCIAL_ICONS.tiktok,
+        },
+        {
+            key: 'youtube',
+            label: 'YouTube',
+            href: sanitizeUrl(youtubeUrl),
+            icon: SOCIAL_ICONS.youtube,
+        },
     ];
 
     return (
         <div className={cn(className)}>
-            <h4 className="text-sm font-semibold text-slate-900">Download Indotix</h4>
+            <h4 className="text-sm font-semibold text-slate-900">
+                Download Indotix
+            </h4>
             <a
                 href={sanitizeUrl(downloadUrl)}
                 className="mt-3 inline-flex items-center"
-                {...(shouldOpenNewTab(downloadUrl) ? { target: '_blank', rel: 'noreferrer' } : {})}
+                {...(shouldOpenNewTab(downloadUrl)
+                    ? { target: '_blank', rel: 'noreferrer' }
+                    : {})}
             >
                 <img
                     src="/images/playstore.png"
@@ -61,7 +90,9 @@ export function FooterDownloadSocial({
                     loading="lazy"
                 />
             </a>
-            <h4 className="mt-6 text-sm font-semibold text-slate-900">Ikuti Kami</h4>
+            <h4 className="mt-6 text-sm font-semibold text-slate-900">
+                Ikuti Kami
+            </h4>
             <div className="mt-3 flex flex-wrap gap-2">
                 {links.map((link) => (
                     <a
@@ -69,18 +100,19 @@ export function FooterDownloadSocial({
                         href={link.href}
                         aria-label={link.label}
                         className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 transition hover:bg-slate-200"
-                        {...(shouldOpenNewTab(link.href) ? { target: '_blank', rel: 'noreferrer' } : {})}
+                        {...(shouldOpenNewTab(link.href)
+                            ? { target: '_blank', rel: 'noreferrer' }
+                            : {})}
                     >
-                        <img src={link.icon} alt={link.label} className="h-4 w-4" loading="lazy" />
+                        <img
+                            src={link.icon}
+                            alt={link.label}
+                            className="h-4 w-4"
+                            loading="lazy"
+                        />
                     </a>
                 ))}
             </div>
-            <a
-                href="/panduan/mitra"
-                className="mt-6 inline-flex min-h-11 items-center text-sm font-medium text-slate-600 transition hover:text-sky-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-600"
-            >
-                Panduan Mitra
-            </a>
         </div>
     );
 }

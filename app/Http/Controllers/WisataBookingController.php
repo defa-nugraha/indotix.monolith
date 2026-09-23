@@ -6,19 +6,20 @@ use App\Mail\WisataTicketMail;
 use App\Models\MitraWisataOnboarding;
 use App\Models\SystemSetting;
 use App\Models\UserNotification;
-use App\Models\WisataBooking;
+use App\Models\Voucher;
 use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateCommission;
 use App\Models\WisataAffiliateCommissionItem;
 use App\Models\WisataAffiliateLink;
+use App\Models\WisataBooking;
+use App\Models\WisataBookingItem;
 use App\Models\WisataPayment;
 use App\Models\WisataTicket;
-use App\Models\WisataBookingItem;
-use App\Models\Voucher;
-use App\Services\MidtransService;
+use App\Services\ProductReviewService;
 use App\Services\WisataPaymentLifecycleService;
 use App\Services\WisataTicketPdfService;
-use App\Services\ProductReviewService;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -86,6 +87,9 @@ class WisataBookingController extends Controller
         }
 
         $request->session()->put('wisata_booking_draft', $draft);
+        if ($request->boolean('from_cart')) {
+            $request->session()->forget('wisata_cart');
+        }
 
         if (! $request->user()) {
             $request->session()->put('url.intended', route('wisata.booking.review'));
@@ -160,7 +164,7 @@ class WisataBookingController extends Controller
         return back()->with('status', 'wisata-voucher-removed');
     }
 
-    public function confirm(Request $request, WisataPaymentLifecycleService $payments): RedirectResponse|\Illuminate\Http\JsonResponse|\Inertia\Response
+    public function confirm(Request $request, WisataPaymentLifecycleService $payments): RedirectResponse|JsonResponse|Response
     {
         $draft = $request->session()->get('wisata_booking_draft');
         if (! $draft) {
@@ -541,7 +545,7 @@ class WisataBookingController extends Controller
                 ]);
             }
 
-            $visitDate = \Carbon\Carbon::parse($draft['visit_date'])->startOfDay();
+            $visitDate = Carbon::parse($draft['visit_date'])->startOfDay();
             if ($ticket->valid_from && $visitDate->lt($ticket->valid_from->startOfDay())) {
                 throw ValidationException::withMessages([
                     'items' => "Tiket {$ticket->name} belum berlaku pada tanggal kunjungan.",
@@ -1165,5 +1169,4 @@ class WisataBookingController extends Controller
 
         return (int) $commission->value * max(1, (int) $booking->quantity);
     }
-
 }

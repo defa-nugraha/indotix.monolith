@@ -1,19 +1,25 @@
 @php
-    $template = $template ?? [];
-    $topLogoImages = collect($template['top_logo_images'] ?? [])->filter()->values()->all();
-    $qrLogoImage = $template['qr_logo_image'] ?? null;
-    $backgroundImage = $template['background_image'] ?? null;
-    $playstoreImage = $template['playstore_image'] ?? null;
-    $scanLabel = $template['scan_label'] ?? 'Scan untuk Masuk';
-    $leadText = $template['lead_text'] ?? 'Scan QR ini melalui menu Scan Tiket Indotix untuk memvalidasi tiket kunjungan Anda.';
-    $mainTitle = $template['main_title'] ?? 'SATU QR UNTUK VALIDASI TIKET WISATA';
-    $mainDescription = $template['main_description'] ?? 'Tempel QR ini di loket atau pintu masuk. User memilih tiket paid miliknya setelah scan.';
-    $websiteLabel = $template['website_label'] ?? 'indotix.co.id';
-    $footerSteps = [
-        $template['footer_step_one'] ?? 'Scan QR',
-        $template['footer_step_two'] ?? 'Pilih Tiket',
-        $template['footer_step_three'] ?? 'Validasi',
-    ];
+    $template = array_replace(\App\Support\WisataEntryQrTemplate::defaults(), $template ?? []);
+    $logos = array_values(array_filter($template['top_logo_images'] ?? []));
+    // All elements share the reference poster's 500 x 707 coordinate system.
+    $mm = static fn (float $value) => round($value * 210 / 500, 4).'mm';
+    $box = static fn ($x, $y, $w, $h) => 'left:'.$mm($x).';top:'.$mm($y).';width:'.$mm($w).';height:'.$mm($h).';';
+    $fit = static function ($uri, $x, $y, $w, $h) use ($box) {
+        $bytes = str_contains($uri, ',') ? base64_decode(explode(',', $uri, 2)[1], true) : false;
+        $size = $bytes ? @getimagesizefromstring($bytes) : false;
+        if ($size) {
+            $scale = min($w / $size[0], $h / $size[1]);
+            $nw = $size[0] * $scale;
+            $nh = $size[1] * $scale;
+            return $box($x + ($w - $nw) / 2, $y + ($h - $nh) / 2, $nw, $nh);
+        }
+        return $box($x, $y, $w, $h);
+    };
+    $art = view('partials.wisata-entry-qr-art')->render();
+    $artUri = 'data:image/svg+xml;base64,'.base64_encode($art);
+    $name = mb_strtoupper($destinationName ?: 'Destinasi Wisata');
+    $titleSize = mb_strlen($name) > 48 ? 23 : (mb_strlen($name) > 30 ? 28 : 34);
+    $steps = [$template['footer_step_one'], $template['footer_step_two'], $template['footer_step_three']];
 @endphp
 <!doctype html>
 <html lang="id">
@@ -22,281 +28,57 @@
     <title>QR Masuk Wisata Indotix</title>
     <style>
         @page { size: A4 portrait; margin: 0; }
-        * { box-sizing: border-box; }
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 210mm;
-            height: 297mm;
-            overflow: hidden;
-            font-family: DejaVu Sans, Arial, sans-serif;
-            color: #0b2347;
-            background: #ffffff;
-        }
-        .poster {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 210mm;
-            height: 297mm;
-            overflow: hidden;
-            background: #ffffff;
-        }
-        .frame {
-            position: absolute;
-            inset: 0;
-            border: 3mm solid #116fd4;
-        }
-        .hero {
-            position: absolute;
-            top: 3mm;
-            left: 3mm;
-            width: 204mm;
-            height: 108mm;
-            overflow: hidden;
-            background: #087bc9;
-            color: #ffffff;
-        }
-        .hero-bg {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100%;
-            height: 100%;
-            opacity: .34;
-        }
-        .logo-shell {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 69mm;
-            height: 27mm;
-            padding: 6mm 8mm;
-            background: #ffffff;
-            border-bottom-right-radius: 16mm;
-            color: #0785ca;
-            font-size: 10mm;
-            font-weight: bold;
-        }
-        .logo-shell img {
-            display: inline-block;
-            max-width: 46mm;
-            max-height: 15mm;
-            margin-right: 2mm;
-            vertical-align: middle;
-        }
-        .scan-pill {
-            position: absolute;
-            top: 9mm;
-            right: 9mm;
-            padding: 4mm 8mm;
-            border: .4mm solid #8ddcf5;
-            border-radius: 10mm;
-            background: #1167c8;
-            font-size: 5.2mm;
-            font-weight: bold;
-        }
-        .title-area {
-            position: absolute;
-            top: 39mm;
-            left: 12mm;
-            width: 160mm;
-        }
-        .title {
-            margin: 0;
-            max-height: 30mm;
-            overflow: hidden;
-            font-size: 12mm;
-            line-height: 1.05;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .accent-line {
-            width: 18mm;
-            height: 1.5mm;
-            margin-top: 5mm;
-            background: #7de8ff;
-        }
-        .lead {
-            width: 145mm;
-            margin: 5mm 0 0;
-            font-size: 5mm;
-            line-height: 1.35;
-        }
-        .body-panel {
-            position: absolute;
-            top: 101mm;
-            left: 3mm;
-            width: 204mm;
-            height: 162mm;
-            border-top-left-radius: 16mm;
-            border-top-right-radius: 16mm;
-            background: #ffffff;
-            text-align: center;
-        }
-        .qr-wrap {
-            position: absolute;
-            top: 12mm;
-            left: 66mm;
-            width: 72mm;
-            height: 72mm;
-            padding: 6mm;
-            border: 1.3mm solid #1687e8;
-            background: #ffffff;
-        }
-        .qr-wrap > img {
-            display: block;
-            width: 60mm;
-            height: 60mm;
-        }
-        .qr-logo {
-            position: absolute;
-            top: 31mm;
-            left: 31mm;
-            width: 10mm;
-            height: 10mm;
-            padding: 1mm;
-            background: #ffffff;
-        }
-        .qr-logo img { width: 8mm; height: 8mm; }
-        .check {
-            position: absolute;
-            top: 76mm;
-            left: 94mm;
-            width: 16mm;
-            height: 16mm;
-            border-radius: 8mm;
-            background: #0e85dc;
-            color: #ffffff;
-            font-size: 9mm;
-            font-weight: bold;
-            line-height: 16mm;
-        }
-        .main-copy {
-            position: absolute;
-            top: 105mm;
-            left: 16mm;
-            width: 172mm;
-        }
-        .main-copy h2 {
-            margin: 0;
-            color: #123a75;
-            font-size: 5.5mm;
-            line-height: 1.2;
-        }
-        .main-copy p {
-            margin: 3mm auto 0;
-            max-width: 145mm;
-            color: #526987;
-            font-size: 4mm;
-            line-height: 1.4;
-        }
-        .promo {
-            position: absolute;
-            top: 135mm;
-            left: 15mm;
-            width: 174mm;
-            height: 19mm;
-            padding: 3mm 5mm;
-            border: .35mm solid #dceffd;
-            border-radius: 5mm;
-            background: #f7fbff;
-            text-align: left;
-        }
-        .site { color: #123a75; font-size: 4.3mm; font-weight: bold; }
-        .download-copy { margin-top: 1mm; color: #64748b; font-size: 3.1mm; }
-        .playstore {
-            position: absolute;
-            top: 4mm;
-            right: 5mm;
-            width: 35mm;
-            max-height: 11mm;
-        }
-        .footer {
-            position: absolute;
-            top: 263mm;
-            left: 3mm;
-            width: 204mm;
-            height: 31mm;
-            background: #087dcc;
-            color: #ffffff;
-        }
-        .footer table { width: 100%; height: 31mm; border-collapse: collapse; }
-        .footer td {
-            width: 33.333%;
-            padding-top: 8mm;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 4.2mm;
-            font-weight: bold;
-        }
-        .footer td + td { border-left: .3mm solid #8ddcf5; }
-        .step-number {
-            display: inline-block;
-            width: 8mm;
-            height: 8mm;
-            margin-right: 2mm;
-            border: .45mm solid #ffffff;
-            border-radius: 4mm;
-            line-height: 7mm;
-            text-align: center;
-        }
+        html, body { margin: 0; padding: 0; font-family: Helvetica, Arial, sans-serif; color: #004575; }
+        .poster { position: fixed; top: 0; left: 0; width: 210mm; height: 297mm; }
+        .item { position: absolute; margin: 0; padding: 0; }
+        .white { color: #fff; }
+        .bold { font-weight: bold; }
+        .center { text-align: center; }
     </style>
 </head>
 <body>
-    <main class="poster">
-        <section class="hero">
-            @if($backgroundImage)
-                <img src="{{ $backgroundImage }}" alt="" class="hero-bg">
-            @endif
-            <div class="logo-shell">
-                @forelse($topLogoImages as $topLogoImage)
-                    <img src="{{ $topLogoImage }}" alt="Logo">
-                @empty
-                    indotix
-                @endforelse
-            </div>
-            <div class="scan-pill">{{ $scanLabel }}</div>
-            <div class="title-area">
-                <h1 class="title">{{ $destinationName }}</h1>
-                <div class="accent-line"></div>
-                <p class="lead">{{ $leadText }}</p>
-            </div>
-        </section>
-
-        <section class="body-panel">
-            <div class="qr-wrap">
-                <img src="{{ $qrImage }}" alt="QR masuk wisata">
-                @if($qrLogoImage)
-                    <span class="qr-logo"><img src="{{ $qrLogoImage }}" alt=""></span>
-                @endif
-            </div>
-            <div class="check">&#10003;</div>
-
-            <div class="main-copy">
-                <h2>&gt;&gt; {{ $mainTitle }} &lt;&lt;</h2>
-                <p>{{ $mainDescription }}</p>
-            </div>
-
-            <div class="promo">
-                <div class="site">{{ $websiteLabel }}</div>
-                <div class="download-copy">Download aplikasi Indotix</div>
-                @if($playstoreImage)
-                    <img src="{{ $playstoreImage }}" alt="Google Play" class="playstore">
-                @endif
-            </div>
-        </section>
-
-        <footer class="footer">
-            <table>
-                <tr>
-                    @foreach($footerSteps as $index => $step)
-                        <td><span class="step-number">{{ $index + 1 }}</span>{{ $step }}</td>
-                    @endforeach
-                </tr>
-            </table>
-        </footer>
-        <div class="frame"></div>
-    </main>
+<main class="poster">
+    <img class="item" style="{{ $box(0, 0, 500, 707) }}" src="{{ $artUri }}" alt="">
+    @if(!empty($template['background_image']))
+        <img class="item" style="{{ $box(17, 14, 474, 269) }}" src="{{ $template['background_image'] }}" alt="">
+    @endif
+    {{-- Masks and frame are above the hero image so square image corners never escape. --}}
+    <div class="item" style="{{ $box(17, 253, 474, 351) }}background:#fff;border-radius:{{ $mm(46) }} {{ $mm(46) }} 0 0;"></div>
+    <div class="item" style="{{ $box(17, 13, 161, 43) }}background:#fff;border-bottom-right-radius:{{ $mm(44) }};"></div>
+    @foreach($logos as $index => $logo)
+        @php
+            $slot = 132 / max(1, count($logos));
+        @endphp
+        <img class="item" src="{{ $logo }}" alt="Logo Indotix" style="{{ $fit($logo, 27 + $slot * $index, 20, $slot - 5, 28) }}">
+    @endforeach
+    <div class="item" style="{{ $box(244, 23, 225, 50) }}background:#0071c8;border:{{ $mm(1) }} solid #aeebff;border-radius:{{ $mm(26) }};"></div>
+    <div class="item white bold center" style="{{ $box(295, 39, 167, 23) }}font-size:{{ $mm(18) }};line-height:1;">{{ $template['scan_label'] }}</div>
+    <h1 class="item white bold" style="{{ $box(46, 82, 350, 76) }}font-size:{{ $mm($titleSize) }};line-height:1.02;overflow:hidden;">{{ $name }}</h1>
+    <div class="item" style="{{ $box(46, 170, 70, 7) }}background:#7de8ff;border-radius:{{ $mm(4) }};"></div>
+    <p class="item white" style="{{ $box(46, 198, 390, 48) }}font-size:{{ $mm(17.5) }};line-height:1.4;">{{ $template['lead_text'] }}</p>
+    <div class="item" style="{{ $box(160, 276, 180, 188) }}background:#edf6fa;border-radius:{{ $mm(23) }};"></div>
+    <div class="item" style="{{ $box(156, 270, 188, 188) }}background:#fff;border:{{ $mm(0.7) }} solid #edf4f8;border-radius:{{ $mm(23) }};"></div>
+    <img class="item" src="{{ $qrImage }}" alt="QR masuk wisata" style="{{ $box(160, 274, 180, 180) }}">
+    @if(!empty($template['qr_logo_image']))
+        <div class="item" style="{{ $box(236, 350, 28, 28) }}background:#fff;border-radius:{{ $mm(5) }};"></div>
+        <img class="item" src="{{ $template['qr_logo_image'] }}" alt="" style="{{ $fit($template['qr_logo_image'], 238, 352, 24, 24) }}">
+    @endif
+    <h2 class="item bold center" style="{{ $box(60, 474, 388, 27) }}font-size:{{ $mm(13.5) }};line-height:1.2;">
+        <span style="color:#009add;">&gt; &gt;</span> {{ $template['main_title'] }} <span style="color:#009add;">&lt; &lt;</span>
+    </h2>
+    <p class="item center" style="{{ $box(81, 507, 346, 34) }}font-size:{{ $mm(11.5) }};line-height:1.35;">{{ $template['main_description'] }}</p>
+    <div class="item" style="{{ $box(204, 540, 100, 7) }}background:#00d9e8;border-radius:{{ $mm(4) }};"></div>
+    <div class="item" style="{{ $box(56, 549, 396, 49) }}background:#fff;border:{{ $mm(0.8) }} solid #d9f1ff;border-radius:{{ $mm(18) }};"></div>
+    <div class="item bold" style="{{ $box(101, 560, 224, 16) }}font-size:{{ $mm(mb_strlen($template['website_label']) > 32 ? 9 : 13) }};">{{ $template['website_label'] }}</div>
+    <div class="item" style="{{ $box(101, 580, 224, 12) }}font-size:{{ $mm(10) }};">Download aplikasi Indotix</div>
+    @if(!empty($template['playstore_image']))
+        <img class="item" src="{{ $template['playstore_image'] }}" alt="Google Play" style="{{ $fit($template['playstore_image'], 336, 560, 100, 30) }}">
+    @endif
+    @foreach($steps as $index => $step)
+        <div class="item white bold" style="{{ $box(106 + $index * 143, 635, 87, 20) }}font-size:{{ $mm(11.5) }};line-height:1.2;">{{ $step }}</div>
+    @endforeach
+    <div class="item white center" style="{{ $box(105, 668, 290, 17) }}font-size:{{ $mm(14) }};line-height:1.1;">{{ $template['customer_service'] }}</div>
+    <img class="item" style="{{ $box(0, 0, 500, 707) }}" src="data:image/svg+xml;base64,{{ base64_encode(view('partials.wisata-entry-qr-details')->render()) }}" alt="">
+</main>
 </body>
 </html>

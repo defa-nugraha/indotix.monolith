@@ -7,16 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     private array $tables = [
-        'academy_classes',
-        'academy_tickets',
+        'commission_rules',
         'blog_categories',
         'blog_posts',
         'blog_tags',
-        'commission_rules',
-        'events',
-        'event_commissions',
-        'event_organizers',
-        'event_tickets',
         'faqs',
         'hotels',
         'notification_templates',
@@ -25,12 +19,6 @@ return new class extends Migration
         'public_partners',
         'room_inventories',
         'room_types',
-        'souvenir_categories',
-        'souvenir_products',
-        'souvenir_promotions',
-        'souvenir_variants',
-        'special_programs',
-        'special_program_variants',
         'system_settings',
         'users',
         'vouchers',
@@ -39,8 +27,6 @@ return new class extends Migration
     ];
 
     private array $preexistingColumns = [
-        'special_programs' => ['created_by', 'updated_by'],
-        'souvenir_products' => ['created_by', 'updated_by'],
         'system_settings' => ['updated_by'],
     ];
 

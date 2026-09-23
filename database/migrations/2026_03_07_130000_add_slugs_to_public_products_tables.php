@@ -9,44 +9,12 @@ use Illuminate\Support\Str;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::table('hotels', function (Blueprint $table) {
-            $table->string('slug')->nullable()->after('name');
-        });
-
-        Schema::table('events', function (Blueprint $table) {
-            $table->string('slug')->nullable()->after('title');
-        });
-
-        Schema::table('special_programs', function (Blueprint $table) {
-            $table->string('slug')->nullable()->after('name');
-        });
-
-        Schema::table('academy_classes', function (Blueprint $table) {
-            $table->string('slug')->nullable()->after('title');
-        });
-
         Schema::table('mitra_wisata_onboardings', function (Blueprint $table) {
             $table->string('slug')->nullable()->after('destination_name');
         });
 
-        $this->fillSlugs('hotels', 'name', 'hotel');
-        $this->fillSlugs('events', 'title', 'event', ['booking']);
-        $this->fillSlugs('special_programs', 'name', 'program', ['booking']);
-        $this->fillSlugs('academy_classes', 'title', 'academy', ['booking']);
         $this->fillSlugs('mitra_wisata_onboardings', 'destination_name', 'wisata', ['booking', 'history']);
 
-        Schema::table('hotels', function (Blueprint $table) {
-            $table->unique('slug');
-        });
-        Schema::table('events', function (Blueprint $table) {
-            $table->unique('slug');
-        });
-        Schema::table('special_programs', function (Blueprint $table) {
-            $table->unique('slug');
-        });
-        Schema::table('academy_classes', function (Blueprint $table) {
-            $table->unique('slug');
-        });
         Schema::table('mitra_wisata_onboardings', function (Blueprint $table) {
             $table->unique('slug');
         });
@@ -54,22 +22,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::table('hotels', function (Blueprint $table) {
-            $table->dropUnique(['slug']);
-            $table->dropColumn('slug');
-        });
-        Schema::table('events', function (Blueprint $table) {
-            $table->dropUnique(['slug']);
-            $table->dropColumn('slug');
-        });
-        Schema::table('special_programs', function (Blueprint $table) {
-            $table->dropUnique(['slug']);
-            $table->dropColumn('slug');
-        });
-        Schema::table('academy_classes', function (Blueprint $table) {
-            $table->dropUnique(['slug']);
-            $table->dropColumn('slug');
-        });
         Schema::table('mitra_wisata_onboardings', function (Blueprint $table) {
             $table->dropUnique(['slug']);
             $table->dropColumn('slug');

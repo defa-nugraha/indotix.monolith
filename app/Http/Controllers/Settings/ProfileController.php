@@ -5,15 +5,10 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
-use App\Models\AcademyBooking;
-use App\Models\Booking;
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
 use App\Models\EmailOtp;
-use App\Models\EventBooking;
 use App\Models\ProductReview;
-use App\Models\SouvenirOrder;
-use App\Models\SpecialProgramBooking;
 use App\Models\UserAddress;
 use App\Models\UserDeviceToken;
 use App\Models\UserNotification;
@@ -78,46 +73,11 @@ class ProfileController extends Controller
 
         $finalStatuses = ['cancelled', 'completed', 'expired', 'no_show'];
         $counts = [
-            'hotel' => Booking::query()
-                ->where('user_id', $user->id)
-                ->where(function ($query) use ($finalStatuses) {
-                    $query->whereNull('status')
-                        ->orWhereNotIn('status', $finalStatuses);
-                })
-                ->count(),
             'wisata' => WisataBooking::query()
                 ->where('user_id', $user->id)
                 ->where(function ($query) use ($finalStatuses) {
                     $query->whereNull('status')
                         ->orWhereNotIn('status', $finalStatuses);
-                })
-                ->count(),
-            'event' => EventBooking::query()
-                ->where('user_id', $user->id)
-                ->where(function ($query) use ($finalStatuses) {
-                    $query->whereNull('status')
-                        ->orWhereNotIn('status', $finalStatuses);
-                })
-                ->count(),
-            'academy' => AcademyBooking::query()
-                ->where('user_id', $user->id)
-                ->where(function ($query) use ($finalStatuses) {
-                    $query->whereNull('status')
-                        ->orWhereNotIn('status', $finalStatuses);
-                })
-                ->count(),
-            'special_program' => SpecialProgramBooking::query()
-                ->where('user_id', $user->id)
-                ->where(function ($query) use ($finalStatuses) {
-                    $query->whereNull('status')
-                        ->orWhereNotIn('status', $finalStatuses);
-                })
-                ->count(),
-            'souvenir' => SouvenirOrder::query()
-                ->where('user_id', $user->id)
-                ->where(function ($query) {
-                    $query->whereNull('status')
-                        ->orWhereNotIn('status', ['cancelled', 'completed']);
                 })
                 ->count(),
         ];
