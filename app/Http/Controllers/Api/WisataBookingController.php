@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Mail\WisataTicketMail;
 use App\Http\Controllers\Controller;
+use App\Mail\WisataTicketMail;
 use App\Models\MitraWisataOnboarding;
 use App\Models\SystemSetting;
 use App\Models\UserNotification;
@@ -16,9 +16,9 @@ use App\Models\WisataBooking;
 use App\Models\WisataBookingItem;
 use App\Models\WisataPayment;
 use App\Models\WisataTicket;
-use App\Services\MidtransService;
 use App\Services\WisataPaymentLifecycleService;
 use App\Services\WisataTicketPdfService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
@@ -165,7 +165,7 @@ class WisataBookingController extends Controller
                     'total_price' => $summary['total'],
                     'status' => 'pending_payment',
                     'payment_status' => 'pending',
-                'payment_deadline' => now()->addMinutes(SystemSetting::wisataBookingTimeoutMinutes()),
+                    'payment_deadline' => now()->addMinutes(SystemSetting::wisataBookingTimeoutMinutes()),
                     'guest_name' => $data['guest_name'],
                     'guest_email' => $data['guest_email'],
                     'guest_phone' => $data['guest_phone'],
@@ -393,7 +393,7 @@ class WisataBookingController extends Controller
                 throw new RuntimeException('Tiket belum tersedia.');
             }
 
-            $visitDate = \Carbon\Carbon::parse($data['visit_date'])->startOfDay();
+            $visitDate = Carbon::parse($data['visit_date'], config('app.timezone'))->startOfDay();
             if ($ticket->valid_from && $visitDate->lt($ticket->valid_from->startOfDay())) {
                 throw new RuntimeException('Tiket belum berlaku pada tanggal kunjungan.');
             }
@@ -412,7 +412,7 @@ class WisataBookingController extends Controller
                 throw new RuntimeException('Kuota tiket tidak mencukupi.');
             }
 
-            $unitPrice = (int) $ticket->price;
+            $unitPrice = $ticket->priceForVisitDate($visitDate);
 
             $items[] = [
                 'ticket_id' => (int) $ticket->id,
@@ -936,5 +936,4 @@ class WisataBookingController extends Controller
 
         return (int) $commission->value * max(1, (int) $booking->quantity);
     }
-
 }

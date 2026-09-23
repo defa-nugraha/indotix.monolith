@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\WisataTicket;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -122,6 +123,7 @@ class WisataCartController extends Controller
 
         $ids = collect($cart['items'] ?? [])->pluck('ticket_id')->map(fn ($id) => (int) $id)->all();
         $tickets = WisataTicket::query()->whereIn('id', $ids)->get()->keyBy('id');
+        $visitDate = Carbon::parse($cart['visit_date'], config('app.timezone'))->startOfDay();
         $destination = MitraWisataOnboarding::query()->find($cart['destination_id']);
         if (! $destination) {
             return $this->emptyPayload();
@@ -134,12 +136,14 @@ class WisataCartController extends Controller
             }
             $quantity = max(0, (int) $item['quantity']);
 
+            $unitPrice = $ticket->priceForVisitDate($visitDate);
+
             return [
                 'ticket_id' => Crypt::encryptString((string) $ticket->id),
                 'name' => $ticket->name,
                 'quantity' => $quantity,
-                'unit_price' => (int) $ticket->price,
-                'subtotal' => (int) $ticket->price * $quantity,
+                'unit_price' => $unitPrice,
+                'subtotal' => $unitPrice * $quantity,
             ];
         })->filter()->values();
 

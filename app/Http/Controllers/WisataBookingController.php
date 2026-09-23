@@ -545,7 +545,7 @@ class WisataBookingController extends Controller
                 ]);
             }
 
-            $visitDate = Carbon::parse($draft['visit_date'])->startOfDay();
+            $visitDate = Carbon::parse($draft['visit_date'], config('app.timezone'))->startOfDay();
             if ($ticket->valid_from && $visitDate->lt($ticket->valid_from->startOfDay())) {
                 throw ValidationException::withMessages([
                     'items' => "Tiket {$ticket->name} belum berlaku pada tanggal kunjungan.",
@@ -583,7 +583,7 @@ class WisataBookingController extends Controller
                 ]);
             }
 
-            $unitPrice = (int) $ticket->price;
+            $unitPrice = $ticket->priceForVisitDate($visitDate);
 
             $items[] = [
                 'ticket_id' => (int) $ticket->id,

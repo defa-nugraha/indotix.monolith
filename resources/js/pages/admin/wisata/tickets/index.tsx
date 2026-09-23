@@ -24,6 +24,8 @@ type TicketRow = {
     ticket_kind: string;
     package_items: Array<{ ticket_id: number; quantity: number }>;
     is_active: boolean;
+    is_weekend?: boolean;
+    weekend_price?: number | null;
     destination?: { id?: number; destination_name?: string | null };
     owner?: { id?: number; name?: string; email?: string };
 };
@@ -193,6 +195,10 @@ export default function AdminWisataTicketsIndex({
                         <input id="ticket-name" class="swal2-input !mx-0 !mt-1 !w-full" value="${escapeHtml(String(ticket.name))}" maxlength="255">
                     </label>
                     <label class="grid gap-1 text-xs font-semibold text-slate-600">
+                        <span>Harga weekend</span>
+                        <input id="ticket-weekend-price" type="number" min="0" class="swal2-input !mx-0 !mt-1 !w-full" value="${ticket.weekend_price ?? ''}">
+                    </label>
+                    <label class="grid gap-1 text-xs font-semibold text-slate-600">
                         <span>Harga</span>
                         <input id="ticket-price" type="number" min="0" class="swal2-input !mx-0 !mt-1 !w-full" value="${ticket.price}" ${ticket.ticket_kind === 'package' ? 'disabled' : ''}>
                         ${ticket.ticket_kind === 'package' ? '<small class="text-slate-500">Harga paket dihitung otomatis dari tiket satuan.</small>' : ''}
@@ -204,6 +210,10 @@ export default function AdminWisataTicketsIndex({
                     <label class="flex items-center gap-2 text-xs font-semibold text-slate-600">
                         <input id="ticket-active" type="checkbox" ${ticket.is_active ? 'checked' : ''}>
                         <span>Tiket aktif</span>
+                    </label>
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                        <input id="ticket-weekend" type="checkbox" ${ticket.is_weekend ? 'checked' : ''}>
+                        <span>Khusus weekend</span>
                     </label>
                 </div>
             `,
@@ -217,6 +227,9 @@ export default function AdminWisataTicketsIndex({
                 const price = Number((document.getElementById('ticket-price') as HTMLInputElement | null)?.value ?? ticket.price);
                 const quota = Number((document.getElementById('ticket-quota') as HTMLInputElement | null)?.value ?? ticket.quota);
                 const isActive = Boolean((document.getElementById('ticket-active') as HTMLInputElement | null)?.checked);
+                const isWeekend = Boolean((document.getElementById('ticket-weekend') as HTMLInputElement | null)?.checked);
+                const weekendPriceInput = (document.getElementById('ticket-weekend-price') as HTMLInputElement | null)?.value ?? '';
+                const weekendPrice = weekendPriceInput === '' ? null : Number(weekendPriceInput);
 
                 if (!name) {
                     Swal.showValidationMessage('Nama tiket wajib diisi.');
@@ -230,12 +243,19 @@ export default function AdminWisataTicketsIndex({
                     Swal.showValidationMessage('Kuota wajib angka 0 atau lebih.');
                     return false;
                 }
+                if (isWeekend && (weekendPrice === null || !Number.isInteger(weekendPrice) || weekendPrice < 0)) {
+                    Swal.showValidationMessage('Harga weekend wajib diisi.');
+                    return false;
+                }
+                const normalizedWeekendPrice = weekendPrice ?? 0;
 
                 return {
                     name,
                     price,
                     quota,
                     is_active: isActive,
+                    is_weekend: isWeekend,
+                    weekend_price: isWeekend ? normalizedWeekendPrice : null,
                 };
             },
         });
