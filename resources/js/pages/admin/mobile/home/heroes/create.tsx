@@ -76,7 +76,6 @@ function HeroForm({
                         form={form}
                         name="title"
                         label="Headline"
-                        required
                     />
                     <TextField
                         form={form}
