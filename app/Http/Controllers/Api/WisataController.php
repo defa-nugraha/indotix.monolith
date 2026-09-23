@@ -48,10 +48,10 @@ class WisataController extends Controller
             ->get()
             ->groupBy('mitra_wisata_onboarding_id');
 
-        $results = $destinations->map(function (MitraWisataOnboarding $destination) use ($tickets, $data) {
+        $results = $destinations->map(function (MitraWisataOnboarding $destination) use ($tickets, $data, $visitDate) {
             $items = $tickets->get($destination->id, collect());
 
-            $ticketRows = $items->map(function (WisataTicket $ticket) use ($data) {
+            $ticketRows = $items->map(function (WisataTicket $ticket) use ($data, $visitDate) {
                 $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);

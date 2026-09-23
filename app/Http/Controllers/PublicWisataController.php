@@ -150,7 +150,7 @@ class PublicWisataController extends Controller
             : collect();
 
         $tickets = $ticketModels
-            ->map(function (WisataTicket $ticket) use ($data, $packageTicketLookup) {
+            ->map(function (WisataTicket $ticket) use ($data, $packageTicketLookup, $visitDate) {
                 $reserved = $this->reservedTicketQuantity((int) $ticket->id, $data['visit_date']);
                 $maxQuota = $ticket->daily_quota ?? $ticket->quota;
                 $available = max(0, $maxQuota - $reserved);
