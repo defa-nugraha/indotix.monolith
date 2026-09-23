@@ -52,6 +52,8 @@ it('renders representative admin feature pages for a super admin', function (str
     'wisata tickets' => '/admin/wisata/tickets',
     'wisata bookings' => '/admin/wisata/bookings',
     'public banners' => '/admin/public/banners',
+    'reviews' => '/admin/reviews',
+    'blog posts' => '/admin/blog/posts',
     'system settings' => '/admin/system/settings',
 ]);
 
