@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Admin\AboutPageController;
 use App\Http\Controllers\Admin\AdminAuditLogController;
+use App\Http\Controllers\Admin\BlogCategoryController;
+use App\Http\Controllers\Admin\BlogPostController;
+use App\Http\Controllers\Admin\BlogTagController;
 use App\Http\Controllers\Admin\CommissionRuleController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FaqController;
@@ -13,6 +16,7 @@ use App\Http\Controllers\Admin\MobilePromoBannerController;
 use App\Http\Controllers\Admin\NotificationControlController;
 use App\Http\Controllers\Admin\PartnerTermsDocumentController;
 use App\Http\Controllers\Admin\PayoutController;
+use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\PrivacyPolicyController;
 use App\Http\Controllers\Admin\PromoItemController;
 use App\Http\Controllers\Admin\PublicBannerController;
@@ -129,6 +133,44 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.chat.show');
     Route::post('admin/chat/{conversation}/messages', [App\Http\Controllers\Admin\ChatController::class, 'store'])
         ->name('admin.chat.messages.store');
+
+    Route::get('admin/reviews', [ProductReviewController::class, 'index'])
+        ->name('admin.reviews.index');
+    Route::post('admin/reviews/{review}/reply', [ProductReviewController::class, 'reply'])
+        ->name('admin.reviews.reply');
+    Route::delete('admin/reviews/{review}', [ProductReviewController::class, 'destroy'])
+        ->name('admin.reviews.destroy');
+
+    Route::get('admin/blog/posts', [BlogPostController::class, 'index'])
+        ->name('admin.blog.posts.index');
+    Route::get('admin/blog/posts/create', [BlogPostController::class, 'create'])
+        ->name('admin.blog.posts.create');
+    Route::post('admin/blog/posts', [BlogPostController::class, 'store'])
+        ->name('admin.blog.posts.store');
+    Route::get('admin/blog/posts/{post}/edit', [BlogPostController::class, 'edit'])
+        ->name('admin.blog.posts.edit');
+    Route::put('admin/blog/posts/{post}', [BlogPostController::class, 'update'])
+        ->name('admin.blog.posts.update');
+    Route::delete('admin/blog/posts/{post}', [BlogPostController::class, 'destroy'])
+        ->name('admin.blog.posts.destroy');
+
+    Route::get('admin/blog/categories', [BlogCategoryController::class, 'index'])
+        ->name('admin.blog.categories.index');
+    Route::post('admin/blog/categories', [BlogCategoryController::class, 'store'])
+        ->name('admin.blog.categories.store');
+    Route::put('admin/blog/categories/{category}', [BlogCategoryController::class, 'update'])
+        ->name('admin.blog.categories.update');
+    Route::delete('admin/blog/categories/{category}', [BlogCategoryController::class, 'destroy'])
+        ->name('admin.blog.categories.destroy');
+
+    Route::get('admin/blog/tags', [BlogTagController::class, 'index'])
+        ->name('admin.blog.tags.index');
+    Route::post('admin/blog/tags', [BlogTagController::class, 'store'])
+        ->name('admin.blog.tags.store');
+    Route::put('admin/blog/tags/{tag}', [BlogTagController::class, 'update'])
+        ->name('admin.blog.tags.update');
+    Route::delete('admin/blog/tags/{tag}', [BlogTagController::class, 'destroy'])
+        ->name('admin.blog.tags.destroy');
 
     Route::get('admin/users', [UserController::class, 'index'])
         ->name('admin.users.index');
