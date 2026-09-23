@@ -86,6 +86,20 @@ test('website banners never appear in mobile home api', function () {
         ->assertJsonMissing(['title' => 'Website Only']);
 });
 
+test('mobile hero headline is optional when creating a hero', function () {
+    Storage::fake('public');
+    $admin = mobileAdmin();
+
+    $this->actingAs($admin)->post('/admin/mobile/home/heroes', [
+        'title' => '',
+        'media_type' => 'image',
+        'media' => UploadedFile::fake()->create('mobile-hero-no-headline.png', 20, 'image/png'),
+        'is_active' => true,
+    ])->assertRedirect();
+
+    expect(MobileHomeHero::query()->latest('id')->value('title'))->toBeNull();
+});
+
 test('mobile routes require existing admin authorization', function () {
     $this->get('/admin/mobile/home')->assertRedirect();
     $this->get('/admin/mobile/promos')->assertRedirect();
