@@ -425,7 +425,7 @@ export function PublicFooter({ contact }: { contact?: PublicContact | null }) {
 
     return (
         <footer className="mt-0 border-t border-slate-200 bg-white">
-            <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 md:grid-cols-4 md:px-8">
+            <div className="mx-auto grid w-full max-w-6xl gap-6 px-3 py-10 md:grid-cols-4 md:px-5">
                 <div>
                     <Link href="/">
                         <img
@@ -469,64 +469,76 @@ export function PublicFooter({ contact }: { contact?: PublicContact | null }) {
                     <h4 className="text-sm font-semibold text-slate-900">
                         Perusahaan
                     </h4>
-                    <ul className="mt-3 space-y-2 text-sm text-slate-600">
-                        <li>
-                            <Link
-                                href="/about"
-                                className="transition hover:text-sky-600"
-                            >
-                                Tentang Kami
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/jelajah"
-                                className="transition hover:text-sky-600"
-                            >
-                                Blog
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/faq"
-                                className="transition hover:text-sky-600"
-                            >
-                                FAQ
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/terms-and-conditions"
-                                className="transition hover:text-sky-600"
-                            >
-                                Syarat dan Ketentuan
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/privacy-policy"
-                                className="transition hover:text-sky-600"
-                            >
-                                Kebijakan Privasi
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/refund-policy"
-                                className="transition hover:text-sky-600"
-                            >
-                                Refund Policy
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/contact-us"
-                                className="transition hover:text-sky-600"
-                            >
-                                Contact Us
-                            </Link>
-                        </li>
-                    </ul>
+                    <div className="mt-3 grid grid-cols-2 gap-x-4 text-sm text-slate-600">
+                        <ul className="space-y-2">
+                            <li>
+                                <Link
+                                    href="/about"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Tentang Kami
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/jelajah"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Blog
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/faq"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    FAQ
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/terms-and-conditions"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Syarat dan Ketentuan
+                                </Link>
+                            </li>
+                        </ul>
+                        <ul className="space-y-2">
+                            <li>
+                                <Link
+                                    href="/contact-us"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Kontak Kami
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/privacy-policy"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Kebijakan Privasi
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/refund-policy"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Refund Policy
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/delete-account"
+                                    className="transition hover:text-sky-600"
+                                >
+                                    Penghapusan Akun
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <FooterDownloadSocial
                     downloadUrl={contact?.download_url}

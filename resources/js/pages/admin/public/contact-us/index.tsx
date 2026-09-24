@@ -111,7 +111,7 @@ const iconMap = Object.fromEntries(
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Konten Publik', href: '/admin/public/contact-us' },
-    { title: 'Contact Us', href: '/admin/public/contact-us' },
+    { title: 'Kontak Kami', href: '/admin/public/contact-us' },
 ];
 
 export default function ContactUsIndex({ contacts }: { contacts: Contact[] }) {
@@ -190,7 +190,7 @@ export default function ContactUsIndex({ contacts }: { contacts: Contact[] }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Kelola Contact Us" />
+            <Head title="Kelola Kontak Kami" />
             <div className="flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-sans text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -199,11 +199,11 @@ export default function ContactUsIndex({ contacts }: { contacts: Contact[] }) {
                                 Konten Publik
                             </p>
                             <h1 className="mt-2 text-2xl font-semibold">
-                                Contact Us
+                                Kontak Kami
                             </h1>
                             <p className="mt-2 text-sm text-slate-600">
                                 Kelola daftar kontak yang ditampilkan pada
-                                halaman Contact Us.
+                                halaman Kontak Kami.
                             </p>
                         </div>
                         <Button
@@ -312,7 +312,7 @@ export default function ContactUsIndex({ contacts }: { contacts: Contact[] }) {
                             {editing ? 'Edit Kontak' : 'Tambah Kontak'}
                         </DialogTitle>
                         <DialogDescription>
-                            Kontak ini akan ditampilkan pada halaman Contact Us
+                            Kontak ini akan ditampilkan pada halaman Kontak Kami
                             publik.
                         </DialogDescription>
                     </DialogHeader>

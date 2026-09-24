@@ -230,7 +230,7 @@ export function AppSidebarAdmin() {
         {
             feature: 'public_contacts',
             href: '/admin/public/contact-us',
-            label: 'Contact Us',
+            label: 'Kontak Kami',
         },
         {
             feature: 'public_partners',

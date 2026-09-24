@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import type { BreadcrumbItem } from '@/types';
 import CkeditorField from '@/components/ckeditor-field';
+import { useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -26,6 +27,9 @@ type Policy = {
 };
 
 export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
+    const [activeTab, setActiveTab] = useState<'privacy' | 'terms' | 'refund'>(
+        'privacy',
+    );
     const form = useForm({
         title: policy.title ?? 'Kebijakan Privasi Indotix',
         content: policy.content ?? '',
@@ -109,39 +113,84 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
                             />
                             <InputError message={form.errors.effective_at} />
                         </div>
-                        <div className="grid gap-2">
-                            <Label required>Kebijakan Privasi</Label>
-                            <CkeditorField
-                                value={form.data.content}
-                                onChange={(value) =>
-                                    form.setData('content', value)
-                                }
-                                minHeightClassName="min-h-[320px]"
-                            />
-                            <InputError message={form.errors.content} />
+                        <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-2">
+                            <div
+                                className="grid grid-cols-3 gap-1"
+                                role="tablist"
+                                aria-label="Dokumen legal"
+                            >
+                                {[
+                                    ['privacy', 'Kebijakan Privasi'],
+                                    ['terms', 'Syarat dan Ketentuan'],
+                                    ['refund', 'Refund Policy'],
+                                ].map(([value, label]) => (
+                                    <button
+                                        key={value}
+                                        type="button"
+                                        role="tab"
+                                        aria-selected={activeTab === value}
+                                        onClick={() =>
+                                            setActiveTab(
+                                                value as
+                                                    | 'privacy'
+                                                    | 'terms'
+                                                    | 'refund',
+                                            )
+                                        }
+                                        className={`rounded-xl px-3 py-2 text-sm font-medium transition ${
+                                            activeTab === value
+                                                ? 'bg-white text-sky-700 shadow-sm'
+                                                : 'text-slate-500 hover:bg-white/70 hover:text-slate-800'
+                                        }`}
+                                    >
+                                        {label}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                        <div className="grid gap-2">
-                            <Label required>Syarat dan Ketentuan</Label>
-                            <CkeditorField
-                                value={form.data.terms_content}
-                                onChange={(value) =>
-                                    form.setData('terms_content', value)
-                                }
-                                minHeightClassName="min-h-[320px]"
-                            />
-                            <InputError message={form.errors.terms_content} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label required>Refund Policy</Label>
-                            <CkeditorField
-                                value={form.data.refund_content}
-                                onChange={(value) =>
-                                    form.setData('refund_content', value)
-                                }
-                                minHeightClassName="min-h-[320px]"
-                            />
-                            <InputError message={form.errors.refund_content} />
-                        </div>
+                        {activeTab === 'privacy' && (
+                            <div className="grid gap-2">
+                                <Label required>Kebijakan Privasi</Label>
+                                <CkeditorField
+                                    value={form.data.content}
+                                    onChange={(value) =>
+                                        form.setData('content', value)
+                                    }
+                                    minHeightClassName="min-h-[320px]"
+                                />
+                                <InputError message={form.errors.content} />
+                            </div>
+                        )}
+                        {activeTab === 'terms' && (
+                            <div className="grid gap-2">
+                                <Label required>Syarat dan Ketentuan</Label>
+                                <CkeditorField
+                                    value={form.data.terms_content}
+                                    onChange={(value) =>
+                                        form.setData('terms_content', value)
+                                    }
+                                    minHeightClassName="min-h-[320px]"
+                                />
+                                <InputError
+                                    message={form.errors.terms_content}
+                                />
+                            </div>
+                        )}
+                        {activeTab === 'refund' && (
+                            <div className="grid gap-2">
+                                <Label required>Refund Policy</Label>
+                                <CkeditorField
+                                    value={form.data.refund_content}
+                                    onChange={(value) =>
+                                        form.setData('refund_content', value)
+                                    }
+                                    minHeightClassName="min-h-[320px]"
+                                />
+                                <InputError
+                                    message={form.errors.refund_content}
+                                />
+                            </div>
+                        )}
                         <div className="flex gap-2">
                             <label className="flex items-center gap-2 text-sm text-slate-600">
                                 <input

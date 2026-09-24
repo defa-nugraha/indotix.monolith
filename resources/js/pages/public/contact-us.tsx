@@ -87,7 +87,7 @@ export default function ContactUsPage({ contacts }: { contacts: Contact[] }) {
     return (
         <PublicLayout categories={[]} chips={[]}>
             <PublicSeo
-                title="Contact Us - Indotix"
+                title="Kontak Kami - Indotix"
                 description="Hubungi Indotix melalui kanal layanan yang tersedia."
                 canonicalPath="/contact-us"
             />
@@ -97,7 +97,7 @@ export default function ContactUsPage({ contacts }: { contacts: Contact[] }) {
                         Indotix
                     </p>
                     <h1 className="mt-2 text-3xl font-semibold text-slate-900 sm:text-4xl">
-                        Contact Us
+                        Kontak Kami
                     </h1>
                     <p className="mt-3 max-w-2xl text-slate-600">
                         Kami siap membantu kebutuhan perjalanan dan layanan

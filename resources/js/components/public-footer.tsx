@@ -35,7 +35,7 @@ export function PublicFooter({ contact, className }: Props) {
                 className,
             )}
         >
-            <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 md:px-8 lg:grid-cols-4">
+            <div className="mx-auto grid w-full max-w-6xl gap-8 px-3 py-10 sm:grid-cols-2 md:px-5 lg:grid-cols-4">
                 <div className="sm:col-span-2 lg:col-span-1">
                     <Link
                         href="/"
@@ -102,58 +102,62 @@ export function PublicFooter({ contact, className }: Props) {
                     <h4 className="text-sm font-semibold text-slate-900">
                         Perusahaan
                     </h4>
-                    <ul className="mt-2 space-y-1">
-                        <li>
-                            <Link href="/about" className={footerLinkClass}>
-                                Tentang Kami
-                            </Link>
-                        </li>
-                        <li>
-                            <Link href="/faq" className={footerLinkClass}>
-                                FAQ
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/terms-and-conditions"
-                                className={footerLinkClass}
-                            >
-                                Syarat dan Ketentuan
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/privacy-policy"
-                                className={footerLinkClass}
-                            >
-                                Kebijakan Privasi
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/refund-policy"
-                                className={footerLinkClass}
-                            >
-                                Refund Policy
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/contact-us"
-                                className={footerLinkClass}
-                            >
-                                Contact Us
-                            </Link>
-                        </li>
-                        <li>
-                            <Link
-                                href="/delete-account"
-                                className={footerLinkClass}
-                            >
-                                Penghapusan Akun
-                            </Link>
-                        </li>
-                    </ul>
+                    <div className="mt-2 grid grid-cols-2 gap-x-4">
+                        <ul className="space-y-1">
+                            <li>
+                                <Link href="/about" className={footerLinkClass}>
+                                    Tentang Kami
+                                </Link>
+                            </li>
+                            <li>
+                                <Link href="/faq" className={footerLinkClass}>
+                                    FAQ
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/terms-and-conditions"
+                                    className={footerLinkClass}
+                                >
+                                    Syarat dan Ketentuan
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/privacy-policy"
+                                    className={footerLinkClass}
+                                >
+                                    Kebijakan Privasi
+                                </Link>
+                            </li>
+                        </ul>
+                        <ul className="space-y-1">
+                            <li>
+                                <Link
+                                    href="/contact-us"
+                                    className={footerLinkClass}
+                                >
+                                    Kontak Kami
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/refund-policy"
+                                    className={footerLinkClass}
+                                >
+                                    Refund Policy
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    href="/delete-account"
+                                    className={footerLinkClass}
+                                >
+                                    Penghapusan Akun
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
                 </nav>
 
                 <FooterDownloadSocial
