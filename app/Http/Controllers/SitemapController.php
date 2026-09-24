@@ -20,6 +20,7 @@ class SitemapController extends Controller
                 ['loc' => url('/faq'), 'lastmod' => null],
                 ['loc' => url('/privacy-policy'), 'lastmod' => null],
                 ['loc' => url('/terms-and-conditions'), 'lastmod' => null],
+                ['loc' => url('/refund-policy'), 'lastmod' => null],
                 ['loc' => url('/delete-account'), 'lastmod' => null],
             ]);
 

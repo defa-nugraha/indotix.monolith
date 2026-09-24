@@ -637,6 +637,8 @@ Route::get('/privacy-policy', [PublicPrivacyPolicyController::class, 'show'])
     ->name('public.privacy-policy');
 Route::get('/terms-and-conditions', [PublicPrivacyPolicyController::class, 'terms'])
     ->name('public.terms-and-conditions');
+Route::get('/refund-policy', [PublicPrivacyPolicyController::class, 'refund'])
+    ->name('public.refund-policy');
 Route::get('/delete-account', [PublicDeleteAccountController::class, 'show'])
     ->name('public.delete-account');
 

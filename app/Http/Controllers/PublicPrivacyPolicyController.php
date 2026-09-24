@@ -29,6 +29,16 @@ class PublicPrivacyPolicyController extends Controller
         ]);
     }
 
+    public function refund(): Response
+    {
+        return Inertia::render('public/privacy-policy', [
+            'policy' => $this->activePolicy(),
+            'initialSection' => 'refund',
+            'pageTitle' => 'Refund Policy Indotix',
+            'canonicalPath' => '/refund-policy',
+        ]);
+    }
+
     private function activePolicy(): ?PrivacyPolicy
     {
         $policy = PrivacyPolicy::query()

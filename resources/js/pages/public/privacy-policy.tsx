@@ -27,20 +27,29 @@ export default function PrivacyPolicyPage({
     canonicalPath = '/privacy-policy',
 }: {
     policy: Policy | null;
-    initialSection?: 'privacy' | 'terms';
+    initialSection?: 'privacy' | 'terms' | 'refund';
     pageTitle?: string;
     canonicalPath?: string;
 }) {
     const isTermsPage = initialSection === 'terms';
+    const isRefundPage = initialSection === 'refund';
     const resolvedTitle =
         pageTitle ??
-        (isTermsPage ? 'Syarat dan Ketentuan Indotix' : 'Kebijakan Privasi Indotix');
-    const description = isTermsPage
-        ? 'Syarat dan ketentuan penggunaan layanan Indotix untuk pemesanan tiket wisata dan layanan digital terkait.'
-        : 'Kebijakan privasi Indotix mengenai pengumpulan, penggunaan, penyimpanan, dan perlindungan data pribadi pengguna.';
-    const sectionOrder = isTermsPage
-        ? ['terms', 'privacy-policy']
-        : ['privacy-policy', 'terms'];
+        (isRefundPage
+            ? 'Refund Policy Indotix'
+            : isTermsPage
+              ? 'Syarat dan Ketentuan Indotix'
+              : 'Kebijakan Privasi Indotix');
+    const description = isRefundPage
+        ? 'Kebijakan refund Indotix untuk pemesanan tiket wisata dan layanan digital terkait.'
+        : isTermsPage
+          ? 'Syarat dan ketentuan penggunaan layanan Indotix untuk pemesanan tiket wisata dan layanan digital terkait.'
+          : 'Kebijakan privasi Indotix mengenai pengumpulan, penggunaan, penyimpanan, dan perlindungan data pribadi pengguna.';
+    const sectionOrder = isRefundPage
+        ? ['refund']
+        : isTermsPage
+          ? ['terms', 'privacy-policy']
+          : ['privacy-policy', 'terms'];
 
     const categories = [
         { label: 'Wisata', icon: MapPinned, active: true, href: '/wisata' },
@@ -72,12 +81,16 @@ export default function PrivacyPolicyPage({
                 description={description}
                 canonicalPath={canonicalPath}
                 keywords={[
-                    isTermsPage
-                        ? 'syarat dan ketentuan Indotix'
-                        : 'kebijakan privasi Indotix',
-                    isTermsPage
-                        ? 'ketentuan penggunaan layanan Indotix'
-                        : 'perlindungan data pengguna',
+                    isRefundPage
+                        ? 'refund policy Indotix'
+                        : isTermsPage
+                          ? 'syarat dan ketentuan Indotix'
+                          : 'kebijakan privasi Indotix',
+                    isRefundPage
+                        ? 'kebijakan pengembalian dana tiket wisata'
+                        : isTermsPage
+                          ? 'ketentuan penggunaan layanan Indotix'
+                          : 'perlindungan data pengguna',
                 ]}
                 structuredData={{
                     '@context': 'https://schema.org',
@@ -98,9 +111,11 @@ export default function PrivacyPolicyPage({
                         </Link>
                         <span className="mx-2">/</span>
                         <span className="text-slate-700">
-                            {isTermsPage
-                                ? 'Syarat dan Ketentuan'
-                                : 'Kebijakan Privasi'}
+                            {isRefundPage
+                                ? 'Refund Policy'
+                                : isTermsPage
+                                  ? 'Syarat dan Ketentuan'
+                                  : 'Kebijakan Privasi'}
                         </span>
                     </nav>
                     <h1 className="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
@@ -123,7 +138,7 @@ export default function PrivacyPolicyPage({
                         <Link
                             href="/privacy-policy"
                             className={`rounded-full border px-3 py-1 transition ${
-                                !isTermsPage
+                                !isTermsPage && !isRefundPage
                                     ? 'border-sky-200 bg-sky-50 text-sky-700'
                                     : 'border-slate-200 text-slate-600 hover:border-sky-200 hover:text-sky-600'
                             }`}
@@ -139,6 +154,16 @@ export default function PrivacyPolicyPage({
                             }`}
                         >
                             Syarat dan Ketentuan
+                        </Link>
+                        <Link
+                            href="/refund-policy"
+                            className={`rounded-full border px-3 py-1 transition ${
+                                isRefundPage
+                                    ? 'border-sky-200 bg-sky-50 text-sky-700'
+                                    : 'border-slate-200 text-slate-600 hover:border-sky-200 hover:text-sky-600'
+                            }`}
+                        >
+                            Refund Policy
                         </Link>
                     </div>
 
@@ -164,11 +189,13 @@ export default function PrivacyPolicyPage({
                                 ) : (
                                     <section
                                         key={section}
-                                        id="terms"
+                                        id={section}
                                         className="scroll-mt-36 rounded-2xl border border-slate-200 bg-slate-50/60 p-4 sm:p-6"
                                     >
                                         <h2 className="text-xl font-semibold text-slate-900">
-                                            Syarat dan Ketentuan
+                                            {section === 'refund'
+                                                ? 'Refund Policy'
+                                                : 'Syarat dan Ketentuan'}
                                         </h2>
                                         {policy.terms_content ? (
                                             <div
@@ -179,7 +206,9 @@ export default function PrivacyPolicyPage({
                                             />
                                         ) : (
                                             <div className="mt-4 rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
-                                                Syarat dan ketentuan belum tersedia.
+                                                {section === 'refund'
+                                                    ? 'Refund policy belum tersedia.'
+                                                    : 'Syarat dan ketentuan belum tersedia.'}
                                             </div>
                                         )}
                                     </section>
@@ -188,7 +217,11 @@ export default function PrivacyPolicyPage({
                         </div>
                     ) : (
                         <div className="mt-6 rounded-2xl border border-dashed border-slate-200 p-6 text-center text-sm text-slate-500">
-                            Kebijakan privasi belum tersedia.
+                            {isRefundPage
+                                ? 'Refund policy belum tersedia.'
+                                : isTermsPage
+                                  ? 'Syarat dan ketentuan belum tersedia.'
+                                  : 'Kebijakan privasi belum tersedia.'}
                         </div>
                     )}
                 </div>

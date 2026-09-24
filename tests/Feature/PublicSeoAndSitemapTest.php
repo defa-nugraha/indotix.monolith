@@ -27,6 +27,7 @@ test('sitemap contains all public landing pages and published articles', functio
         ->assertSee(url('/faq'), false)
         ->assertSee(url('/privacy-policy'), false)
         ->assertSee(url('/terms-and-conditions'), false)
+        ->assertSee(url('/refund-policy'), false)
         ->assertSee(url('/delete-account'), false)
         ->assertSee(url('/jelajah/panduan-wisata-keluarga'), false)
         ->assertDontSee(url('/jelajah-indotix'), false);
@@ -49,6 +50,26 @@ test('terms and conditions page uses active legal document content', function ()
             ->where('initialSection', 'terms')
             ->where('canonicalPath', '/terms-and-conditions')
             ->where('policy.terms_content', '<p>Konten syarat dan ketentuan pengguna.</p>'));
+});
+
+test('refund policy page follows the public terms page presentation', function () {
+    PrivacyPolicy::query()->create([
+        'title' => 'Kebijakan Privasi Indotix',
+        'content' => '<p>Konten privasi pengguna.</p>',
+        'terms_content' => '<p>Konten refund pengguna.</p>',
+        'version' => '2.0',
+        'effective_at' => now()->toDateString(),
+        'is_active' => true,
+    ]);
+
+    $this->get('/refund-policy')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('public/privacy-policy')
+            ->where('initialSection', 'refund')
+            ->where('canonicalPath', '/refund-policy')
+            ->where('pageTitle', 'Refund Policy Indotix')
+            ->where('policy.terms_content', '<p>Konten refund pengguna.</p>'));
 });
 
 test('published article exposes its custom seo fields to the public page', function () {
