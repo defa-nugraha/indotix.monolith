@@ -510,6 +510,22 @@ export function PublicFooter({ contact }: { contact?: PublicContact | null }) {
                                 Kebijakan Privasi
                             </Link>
                         </li>
+                        <li>
+                            <Link
+                                href="/refund-policy"
+                                className="transition hover:text-sky-600"
+                            >
+                                Refund Policy
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/contact-us"
+                                className="transition hover:text-sky-600"
+                            >
+                                Contact Us
+                            </Link>
+                        </li>
                     </ul>
                 </div>
                 <FooterDownloadSocial

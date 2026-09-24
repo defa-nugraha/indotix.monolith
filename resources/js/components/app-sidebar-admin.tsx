@@ -201,6 +201,7 @@ export function AppSidebarAdmin() {
         isCurrentUrl('/admin/public/promo-items') ||
         isCurrentUrl('/admin/public/entry-qr') ||
         isCurrentUrl('/admin/public/contacts') ||
+        isCurrentUrl('/admin/public/contact-us') ||
         isCurrentUrl('/admin/public/partners') ||
         isCurrentUrl('/admin/public/about') ||
         isCurrentUrl('/admin/public/faqs') ||
@@ -225,6 +226,11 @@ export function AppSidebarAdmin() {
             feature: 'public_contacts',
             href: '/admin/public/contacts',
             label: 'Kontak',
+        },
+        {
+            feature: 'public_contacts',
+            href: '/admin/public/contact-us',
+            label: 'Contact Us',
         },
         {
             feature: 'public_partners',

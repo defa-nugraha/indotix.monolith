@@ -16,9 +16,29 @@ type Policy = {
     title: string;
     content: string;
     terms_content?: string | null;
+    refund_content?: string | null;
     version: string | null;
     effective_at: string | null;
 };
+
+function formatEffectiveDate(value: string | null): string | null {
+    if (!value) {
+        return null;
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Asia/Jakarta',
+    }).format(date);
+}
 
 export default function PrivacyPolicyPage({
     policy,
@@ -45,6 +65,7 @@ export default function PrivacyPolicyPage({
         : isTermsPage
           ? 'Syarat dan ketentuan penggunaan layanan Indotix untuk pemesanan tiket wisata dan layanan digital terkait.'
           : 'Kebijakan privasi Indotix mengenai pengumpulan, penggunaan, penyimpanan, dan perlindungan data pribadi pengguna.';
+    const effectiveDate = formatEffectiveDate(policy?.effective_at ?? null);
     const sectionOrder = isRefundPage
         ? ['refund']
         : isTermsPage
@@ -127,9 +148,9 @@ export default function PrivacyPolicyPage({
                                 Versi {policy.version}
                             </span>
                         )}
-                        {policy?.effective_at && (
+                        {effectiveDate && (
                             <span className="rounded-full bg-slate-100 px-3 py-1">
-                                Berlaku: {policy.effective_at}
+                                Berlaku: {effectiveDate}
                             </span>
                         )}
                     </div>
@@ -201,7 +222,11 @@ export default function PrivacyPolicyPage({
                                             <div
                                                 className="prose prose-slate mt-4 max-w-none"
                                                 dangerouslySetInnerHTML={{
-                                                    __html: policy.terms_content,
+                                                    __html:
+                                                        section === 'refund'
+                                                            ? (policy.refund_content ??
+                                                              '')
+                                                            : policy.terms_content,
                                                 }}
                                             />
                                         ) : (

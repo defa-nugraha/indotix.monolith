@@ -16,6 +16,7 @@ export default function MobileHeroesIndex({
 }: {
     heroes: Array<Record<string, any>>;
 }) {
+    const canDelete = heroes.length > 1;
     const handleDelete = async (id: number) => {
         const result = await Swal.fire({
             title: 'Hapus Hero Mobile?',
@@ -157,6 +158,12 @@ export default function MobileHeroesIndex({
                                                     className="border-red-200 text-red-600 hover:bg-red-50"
                                                     onClick={() =>
                                                         handleDelete(hero.id)
+                                                    }
+                                                    disabled={!canDelete}
+                                                    title={
+                                                        canDelete
+                                                            ? 'Hapus Hero'
+                                                            : 'Hero terakhir tidak dapat dihapus'
                                                     }
                                                 >
                                                     Hapus

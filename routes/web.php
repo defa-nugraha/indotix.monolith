@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\PrivacyPolicyController;
 use App\Http\Controllers\Admin\PromoItemController;
 use App\Http\Controllers\Admin\PublicBannerController;
 use App\Http\Controllers\Admin\PublicContactController;
+use App\Http\Controllers\Admin\PublicContactItemController;
 use App\Http\Controllers\Admin\PublicPartnerController;
 use App\Http\Controllers\Admin\PublicPartOfLogoController;
 use App\Http\Controllers\Admin\SystemSettingController;
@@ -74,6 +75,7 @@ use App\Http\Controllers\PublicBlogController;
 use App\Http\Controllers\PublicMitraGuideController;
 use App\Http\Controllers\PublicNotificationController;
 use App\Http\Controllers\PublicPrivacyPolicyController;
+use App\Http\Controllers\PublicContactUsController;
 use App\Http\Controllers\PublicPromoController;
 use App\Http\Controllers\PublicReviewController;
 use App\Http\Controllers\PublicTransactionFinishController;
@@ -497,6 +499,14 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.public.contacts.edit');
     Route::put('admin/public/contacts', [PublicContactController::class, 'update'])
         ->name('admin.public.contacts.update');
+    Route::get('admin/public/contact-us', [PublicContactItemController::class, 'index'])
+        ->name('admin.public.contact-us.index');
+    Route::post('admin/public/contact-us', [PublicContactItemController::class, 'store'])
+        ->name('admin.public.contact-us.store');
+    Route::put('admin/public/contact-us/{contact}', [PublicContactItemController::class, 'update'])
+        ->name('admin.public.contact-us.update');
+    Route::delete('admin/public/contact-us/{contact}', [PublicContactItemController::class, 'destroy'])
+        ->name('admin.public.contact-us.destroy');
 
     Route::get('admin/public/partners', [PublicPartnerController::class, 'index'])
         ->name('admin.public.partners.index');
@@ -639,6 +649,8 @@ Route::get('/terms-and-conditions', [PublicPrivacyPolicyController::class, 'term
     ->name('public.terms-and-conditions');
 Route::get('/refund-policy', [PublicPrivacyPolicyController::class, 'refund'])
     ->name('public.refund-policy');
+Route::get('/contact-us', [PublicContactUsController::class, 'show'])
+    ->name('public.contact-us');
 Route::get('/delete-account', [PublicDeleteAccountController::class, 'show'])
     ->name('public.delete-account');
 

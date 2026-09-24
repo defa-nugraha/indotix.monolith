@@ -131,6 +131,22 @@ export function PublicFooter({ contact, className }: Props) {
                         </li>
                         <li>
                             <Link
+                                href="/refund-policy"
+                                className={footerLinkClass}
+                            >
+                                Refund Policy
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/contact-us"
+                                className={footerLinkClass}
+                            >
+                                Contact Us
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
                                 href="/delete-account"
                                 className={footerLinkClass}
                             >

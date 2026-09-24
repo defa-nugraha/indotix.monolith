@@ -53,6 +53,7 @@ class PublicPrivacyPolicyController extends Controller
 
         $policy->content = HtmlSanitizer::clean($policy->content);
         $policy->terms_content = HtmlSanitizer::clean($policy->terms_content);
+        $policy->refund_content = HtmlSanitizer::clean($policy->refund_content);
 
         return $policy;
     }

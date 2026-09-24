@@ -20,6 +20,7 @@ class PrivacyPolicyController extends Controller
             'title' => 'Kebijakan Privasi Indotix',
             'content' => 'Kebijakan privasi belum diatur.',
             'terms_content' => 'Syarat dan ketentuan belum diatur.',
+            'refund_content' => 'Refund policy belum diatur.',
             'is_active' => true,
         ]);
 
@@ -36,6 +37,7 @@ class PrivacyPolicyController extends Controller
             'title' => 'Kebijakan Privasi Indotix',
             'content' => 'Kebijakan privasi belum diatur.',
             'terms_content' => 'Syarat dan ketentuan belum diatur.',
+            'refund_content' => 'Refund policy belum diatur.',
             'is_active' => true,
         ]);
 
@@ -43,18 +45,21 @@ class PrivacyPolicyController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'content' => ['required', 'string'],
             'terms_content' => ['required', 'string'],
+            'refund_content' => ['required', 'string'],
             'version' => ['nullable', 'string', 'max:50'],
             'effective_at' => ['nullable', 'date'],
             'is_active' => ['nullable', 'boolean'],
         ], [
             'content.required' => 'Konten Kebijakan Privasi wajib diisi.',
             'terms_content.required' => 'Konten Syarat dan Ketentuan wajib diisi.',
+            'refund_content.required' => 'Konten Refund Policy wajib diisi.',
         ]);
 
         $policy->update([
             'title' => $data['title'],
             'content' => HtmlSanitizer::clean($data['content']),
             'terms_content' => HtmlSanitizer::clean($data['terms_content'] ?? $policy->terms_content),
+            'refund_content' => HtmlSanitizer::clean($data['refund_content'] ?? $policy->refund_content),
             'version' => $data['version'] ?? $policy->version,
             'effective_at' => $data['effective_at'] ?? $policy->effective_at,
             'is_active' => (bool) ($data['is_active'] ?? $policy->is_active),

@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class PrivacyPolicy extends Model
+class PublicContactItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'title',
-        'content',
-        'terms_content',
-        'refund_content',
-        'version',
-        'effective_at',
+        'name',
+        'contact',
+        'description',
+        'icon',
+        'sort_order',
         'is_active',
     ];
 
@@ -23,7 +22,7 @@ class PrivacyPolicy extends Model
     {
         return [
             'is_active' => 'boolean',
-            'effective_at' => 'date',
+            'sort_order' => 'integer',
         ];
     }
 }

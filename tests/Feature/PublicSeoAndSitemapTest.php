@@ -28,6 +28,7 @@ test('sitemap contains all public landing pages and published articles', functio
         ->assertSee(url('/privacy-policy'), false)
         ->assertSee(url('/terms-and-conditions'), false)
         ->assertSee(url('/refund-policy'), false)
+        ->assertSee(url('/contact-us'), false)
         ->assertSee(url('/delete-account'), false)
         ->assertSee(url('/jelajah/panduan-wisata-keluarga'), false)
         ->assertDontSee(url('/jelajah-indotix'), false);
@@ -57,6 +58,7 @@ test('refund policy page follows the public terms page presentation', function (
         'title' => 'Kebijakan Privasi Indotix',
         'content' => '<p>Konten privasi pengguna.</p>',
         'terms_content' => '<p>Konten refund pengguna.</p>',
+        'refund_content' => '<p>Konten refund pengguna.</p>',
         'version' => '2.0',
         'effective_at' => now()->toDateString(),
         'is_active' => true,
@@ -69,7 +71,7 @@ test('refund policy page follows the public terms page presentation', function (
             ->where('initialSection', 'refund')
             ->where('canonicalPath', '/refund-policy')
             ->where('pageTitle', 'Refund Policy Indotix')
-            ->where('policy.terms_content', '<p>Konten refund pengguna.</p>'));
+            ->where('policy.refund_content', '<p>Konten refund pengguna.</p>'));
 });
 
 test('published article exposes its custom seo fields to the public page', function () {

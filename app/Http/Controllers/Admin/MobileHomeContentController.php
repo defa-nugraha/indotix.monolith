@@ -71,6 +71,12 @@ class MobileHomeContentController extends Controller
 
     public function destroy(MobileHomeHero $hero): RedirectResponse
     {
+        if (MobileHomeHero::query()->count() <= 1) {
+            throw ValidationException::withMessages([
+                'hero' => 'Hero Mobile terakhir tidak dapat dihapus. Tambahkan Hero baru terlebih dahulu.',
+            ]);
+        }
+
         $paths = [$hero->media_path, $hero->poster_path];
         $hero->delete();
         $this->deleteReplaced($paths, []);
