@@ -33,7 +33,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
-        $middleware->validateCsrfTokens(except: ['payments/midtrans/callback']);
+        $middleware->validateCsrfTokens(except: [
+            'payments/midtrans/callback',
+            'payments/ipaymu/callback',
+        ]);
 
         $middleware->alias([
             'mitra' => EnsureMitra::class,

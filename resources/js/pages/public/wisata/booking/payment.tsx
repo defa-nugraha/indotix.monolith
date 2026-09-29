@@ -1,6 +1,6 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { AlertCircle, Clock, CreditCard, RefreshCw } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import PublicLayout from '@/layouts/public-layout';
 import { guardPurchaseByRole } from '@/lib/purchase-guard';
@@ -26,26 +26,17 @@ type Booking = {
     }>;
     destination: { id: number; name: string; address?: string | null };
     guest: { name: string; email: string; phone: string };
-    payment?: { status?: string; payment_type?: string; payload?: any } | null;
+    payment?: {
+        provider?: string;
+        status?: string;
+        internal_status?: string;
+        payment_type?: string;
+        payment_url?: string | null;
+        payload?: { redirect_url?: string; token?: string };
+    } | null;
 };
 
-declare global {
-    interface Window {
-        snap?: {
-            pay: (token: string, options?: Record<string, unknown>) => void;
-        };
-    }
-}
-
-export default function WisataBookingPayment({
-    booking,
-    snapClientKey,
-    snapScriptUrl,
-}: {
-    booking: Booking;
-    snapClientKey: string;
-    snapScriptUrl: string;
-}) {
+export default function WisataBookingPayment({ booking }: { booking: Booking }) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage()
         .props as {
         auth?: { user?: { role?: string } };
@@ -55,8 +46,8 @@ export default function WisataBookingPayment({
     const role = auth?.user?.role;
     const [remaining, setRemaining] = useState<string | null>(null);
     const form = useForm({});
-    const snapOpened = useRef(false);
-    const snapToken = booking.payment?.payload?.token;
+    const paymentUrl =
+        booking.payment?.payment_url ?? booking.payment?.payload?.redirect_url;
 
     useEffect(() => {
         if (!booking.payment_deadline) return;
@@ -76,29 +67,6 @@ export default function WisataBookingPayment({
         }, 1000);
         return () => clearInterval(interval);
     }, [booking.payment_deadline]);
-
-    useEffect(() => {
-        if (!snapScriptUrl || !snapClientKey) return;
-        if (document.querySelector('script[data-midtrans-snap]')) return;
-        const script = document.createElement('script');
-        script.src = snapScriptUrl;
-        script.setAttribute('data-client-key', snapClientKey);
-        script.setAttribute('data-midtrans-snap', 'true');
-        script.async = true;
-        script.onload = () => {
-            if (snapToken && !snapOpened.current && window.snap) {
-                snapOpened.current = true;
-                window.snap.pay(snapToken);
-            }
-        };
-        document.body.appendChild(script);
-    }, [snapClientKey, snapScriptUrl]);
-
-    useEffect(() => {
-        if (!snapToken || snapOpened.current || !window.snap) return;
-        snapOpened.current = true;
-        window.snap.pay(snapToken);
-    }, [snapToken]);
 
     return (
         <PublicLayout>
@@ -186,7 +154,7 @@ export default function WisataBookingPayment({
                                 Cara membayar:
                             </h5>
                             <ol className="list-decimal space-y-1 pl-4 leading-relaxed font-medium">
-                                <li>Buka popup pembayaran Midtrans.</li>
+                                <li>Buka halaman pembayaran aman.</li>
                                 <li>Pilih metode pembayaran yang tersedia.</li>
                                 <li>
                                     Ikuti instruksi sesuai metode pembayaran.
@@ -205,8 +173,8 @@ export default function WisataBookingPayment({
                                 if (guardPurchaseByRole(role)) {
                                     return;
                                 }
-                                if (snapToken && window.snap) {
-                                    window.snap.pay(snapToken);
+                                if (paymentUrl) {
+                                    window.location.assign(paymentUrl);
                                     return;
                                 }
                                 form.post(
@@ -231,7 +199,7 @@ export default function WisataBookingPayment({
                                     <RefreshCw className="h-4 w-4 animate-spin" />
                                     Memproses...
                                 </>
-                            ) : snapToken ? (
+                            ) : paymentUrl ? (
                                 <>
                                     <CreditCard className="h-4 w-4" />
                                     Buka Pembayaran

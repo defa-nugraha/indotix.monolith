@@ -264,7 +264,7 @@ class WisataBookingController extends Controller
             try {
                 $payments->expireBooking($booking);
             } catch (\Throwable $exception) {
-                Log::warning('Unable to synchronize expired wisata booking with Midtrans.', [
+                Log::warning('Unable to synchronize expired wisata booking with payment provider.', [
                     'booking_id' => $booking->id,
                     'message' => $exception->getMessage(),
                 ]);
@@ -274,11 +274,11 @@ class WisataBookingController extends Controller
         }
 
         try {
-            $payment = $payments->createOrGetSnapPayment($booking);
+            $payment = $payments->createOrGetPayment($booking);
         } catch (RuntimeException $exception) {
             return response()->json(['message' => $exception->getMessage()], 422);
         } catch (\Throwable $exception) {
-            Log::warning('Midtrans wisata payment creation failed', [
+            Log::warning('Wisata payment creation failed', [
                 'booking_id' => $booking->id,
                 'message' => $exception->getMessage(),
             ]);
@@ -288,12 +288,23 @@ class WisataBookingController extends Controller
             ], 503);
         }
 
+        $paymentUrl = $payment->payment_url ?? ($payment->payload['redirect_url'] ?? null);
+        if (! $paymentUrl && in_array($payment->internal_status, ['initiating', 'unknown'], true)) {
+            return response()->json([
+                'message' => 'Status pembuatan pembayaran masih diverifikasi. Jangan membuat pembayaran baru; silakan coba beberapa saat lagi.',
+            ], 503);
+        }
+
         return response()->json([
             'payment' => [
                 'order_id' => $payment->order_id,
+                'provider' => $payment->provider,
                 'status' => $payment->status,
+                'internal_status' => $payment->internal_status,
+                'payment_url' => $paymentUrl,
                 'snap_token' => $payment->payload['token'] ?? null,
-                'redirect_url' => $payment->payload['redirect_url'] ?? null,
+                'redirect_url' => $paymentUrl,
+                'expires_at' => $payment->expires_at?->toIso8601String(),
             ],
         ]);
     }
@@ -601,8 +612,12 @@ class WisataBookingController extends Controller
                 'phone' => $booking->guest_phone,
             ],
             'payment' => $latestPayment ? [
+                'provider' => $latestPayment->provider,
                 'status' => $latestPayment->status,
+                'internal_status' => $latestPayment->internal_status,
                 'payment_type' => $latestPayment->payment_type,
+                'payment_url' => $latestPayment->payment_url ?? ($latestPayment->payload['redirect_url'] ?? null),
+                'expires_at' => $latestPayment->expires_at?->toIso8601String(),
                 'payload' => $latestPayment->payload,
             ] : null,
         ];
@@ -753,6 +768,7 @@ class WisataBookingController extends Controller
                 'wisata_booking_id' => $booking->id,
                 'provider' => 'internal',
                 'status' => 'paid',
+                'internal_status' => 'paid',
                 'gross_amount' => 0,
                 'payment_type' => 'free_voucher',
                 'transaction_id' => null,
@@ -761,6 +777,7 @@ class WisataBookingController extends Controller
                     'reason' => 'voucher_discount_covers_total',
                     'voucher_code' => $booking->voucher_code,
                 ],
+                'paid_at' => now(),
             ]);
         }
 

@@ -1,8 +1,11 @@
 <?php
 
 use App\Exceptions\PaymentGatewayException;
+use App\Jobs\SendPushNotificationJob;
+use App\Mail\WisataTicketMail;
 use App\Models\MitraWisataOnboarding;
 use App\Models\User;
+use App\Models\UserNotification;
 use App\Models\WisataAffiliate;
 use App\Models\WisataAffiliateCommissionItem;
 use App\Models\WisataBooking;
@@ -12,6 +15,10 @@ use App\Models\WisataPayout;
 use App\Models\WisataPayoutAdjustment;
 use App\Models\WisataRefund;
 use App\Models\WisataTicket;
+use App\Payments\Gateways\IpaymuPaymentGateway;
+use App\Payments\Gateways\MidtransPaymentGateway;
+use App\Payments\PaymentGatewayManager;
+use App\Services\IpaymuService;
 use App\Services\MidtransService;
 use App\Services\WisataFinanceService;
 use App\Services\WisataPaymentLifecycleService;
@@ -91,7 +98,14 @@ function paymentSecurityFixture(array $bookingOverrides = []): array
 
 function paymentLifecycle(MidtransService $gateway): WisataPaymentLifecycleService
 {
-    return new WisataPaymentLifecycleService($gateway, new WisataFinanceService());
+    return new WisataPaymentLifecycleService(
+        $gateway,
+        new WisataFinanceService,
+        new PaymentGatewayManager(
+            new MidtransPaymentGateway($gateway),
+            new IpaymuPaymentGateway(app(IpaymuService::class)),
+        ),
+    );
 }
 
 test('concurrent payment creation is idempotent for the same booking', function () {
@@ -519,7 +533,6 @@ test('processed refund reverses affiliate commission and creates clawback for pa
         ->and((int) WisataPayoutAdjustment::query()->where('wisata_booking_id', $booking->id)->value('amount'))->toBe(90000);
 });
 
-
 test('wisata signed webhook replay does not duplicate fulfillment', function () {
     [$buyer, , , , $booking] = paymentSecurityFixture();
     $payment = WisataPayment::query()->create([
@@ -552,7 +565,7 @@ test('wisata signed webhook replay does not duplicate fulfillment', function () 
     expect($booking->fresh()->status)->toBe('paid')
         ->and($payment->fresh()->status)->toBe('settlement')
         ->and($payment->fresh()->notification_dispatched_at)->not->toBeNull()
-        ->and(\App\Models\UserNotification::query()
+        ->and(UserNotification::query()
             ->where('user_id', $buyer->id)
             ->where('type', 'wisata_payment_paid')
             ->count())->toBe(1)
@@ -564,8 +577,8 @@ test('wisata signed webhook replay does not duplicate fulfillment', function () 
             ->whereNotNull('completed_at')
             ->count())->toBe(3);
 
-    Queue::assertPushed(\App\Jobs\SendPushNotificationJob::class, 1);
-    Mail::assertSent(\App\Mail\WisataTicketMail::class, 1);
+    Queue::assertPushed(SendPushNotificationJob::class, 1);
+    Mail::assertSent(WisataTicketMail::class, 1);
 });
 
 test('paid side effect claim prevents concurrent duplicate dispatch and stale claim can recover', function () {
@@ -596,13 +609,13 @@ test('paid side effect claim prevents concurrent duplicate dispatch and stale cl
     $service = paymentLifecycle(Mockery::mock(MidtransService::class));
     $service->dispatchPendingPaidSideEffects();
 
-    Queue::assertNotPushed(\App\Jobs\SendPushNotificationJob::class);
+    Queue::assertNotPushed(SendPushNotificationJob::class);
     expect($payment->fresh()->notification_dispatched_at)->toBeNull()
         ->and(WisataPaymentSideEffect::query()
             ->where('wisata_payment_id', $payment->id)
             ->where('effect_type', 'push')
             ->value('status'))->toBe('processing')
-        ->and(\App\Models\UserNotification::query()
+        ->and(UserNotification::query()
             ->where('user_id', $buyer->id)
             ->where('type', 'wisata_payment_paid')
             ->count())->toBe(1);
@@ -614,7 +627,7 @@ test('paid side effect claim prevents concurrent duplicate dispatch and stale cl
 
     $service->dispatchPendingPaidSideEffects();
 
-    Queue::assertPushed(\App\Jobs\SendPushNotificationJob::class, 1);
+    Queue::assertPushed(SendPushNotificationJob::class, 1);
     expect($payment->fresh()->notification_dispatched_at)->not->toBeNull()
         ->and(WisataPaymentSideEffect::query()
             ->where('wisata_payment_id', $payment->id)
