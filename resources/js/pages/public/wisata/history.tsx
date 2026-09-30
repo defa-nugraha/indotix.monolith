@@ -113,9 +113,7 @@ export default function WisataHistory({ bookings = [] }: { bookings: WisataBooki
 
     return (
         <PublicLayout categories={categories} chips={chips}>
-            <Head title="Riwayat Tiket Wisata">
-                <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
-            </Head>
+            <Head title="Riwayat Tiket Wisata" />
 
                         <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="rounded-2xl bg-white p-6 shadow-sm">

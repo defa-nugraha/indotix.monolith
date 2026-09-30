@@ -150,7 +150,7 @@ export default function PromoShow({
                                             {promo.category_label ??
                                                 'Promo Indotix'}
                                         </p>
-                                        <h1 className="mt-3 max-w-2xl font-['Space_Grotesk'] text-3xl leading-tight font-black tracking-tight text-white sm:text-5xl">
+                                        <h1 className="mt-3 max-w-2xl font-sans text-3xl leading-tight font-black tracking-tight text-white sm:text-5xl">
                                             {title}
                                         </h1>
                                         <p className="mt-5 max-w-2xl text-base leading-7 font-bold text-white/90 sm:text-xl">
@@ -186,7 +186,7 @@ export default function PromoShow({
                         <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
                             <div className="flex items-center gap-3">
                                 <Gift className="h-6 w-6 text-sky-600" />
-                                <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                                <h2 className="font-sans text-2xl font-black tracking-tight text-slate-950">
                                     Detail promo
                                 </h2>
                             </div>
@@ -208,7 +208,7 @@ export default function PromoShow({
                         <article className="rounded-[2rem] border border-slate-100 bg-white p-6 shadow-sm">
                             <div className="flex items-center gap-3">
                                 <ShieldCheck className="h-6 w-6 text-sky-600" />
-                                <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                                <h2 className="font-sans text-2xl font-black tracking-tight text-slate-950">
                                     Syarat dan ketentuan
                                 </h2>
                             </div>
@@ -275,7 +275,7 @@ export default function PromoShow({
 
                 {relatedPromos.length > 0 && (
                     <section className="mx-auto max-w-7xl space-y-5 px-4 pt-10 sm:px-6 lg:px-8">
-                        <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                        <h2 className="font-sans text-2xl font-black tracking-tight text-slate-950">
                             Promo lain di kategori ini
                         </h2>
                         <div className="grid gap-5 md:grid-cols-3">

@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import {
     BadgePercent,
     Backpack,
@@ -984,12 +984,6 @@ export default function Welcome({
                     },
                 ]}
             />
-            <Head>
-                <link
-                    href="https://fonts.bunny.net/css?family=inter:400,500,600,700|space-grotesk:500,600,700|jetbrains-mono:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
 
             <Dialog
                 open={showMobileDownloadPrompt}
@@ -1190,7 +1184,7 @@ export default function Welcome({
                     data-coach="home-special-promo"
                 >
                     <div>
-                        <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                        <h2 className="font-sans text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
                             {homeContent.special_promo.title}
                         </h2>
                         <span className="mt-3 block h-1.5 w-8 rounded-full bg-sky-500" />
@@ -1252,7 +1246,7 @@ export default function Welcome({
                                 <p className="text-xs font-bold tracking-wider text-sky-600 uppercase">
                                     Kategori Wisata
                                 </p>
-                                <h2 className="mt-2 font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                                <h2 className="mt-2 font-sans text-2xl font-black tracking-tight text-slate-950">
                                     {section.title}
                                 </h2>
                                 {section.description && (
@@ -1294,7 +1288,7 @@ export default function Welcome({
                 >
                     <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                         <div>
-                            <h1 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                            <h1 className="font-sans text-2xl font-black tracking-tight text-slate-950">
                                 {homeContent.featured.title}
                             </h1>
                             <p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">
@@ -1343,7 +1337,7 @@ export default function Welcome({
                                 <NearbyIcon className="h-4 w-4" />
                                 {homeContent.nearby.eyebrow}
                             </p>
-                            <h2 className="mt-2 font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                            <h2 className="mt-2 font-sans text-2xl font-black tracking-tight text-slate-950">
                                 {homeContent.nearby.title}
                             </h2>
                             <p className="mt-1 max-w-2xl text-xs leading-relaxed font-medium text-slate-500 sm:text-sm">
@@ -1397,7 +1391,7 @@ export default function Welcome({
                                 <BlogIcon className="h-4 w-4" />
                                 {homeContent.blog.eyebrow}
                             </p>
-                            <h2 className="mt-2 font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                            <h2 className="mt-2 font-sans text-2xl font-black tracking-tight text-slate-950">
                                 {homeContent.blog.title}
                             </h2>
                             <p className="mt-1 text-xs font-medium text-slate-500 sm:text-sm">

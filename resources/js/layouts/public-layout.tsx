@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import PublicHeader, {
@@ -99,14 +99,6 @@ export default function PublicLayout({
                 className,
             )}
         >
-            {isUser && (
-                <Head>
-                    <link
-                        href="https://fonts.bunny.net/css?family=sora:400,500,600,700"
-                        rel="stylesheet"
-                    />
-                </Head>
-            )}
             <PublicSeo
                 title="Indotix - Tiket Wisata dan Destinasi Rekreasi"
                 description="Temukan dan pesan tiket wisata, taman hiburan, serta destinasi rekreasi pilihan melalui Indotix."

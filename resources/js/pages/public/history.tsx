@@ -102,9 +102,7 @@ export default function History({ bookings = [] }: { bookings: Booking[] }) {
 
     return (
         <PublicLayout categories={categories} chips={chips}>
-            <Head title="Riwayat Pesanan">
-                <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
-            </Head>
+            <Head title="Riwayat Pesanan" />
 
             <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8 md:px-8 lg:py-10">
                 <div className="rounded-2xl bg-white p-4 shadow-sm sm:p-6">

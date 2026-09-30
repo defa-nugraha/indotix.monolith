@@ -300,7 +300,7 @@ export default function ReviewSection({
             className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xs sm:p-8"
             id="reviews-section"
         >
-            <h2 className="mb-6 font-['Space_Grotesk'] text-xl font-bold text-slate-950">
+            <h2 className="mb-6 font-sans text-xl font-bold text-slate-950">
                 Ulasan dan Rating
             </h2>
 

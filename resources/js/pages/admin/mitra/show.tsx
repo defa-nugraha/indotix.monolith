@@ -319,12 +319,7 @@ export default function AdminMitraShow({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Detail Mitra">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Detail Mitra" />
 
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-sans text-slate-900">
                 <div className="pointer-events-none absolute top-12 -left-32 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />

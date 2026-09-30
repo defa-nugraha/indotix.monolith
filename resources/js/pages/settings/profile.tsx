@@ -44,12 +44,7 @@ export default function Profile({
 
     return (
         <PublicLayout showCategories={false} showChips={false}>
-            <Head title="Profil Saya">
-                <link
-                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Profil Saya" />
 
             <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-8 md:px-8 lg:py-10">
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">

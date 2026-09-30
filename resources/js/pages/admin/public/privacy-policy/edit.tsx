@@ -42,12 +42,7 @@ export default function PrivacyPolicyEdit({ policy }: { policy: Policy }) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dokumen Legal">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Dokumen Legal" />
 
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-sans text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">

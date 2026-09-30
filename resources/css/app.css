@@ -370,8 +370,6 @@ body {
 
     .public-user-shell {
         background: #f6fbff;
-        font-family:
-            'Sora', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
     }
 
     .public-user-header {
@@ -657,7 +655,7 @@ body {
 
 @layer base {
     .swal2-container {
-        font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        font-family: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
         z-index: 10000 !important;
         pointer-events: auto !important;
     }

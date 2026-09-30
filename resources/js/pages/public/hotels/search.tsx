@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { addDays, format } from 'date-fns';
 import {
     CalendarCheck,
@@ -347,12 +347,6 @@ export default function HotelSearch({
                         })),
                 }}
             />
-            <Head>
-                <link
-                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
-                    rel="stylesheet"
-                />
-            </Head>
             <div className="mx-auto w-full max-w-7xl px-4 py-8 md:px-8">
                 {!isReady && (
                     <section className="space-y-8">

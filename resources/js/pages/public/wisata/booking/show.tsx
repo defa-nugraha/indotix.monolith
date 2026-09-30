@@ -117,12 +117,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
             showCategories={false}
             showChips={false}
         >
-            <Head title="Detail Booking Wisata">
-                <link
-                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Detail Booking Wisata" />
             <main className="mx-auto w-full max-w-7xl px-4 py-10 md:px-8">
                 <div className="mx-auto mb-8 w-full max-w-3xl overflow-x-auto pb-2">
                     <div className="relative z-0 flex min-w-[20rem] items-center justify-between">
@@ -162,7 +157,7 @@ export default function WisataBookingShow({ booking }: { booking: Booking }) {
                         <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_24px_70px_-36px_rgba(15,23,42,0.34)]">
                             <div className="flex flex-wrap items-center justify-between gap-4">
                                 <div>
-                                    <h1 className="font-['Space_Grotesk'] text-2xl font-black text-slate-950">
+                                    <h1 className="font-sans text-2xl font-black text-slate-950">
                                         Detail Booking Wisata
                                     </h1>
                                     <p className="mt-2 text-sm text-slate-500">

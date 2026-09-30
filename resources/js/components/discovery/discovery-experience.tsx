@@ -124,7 +124,7 @@ export function DiscoveryStoryHero({
                         <Sparkles className="h-3.5 w-3.5" />
                         <span>{editorial?.eyebrow ?? theme.badge}</span>
                     </div>
-                    <h1 className="mt-4 max-w-3xl font-['Space_Grotesk'] text-2xl leading-tight font-semibold sm:text-3xl lg:text-4xl">
+                    <h1 className="mt-4 max-w-3xl font-sans text-2xl leading-tight font-semibold sm:text-3xl lg:text-4xl">
                         {editorial?.title ?? theme.title}
                     </h1>
                     <p className="mt-3 max-w-2xl text-sm leading-6 text-white/86 sm:text-base">
@@ -276,7 +276,7 @@ export function DiscoveryFeaturedShowcase({
                                 {section?.title ?? 'Rekomendasi pilihan'}
                             </span>
                         </div>
-                        <h2 className="mt-2 line-clamp-2 font-['Space_Grotesk'] text-xl font-semibold text-slate-900 sm:mt-3 sm:text-[2rem]">
+                        <h2 className="mt-2 line-clamp-2 font-sans text-xl font-semibold text-slate-900 sm:mt-3 sm:text-[2rem]">
                             {itemTitle(featured)}
                         </h2>
                         <p className="mt-2 line-clamp-2 max-w-xl text-sm leading-6 text-slate-500 sm:line-clamp-none">

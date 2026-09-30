@@ -74,14 +74,9 @@ export default function MitraDashboard({
     };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard Mitra">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Dashboard Mitra" />
 
-            <div className="workspace-page relative overflow-x-clip font-['Plus_Jakarta_Sans'] text-slate-900">
+            <div className="workspace-page relative overflow-x-clip font-sans text-slate-900">
                 <div className="pointer-events-none absolute top-12 -left-32 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
                 <div className="pointer-events-none absolute top-0 right-[-10%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
                 <div className="pointer-events-none absolute bottom-[-15%] left-[20%] h-80 w-80 rounded-full bg-amber-300/20 blur-[140px]" />
@@ -95,7 +90,7 @@ export default function MitraDashboard({
                             <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Mitra Indotix
                             </p>
-                            <h1 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900 sm:text-3xl">
+                            <h1 className="font-sans text-2xl font-semibold text-slate-900 sm:text-3xl">
                                 {isChoosingType
                                     ? 'Mulai kelola destinasi wisata Anda'
                                     : 'Ringkasan performa destinasi Anda'}

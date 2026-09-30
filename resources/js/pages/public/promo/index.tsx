@@ -260,7 +260,7 @@ export default function PromoIndex({
                             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,132,199,0.55),transparent_58%)]" />
                             <div className="relative grid min-h-[25rem] items-center gap-8 px-7 py-10 text-white sm:min-h-[31rem] sm:px-12 lg:grid-cols-[1fr_0.95fr] lg:px-36 lg:py-16">
                                 <div>
-                                    <h1 className="max-w-xl font-['Space_Grotesk'] text-3xl leading-tight font-black tracking-tight sm:text-5xl lg:text-[3.25rem]">
+                                    <h1 className="max-w-xl font-sans text-3xl leading-tight font-black tracking-tight sm:text-5xl lg:text-[3.25rem]">
                                         Hemat Lebih Banyak untuk Liburan
                                         Berikutnya
                                     </h1>
@@ -412,7 +412,7 @@ export default function PromoIndex({
                                 <TicketPercent className="h-4 w-4" />
                                 Voucher aktif
                             </p>
-                            <h2 className="mt-2 font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                            <h2 className="mt-2 font-sans text-2xl font-black tracking-tight text-slate-950">
                                 Pilih kode promo yang bisa kamu gunakan
                             </h2>
                             <p className="mt-1 text-sm font-medium text-slate-500">
@@ -452,7 +452,7 @@ export default function PromoIndex({
                                                     Voucher Indotix
                                                 </div>
                                                 <div className="mt-2 flex items-end gap-2 lg:mt-4">
-                                                    <span className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 lg:text-4xl">
+                                                    <span className="font-sans text-2xl font-black tracking-tight text-slate-950 lg:text-4xl">
                                                         {voucherDiscount(
                                                             voucher,
                                                         )}
@@ -543,7 +543,7 @@ export default function PromoIndex({
                     <section className="mx-auto max-w-7xl space-y-6 px-4 pt-12 sm:px-6 lg:px-8">
                         <div className="flex items-center gap-3">
                             <Gift className="h-6 w-6 shrink-0 text-sky-600" />
-                            <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950">
+                            <h2 className="font-sans text-2xl font-black tracking-tight text-slate-950">
                                 Promo pilihan untuk liburanmu
                             </h2>
                         </div>

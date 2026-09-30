@@ -33,14 +33,14 @@
 
         <title inertia>{{ config('app.name', 'Indotix') }}</title>
 
-        <meta name="description" content="Indotix — Tiket digital Indonesia untuk wisata, event, hotel, dan retail." />
+        <meta name="description" content="Indotix — Tiket Digital Wisata Indonesia" />
         <meta property="og:title" content="{{ config('app.name', 'Indotix') }}" />
-        <meta property="og:description" content="Indotix — Tiket digital Indonesia untuk wisata, event, hotel, dan retail." />
+        <meta property="og:description" content="Indotix — Tiket Digital Wisata Indonesia" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="{{ asset('logo.png') }}" />
         <meta name="twitter:card" content="summary" />
         <meta name="twitter:title" content="{{ config('app.name', 'Indotix') }}" />
-        <meta name="twitter:description" content="Indotix — Tiket digital Indonesia untuk wisata, event, hotel, dan retail." />
+        <meta name="twitter:description" content="Indotix — Tiket Digital Wisata Indonesia" />
         <meta name="twitter:image" content="{{ asset('logo.png') }}" />
 
         <link rel="icon" href="{{ asset('logo.png') }}" type="image/png">

@@ -280,7 +280,7 @@ export default function WisataSearch({
                     <>
                         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                             <div>
-                                <h1 className="font-['Space_Grotesk'] text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+                                <h1 className="font-sans text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
                                     Pencarian Destinasi
                                 </h1>
                                 <p className="mt-1 text-xs font-medium text-slate-500">

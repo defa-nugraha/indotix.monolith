@@ -70,12 +70,7 @@ export default function WisataBookingPayment({ booking }: { booking: Booking }) 
 
     return (
         <PublicLayout>
-            <Head title="Pembayaran Tiket Wisata">
-                <link
-                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Pembayaran Tiket Wisata" />
             <main className="mx-auto w-full max-w-7xl px-4 py-8 font-sans text-slate-800 sm:px-6 lg:px-8">
                 <div className="mx-auto w-full max-w-3xl">
                     <div className="relative z-0 flex items-center justify-between">
