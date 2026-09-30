@@ -7,7 +7,7 @@ import {
     Ticket,
     User,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 import { PublicFooter } from '@/components/public-footer';
 import { Label } from '@/components/ui/label';
@@ -57,19 +57,8 @@ type Props = {
     } | null;
     pendingVoucherCode?: string | null;
     items?: TicketLineItem[];
-    snapClientKey: string;
-    snapScriptUrl: string;
-    snapToken?: string | null;
     hasUnpaidBooking: boolean;
 };
-
-declare global {
-    interface Window {
-        snap?: {
-            pay: (token: string, options?: Record<string, unknown>) => void;
-        };
-    }
-}
 
 export default function WisataBookingReview({
     draft,
@@ -79,9 +68,6 @@ export default function WisataBookingReview({
     voucher = null,
     pendingVoucherCode = null,
     items = [],
-    snapClientKey,
-    snapScriptUrl,
-    snapToken: initialSnapToken,
     hasUnpaidBooking,
 }: Props) {
     const { auth, unread_notifications, souvenir_cart_count } = usePage()
@@ -109,10 +95,6 @@ export default function WisataBookingReview({
         voucher_code: voucher?.code ?? pendingVoucherCode ?? '',
     });
     const [loading, setLoading] = useState(false);
-    const [snapToken, setSnapToken] = useState<string | null>(
-        initialSnapToken ?? null,
-    );
-    const snapOpened = useRef(false);
     const ticketItems =
         items.length > 0
             ? items
@@ -148,35 +130,6 @@ export default function WisataBookingReview({
     }, [pendingVoucherCode, voucher]);
 
     const hasPhone = Boolean(auth?.user?.phone);
-
-    useEffect(() => {
-        if (initialSnapToken) {
-            setSnapToken(initialSnapToken);
-        }
-    }, [initialSnapToken]);
-
-    useEffect(() => {
-        if (!snapScriptUrl || !snapClientKey) return;
-        if (document.querySelector('script[data-midtrans-snap]')) return;
-        const script = document.createElement('script');
-        script.src = snapScriptUrl;
-        script.setAttribute('data-client-key', snapClientKey);
-        script.setAttribute('data-midtrans-snap', 'true');
-        script.async = true;
-        script.onload = () => {
-            if (snapToken && !snapOpened.current && window.snap) {
-                snapOpened.current = true;
-                window.snap.pay(snapToken);
-            }
-        };
-        document.body.appendChild(script);
-    }, [snapClientKey, snapScriptUrl, snapToken]);
-
-    useEffect(() => {
-        if (!snapToken || snapOpened.current || !window.snap) return;
-        snapOpened.current = true;
-        window.snap.pay(snapToken);
-    }, [snapToken]);
 
     return (
         <PublicLayout>

@@ -44,6 +44,20 @@ return [
         'connect_timeout' => (int) env('MIDTRANS_CONNECT_TIMEOUT', 5),
         'timeout' => (int) env('MIDTRANS_TIMEOUT', 20),
     ],
+    'payment' => [
+        'gateway' => env('PAYMENT_GATEWAY', 'midtrans'),
+    ],
+    'ipaymu' => [
+        'environment' => env('IPAYMU_ENVIRONMENT', 'sandbox'),
+        'va' => env('IPAYMU_VA'),
+        'api_key' => env('IPAYMU_API_KEY'),
+        'connect_timeout' => (int) env('IPAYMU_CONNECT_TIMEOUT', 5),
+        'timeout' => (int) env('IPAYMU_TIMEOUT', 20),
+        'payment_expiry_hours' => (int) env('IPAYMU_PAYMENT_EXPIRY_HOURS', 1),
+        'fee_direction' => env('IPAYMU_FEE_DIRECTION', 'MERCHANT'),
+        'callback_max_bytes' => (int) env('IPAYMU_CALLBACK_MAX_BYTES', 65536),
+        'allow_production' => (bool) env('IPAYMU_ALLOW_PRODUCTION', false),
+    ],
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),

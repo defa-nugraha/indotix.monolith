@@ -16,8 +16,8 @@ use App\Http\Controllers\Admin\MobilePromoBannerController;
 use App\Http\Controllers\Admin\NotificationControlController;
 use App\Http\Controllers\Admin\PartnerTermsDocumentController;
 use App\Http\Controllers\Admin\PayoutController;
-use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\PrivacyPolicyController;
+use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\PromoItemController;
 use App\Http\Controllers\Admin\PublicBannerController;
 use App\Http\Controllers\Admin\PublicContactController;
@@ -54,6 +54,8 @@ use App\Http\Controllers\Auth\MobileEmailVerificationController;
 use App\Http\Controllers\Auth\PublicEmailVerificationController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\IpaymuCallbackController;
+use App\Http\Controllers\IpaymuReturnController;
 use App\Http\Controllers\MidtransCallbackController;
 use App\Http\Controllers\Mitra\PartnerTermsSignatureController;
 use App\Http\Controllers\Mitra\ReviewController;
@@ -67,15 +69,15 @@ use App\Http\Controllers\MitraWisataOnboardingController;
 use App\Http\Controllers\MitraWisataSensitiveDocumentController;
 use App\Http\Controllers\PasskeyAssociationController;
 use App\Http\Controllers\PublicAboutController;
+use App\Http\Controllers\PublicBlogController;
+use App\Http\Controllers\PublicContactUsController;
 use App\Http\Controllers\PublicDeleteAccountController;
 use App\Http\Controllers\PublicFaqController;
 use App\Http\Controllers\PublicHistoryController;
 use App\Http\Controllers\PublicHomeController;
-use App\Http\Controllers\PublicBlogController;
 use App\Http\Controllers\PublicMitraGuideController;
 use App\Http\Controllers\PublicNotificationController;
 use App\Http\Controllers\PublicPrivacyPolicyController;
-use App\Http\Controllers\PublicContactUsController;
 use App\Http\Controllers\PublicPromoController;
 use App\Http\Controllers\PublicReviewController;
 use App\Http\Controllers\PublicTransactionFinishController;
@@ -765,5 +767,11 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
 });
 Route::post('/payments/midtrans/callback', MidtransCallbackController::class)
     ->name('payments.midtrans.callback');
+Route::post('/payments/ipaymu/callback', IpaymuCallbackController::class)
+    ->middleware('throttle:120,1')
+    ->name('payments.ipaymu.callback');
+Route::get('/payments/ipaymu/return', IpaymuReturnController::class)
+    ->middleware('signed')
+    ->name('payments.ipaymu.return');
 
 require __DIR__.'/settings.php';

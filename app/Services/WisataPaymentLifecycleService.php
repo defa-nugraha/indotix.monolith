@@ -12,6 +12,8 @@ use App\Models\WisataBooking;
 use App\Models\WisataPayment;
 use App\Models\WisataPaymentSideEffect;
 use App\Models\WisataRefund;
+use App\Payments\PaymentGatewayManager;
+use App\Payments\PaymentGatewayResult;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -39,11 +41,13 @@ class WisataPaymentLifecycleService
     public function __construct(
         private readonly MidtransService $midtrans,
         private readonly WisataFinanceService $finance,
+        private readonly PaymentGatewayManager $gateways,
     ) {}
 
-    public function createOrGetSnapPayment(WisataBooking $booking): WisataPayment
+    public function createOrGetPayment(WisataBooking $booking): WisataPayment
     {
-        $reservation = DB::transaction(function () use ($booking) {
+        $gateway = $this->gateways->forNewPayment();
+        $reservation = DB::transaction(function () use ($booking, $gateway) {
             $locked = WisataBooking::query()->whereKey($booking->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->isExpired()) {
@@ -73,18 +77,20 @@ class WisataPaymentLifecycleService
 
             $payment = WisataPayment::query()->create([
                 'wisata_booking_id' => $locked->id,
-                'provider' => 'midtrans',
+                'provider' => $gateway->provider(),
                 'status' => 'initiating',
+                'internal_status' => 'initiating',
                 'gross_amount' => (int) $locked->total_price,
-                'payment_type' => 'snap',
+                'payment_type' => $gateway->provider() === 'midtrans' ? 'snap' : 'redirect',
                 'order_id' => sprintf('WISATA-%s-%s', $locked->id, Str::ulid()),
                 'active_key' => $this->activeKey($locked),
             ]);
 
-            $locked->update([
-                'midtrans_order_id' => $payment->order_id,
-                'payment_status' => 'initiating',
-            ]);
+            $bookingUpdate = ['payment_status' => 'initiating'];
+            if ($gateway->provider() === 'midtrans') {
+                $bookingUpdate['midtrans_order_id'] = $payment->order_id;
+            }
+            $locked->update($bookingUpdate);
 
             return ['payment' => $payment, 'created' => true];
         }, 3);
@@ -97,15 +103,15 @@ class WisataPaymentLifecycleService
         }
 
         $booking = $payment->booking()->with(['items.ticket', 'ticket'])->firstOrFail();
-        $payload = $this->buildSnapPayload($booking, $payment->order_id);
 
         try {
-            $snap = $this->midtrans->snap($payload);
+            $result = $gateway->create($booking, $payment);
         } catch (Throwable $exception) {
             DB::transaction(function () use ($payment, $exception) {
                 $lockedPayment = WisataPayment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
                 $lockedPayment->update([
                     'status' => 'unknown',
+                    'internal_status' => 'unknown',
                     'last_gateway_error' => $this->safeError($exception),
                 ]);
                 $lockedPayment->booking()->update(['payment_status' => 'unknown']);
@@ -114,7 +120,7 @@ class WisataPaymentLifecycleService
             throw $exception;
         }
 
-        return DB::transaction(function () use ($payment, $snap) {
+        return DB::transaction(function () use ($payment, $result) {
             $lockedPayment = WisataPayment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
             $booking = WisataBooking::query()->whereKey($lockedPayment->wisata_booking_id)->lockForUpdate()->firstOrFail();
 
@@ -123,19 +129,45 @@ class WisataPaymentLifecycleService
             }
 
             $lockedPayment->update([
-                'status' => 'pending',
-                'transaction_id' => $snap['transaction_id'] ?? $lockedPayment->transaction_id,
-                'payload' => $snap,
+                'status' => $result->providerStatus,
+                'internal_status' => $result->internalStatus,
+                'transaction_id' => $result->transactionId ?? $lockedPayment->transaction_id,
+                'provider_reference_id' => $result->providerReferenceId,
+                'provider_amount' => $result->amount,
+                'fee' => $result->fee,
+                'payment_type' => $result->paymentType ?? $lockedPayment->payment_type,
+                'payment_channel' => $result->paymentChannel,
+                'payment_url' => $result->paymentUrl,
+                'expires_at' => $result->expiresAt,
+                'payload' => $result->raw,
                 'last_gateway_error' => null,
             ]);
 
-            $booking->update([
-                'midtrans_order_id' => $lockedPayment->order_id,
-                'payment_status' => 'pending',
+            $bookingUpdate = [
+                'payment_status' => $result->internalStatus,
+                'payment_deadline' => $result->expiresAt ?? $booking->payment_deadline,
+            ];
+            if ($lockedPayment->provider === 'midtrans') {
+                $bookingUpdate['midtrans_order_id'] = $lockedPayment->order_id;
+            }
+            $booking->update($bookingUpdate);
+
+            Log::info('Payment created by provider.', [
+                'event_type' => 'payment_created',
+                'booking_id' => $booking->id,
+                'payment_id' => $lockedPayment->id,
+                'order_id' => $lockedPayment->order_id,
+                'provider' => $lockedPayment->provider,
+                'provider_transaction_id' => $lockedPayment->transaction_id,
             ]);
 
             return $lockedPayment->fresh();
         }, 3);
+    }
+
+    public function createOrGetSnapPayment(WisataBooking $booking): WisataPayment
+    {
+        return $this->createOrGetPayment($booking);
     }
 
     public function cancelBooking(WisataBooking $booking, ?string $reason = null, ?int $adminId = null): WisataBooking
@@ -148,7 +180,6 @@ class WisataPaymentLifecycleService
             }
 
             $payment = $locked->payments()
-                ->where('provider', 'midtrans')
                 ->latest('id')
                 ->lockForUpdate()
                 ->first();
@@ -169,6 +200,18 @@ class WisataPaymentLifecycleService
 
         /** @var WisataPayment $payment */
         $payment = $context['payment'];
+
+        if ($payment->provider !== 'midtrans') {
+            $status = $this->gateways->forProvider($payment->provider)->status($payment);
+            if ($status?->internalStatus === 'paid') {
+                $this->applyGatewayResult($payment, $status, 'reconciliation');
+                throw new RuntimeException('Pembayaran sudah berhasil dan booking tidak dapat dibatalkan.');
+            }
+
+            throw new RuntimeException(
+                'Pembatalan otomatis iPaymu tidak tersedia. Booking tidak diubah untuk mencegah pembayaran terlambat pada transaksi yang masih aktif.',
+            );
+        }
 
         try {
             $status = $this->midtrans->statusOrNull($payment->order_id);
@@ -214,7 +257,7 @@ class WisataPaymentLifecycleService
                 return ['booking' => $locked, 'payment' => null, 'noop' => true];
             }
 
-            $payment = $locked->payments()->where('provider', 'midtrans')->latest('id')->lockForUpdate()->first();
+            $payment = $locked->payments()->latest('id')->lockForUpdate()->first();
 
             if (! $payment) {
                 return ['booking' => $locked, 'payment' => null, 'noop' => false];
@@ -237,6 +280,24 @@ class WisataPaymentLifecycleService
         /** @var WisataPayment $payment */
         $payment = $context['payment'];
 
+        if ($payment->provider !== 'midtrans') {
+            try {
+                $status = $this->gateways->forProvider($payment->provider)->status($payment);
+                if ($status === null) {
+                    $this->markGatewayActionUnknown($booking->id, $payment->id, 'expiry_unknown', new RuntimeException('Provider transaction ID is unavailable.'));
+
+                    return $booking->fresh();
+                }
+
+                $this->applyGatewayResult($payment, $status, 'reconciliation');
+
+                return $booking->fresh();
+            } catch (Throwable $exception) {
+                $this->markGatewayActionUnknown($booking->id, $payment->id, 'expiry_unknown', $exception);
+                throw $exception;
+            }
+        }
+
         try {
             $status = $this->midtrans->statusOrNull($payment->order_id);
 
@@ -246,6 +307,7 @@ class WisataPaymentLifecycleService
 
             if ($this->providerPaymentSucceeded($status)) {
                 $this->applyProviderPayload($payment, $status);
+
                 return $booking->fresh();
             }
 
@@ -282,14 +344,22 @@ class WisataPaymentLifecycleService
             }
 
             $payment = $locked->payments()
-                ->where('provider', 'midtrans')
-                ->whereIn('status', ['settlement', 'capture'])
+                ->where(function ($query) {
+                    $query->where('internal_status', 'paid')
+                        ->orWhereIn('status', ['settlement', 'capture']);
+                })
                 ->latest('id')
                 ->lockForUpdate()
                 ->first();
 
             if (! $payment) {
-                throw new RuntimeException('Transaksi Midtrans yang dapat direfund tidak ditemukan.');
+                throw new RuntimeException('Transaksi pembayaran yang dapat direfund tidak ditemukan.');
+            }
+
+            if ($payment->provider !== 'midtrans') {
+                throw new RuntimeException(
+                    'Refund otomatis iPaymu belum tersedia pada API publik resmi. Lakukan refund melalui prosedur manual iPaymu dan rekonsiliasi dengan bukti provider.',
+                );
             }
 
             $existing = WisataRefund::query()
@@ -444,12 +514,30 @@ class WisataPaymentLifecycleService
                 $lockedPayment = WisataPayment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
                 $booking = WisataBooking::query()->whereKey($lockedPayment->wisata_booking_id)->lockForUpdate()->firstOrFail();
 
+                if (in_array($lockedPayment->internal_status, ['paid', 'refunded'], true)) {
+                    Log::warning('Rejected regressive Midtrans payment transition.', [
+                        'event_type' => 'payment_transition_rejected',
+                        'payment_id' => $lockedPayment->id,
+                        'provider' => 'midtrans',
+                        'from' => $lockedPayment->internal_status,
+                        'to' => $status,
+                    ]);
+
+                    return;
+                }
+
                 $lockedPayment->update([
                     'status' => $status,
+                    'internal_status' => match ($status) {
+                        'cancel' => 'cancelled',
+                        'expire' => 'expired',
+                        default => 'failed',
+                    },
                     'payment_type' => $payload['payment_type'] ?? $lockedPayment->payment_type,
                     'transaction_id' => $payload['transaction_id'] ?? $lockedPayment->transaction_id,
                     'payload' => $payload,
                     'active_key' => null,
+                    'failed_at' => $lockedPayment->failed_at ?? now(),
                     'last_gateway_error' => null,
                     'last_reconciled_at' => now(),
                 ]);
@@ -478,11 +566,240 @@ class WisataPaymentLifecycleService
         return false;
     }
 
+    public function handleIpaymuStatus(
+        WisataPayment $payment,
+        PaymentGatewayResult $result,
+        string $source = 'callback',
+    ): bool {
+        if ($payment->provider !== 'ipaymu') {
+            throw new RuntimeException('Payment provider does not match iPaymu callback.');
+        }
+
+        return $this->applyGatewayResult($payment, $result, $source);
+    }
+
+    private function applyGatewayResult(
+        WisataPayment $payment,
+        PaymentGatewayResult $result,
+        string $source,
+    ): bool {
+        $manualRefundId = null;
+
+        if ($result->transactionId === null || $result->transactionId === '') {
+            throw new RuntimeException('Provider transaction ID is missing.');
+        }
+
+        if ($payment->transaction_id && ! hash_equals((string) $payment->transaction_id, $result->transactionId)) {
+            throw new RuntimeException('Provider transaction ID mismatch.');
+        }
+
+        if ($result->amount === null || $result->amount !== (int) $payment->gross_amount) {
+            Log::critical('Payment provider amount mismatch.', [
+                'event_type' => 'payment_amount_mismatch',
+                'payment_id' => $payment->id,
+                'order_id' => $payment->order_id,
+                'provider' => $payment->provider,
+                'provider_transaction_id' => $result->transactionId,
+                'source' => $source,
+            ]);
+
+            throw new RuntimeException('Provider payment amount mismatch.');
+        }
+
+        $collision = WisataPayment::query()
+            ->where('provider', $payment->provider)
+            ->where('transaction_id', $result->transactionId)
+            ->where('id', '!=', $payment->id)
+            ->exists();
+        if ($collision) {
+            throw new RuntimeException('Provider transaction is already attached to another payment.');
+        }
+
+        $transitioned = DB::transaction(function () use ($payment, $result, $source, &$manualRefundId) {
+            $lockedPayment = WisataPayment::query()->whereKey($payment->id)->lockForUpdate()->firstOrFail();
+            $booking = WisataBooking::query()->whereKey($lockedPayment->wisata_booking_id)->lockForUpdate()->firstOrFail();
+            $currentInternal = (string) ($lockedPayment->internal_status ?: 'pending');
+            $incomingInternal = $result->internalStatus;
+
+            if ($lockedPayment->transaction_id && ! hash_equals((string) $lockedPayment->transaction_id, $result->transactionId)) {
+                throw new RuntimeException('Provider transaction changed during processing.');
+            }
+
+            $isRegressiveTransition = ($currentInternal === 'refunded' && $incomingInternal !== 'refunded')
+                || ($currentInternal === 'paid' && ! in_array($incomingInternal, ['paid', 'refunded'], true));
+            if ($isRegressiveTransition) {
+                Log::warning('Rejected regressive payment transition.', [
+                    'event_type' => 'payment_transition_rejected',
+                    'payment_id' => $lockedPayment->id,
+                    'order_id' => $lockedPayment->order_id,
+                    'provider' => $lockedPayment->provider,
+                    'from' => $currentInternal,
+                    'to' => $incomingInternal,
+                    'source' => $source,
+                ]);
+
+                return false;
+            }
+
+            $lockedPayment->update([
+                'status' => $result->providerStatus,
+                'internal_status' => $incomingInternal,
+                'transaction_id' => $result->transactionId,
+                'provider_reference_id' => $result->providerReferenceId ?? $lockedPayment->provider_reference_id,
+                'provider_amount' => $result->amount,
+                'fee' => $result->fee,
+                'payment_type' => $result->paymentType ?? $lockedPayment->payment_type,
+                'payment_channel' => $result->paymentChannel ?? $lockedPayment->payment_channel,
+                'payment_url' => $result->paymentUrl ?? $lockedPayment->payment_url,
+                'expires_at' => $result->expiresAt ?? $lockedPayment->expires_at,
+                'paid_at' => $incomingInternal === 'paid' ? ($lockedPayment->paid_at ?? now()) : $lockedPayment->paid_at,
+                'failed_at' => in_array($incomingInternal, ['failed', 'expired', 'cancelled'], true)
+                    ? ($lockedPayment->failed_at ?? now())
+                    : $lockedPayment->failed_at,
+                'payload' => $result->raw,
+                'active_key' => in_array($incomingInternal, ['paid', 'failed', 'expired', 'cancelled', 'refunded'], true)
+                    ? null
+                    : $lockedPayment->active_key,
+                'last_gateway_error' => null,
+                'last_reconciled_at' => now(),
+                'reconciliation_attempts' => (int) $lockedPayment->reconciliation_attempts + 1,
+            ]);
+
+            if ($incomingInternal === 'paid') {
+                if (in_array($booking->status, ['cancelled', 'expired'], true)) {
+                    $booking->update(['refund_status' => 'pending']);
+                    WisataRefund::query()->firstOrCreate(
+                        ['refund_key' => 'WISATA-LATE-'.$lockedPayment->id],
+                        [
+                            'wisata_booking_id' => $booking->id,
+                            'wisata_payment_id' => $lockedPayment->id,
+                            'amount' => (int) $lockedPayment->gross_amount,
+                            'status' => $lockedPayment->provider === 'ipaymu' ? 'pending_manual' : 'pending',
+                            'provider_action' => $lockedPayment->provider === 'ipaymu' ? 'manual_refund' : 'refund',
+                        ],
+                    );
+
+                    Log::critical('Successful payment arrived for terminal wisata booking.', [
+                        'event_type' => 'late_successful_payment',
+                        'booking_id' => $booking->id,
+                        'payment_id' => $lockedPayment->id,
+                        'provider' => $lockedPayment->provider,
+                        'provider_transaction_id' => $result->transactionId,
+                    ]);
+
+                    return false;
+                }
+
+                if (in_array($booking->status, ['paid', 'completed'], true)) {
+                    $this->ensurePaidSideEffectRows($lockedPayment->id, (bool) $booking->guest_email);
+
+                    return false;
+                }
+
+                if ($booking->status !== 'pending_payment') {
+                    throw new RuntimeException('Invalid booking state transition to paid.');
+                }
+
+                $booking->update([
+                    'status' => 'paid',
+                    'payment_status' => 'paid',
+                    'payment_deadline' => null,
+                ]);
+                WisataAffiliateCommissionItem::query()
+                    ->where('wisata_booking_id', $booking->id)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'approved', 'reason' => null]);
+                $this->ensurePaidSideEffectRows($lockedPayment->id, (bool) $booking->guest_email);
+
+                Log::info('Payment transitioned to paid.', [
+                    'event_type' => 'payment_state_transition',
+                    'booking_id' => $booking->id,
+                    'payment_id' => $lockedPayment->id,
+                    'order_id' => $lockedPayment->order_id,
+                    'provider' => $lockedPayment->provider,
+                    'provider_transaction_id' => $result->transactionId,
+                    'source' => $source,
+                ]);
+
+                return true;
+            }
+
+            if ($incomingInternal === 'refunded') {
+                if (in_array($booking->status, ['paid', 'completed'], true) || $currentInternal === 'paid') {
+                    $refund = WisataRefund::query()->firstOrCreate(
+                        ['refund_key' => 'WISATA-IPAYMU-REFUND-'.$lockedPayment->id],
+                        [
+                            'wisata_booking_id' => $booking->id,
+                            'wisata_payment_id' => $lockedPayment->id,
+                            'amount' => (int) $lockedPayment->gross_amount,
+                            'status' => 'pending_manual',
+                            'provider_action' => 'manual_refund',
+                        ],
+                    );
+                    $manualRefundId = $refund->id;
+                } elseif ($booking->status === 'pending_payment') {
+                    $booking->update([
+                        'status' => 'cancelled',
+                        'payment_status' => 'refunded',
+                    ]);
+                    WisataAffiliateCommissionItem::query()
+                        ->where('wisata_booking_id', $booking->id)
+                        ->where('status', '!=', 'cancelled')
+                        ->update([
+                            'status' => 'cancelled',
+                            'reason' => 'Transaksi direfund sebelum booking dikonfirmasi.',
+                        ]);
+                }
+
+                return false;
+            }
+
+            if (in_array($incomingInternal, ['failed', 'expired', 'cancelled'], true) && $booking->status === 'pending_payment') {
+                $booking->update([
+                    'status' => $incomingInternal === 'cancelled' ? 'cancelled' : 'expired',
+                    'payment_status' => $incomingInternal,
+                ]);
+                WisataAffiliateCommissionItem::query()
+                    ->where('wisata_booking_id', $booking->id)
+                    ->where('status', '!=', 'cancelled')
+                    ->update([
+                        'status' => 'cancelled',
+                        'reason' => 'Pembayaran tidak berhasil atau kedaluwarsa.',
+                    ]);
+            } elseif ($booking->status === 'pending_payment') {
+                $booking->update(['payment_status' => $incomingInternal]);
+            }
+
+            return false;
+        }, 3);
+
+        if ($manualRefundId !== null) {
+            $this->finalizeRefund($manualRefundId, $result->raw);
+        }
+
+        if ($result->internalStatus === 'paid') {
+            $this->dispatchPaidSideEffects($payment->fresh(['booking']));
+        }
+
+        return $transitioned;
+    }
+
     public function reconcile(WisataPayment $payment): void
     {
         $payment = $payment->fresh();
 
         try {
+            if ($payment->provider !== 'midtrans') {
+                $status = $this->gateways->forProvider($payment->provider)->status($payment);
+                if ($status === null) {
+                    throw new RuntimeException('Provider transaction ID is unavailable for reconciliation.');
+                }
+
+                $this->applyGatewayResult($payment, $status, 'reconciliation');
+
+                return;
+            }
+
             $status = $this->midtrans->statusOrNull($payment->order_id);
 
             if ($status === null) {
@@ -546,11 +863,14 @@ class WisataPaymentLifecycleService
     public function reconcileRecentPayments(int $limit = 50): int
     {
         $payments = WisataPayment::query()
-            ->where('provider', 'midtrans')
             ->where(function ($query) {
-                $query->whereIn('status', self::ACTIVE_PAYMENT_STATUSES)
+                $query->whereIn('internal_status', ['initiating', 'pending', 'unknown'])
+                    ->orWhereIn('status', self::ACTIVE_PAYMENT_STATUSES)
                     ->orWhere(function ($paid) {
-                        $paid->whereIn('status', ['settlement', 'capture'])
+                        $paid->where(function ($query) {
+                            $query->where('internal_status', 'paid')
+                                ->orWhereIn('status', ['settlement', 'capture']);
+                        })
                             ->whereNull('notification_dispatched_at');
                     });
             })
@@ -562,7 +882,7 @@ class WisataPaymentLifecycleService
         $processed = 0;
         foreach ($payments as $payment) {
             try {
-                if (in_array($payment->status, ['settlement', 'capture'], true) && ! $payment->notification_dispatched_at) {
+                if (($payment->internal_status === 'paid' || in_array($payment->status, ['settlement', 'capture'], true)) && ! $payment->notification_dispatched_at) {
                     $this->dispatchPaidSideEffects($payment->fresh(['booking']));
                 } else {
                     $this->reconcile($payment);
@@ -579,6 +899,7 @@ class WisataPaymentLifecycleService
 
         $refunds = WisataRefund::query()
             ->whereIn('status', ['pending', 'processing', 'unknown'])
+            ->whereHas('payment', fn ($query) => $query->where('provider', 'midtrans'))
             ->where('created_at', '>=', now()->subDays(30))
             ->orderBy('id')
             ->limit($limit)
@@ -654,8 +975,21 @@ class WisataPaymentLifecycleService
             $booking = WisataBooking::query()->whereKey($lockedPayment->wisata_booking_id)->lockForUpdate()->firstOrFail();
             $providerStatus = (string) ($payload['transaction_status'] ?? $lockedPayment->status);
 
+            if ($lockedPayment->internal_status === 'refunded') {
+                Log::warning('Rejected paid transition for refunded Midtrans payment.', [
+                    'event_type' => 'payment_transition_rejected',
+                    'payment_id' => $lockedPayment->id,
+                    'provider' => 'midtrans',
+                    'from' => 'refunded',
+                    'to' => 'paid',
+                ]);
+
+                return false;
+            }
+
             $lockedPayment->update([
                 'status' => $providerStatus,
+                'internal_status' => 'paid',
                 'payment_type' => $payload['payment_type'] ?? $lockedPayment->payment_type,
                 'transaction_id' => $payload['transaction_id'] ?? $lockedPayment->transaction_id,
                 'payload' => $payload,
@@ -735,7 +1069,7 @@ class WisataPaymentLifecycleService
         if (
             ! $booking
             || ! in_array((string) $booking->status, ['paid', 'completed'], true)
-            || ! in_array((string) $payment->status, ['settlement', 'capture'], true)
+            || ! ($payment->internal_status === 'paid' || in_array((string) $payment->status, ['settlement', 'capture'], true))
             || $payment->notification_dispatched_at
         ) {
             return;
@@ -792,8 +1126,13 @@ class WisataPaymentLifecycleService
             ->pluck('wisata_payment_id');
 
         $payments = WisataPayment::query()
-            ->where('provider', 'midtrans')
-            ->whereIn('status', ['settlement', 'capture'])
+            ->where(function ($query) {
+                $query->where('internal_status', 'paid')
+                    ->orWhere(function ($legacy) {
+                        $legacy->where('provider', 'midtrans')
+                            ->whereIn('status', ['settlement', 'capture']);
+                    });
+            })
             ->whereNull('notification_dispatched_at')
             ->whereHas('booking', fn ($query) => $query->whereIn('status', ['paid', 'completed']))
             ->where(function ($query) use ($outboxPaymentIds) {
@@ -1121,6 +1460,7 @@ class WisataPaymentLifecycleService
         DB::transaction(function () use ($bookingId, $paymentId, $status, $exception) {
             WisataPayment::query()->whereKey($paymentId)->lockForUpdate()->update([
                 'status' => $status,
+                'internal_status' => 'unknown',
                 'last_gateway_error' => $this->safeError($exception),
             ]);
             WisataBooking::query()->whereKey($bookingId)->lockForUpdate()->update([
@@ -1131,16 +1471,47 @@ class WisataPaymentLifecycleService
 
     private function updatePaymentFromProvider(int $paymentId, array $payload, bool $terminal): void
     {
-        WisataPayment::query()->whereKey($paymentId)->update([
-            'status' => (string) ($payload['transaction_status'] ?? 'unknown'),
-            'payment_type' => $payload['payment_type'] ?? DB::raw('payment_type'),
-            'transaction_id' => $payload['transaction_id'] ?? DB::raw('transaction_id'),
-            'payload' => $payload,
-            'active_key' => $terminal ? null : DB::raw('active_key'),
-            'last_gateway_error' => null,
-            'last_reconciled_at' => now(),
-            'reconciliation_attempts' => DB::raw('reconciliation_attempts + 1'),
-        ]);
+        $providerStatus = (string) ($payload['transaction_status'] ?? 'unknown');
+        $internalStatus = match ($providerStatus) {
+            'settlement' => 'paid',
+            'capture' => ($payload['fraud_status'] ?? 'accept') === 'accept' ? 'paid' : 'pending',
+            'pending', 'authorize' => 'pending',
+            'cancel' => 'cancelled',
+            'expire' => 'expired',
+            'deny', 'failure' => 'failed',
+            'refund', 'partial_refund' => 'refunded',
+            default => 'unknown',
+        };
+
+        DB::transaction(function () use ($paymentId, $payload, $terminal, $providerStatus, $internalStatus) {
+            $payment = WisataPayment::query()->whereKey($paymentId)->lockForUpdate()->firstOrFail();
+            if (
+                in_array($payment->internal_status, ['paid', 'refunded'], true)
+                && $internalStatus !== $payment->internal_status
+            ) {
+                Log::warning('Rejected regressive Midtrans payment transition.', [
+                    'event_type' => 'payment_transition_rejected',
+                    'payment_id' => $payment->id,
+                    'provider' => 'midtrans',
+                    'from' => $payment->internal_status,
+                    'to' => $internalStatus,
+                ]);
+
+                return;
+            }
+
+            $payment->update([
+                'status' => $providerStatus,
+                'internal_status' => $internalStatus,
+                'payment_type' => $payload['payment_type'] ?? $payment->payment_type,
+                'transaction_id' => $payload['transaction_id'] ?? $payment->transaction_id,
+                'payload' => $payload,
+                'active_key' => $terminal ? null : $payment->active_key,
+                'last_gateway_error' => null,
+                'last_reconciled_at' => now(),
+                'reconciliation_attempts' => (int) $payment->reconciliation_attempts + 1,
+            ]);
+        }, 3);
     }
 
     private function providerPaymentSucceeded(array $payload): bool
