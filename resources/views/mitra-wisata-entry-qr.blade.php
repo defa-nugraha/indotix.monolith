@@ -17,8 +17,10 @@
     };
     $art = view('partials.wisata-entry-qr-art')->render();
     $artUri = 'data:image/svg+xml;base64,'.base64_encode($art);
-    $name = mb_strtoupper($destinationName ?: 'Destinasi Wisata');
-    $titleSize = mb_strlen($name) > 48 ? 23 : (mb_strlen($name) > 30 ? 28 : 34);
+    $posters = $posters ?? [[
+        'destinationName' => $destinationName ?? 'Destinasi Wisata',
+        'qrImage' => $qrImage ?? '',
+    ]];
     $steps = [$template['footer_step_one'], $template['footer_step_two'], $template['footer_step_three']];
 @endphp
 <!doctype html>
@@ -29,7 +31,8 @@
     <style>
         @page { size: A4 portrait; margin: 0; }
         html, body { margin: 0; padding: 0; font-family: Helvetica, Arial, sans-serif; color: #004575; }
-        .poster { position: fixed; top: 0; left: 0; width: 210mm; height: 297mm; }
+        .poster { position: relative; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; }
+        .poster:last-child { page-break-after: auto; }
         .item { position: absolute; margin: 0; padding: 0; }
         .white { color: #fff; }
         .bold { font-weight: bold; }
@@ -37,6 +40,11 @@
     </style>
 </head>
 <body>
+@foreach($posters as $poster)
+@php
+    $name = mb_strtoupper($poster['destinationName'] ?: 'Destinasi Wisata');
+    $titleSize = mb_strlen($name) > 48 ? 23 : (mb_strlen($name) > 30 ? 28 : 34);
+@endphp
 <main class="poster">
     <img class="item" style="{{ $box(0, 0, 500, 707) }}" src="{{ $artUri }}" alt="">
     @if(!empty($template['background_image']))
@@ -58,7 +66,7 @@
     <p class="item white" style="{{ $box(46, 198, 390, 48) }}font-size:{{ $mm(17.5) }};line-height:1.4;">{{ $template['lead_text'] }}</p>
     <div class="item" style="{{ $box(160, 276, 180, 188) }}background:#edf6fa;border-radius:{{ $mm(23) }};"></div>
     <div class="item" style="{{ $box(156, 270, 188, 188) }}background:#fff;border:{{ $mm(0.7) }} solid #edf4f8;border-radius:{{ $mm(23) }};"></div>
-    <img class="item" src="{{ $qrImage }}" alt="QR masuk wisata" style="{{ $box(160, 274, 180, 180) }}">
+    <img class="item" src="{{ $poster['qrImage'] }}" alt="QR masuk wisata" style="{{ $box(160, 274, 180, 180) }}">
     @if(!empty($template['qr_logo_image']))
         <div class="item" style="{{ $box(236, 350, 28, 28) }}background:#fff;border-radius:{{ $mm(5) }};"></div>
         <img class="item" src="{{ $template['qr_logo_image'] }}" alt="" style="{{ $fit($template['qr_logo_image'], 238, 352, 24, 24) }}">
@@ -80,5 +88,6 @@
     <div class="item white center" style="{{ $box(105, 668, 290, 17) }}font-size:{{ $mm(14) }};line-height:1.1;">{{ $template['customer_service'] }}</div>
     <img class="item" style="{{ $box(0, 0, 500, 707) }}" src="data:image/svg+xml;base64,{{ base64_encode(view('partials.wisata-entry-qr-details')->render()) }}" alt="">
 </main>
+@endforeach
 </body>
 </html>

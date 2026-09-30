@@ -192,6 +192,9 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra-wisata.index');
     Route::post('admin/mitra-wisata', [MitraWisataController::class, 'store'])
         ->name('admin.mitra-wisata.store');
+    Route::get('admin/mitra-wisata/qr-download', [MitraWisataController::class, 'downloadQr'])
+        ->middleware('throttle:10,1')
+        ->name('admin.mitra-wisata.qr-download');
     Route::get('admin/mitra-wisata/{user}', [MitraWisataController::class, 'show'])
         ->name('admin.mitra-wisata.show');
     Route::get('admin/mitra-wisata/{user}/documents/{type}', [MitraWisataSensitiveDocumentController::class, 'showAdmin'])

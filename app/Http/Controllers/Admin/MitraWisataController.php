@@ -6,10 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\MitraWisataOnboarding;
 use App\Models\User;
 use App\Services\MitraDeletionService;
+use App\Services\WisataTicketUsageService;
+use App\Support\QrCodeRenderer;
+use App\Support\WisataEntryQrTemplate;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -97,6 +104,67 @@ class MitraWisataController extends Controller
         ]);
     }
 
+    public function downloadQr(Request $request, WisataTicketUsageService $usageService): HttpResponse
+    {
+        $data = $request->validate([
+            'ids' => ['required', 'array', 'min:1', 'max:50'],
+            'ids.*' => ['required', 'integer', 'distinct', 'min:1'],
+        ]);
+
+        $ids = collect($data['ids'])->map(fn ($id) => (int) $id)->values();
+        $users = User::query()
+            ->whereKey($ids)
+            ->where('role', 'mitra')
+            ->where('mitra_onboarding_type', 'wisata')
+            ->with('mitraWisataOnboarding')
+            ->get()
+            ->keyBy('id');
+
+        if ($users->count() !== $ids->count()) {
+            throw ValidationException::withMessages([
+                'ids' => 'Satu atau beberapa mitra yang dipilih tidak valid.',
+            ]);
+        }
+
+        $posters = $ids->map(function (int $id) use ($users, $usageService) {
+            $destination = $users->get($id)?->mitraWisataOnboarding;
+            if (! $destination) {
+                throw ValidationException::withMessages([
+                    'ids' => 'QR belum tersedia karena data destinasi salah satu mitra belum lengkap.',
+                ]);
+            }
+
+            return [
+                'destinationName' => $destination->destination_name ?: 'Destinasi Wisata',
+                'qrImage' => QrCodeRenderer::dataUri($usageService->buildMerchantQrData($destination), 520),
+            ];
+        })->all();
+
+        $html = view('mitra-wisata-entry-qr', [
+            'posters' => $posters,
+            'template' => WisataEntryQrTemplate::pdfPayload(),
+        ])->render();
+
+        $options = new Options;
+        $options->set('isRemoteEnabled', false);
+        $options->set('isHtml5ParserEnabled', true);
+
+        $pdf = new Dompdf($options);
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->loadHtml($html, 'UTF-8');
+        $pdf->render();
+
+        $filename = 'qr-masuk-mitra-wisata-'.count($posters).'.pdf';
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'Pragma' => 'no-cache',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
@@ -168,6 +236,7 @@ class MitraWisataController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'phone' => $user->phone,
                 'is_suspended' => (bool) $user->is_suspended,
                 'suspended_reason' => $user->suspended_reason,
                 'suspended_at' => optional($user->suspended_at)->toDateTimeString(),
