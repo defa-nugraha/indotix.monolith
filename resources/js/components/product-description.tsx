@@ -7,21 +7,23 @@ import {
 } from 'react';
 import { cn } from '@/lib/utils';
 
-type ProductDescriptionProps = HTMLAttributes<HTMLParagraphElement> & {
+type ProductDescriptionProps = HTMLAttributes<HTMLDivElement> & {
     text?: string | null;
     fallback?: string;
     lines?: number;
+    html?: boolean;
 };
 
 export function ProductDescription({
     text,
     fallback,
     lines = 4,
+    html = false,
     className,
     ...props
 }: ProductDescriptionProps) {
     const content = text?.trim() || fallback || '';
-    const textRef = useRef<HTMLParagraphElement>(null);
+    const textRef = useRef<HTMLDivElement>(null);
     const [expanded, setExpanded] = useState(false);
     const [canExpand, setCanExpand] = useState(false);
 
@@ -56,7 +58,7 @@ export function ProductDescription({
 
     return (
         <div>
-            <p
+            <div
                 ref={textRef}
                 className={cn(
                     !expanded && 'product-description-ellipsis',
@@ -68,9 +70,12 @@ export function ProductDescription({
                     } as CSSProperties
                 }
                 {...props}
+                {...(html
+                    ? { dangerouslySetInnerHTML: { __html: content } }
+                    : {})}
             >
-                {content}
-            </p>
+                {!html ? content : null}
+            </div>
             {canExpand && (
                 <button
                     type="button"

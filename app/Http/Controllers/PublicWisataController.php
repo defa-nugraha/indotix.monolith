@@ -12,6 +12,7 @@ use App\Models\WisataTicket;
 use App\Services\Discovery\DiscoveryService;
 use App\Services\ProductReviewService;
 use App\Support\HomePageContent;
+use App\Support\HtmlSanitizer;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -202,7 +203,7 @@ class PublicWisataController extends Controller
                 'slug' => $destination->slug,
                 'destination_name' => $destination->destination_name,
                 'destination_type' => $destination->destination_type,
-                'description' => $destination->description,
+                'description' => HtmlSanitizer::clean($destination->description),
                 'highlights' => $destination->highlights,
                 'address_full' => $destination->address_full,
                 'city_name' => $this->resolveCityName($destination->city_code),
