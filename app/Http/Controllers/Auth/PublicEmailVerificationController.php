@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\RoleRedirect;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -25,7 +26,7 @@ class PublicEmailVerificationController extends Controller
         }
 
         return view('auth.email-verified', [
-            'loginUrl' => route('login'),
+            'loginUrl' => RoleRedirect::dashboardUrl($request->user()),
             'logoUrl' => asset('logo.png'),
         ]);
     }

@@ -59,12 +59,38 @@ test('web signed link verifies email without browser authentication', function (
     $this->get($verificationUrl)
         ->assertOk()
         ->assertSee('Email berhasil diverifikasi')
-        ->assertSee('Masuk ke Indotix');
+        ->assertSee('Masuk ke Indotix')
+        ->assertSee('href="'.route('login').'"', false);
 
     expect(auth()->check())->toBeFalse();
     expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
     Event::assertDispatched(Verified::class);
 });
+
+test('web verification success action follows the authenticated account role', function (string $role, string $routeName) {
+    $user = User::factory()->unverified()->create([
+        'role' => $role,
+    ]);
+    $verificationUrl = URL::temporarySignedRoute(
+        'public.verification.verify',
+        now()->addMinutes(60),
+        [
+            'id' => $user->id,
+            'hash' => sha1($user->getEmailForVerification()),
+        ],
+    );
+
+    $this->actingAs($user)
+        ->get($verificationUrl)
+        ->assertOk()
+        ->assertSee('href="'.route($routeName).'"', false);
+
+    expect($user->fresh()->hasVerifiedEmail())->toBeTrue();
+})->with([
+    'mitra' => ['mitra', 'mitra.dashboard'],
+    'user' => ['user', 'home'],
+    'admin' => ['admin', 'dashboard'],
+]);
 
 test('web verification link rejects a mismatched email hash', function () {
     Event::fake();

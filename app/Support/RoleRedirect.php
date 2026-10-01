@@ -7,20 +7,25 @@ use Illuminate\Http\RedirectResponse;
 
 class RoleRedirect
 {
-    public static function toDashboard(?User $user): RedirectResponse
+    public static function dashboardUrl(?User $user): string
     {
         if (! $user) {
-            return redirect()->route('login');
+            return route('login');
         }
 
         if ($user->role === 'mitra') {
-            return redirect()->route('mitra.dashboard');
+            return route('mitra.dashboard');
         }
 
         if (str_starts_with((string) $user->role, 'admin')) {
-            return redirect()->route('dashboard');
+            return route('dashboard');
         }
 
-        return redirect()->route('home');
+        return route('home');
+    }
+
+    public static function toDashboard(?User $user): RedirectResponse
+    {
+        return redirect()->to(self::dashboardUrl($user));
     }
 }
