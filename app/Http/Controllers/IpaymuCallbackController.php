@@ -48,6 +48,9 @@ class IpaymuCallbackController extends Controller
                 'event_type' => 'payment_callback_signature_invalid',
                 'provider' => 'ipaymu',
                 'external_id_hash' => hash('sha256', $externalId),
+                'content_type' => $request->header('Content-Type'),
+                'payload_keys' => array_keys($payload),
+                'payload_hash' => hash('sha256', $verifier->canonicalJson($payload)),
             ]);
 
             return response('Invalid signature', 400);
@@ -124,7 +127,9 @@ class IpaymuCallbackController extends Controller
 
             $event->update(['wisata_payment_id' => $payment->id]);
             $callbackAmount = $this->integerAmount($normalized['amount'] ?? null);
-            if ($callbackAmount === null || $callbackAmount !== (int) $payment->gross_amount) {
+            $callbackSubtotal = $this->integerAmount($normalized['sub_total'] ?? null);
+            $expectedAmount = $callbackSubtotal ?? $callbackAmount;
+            if ($expectedAmount === null || $expectedAmount !== (int) $payment->gross_amount) {
                 $this->reject($event, 'callback_amount_mismatch');
 
                 return response('OK', 200);
@@ -137,7 +142,11 @@ class IpaymuCallbackController extends Controller
             }
 
             $result = $gateway->statusByTransactionId($transactionId, $payment->payment_url);
-            $this->assertInquiryIdentity($result, $payment, $referenceId, $transactionId);
+            $this->assertInquiryIdentity($result, $payment, $referenceId, $transactionId, $callbackAmount);
+            $inquiryRaw = $result->raw;
+            if ($callbackSubtotal !== null) {
+                $inquiryRaw['Data']['SubTotal'] = (string) $callbackSubtotal;
+            }
             $result = new PaymentGatewayResult(
                 $result->internalStatus,
                 $result->providerStatus,
@@ -149,7 +158,7 @@ class IpaymuCallbackController extends Controller
                 $result->amount,
                 $result->fee,
                 $result->expiresAt,
-                $result->raw,
+                $inquiryRaw,
             );
 
             $payments->handleIpaymuStatus($payment, $result);
@@ -250,7 +259,7 @@ class IpaymuCallbackController extends Controller
     {
         $expectedVa = trim((string) config('services.ipaymu.va', ''));
         $merchant = trim((string) ($payload['merchant'] ?? ''));
-        if ($expectedVa === '' || $merchant === '' || ! hash_equals($expectedVa, $merchant)) {
+        if ($merchant !== '' && ($expectedVa === '' || ! hash_equals($expectedVa, $merchant))) {
             throw new \RuntimeException('iPaymu callback merchant mismatch.');
         }
 
@@ -268,11 +277,18 @@ class IpaymuCallbackController extends Controller
         WisataPayment $payment,
         string $referenceId,
         string $transactionId,
+        ?int $callbackAmount = null,
     ): void {
         if ($result->transactionId === null || ! hash_equals($transactionId, $result->transactionId)) {
             throw new \RuntimeException('iPaymu inquiry transaction mismatch.');
         }
-        if ($result->amount === null || $result->amount !== (int) $payment->gross_amount) {
+        if ($result->amount === null) {
+            throw new \RuntimeException('iPaymu inquiry amount is missing.');
+        }
+        if ($callbackAmount !== null && $result->amount !== $callbackAmount) {
+            throw new \RuntimeException('iPaymu inquiry amount mismatch.');
+        }
+        if ($callbackAmount === null && $result->amount !== (int) $payment->gross_amount) {
             throw new \RuntimeException('iPaymu inquiry amount mismatch.');
         }
 
