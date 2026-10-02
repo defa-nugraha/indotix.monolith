@@ -3,9 +3,7 @@
 use App\Payments\IpaymuCallbackVerifier;
 
 it('verifies iPaymu documented callback signature normalization', function () {
-    config(['services.ipaymu.va' => '123456']);
-
-    $payload = [
+        $payload = [
         'trx_id' => '237141',
         'sid' => 'e6b72b57-58f6-4a7c-b65d-5235fdcc6ed6',
         'reference_id' => 'WISATA-46-01M3XQ404105551NRYW2KYPM9N',
@@ -33,7 +31,7 @@ it('verifies iPaymu documented callback signature normalization', function () {
         'url' => 'https://staging.indotix.co.id/payments/ipaymu/callback',
     ];
 
-    $verifier = app(IpaymuCallbackVerifier::class);
+    $verifier = new IpaymuCallbackVerifier('123456');
     $signature = hash_hmac('sha256', $verifier->canonicalJson($payload), '123456');
 
     expect($verifier->verify($payload, $signature))->toBeTrue();
