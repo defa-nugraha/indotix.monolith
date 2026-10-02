@@ -118,20 +118,22 @@ final readonly class IpaymuPaymentGateway implements PaymentGateway
     private function assertPaymentUrl(string $url): void
     {
         $parts = parse_url($url);
-        $expectedHost = config('services.ipaymu.environment') === 'production'
-            ? 'my.ipaymu.com'
-            : 'sandbox.ipaymu.com';
+        $allowedHosts = config('services.ipaymu.environment') === 'production'
+            ? ['my.ipaymu.com']
+            : ['sandbox-payment.ipaymu.com'];
+
+        $host = strtolower((string) ($parts['host'] ?? ''));
 
         if (
             ! is_array($parts)
             || ($parts['scheme'] ?? null) !== 'https'
-            || strtolower((string) ($parts['host'] ?? '')) !== $expectedHost
+            || ! in_array($host, $allowedHosts, true)
         ) {
             Log::warning('iPaymu payment URL rejected.', [
                 'environment' => config('services.ipaymu.environment'),
                 'scheme' => $parts['scheme'] ?? null,
                 'host' => $parts['host'] ?? null,
-                'expected_host' => $expectedHost,
+                'allowed_hosts' => $allowedHosts,
                 'url_hash' => hash('sha256', $url),
             ]);
 
