@@ -41,6 +41,25 @@ test('callback signature rejects payload mutation and malformed signatures', fun
         ->and($verifier->verify($payload, 'not-a-signature'))->toBeFalse();
 });
 
+test('callback signature accepts providers that omit JSON slash escaping', function () {
+    config(['services.ipaymu.va' => '1179000899']);
+    $verifier = app(IpaymuCallbackVerifier::class);
+    $payload = [
+        'reference_id' => 'ORDER-1',
+        'url' => 'https://staging.indotix.co.id/payments/ipaymu/callback',
+        'status_code' => '1',
+        'trx_id' => '4719',
+        'additional_info' => '[]',
+    ];
+    $signature = hash_hmac(
+        'sha256',
+        $verifier->canonicalJson($payload, true),
+        '1179000899',
+    );
+
+    expect($verifier->verify($payload, $signature))->toBeTrue();
+});
+
 test('callback canonicalization is stable across key order', function () {
     config(['services.ipaymu.va' => '1179000899']);
     $verifier = app(IpaymuCallbackVerifier::class);
