@@ -9,6 +9,7 @@ use App\Payments\Contracts\PaymentGateway;
 use App\Payments\PaymentGatewayResult;
 use App\Services\IpaymuService;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 final readonly class IpaymuPaymentGateway implements PaymentGateway
@@ -126,6 +127,14 @@ final readonly class IpaymuPaymentGateway implements PaymentGateway
             || ($parts['scheme'] ?? null) !== 'https'
             || strtolower((string) ($parts['host'] ?? '')) !== $expectedHost
         ) {
+            Log::warning('iPaymu payment URL rejected.', [
+                'environment' => config('services.ipaymu.environment'),
+                'scheme' => $parts['scheme'] ?? null,
+                'host' => $parts['host'] ?? null,
+                'expected_host' => $expectedHost,
+                'url_hash' => hash('sha256', $url),
+            ]);
+
             throw new PaymentGatewayException('iPaymu returned an untrusted payment URL.');
         }
     }
