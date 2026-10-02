@@ -39,7 +39,7 @@ it('verifies iPaymu documented callback signature normalization', function () {
 });
 
 it('verifies iPaymu form callback when sandbox preserves raw additional_info and is_escrow values', function () {
-    config(['services.ipaymu.va' => '123456']);
+    // The verifier accepts the merchant VA explicitly so this unit test does not require Laravel bootstrapping.
 
     $payload = [
         'trx_id' => '237141',
@@ -51,7 +51,7 @@ it('verifies iPaymu form callback when sandbox preserves raw additional_info and
         'url' => 'https://staging.indotix.co.id/payments/ipaymu/callback',
     ];
 
-    $verifier = app(IpaymuCallbackVerifier::class);
+    $verifier = new IpaymuCallbackVerifier('123456');
     $compatibility = $verifier->normalize($payload);
     $compatibility['is_escrow'] = 'true';
     $compatibility['additional_info'] = '[]';
