@@ -8,9 +8,11 @@ use JsonException;
 
 final class IpaymuCallbackVerifier
 {
+    public function __construct(private readonly ?string $merchantVa = null) {}
+
     public function verify(array $payload, string $signature): bool
     {
-        $va = trim((string) config('services.ipaymu.va', ''));
+        $va = trim($this->merchantVa ?? (string) config('services.ipaymu.va', ''));
         if ($va === '' || ! preg_match('/\A[a-f0-9]{64}\z/i', $signature)) {
             return false;
         }
