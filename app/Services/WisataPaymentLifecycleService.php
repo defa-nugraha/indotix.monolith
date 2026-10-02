@@ -599,7 +599,7 @@ class WisataPaymentLifecycleService
         }
 
         if ($paymentAmount === null || $paymentAmount !== (int) $payment->gross_amount) {
-            Log::critical('Payment provider amount mismatch.',
+            Log::critical('Payment provider amount mismatch.', [
                 'event_type' => 'payment_amount_mismatch',
                 'payment_id' => $payment->id,
                 'order_id' => $payment->order_id,
