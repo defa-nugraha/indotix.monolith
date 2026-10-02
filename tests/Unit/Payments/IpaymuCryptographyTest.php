@@ -62,7 +62,7 @@ test('redirect payment uses the server booking total and sends no secret to the 
             'Success' => true,
             'Data' => [
                 'SessionID' => 'SESSION-1',
-                'Url' => 'https://sandbox.ipaymu.com/payment/SESSION-1',
+                'Url' => 'https://sandbox-payment.ipaymu.com/payment/SESSION-1',
             ],
         ]),
     ]);
@@ -78,7 +78,7 @@ test('redirect payment uses the server booking total and sends no secret to the 
     $result = app(IpaymuPaymentGateway::class)->create($booking, $payment);
 
     expect($result->amount)->toBe(100000)
-        ->and($result->paymentUrl)->toBe('https://sandbox.ipaymu.com/payment/SESSION-1')
+        ->and($result->paymentUrl)->toBe('https://sandbox-payment.ipaymu.com/payment/SESSION-1')
         ->and(json_encode($result->raw))->not->toContain('test-api-key');
     Http::assertSent(function ($request) {
         $body = json_decode($request->body(), true);
