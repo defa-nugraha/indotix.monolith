@@ -15,17 +15,19 @@ final class IpaymuCallbackVerifier
             return false;
         }
 
+        $expected = strtolower($signature);
+
         try {
-            $canonical = $this->canonicalJson($payload);
-            $alternateCanonical = $this->canonicalJson($payload, true);
+            foreach ($this->canonicalCandidates($payload) as $canonical) {
+                if (hash_equals(hash_hmac('sha256', $canonical, $va), $expected)) {
+                    return true;
+                }
+            }
         } catch (JsonException) {
             return false;
         }
 
-        $expected = strtolower($signature);
-
-        return hash_equals(hash_hmac('sha256', $canonical, $va), $expected)
-            || hash_equals(hash_hmac('sha256', $alternateCanonical, $va), $expected);
+        return false;
     }
 
     public function normalize(array $payload): array
@@ -55,13 +57,57 @@ final class IpaymuCallbackVerifier
 
     public function canonicalJson(array $payload, bool $unescapedSlashes = false): string
     {
+        return $this->encode($this->normalize($payload), $unescapedSlashes);
+    }
+
+    /**
+     * @return list<string>
+     *
+     * @throws JsonException
+     */
+    private function canonicalCandidates(array $payload): array
+    {
+        $normalized = $this->normalize($payload);
+        $candidates = [
+            $this->encode($normalized),
+            $this->encode($normalized, true),
+        ];
+
+        // iPaymu documents the normalized representation above. Sandbox/form
+        // callbacks may preserve these two fields in their original form before
+        // signing; accept those variants only when their HMAC still matches the
+        // merchant VA secret.
+        $formCompatibility = $normalized;
+
+        if (array_key_exists('additional_info', $payload) && $payload['additional_info'] === '[]') {
+            $formCompatibility['additional_info'] = '[]';
+        }
+
+        if (array_key_exists('is_escrow', $payload) && is_string($payload['is_escrow'])) {
+            $formCompatibility['is_escrow'] = $payload['is_escrow'];
+        }
+
+        ksort($formCompatibility, SORT_STRING);
+        $candidates[] = $this->encode($formCompatibility);
+        $candidates[] = $this->encode($formCompatibility, true);
+
+        return array_values(array_unique($candidates));
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     *
+     * @throws JsonException
+     */
+    private function encode(array $payload, bool $unescapedSlashes = false): string
+    {
         $flags = JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR;
 
         if ($unescapedSlashes) {
             $flags |= JSON_UNESCAPED_SLASHES;
         }
 
-        return json_encode($this->normalize($payload), $flags);
+        return json_encode($payload, $flags);
     }
 
     public function validTimestamp(string $timestamp): bool
