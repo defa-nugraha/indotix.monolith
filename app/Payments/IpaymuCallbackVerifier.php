@@ -17,11 +17,15 @@ final class IpaymuCallbackVerifier
 
         try {
             $canonical = $this->canonicalJson($payload);
+            $alternateCanonical = $this->canonicalJson($payload, true);
         } catch (JsonException) {
             return false;
         }
 
-        return hash_equals(hash_hmac('sha256', $canonical, $va), strtolower($signature));
+        $expected = strtolower($signature);
+
+        return hash_equals(hash_hmac('sha256', $canonical, $va), $expected)
+            || hash_equals(hash_hmac('sha256', $alternateCanonical, $va), $expected);
     }
 
     public function normalize(array $payload): array
@@ -49,9 +53,15 @@ final class IpaymuCallbackVerifier
         return $payload;
     }
 
-    public function canonicalJson(array $payload): string
+    public function canonicalJson(array $payload, bool $unescapedSlashes = false): string
     {
-        return json_encode($this->normalize($payload), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        $flags = JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR;
+
+        if ($unescapedSlashes) {
+            $flags |= JSON_UNESCAPED_SLASHES;
+        }
+
+        return json_encode($this->normalize($payload), $flags);
     }
 
     public function validTimestamp(string $timestamp): bool
