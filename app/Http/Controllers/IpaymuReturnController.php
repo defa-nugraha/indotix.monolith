@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\WisataPayment;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 
@@ -28,6 +29,58 @@ class IpaymuReturnController extends Controller
             403,
         );
 
-        return view('payments.ipaymu-return');
+        $reference = trim((string) $request->query('reference', ''));
+        $payment = null;
+
+        if ($reference !== '' && strlen($reference) <= 120) {
+            $payment = WisataPayment::query()
+                ->where('provider', 'ipaymu')
+                ->where('order_id', $reference)
+                ->with('booking')
+                ->latest('id')
+                ->first();
+        }
+
+        $status = $this->presentationStatus($payment);
+
+        return view('payments.ipaymu-return', [
+            'status' => $status,
+            'payment' => $payment,
+            'reference' => $reference,
+        ]);
+    }
+
+    /**
+     * The browser return parameters are informational only. Never trust
+     * iPaymu's query-string status to declare a payment successful.
+     * The success state comes from the server-side payment lifecycle.
+     */
+    private function presentationStatus(?WisataPayment $payment): string
+    {
+        if (! $payment) {
+            return 'verification';
+        }
+
+        if (
+            $payment->internal_status === 'paid'
+            || in_array($payment->booking?->status, ['paid', 'completed'], true)
+        ) {
+            return 'success';
+        }
+
+        return match ($payment->internal_status) {
+            'failed' => 'failed',
+            'cancelled' => 'cancelled',
+            'expired' => 'expired',
+            'refunded' => 'refunded',
+            'pending',
+            'initiating',
+            'unknown',
+            'cancellation_pending',
+            'cancellation_unknown',
+            'expiry_pending',
+            'expiry_unknown' => 'verification',
+            default => 'verification',
+        };
     }
 }
