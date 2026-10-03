@@ -32,7 +32,7 @@ final class IpaymuCallbackVerifier
         return false;
     }
 
-    public function normalize(array $payload): array
+    public function normalize(array $payload, bool $sort = true): array
     {
         unset($payload['signature']);
 
