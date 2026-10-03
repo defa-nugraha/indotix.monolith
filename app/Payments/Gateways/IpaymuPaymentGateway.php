@@ -151,8 +151,8 @@ final readonly class IpaymuPaymentGateway implements PaymentGateway
     {
         $parts = parse_url($url);
         $allowedHosts = config('services.ipaymu.environment') === 'production'
-            ? ['my.ipaymu.com']
-            : ['sandbox-payment.ipaymu.com'];
+            ? ['my.ipaymu.com', 'payment.ipaymu.com']
+            : ['sandbox-payment.ipaymu.com', 'payment.ipaymu.com'];
 
         $host = strtolower((string) ($parts['host'] ?? ''));
 
