@@ -45,6 +45,11 @@ export default function WisataBookingPayment({ booking }: { booking: Booking }) 
     };
     const role = auth?.user?.role;
     const [remaining, setRemaining] = useState<string | null>(null);
+    const [isExpired, setIsExpired] = useState(() =>
+        booking.payment_deadline
+            ? new Date(booking.payment_deadline).getTime() <= Date.now()
+            : booking.status !== 'pending_payment',
+    );
     const form = useForm({});
     const paymentUrl =
         booking.payment?.payment_url ?? booking.payment?.payload?.redirect_url;
@@ -52,17 +57,27 @@ export default function WisataBookingPayment({ booking }: { booking: Booking }) 
     useEffect(() => {
         if (!booking.payment_deadline) return;
         const deadline = new Date(booking.payment_deadline).getTime();
-        const interval = setInterval(() => {
+        const updateCountdown = () => {
             const diff = deadline - Date.now();
             if (diff <= 0) {
                 setRemaining('00:00');
+                setIsExpired(true);
+                return true;
+            }
+
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            setRemaining(
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
+            );
+            setIsExpired(false);
+            return false;
+        };
+
+        updateCountdown();
+        const interval = setInterval(() => {
+            if (updateCountdown()) {
                 clearInterval(interval);
-            } else {
-                const minutes = Math.floor(diff / 60000);
-                const seconds = Math.floor((diff % 60000) / 1000);
-                setRemaining(
-                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`,
-                );
             }
         }, 1000);
         return () => clearInterval(interval);
@@ -162,9 +177,17 @@ export default function WisataBookingPayment({ booking }: { booking: Booking }) 
                     </div>
 
                     <div className="space-y-3 pt-2">
+                        {isExpired && (
+                            <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-center text-xs font-semibold text-red-700">
+                                Waktu pembayaran telah habis. Booking ini tidak dapat digunakan untuk membuka pembayaran kembali.
+                            </div>
+                        )}
                         <button
                             type="button"
                             onClick={() => {
+                                if (isExpired) {
+                                    return;
+                                }
                                 if (guardPurchaseByRole(role)) {
                                     return;
                                 }
@@ -187,12 +210,17 @@ export default function WisataBookingPayment({ booking }: { booking: Booking }) 
                                 );
                             }}
                             className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-blue-600 min-h-11 py-3 text-xs font-extrabold tracking-wider text-white uppercase shadow-md transition-all hover:bg-blue-700 hover:shadow-lg disabled:opacity-50"
-                            disabled={form.processing}
+                            disabled={form.processing || isExpired}
                         >
                             {form.processing ? (
                                 <>
                                     <RefreshCw className="h-4 w-4 animate-spin" />
                                     Memproses...
+                                </>
+                            ) : isExpired ? (
+                                <>
+                                    <Clock className="h-4 w-4" />
+                                    Pembayaran Kedaluwarsa
                                 </>
                             ) : paymentUrl ? (
                                 <>
