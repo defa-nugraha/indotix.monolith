@@ -244,7 +244,7 @@ test('paid user can download a wisata ticket without a browser process', functio
 
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf')
-        ->assertHeader('content-disposition', 'attachment; filename="tiket-wisata-'.$booking->id.'.pdf"');
+        ->assertHeader('content-disposition', 'attachment; filename="E-Tiket Indotix - '.$booking->booking_code.'.pdf"');
     expect($response->getContent())->toStartWith('%PDF');
 });
 
