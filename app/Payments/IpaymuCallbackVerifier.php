@@ -17,22 +17,20 @@ final class IpaymuCallbackVerifier
             return false;
         }
 
-        $expected = strtolower($signature);
-
         try {
-            foreach ($this->canonicalCandidates($payload) as $canonical) {
-                if (hash_equals(hash_hmac('sha256', $canonical, $va), $expected)) {
-                    return true;
-                }
-            }
+            $normalized = $this->normalize($payload);
+            $canonical = $this->canonicalJsonFromNormalized($normalized);
         } catch (JsonException) {
             return false;
         }
 
-        return false;
+        return hash_equals(
+            hash_hmac('sha256', $canonical, $va),
+            strtolower($signature),
+        );
     }
 
-    public function normalize(array $payload, bool $sort = true): array
+    public function normalize(array $payload): array
     {
         unset($payload['signature']);
 
@@ -41,8 +39,10 @@ final class IpaymuCallbackVerifier
                 $payload[$key] = filter_var($value, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
             } elseif ($key === 'is_escrow') {
                 $payload[$key] = in_array($value, [true, 1, '1', 'true'], true);
-            } elseif ($key === 'additional_info' && $value === '[]') {
-                $payload[$key] = [];
+            } elseif ($key === 'additional_info') {
+                if ($value === '[]') {
+                    $payload[$key] = [];
+                }
             } elseif (! is_array($value) && ! is_object($value) && $value !== null) {
                 $payload[$key] = (string) $value;
             }
@@ -52,61 +52,19 @@ final class IpaymuCallbackVerifier
             $payload['additional_info'] = [];
         }
 
-        if ($sort) {
-            ksort($payload, SORT_STRING);
-        }
+        ksort($payload, SORT_STRING);
 
         return $payload;
     }
 
     public function canonicalJson(array $payload, bool $unescapedSlashes = false): string
     {
-        return $this->encode($this->normalize($payload), $unescapedSlashes);
+        $normalized = $this->normalize($payload);
+
+        return $this->canonicalJsonFromNormalized($normalized, $unescapedSlashes);
     }
 
-    /**
-     * @return list<string>
-     *
-     * @throws JsonException
-     */
-    private function canonicalCandidates(array $payload): array
-    {
-        $normalized = $this->normalize($payload, true);
-        $inputOrder = $this->normalize($payload, false);
-
-        $candidates = [
-            $this->encode($normalized),
-            $this->encode($normalized, true),
-            $this->encode($inputOrder),
-            $this->encode($inputOrder, true),
-        ];
-
-        // iPaymu documents the normalized representation above. Sandbox/form
-        // callbacks may preserve these two fields in their original form before
-        // signing; accept those variants only when their HMAC still matches the
-        // merchant VA secret.
-        $formCompatibility = $normalized;
-
-        if (array_key_exists('additional_info', $payload) && $payload['additional_info'] === '[]') {
-            $formCompatibility['additional_info'] = '[]';
-        }
-
-        if (array_key_exists('is_escrow', $payload) && is_string($payload['is_escrow'])) {
-            $formCompatibility['is_escrow'] = $payload['is_escrow'];
-        }
-
-        $candidates[] = $this->encode($formCompatibility);
-        $candidates[] = $this->encode($formCompatibility, true);
-
-        return array_values(array_unique($candidates));
-    }
-
-    /**
-     * @param array<string, mixed> $payload
-     *
-     * @throws JsonException
-     */
-    private function encode(array $payload, bool $unescapedSlashes = false): string
+    private function canonicalJsonFromNormalized(array $payload, bool $unescapedSlashes = false): string
     {
         $flags = JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR;
 
