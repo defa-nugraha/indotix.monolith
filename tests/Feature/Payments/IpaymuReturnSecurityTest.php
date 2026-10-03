@@ -1,6 +1,6 @@
 <?php
 
-use Illuminate\\Support\\Facades\\URL;
+use Illuminate\Support\Facades\URL;
 
 it('accepts an iPaymu return URL after provider query parameters are appended', function () {
     $url = URL::temporarySignedRoute(
