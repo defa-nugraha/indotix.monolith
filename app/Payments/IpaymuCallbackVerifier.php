@@ -20,14 +20,23 @@ final class IpaymuCallbackVerifier
         try {
             $normalized = $this->normalize($payload);
             $canonical = $this->canonicalJsonFromNormalized($normalized);
+            $expected = hash_hmac('sha256', $canonical, $va);
+
+            if (hash_equals($expected, strtolower($signature))) {
+                return true;
+            }
+
+            // Accept the equivalent JSON representation some callback
+            // senders use when they do not escape forward slashes.
+            $unescapedCanonical = $this->canonicalJsonFromNormalized($normalized, true);
+
+            return hash_equals(
+                hash_hmac('sha256', $unescapedCanonical, $va),
+                strtolower($signature),
+            );
         } catch (JsonException) {
             return false;
         }
-
-        return hash_equals(
-            hash_hmac('sha256', $canonical, $va),
-            strtolower($signature),
-        );
     }
 
     public function normalize(array $payload): array
