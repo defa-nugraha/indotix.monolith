@@ -8,7 +8,7 @@
         * { box-sizing: border-box; }
         body { margin: 0; padding: 22px; background: #f3f7fb; color: #0f172a; font-family: Arial, sans-serif; }
         .ticket { max-width: 780px; min-height: 1000px; margin: 0 auto; background: #fff; border: 1px solid #dbeafe; overflow: hidden; position: relative; }
-        .brand-wave { position: absolute; top: 0; right: 0; width: 250px; height: 95px; background: #0797d6; border-bottom-left-radius: 110px; color: #fff; text-align: right; padding: 22px 32px 0 0; font-size: 30px; font-weight: 700; }
+        .brand-wave { position: absolute; top: 0; right: 0; width: 250px; height: 95px; background: #0797d6; border-bottom-left-radius: 110px; padding: 18px 28px 0 0; text-align: right; }
         .content { padding: 34px 34px 24px; position: relative; z-index: 1; }
         .eyebrow { color: #64748b; font-size: 14px; margin-top: 4px; }
         .title { font-size: 27px; font-weight: 700; margin: 0; }
@@ -18,13 +18,14 @@
         .label { font-size: 11px; color: #7c8797; text-transform: uppercase; letter-spacing: .04em; }
         .value { font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.45; }
         .muted { color: #64748b; font-size: 12px; line-height: 1.45; }
-        .timeline { display: grid; grid-template-columns: 90px 22px 1fr; gap: 8px; align-items: start; margin-top: 16px; }
-        .time { font-size: 18px; font-weight: 700; color: #334155; }
-        .dot { width: 12px; height: 12px; border: 3px solid #0ea5e9; border-radius: 50%; margin-top: 5px; }
-        .line { width: 2px; height: 32px; background: #bae6fd; margin-left: 5px; }
-        .info-band { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; border-top: 1px solid #d7dde6; border-bottom: 1px solid #d7dde6; padding: 18px 0; margin-top: 24px; }
-        .info { display: grid; grid-template-columns: 38px 1fr; gap: 10px; align-items: start; color: #475569; font-size: 12px; line-height: 1.4; }
-        .icon { width: 34px; height: 34px; border: 2px solid #94a3b8; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #475569; font-weight: 700; }
+        .timeline-wrap { margin-top: 16px; }
+        .timeline-table { width: 100%; border-collapse: collapse; margin: 0; }
+        .timeline-table td { border: 0; padding: 0; vertical-align: top; }
+        .timeline-time { width: 74px; padding-top: 3px !important; font-size: 15px; font-weight: 700; color: #334155; white-space: nowrap; }
+        .timeline-marker { width: 26px; position: relative; text-align: center; }
+        .timeline-marker .dot { display: inline-block; width: 13px; height: 13px; border: 3px solid #0ea5e9; border-radius: 50%; background: #fff; position: relative; z-index: 2; margin-top: 2px; }
+        .timeline-marker.connected:after { content: ""; position: absolute; top: 14px; bottom: -10px; left: 12px; width: 2px; background: #bae6fd; }
+        .timeline-detail { padding: 0 0 18px 8px !important; }
         table { width: 100%; border-collapse: collapse; margin-top: 18px; }
         th { background: #f8fafc; color: #64748b; font-size: 11px; padding: 10px 8px; text-align: left; text-transform: uppercase; }
         td { border-bottom: 1px solid #edf2f7; font-size: 12px; padding: 11px 8px; }
@@ -34,6 +35,15 @@
         .total .amount { margin-top: 5px; font-size: 20px; font-weight: 800; color: #0284c7; }
         .footer { position: absolute; right: 0; bottom: 0; left: 0; border-top: 1px solid #d7dde6; background: #f8fafc; padding: 18px 34px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; color: #64748b; font-size: 12px; }
         .footer strong { display: block; color: #334155; margin-bottom: 4px; }
+        .guide-row { display: table; width: 100%; table-layout: fixed; border-top: 1px solid #d7dde6; border-bottom: 1px solid #d7dde6; margin-top: 4px; padding: 18px 0; }
+        .guide-column { display: table-cell; width: 50%; vertical-align: top; padding: 0 14px; }
+        .guide-column:first-child { padding-left: 0; border-right: 1px solid #e2e8f0; }
+        .guide-column:last-child { padding-right: 0; }
+        .guide-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .guide-table td { border: 0; padding: 6px 0; vertical-align: top; font-size: 11px; color: #475569; line-height: 1.45; }
+        .guide-icon { width: 27px; padding-right: 7px !important; }
+        .guide-icon span { display: inline-block; width: 21px; height: 21px; line-height: 21px; text-align: center; border-radius: 50%; background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 800; }
+        .brand-logo { width: 118px; height: 48px; object-fit: contain; object-position: right center; }
         .right { text-align: right; }
     </style>
 </head>
@@ -56,7 +66,7 @@
             ]]);
     @endphp
     <div class="ticket">
-        <div class="brand-wave">indotix</div>
+        <div class="brand-wave"><img src="{{ public_path('logo.png') }}" alt="Indotix" class="brand-logo" /></div>
         <div class="content">
             <h1 class="title">E-ticket <span style="color:#94a3b8;">/ E-tiket</span></h1>
             <div class="eyebrow">Tiket Wisata Indotix</div>
@@ -77,27 +87,53 @@
             </div>
 
             <div class="section">
-                <div class="timeline">
-                    <div class="time">{{ $booking->created_at?->format('H:i') }}</div>
-                    <div>
-                        <div class="dot"></div>
-                        <div class="line"></div>
-                    </div>
-                    <div>
-                        <div class="value">Tiket dipesan</div>
-                        <div class="muted">{{ $booking->created_at?->format('l, d F Y') }}</div>
-                    </div>
-
-                    <div class="time">{{ $booking->visit_date?->format('d M') }}</div>
-                    <div><div class="dot"></div></div>
-                    <div>
-                        <div class="value">{{ $booking->destination?->destination_name ?? 'Destinasi wisata' }}</div>
-                        <div class="muted">Tanggal kunjungan: {{ $booking->visit_date?->format('l, d F Y') }}</div>
-                    </div>
+                <div class="label">Tahapan Pemesanan</div>
+                <div class="timeline-wrap">
+                    <table class="timeline-table">
+                        <tbody>
+                            <tr>
+                                <td class="timeline-time">{{ $booking->created_at?->format('H:i') }}</td>
+                                <td class="timeline-marker connected"><span class="dot"></span></td>
+                                <td class="timeline-detail">
+                                    <div class="value">Tiket dipesan</div>
+                                    <div class="muted">{{ $booking->created_at?->format('l, d F Y') }}</div>
+                                    <div class="muted" style="margin-top:3px;">{{ $booking->guest_name ?? 'Pemesan' }} · {{ $booking->booking_code }}</div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="timeline-time">{{ $booking->visit_date?->format('d M') }}</td>
+                                <td class="timeline-marker"><span class="dot"></span></td>
+                                <td class="timeline-detail">
+                                    <div class="value">Kunjungan wisata</div>
+                                    <div class="muted">{{ $booking->destination?->destination_name ?? 'Destinasi wisata' }}</div>
+                                    <div class="muted" style="margin-top:3px;">Tanggal kunjungan: {{ $booking->visit_date?->format('l, d F Y') }}</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="info-band">
+            <div class="guide-row">
+                <div class="guide-column">
+                    <div class="label">Tutorial Penggunaan E-Ticket</div>
+                    <table class="guide-table">
+                        <tr><td class="guide-icon"><span>1</span></td><td>Datang sesuai tanggal kunjungan dan siapkan e-ticket.</td></tr>
+                        <tr><td class="guide-icon"><span>2</span></td><td>Buka menu <strong>Scan Tiket</strong> di Indotix.</td></tr>
+                        <tr><td class="guide-icon"><span>3</span></td><td>Scan QR masuk yang disediakan mitra wisata.</td></tr>
+                        <tr><td class="guide-icon"><span>4</span></td><td>Pilih tiket yang ingin digunakan.</td></tr>
+                    </table>
+                </div>
+                <div class="guide-column">
+                    <div class="label">Informasi Penggunaan</div>
+                    <table class="guide-table">
+                        <tr><td class="guide-icon"><span>✓</span></td><td>Tunjukkan e-ticket dan identitas pemesan saat dibutuhkan petugas.</td></tr>
+                        <tr><td class="guide-icon"><span>1x</span></td><td>Setiap tiket hanya dapat digunakan satu kali sesuai tanggal kunjungan.</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <table>
                 <div class="info">
                     <div class="icon">i</div>
                     <div>Tunjukkan e-ticket dan identitas pemesan saat dibutuhkan petugas.</div>
