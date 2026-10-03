@@ -665,8 +665,10 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
 });
 Route::get('/wisata', [PublicWisataController::class, 'index'])
     ->name('wisata.search');
+Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function () {
     Route::get('/wisata/history', [PublicWisataHistoryController::class, 'index'])
         ->name('public.wisata.history');
+});
 Route::get('/wisata/{destination}', [PublicWisataController::class, 'show'])
     ->name('wisata.show');
 Route::post('/wisata/booking/prepare', [WisataBookingController::class, 'prepare'])
