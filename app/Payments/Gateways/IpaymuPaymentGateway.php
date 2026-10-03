@@ -56,6 +56,15 @@ final readonly class IpaymuPaymentGateway implements PaymentGateway
 
         $data = $raw['Data'];
         $paymentUrl = trim((string) ($data['Url'] ?? ''));
+
+        Log::info('iPaymu payment URL received.', [
+            'environment' => config('services.ipaymu.environment'),
+            'booking_id' => $booking->id,
+            'order_id' => $payment->order_id,
+            'payment_url' => $paymentUrl,
+            'url_hash' => hash('sha256', $paymentUrl),
+        ]);
+
         $this->assertPaymentUrl($paymentUrl);
 
         return new PaymentGatewayResult(
