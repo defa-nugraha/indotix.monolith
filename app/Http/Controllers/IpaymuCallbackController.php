@@ -141,7 +141,16 @@ class IpaymuCallbackController extends Controller
                 return response('OK', 200);
             }
 
-            $result = $gateway->statusByTransactionId($transactionId, $payment->payment_url);
+            $callbackStatusCode = filter_var(
+                $normalized['status_code'] ?? null,
+                FILTER_VALIDATE_INT,
+                FILTER_NULL_ON_FAILURE,
+            );
+            $result = $gateway->statusByTransactionId(
+                $transactionId,
+                $payment->payment_url,
+                $callbackStatusCode,
+            );
             $this->assertInquiryIdentity($result, $payment, $referenceId, $transactionId, $callbackAmount);
             $inquiryRaw = $result->raw;
             if ($callbackSubtotal !== null) {
