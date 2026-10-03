@@ -329,7 +329,7 @@
 
         <div class="actions">
             @if ($status === 'success' && $payment?->booking)
-                <a class="button primary" href="{{ route('wisata.booking.ticket', ['booking' => IlluminateSupportFacadesCrypt::encryptString((string) $payment->booking->id)]) }}">
+                <a class="button primary" href="{{ route('wisata.booking.ticket', ['booking' => encrypt((string) $payment->booking->id)]) }}">
                     Lihat e-ticket
                 </a>
             @endif
