@@ -82,21 +82,16 @@ final readonly class IpaymuPaymentGateway implements PaymentGateway
         return $this->statusByTransactionId((string) $payment->transaction_id, $payment->payment_url);
     }
 
-    public function statusByTransactionId(string $transactionId, ?string $paymentUrl = null): PaymentGatewayResult
+    public function statusByTransactionId(
+        string $transactionId,
+        ?string $paymentUrl = null,
+        ?int $trustedCallbackStatusCode = null,
+    ): PaymentGatewayResult
     {
         $raw = $this->client->transaction($transactionId);
         $data = $raw['Data'];
         $statusCode = filter_var($data['Status'] ?? null, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
-        $internalStatus = match ($statusCode) {
-            0 => 'pending',
-            1, 6 => 'paid',
-            7 => 'unknown',
-            2 => 'cancelled',
-            3 => 'refunded',
-            4, 5 => 'failed',
-            -2 => 'expired',
-            default => 'unknown',
-        };
+        $internalStatus = $this->resolveInternalStatus($statusCode, $trustedCallbackStatusCode);
 
         return new PaymentGatewayResult(
             $internalStatus,
@@ -113,6 +108,34 @@ final readonly class IpaymuPaymentGateway implements PaymentGateway
                 : null,
             $raw,
         );
+    }
+
+    private function resolveInternalStatus(?int $statusCode, ?int $trustedCallbackStatusCode): string
+    {
+        // A cryptographically verified callback status may be used to confirm the
+        // transaction after identity and amount checks have passed. This prevents
+        // an ambiguous inquiry status from overriding a successful callback.
+        if ($trustedCallbackStatusCode !== null) {
+            return match ($trustedCallbackStatusCode) {
+                0 => 'pending',
+                1 => 'paid',
+                2 => 'cancelled',
+                3 => 'refunded',
+                4, 5 => 'failed',
+                -2 => 'expired',
+                default => 'unknown',
+            };
+        }
+
+        return match ($statusCode) {
+            0 => 'pending',
+            1, 6 => 'paid',
+            2 => 'cancelled',
+            3 => 'refunded',
+            4, 5 => 'failed',
+            -2 => 'expired',
+            default => 'unknown',
+        };
     }
 
     private function assertPaymentUrl(string $url): void
