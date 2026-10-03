@@ -31,3 +31,19 @@ it('rejects an iPaymu return URL when the signed reference is tampered', functio
 
     $response->assertForbidden();
 });
+
+
+it('does not trust the provider return status before server verification', function () {
+    $url = URL::temporarySignedRoute(
+        'payments.ipaymu.return',
+        now()->addMinutes(10),
+        ['reference' => 'WISATA-RETURN-UNKNOWN'],
+    );
+
+    $response = $this->get($url.'&sid=return-test&trx_id=237262&status=berhasil&tipe=va&payment_method=va&payment_channel=bag');
+
+    $response
+        ->assertOk()
+        ->assertSee('Pembayaran sedang diverifikasi')
+        ->assertDontSee('Pembayaran berhasil');
+});
