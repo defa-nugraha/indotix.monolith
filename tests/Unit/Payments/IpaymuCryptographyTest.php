@@ -60,6 +60,29 @@ test('callback signature accepts providers that omit JSON slash escaping', funct
     expect($verifier->verify($payload, $signature))->toBeTrue();
 });
 
+test('callback normalization matches JavaScript String(null) semantics', function () {
+    config(['services.ipaymu.va' => '1179000899']);
+    $verifier = app(IpaymuCallbackVerifier::class);
+
+    $normalized = $verifier->normalize([
+        'trx_id' => '4719',
+        'status_code' => '1',
+        'transaction_status_code' => '7',
+        'paid_off' => '9950',
+        'is_escrow' => 'true',
+        'settlement_date' => null,
+    ]);
+
+    expect($normalized)
+        ->toHaveKey('additional_info', [])
+        ->and($normalized['trx_id'])->toBe(4719)
+        ->and($normalized['status_code'])->toBe(1)
+        ->and($normalized['transaction_status_code'])->toBe(7)
+        ->and($normalized['paid_off'])->toBe(9950)
+        ->and($normalized['is_escrow'])->toBeTrue()
+        ->and($normalized['settlement_date'])->toBe('null');
+});
+
 test('callback canonicalization is stable across key order', function () {
     config(['services.ipaymu.va' => '1179000899']);
     $verifier = app(IpaymuCallbackVerifier::class);
