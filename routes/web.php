@@ -665,6 +665,8 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
 });
 Route::get('/wisata', [PublicWisataController::class, 'index'])
     ->name('wisata.search');
+    Route::get('/wisata/history', [PublicWisataHistoryController::class, 'index'])
+        ->name('public.wisata.history');
 Route::get('/wisata/{destination}', [PublicWisataController::class, 'show'])
     ->name('wisata.show');
 Route::post('/wisata/booking/prepare', [WisataBookingController::class, 'prepare'])
@@ -737,8 +739,6 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
         ->name('public.notifications.read');
     Route::get('/history', [PublicHistoryController::class, 'index'])
         ->name('public.history');
-    Route::get('/wisata/history', [PublicWisataHistoryController::class, 'index'])
-        ->name('public.wisata.history');
     Route::get('/tickets/scan', [PublicWisataTicketScanController::class, 'index'])
         ->name('tickets.scan.index');
     Route::post('/tickets/scan/use', [PublicWisataTicketScanController::class, 'use'])
