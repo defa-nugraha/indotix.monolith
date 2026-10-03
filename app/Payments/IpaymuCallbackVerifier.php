@@ -52,7 +52,9 @@ final class IpaymuCallbackVerifier
             $payload['additional_info'] = [];
         }
 
-        ksort($payload, SORT_STRING);
+        if ($sort) {
+            ksort($payload, SORT_STRING);
+        }
 
         return $payload;
     }
@@ -69,15 +71,14 @@ final class IpaymuCallbackVerifier
      */
     private function canonicalCandidates(array $payload): array
     {
-        $normalized = $this->normalize($payload);
-        $sorted = $normalized;
-        ksort($sorted, SORT_STRING);
+        $normalized = $this->normalize($payload, true);
+        $inputOrder = $this->normalize($payload, false);
 
         $candidates = [
-            $this->encode($sorted),
-            $this->encode($sorted, true),
             $this->encode($normalized),
             $this->encode($normalized, true),
+            $this->encode($inputOrder),
+            $this->encode($inputOrder, true),
         ];
 
         // iPaymu documents the normalized representation above. Sandbox/form
