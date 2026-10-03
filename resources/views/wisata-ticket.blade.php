@@ -6,45 +6,384 @@
     <title>E-ticket Wisata - Indotix</title>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; padding: 22px; background: #f3f7fb; color: #0f172a; font-family: Arial, sans-serif; }
-        .ticket { max-width: 780px; min-height: 1000px; margin: 0 auto; background: #fff; border: 1px solid #dbeafe; overflow: hidden; position: relative; }
-        .brand-wave { position: absolute; top: 0; right: 0; width: 250px; height: 95px; background: #0797d6; border-bottom-left-radius: 110px; padding: 18px 28px 0 0; text-align: right; }
-        .content { padding: 34px 34px 24px; position: relative; z-index: 1; }
-        .eyebrow { color: #64748b; font-size: 14px; margin-top: 4px; }
-        .title { font-size: 27px; font-weight: 700; margin: 0; }
-        .section { border-top: 1px solid #d7dde6; padding-top: 18px; margin-top: 20px; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-        .logo { height: 46px; margin: 8px 0 10px; }
-        .label { font-size: 11px; color: #7c8797; text-transform: uppercase; letter-spacing: .04em; }
-        .value { font-size: 14px; font-weight: 700; color: #0f172a; line-height: 1.45; }
-        .muted { color: #64748b; font-size: 12px; line-height: 1.45; }
-        .timeline-wrap { margin-top: 16px; }
-        .timeline-table { width: 100%; border-collapse: collapse; margin: 0; }
-        .timeline-table td { border: 0; padding: 0; vertical-align: top; }
-        .timeline-time { width: 74px; padding-top: 3px !important; font-size: 15px; font-weight: 700; color: #334155; white-space: nowrap; }
-        .timeline-marker { width: 26px; position: relative; text-align: center; }
-        .timeline-marker .dot { display: inline-block; width: 13px; height: 13px; border: 3px solid #0ea5e9; border-radius: 50%; background: #fff; position: relative; z-index: 2; margin-top: 2px; }
-        .timeline-marker.connected:after { content: ""; position: absolute; top: 14px; bottom: -10px; left: 12px; width: 2px; background: #bae6fd; }
-        .timeline-detail { padding: 0 0 18px 8px !important; }
-        table { width: 100%; border-collapse: collapse; margin-top: 18px; }
-        th { background: #f8fafc; color: #64748b; font-size: 11px; padding: 10px 8px; text-align: left; text-transform: uppercase; }
-        td { border-bottom: 1px solid #edf2f7; font-size: 12px; padding: 11px 8px; }
-        .summary { margin-top: 18px; display: grid; grid-template-columns: 1fr 210px; gap: 16px; align-items: stretch; }
-        .note { border: 1px solid #dbeafe; background: #f0f9ff; border-radius: 14px; padding: 14px; font-size: 12px; color: #075985; line-height: 1.55; }
-        .total { border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; text-align: right; }
-        .total .amount { margin-top: 5px; font-size: 20px; font-weight: 800; color: #0284c7; }
-        .footer { position: absolute; right: 0; bottom: 0; left: 0; border-top: 1px solid #d7dde6; background: #f8fafc; padding: 18px 34px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; color: #64748b; font-size: 12px; }
-        .footer strong { display: block; color: #334155; margin-bottom: 4px; }
-        .guide-row { display: table; width: 100%; table-layout: fixed; border-top: 1px solid #d7dde6; border-bottom: 1px solid #d7dde6; margin-top: 4px; padding: 18px 0; }
-        .guide-column { display: table-cell; width: 50%; vertical-align: top; padding: 0 14px; }
-        .guide-column:first-child { padding-left: 0; border-right: 1px solid #e2e8f0; }
-        .guide-column:last-child { padding-right: 0; }
-        .guide-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .guide-table td { border: 0; padding: 6px 0; vertical-align: top; font-size: 11px; color: #475569; line-height: 1.45; }
-        .guide-icon { width: 27px; padding-right: 7px !important; }
-        .guide-icon span { display: inline-block; width: 21px; height: 21px; line-height: 21px; text-align: center; border-radius: 50%; background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 800; }
-        .brand-logo { width: 118px; height: 48px; object-fit: contain; object-position: right center; }
-        .right { text-align: right; }
+
+        @page { margin: 0; }
+
+        body {
+            margin: 0;
+            padding: 18px;
+            background: #f4f7fb;
+            color: #0f172a;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+        }
+
+        .ticket {
+            width: 100%;
+            max-width: 780px;
+            margin: 0 auto;
+            background: #fff;
+            border: 1px solid #d9e2ec;
+            border-top: 4px solid #0797d6;
+            position: relative;
+        }
+
+        .content {
+            padding: 24px 30px 22px;
+        }
+
+        .header-table,
+        .meta-table,
+        .timeline-table,
+        .guide-table,
+        .ticket-table,
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .header-table td,
+        .meta-table td,
+        .timeline-table td,
+        .guide-table td,
+        .summary-table td {
+            border: 0;
+        }
+
+        .header-left { vertical-align: top; }
+        .brand-cell {
+            width: 145px;
+            text-align: right;
+            vertical-align: top;
+            padding-top: 2px;
+        }
+
+        .brand-logo {
+            width: 92px;
+            height: auto;
+            max-height: 36px;
+            object-fit: contain;
+            object-position: right center;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 25px;
+            line-height: 1.15;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .title span {
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .eyebrow {
+            margin-top: 5px;
+            color: #64748b;
+            font-size: 11px;
+        }
+
+        .accent {
+            width: 42px;
+            height: 3px;
+            margin-top: 10px;
+            background: #0797d6;
+        }
+
+        .meta-section {
+            margin-top: 24px;
+            padding: 16px 0 17px;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .meta-left {
+            width: 62%;
+            padding-right: 28px !important;
+            vertical-align: top;
+        }
+
+        .meta-right {
+            width: 38%;
+            padding-left: 20px !important;
+            border-left: 1px solid #edf2f7 !important;
+            text-align: right;
+            vertical-align: top;
+        }
+
+        .label {
+            color: #7b8798;
+            font-size: 9px;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+        }
+
+        .value {
+            color: #172033;
+            font-size: 12px;
+            line-height: 1.4;
+            font-weight: 700;
+        }
+
+        .destination {
+            margin-top: 4px;
+            font-size: 13px;
+        }
+
+        .muted {
+            color: #64748b;
+            font-size: 10px;
+            line-height: 1.45;
+        }
+
+        .status {
+            display: inline-block;
+            margin-top: 4px;
+            padding: 4px 9px;
+            border: 1px solid #bae6fd;
+            border-radius: 20px;
+            background: #f0f9ff;
+            color: #0369a1;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: .04em;
+        }
+
+        .booking-code {
+            margin-top: 3px;
+            font-size: 11px;
+            line-height: 1.35;
+            font-weight: 700;
+            word-break: break-all;
+        }
+
+        .timeline-section {
+            margin-top: 18px;
+        }
+
+        .section-heading {
+            color: #718096;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            margin-bottom: 10px;
+        }
+
+        .timeline-table td {
+            vertical-align: top;
+        }
+
+        .timeline-time {
+            width: 62px;
+            padding-top: 1px !important;
+            color: #334155;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .timeline-marker {
+            width: 24px;
+            text-align: center;
+            vertical-align: top !important;
+        }
+
+        .dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border: 2px solid #0797d6;
+            border-radius: 50%;
+            background: #fff;
+        }
+
+        .timeline-detail {
+            padding: 0 0 0 9px !important;
+        }
+
+        .timeline-detail .value {
+            font-size: 11px;
+        }
+
+        .timeline-detail .muted {
+            margin-top: 2px;
+        }
+
+        .timeline-connector td {
+            height: 10px;
+            padding: 0 !important;
+        }
+
+        .timeline-connector .connector-line {
+            width: 2px;
+            height: 10px;
+            margin: 0 auto;
+            background: #bae6fd;
+        }
+
+        .guide-row {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+            margin-top: 17px;
+            padding: 13px 0 12px;
+            border-top: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .guide-column {
+            display: table-cell;
+            width: 50%;
+            padding: 0 15px;
+            vertical-align: top;
+        }
+
+        .guide-column:first-child {
+            padding-left: 0;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .guide-column:last-child {
+            padding-right: 0;
+        }
+
+        .guide-table {
+            margin-top: 7px;
+        }
+
+        .guide-table td {
+            padding: 4px 0;
+            color: #475569;
+            font-size: 9.5px;
+            line-height: 1.4;
+            vertical-align: top;
+        }
+
+        .guide-icon {
+            width: 24px;
+            padding-right: 6px !important;
+        }
+
+        .guide-icon span {
+            display: inline-block;
+            width: 17px;
+            height: 17px;
+            line-height: 17px;
+            text-align: center;
+            border-radius: 50%;
+            background: #e0f2fe;
+            color: #0369a1;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .tickets-section {
+            margin-top: 16px;
+        }
+
+        .ticket-table {
+            table-layout: fixed;
+            margin-top: 7px;
+        }
+
+        .ticket-table th {
+            padding: 8px 7px;
+            background: #f7fafc;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 8.5px;
+            text-align: left;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+        }
+
+        .ticket-table td {
+            padding: 8px 7px;
+            color: #334155;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 9.5px;
+            line-height: 1.35;
+            vertical-align: top;
+        }
+
+        .ticket-table th:nth-child(1),
+        .ticket-table td:nth-child(1) { width: 7%; text-align: center; }
+
+        .ticket-table th:nth-child(2),
+        .ticket-table td:nth-child(2) { width: 21%; }
+
+        .ticket-table th:nth-child(3),
+        .ticket-table td:nth-child(3) { width: 37%; }
+
+        .ticket-table th:nth-child(4),
+        .ticket-table td:nth-child(4) { width: 10%; text-align: center; }
+
+        .ticket-table th:nth-child(5),
+        .ticket-table td:nth-child(5) { width: 12%; text-align: center; }
+
+        .ticket-table th:nth-child(6),
+        .ticket-table td:nth-child(6) { width: 13%; text-align: right; }
+
+        .summary-table {
+            margin-top: 14px;
+        }
+
+        .summary-note {
+            width: 63%;
+            padding: 10px 12px !important;
+            border: 1px solid #dbeafe !important;
+            background: #f7fcff;
+            color: #075985;
+            font-size: 9.5px;
+            line-height: 1.45;
+            vertical-align: top;
+        }
+
+        .summary-total {
+            width: 37%;
+            padding: 10px 0 10px 18px !important;
+            text-align: right;
+            vertical-align: middle;
+        }
+
+        .amount {
+            margin-top: 3px;
+            color: #0284c7;
+            font-size: 17px;
+            font-weight: 800;
+        }
+
+        .footer {
+            margin-top: 18px;
+            padding: 11px 30px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+            color: #64748b;
+            font-size: 9px;
+        }
+
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .footer-table td {
+            border: 0;
+            padding: 0;
+        }
+
+        .footer-right { text-align: right; }
+
+        .footer strong {
+            color: #334155;
+        }
+
+        .avoid-break {
+            page-break-inside: avoid;
+        }
     </style>
 </head>
 <body>
@@ -54,69 +393,83 @@
                 'name' => $item->ticket_name ?? $item->ticket?->name ?? 'Tiket Wisata',
                 'quantity' => (int) $item->quantity,
                 'used' => (int) ($item->used_quantity ?? 0),
-                'unit_price' => (int) $item->unit_price,
                 'subtotal' => (int) $item->subtotal,
             ])
             : collect([[
                 'name' => $booking->ticket?->name ?? 'Tiket Wisata',
                 'quantity' => (int) $booking->quantity,
                 'used' => 0,
-                'unit_price' => (int) $booking->unit_price,
                 'subtotal' => (int) ($booking->total_price ?? 0),
             ]]);
     @endphp
+
     <div class="ticket">
-        <div class="brand-wave"><img src="{{ public_path('logo.png') }}" alt="Indotix" class="brand-logo" /></div>
         <div class="content">
-            <h1 class="title">E-ticket <span style="color:#94a3b8;">/ E-tiket</span></h1>
-            <div class="eyebrow">Tiket Wisata Indotix</div>
+            <table class="header-table">
+                <tr>
+                    <td class="header-left">
+                        <h1 class="title">E-ticket <span>/ E-tiket</span></h1>
+                        <div class="eyebrow">Tiket Wisata Indotix</div>
+                        <div class="accent"></div>
+                    </td>
+                    <td class="brand-cell">
+                        <img src="{{ public_path('logo.png') }}" alt="Indotix" class="brand-logo" />
+                    </td>
+                </tr>
+            </table>
 
-            <div class="grid section" style="border-top:0; padding-top:28px;">
-                <div>
-                    <img src="{{ public_path('logo.png') }}" alt="Indotix" class="logo" />
-                    <div class="label">Destinasi</div>
-                    <div class="value">{{ $booking->destination?->destination_name ?? '-' }}</div>
-                    <div class="muted">{{ $booking->destination?->address_full ?? '-' }}</div>
-                </div>
-                <div class="right" style="padding-top:28px;">
-                    <div class="label">Booking ID Indotix</div>
-                    <div class="value">{{ $booking->booking_code }}</div>
-                    <div class="label" style="margin-top:10px;">Status</div>
-                    <div class="value">{{ strtoupper($booking->status ?? '-') }}</div>
-                </div>
+            <div class="meta-section avoid-break">
+                <table class="meta-table">
+                    <tr>
+                        <td class="meta-left">
+                            <div class="label">Destinasi Wisata</div>
+                            <div class="value destination">{{ $booking->destination?->destination_name ?? '-' }}</div>
+                            <div class="muted">{{ $booking->destination?->address_full ?? '-' }}</div>
+                        </td>
+                        <td class="meta-right">
+                            <div class="label">Booking ID Indotix</div>
+                            <div class="booking-code">{{ $booking->booking_code }}</div>
+                            <div class="label" style="margin-top:9px;">Status Pembayaran</div>
+                            <div class="status">{{ strtoupper($booking->status ?? '-') }}</div>
+                        </td>
+                    </tr>
+                </table>
             </div>
 
-            <div class="section">
-                <div class="label">Tahapan Pemesanan</div>
-                <div class="timeline-wrap">
-                    <table class="timeline-table">
-                        <tbody>
-                            <tr>
-                                <td class="timeline-time">{{ $booking->created_at?->format('H:i') }}</td>
-                                <td class="timeline-marker connected"><span class="dot"></span></td>
-                                <td class="timeline-detail">
-                                    <div class="value">Tiket dipesan</div>
-                                    <div class="muted">{{ $booking->created_at?->format('l, d F Y') }}</div>
-                                    <div class="muted" style="margin-top:3px;">{{ $booking->guest_name ?? 'Pemesan' }} · {{ $booking->booking_code }}</div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="timeline-time">{{ $booking->visit_date?->format('d M') }}</td>
-                                <td class="timeline-marker"><span class="dot"></span></td>
-                                <td class="timeline-detail">
-                                    <div class="value">Kunjungan wisata</div>
-                                    <div class="muted">{{ $booking->destination?->destination_name ?? 'Destinasi wisata' }}</div>
-                                    <div class="muted" style="margin-top:3px;">Tanggal kunjungan: {{ $booking->visit_date?->format('l, d F Y') }}</div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="timeline-section avoid-break">
+                <div class="section-heading">Tahapan Pemesanan</div>
+                <table class="timeline-table">
+                    <tbody>
+                        <tr>
+                            <td class="timeline-time">{{ $booking->created_at?->format('H:i') }}</td>
+                            <td class="timeline-marker"><span class="dot"></span></td>
+                            <td class="timeline-detail">
+                                <div class="value">Tiket dipesan</div>
+                                <div class="muted">{{ $booking->created_at?->format('l, d F Y') }}</div>
+                                <div class="muted">{{ $booking->guest_name ?? 'Pemesan' }} · {{ $booking->booking_code }}</div>
+                            </td>
+                        </tr>
+                        <tr class="timeline-connector">
+                            <td></td>
+                            <td><div class="connector-line"></div></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="timeline-time">{{ $booking->visit_date?->format('d M') }}</td>
+                            <td class="timeline-marker"><span class="dot"></span></td>
+                            <td class="timeline-detail">
+                                <div class="value">Kunjungan wisata</div>
+                                <div class="muted">{{ $booking->destination?->destination_name ?? 'Destinasi wisata' }}</div>
+                                <div class="muted">Tanggal kunjungan: {{ $booking->visit_date?->format('l, d F Y') }}</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
-            <div class="guide-row">
+            <div class="guide-row avoid-break">
                 <div class="guide-column">
-                    <div class="label">Tutorial Penggunaan E-Ticket</div>
+                    <div class="section-heading" style="margin-bottom:0;">Tutorial Penggunaan E-Ticket</div>
                     <table class="guide-table">
                         <tr><td class="guide-icon"><span>1</span></td><td>Datang sesuai tanggal kunjungan dan siapkan e-ticket.</td></tr>
                         <tr><td class="guide-icon"><span>2</span></td><td>Buka menu <strong>Scan Tiket</strong> di Indotix.</td></tr>
@@ -125,7 +478,7 @@
                     </table>
                 </div>
                 <div class="guide-column">
-                    <div class="label">Informasi Penggunaan</div>
+                    <div class="section-heading" style="margin-bottom:0;">Informasi Penggunaan</div>
                     <table class="guide-table">
                         <tr><td class="guide-icon"><span>✓</span></td><td>Tunjukkan e-ticket dan identitas pemesan saat dibutuhkan petugas.</td></tr>
                         <tr><td class="guide-icon"><span>1x</span></td><td>Setiap tiket hanya dapat digunakan satu kali sesuai tanggal kunjungan.</td></tr>
@@ -133,45 +486,55 @@
                 </div>
             </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>No.</th>
-                        <th>Nama Pemesan</th>
-                        <th>Jenis Tiket</th>
-                        <th>Qty</th>
-                        <th>Terpakai</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($ticketRows as $index => $item)
+            <div class="tickets-section avoid-break">
+                <div class="section-heading" style="margin-bottom:0;">Daftar Tiket</div>
+                <table class="ticket-table">
+                    <thead>
                         <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $booking->guest_name ?? '-' }}</td>
-                            <td>{{ $item['name'] }}</td>
-                            <td>{{ $item['quantity'] }}</td>
-                            <td>{{ $item['used'] }}</td>
-                            <td>Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</td>
+                            <th>No.</th>
+                            <th>Nama Pemesan</th>
+                            <th>Jenis Tiket</th>
+                            <th>Qty</th>
+                            <th>Terpakai</th>
+                            <th>Total</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
-
-            <div class="summary">
-                <div class="note">
-                    <strong>Tidak perlu print.</strong><br>
-                    Buka menu Scan Tiket di aplikasi/website Indotix, scan QR masuk di lokasi wisata, lalu pilih tiket yang akan digunakan.
-                </div>
-                <div class="total">
-                    <div class="label">Total Pembayaran</div>
-                    <div class="amount">Rp {{ number_format($booking->total_price ?? 0, 0, ',', '.') }}</div>
-                </div>
+                    </thead>
+                    <tbody>
+                        @foreach ($ticketRows as $index => $item)
+                            <tr>
+                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $booking->guest_name ?? '-' }}</td>
+                                <td>{{ $item['name'] }}</td>
+                                <td>{{ $item['quantity'] }}</td>
+                                <td>{{ $item['used'] }}</td>
+                                <td>Rp {{ number_format($item['subtotal'], 0, ',', '.') }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
+
+            <table class="summary-table avoid-break">
+                <tr>
+                    <td class="summary-note">
+                        <strong>Tidak perlu print.</strong>
+                        Buka menu Scan Tiket di aplikasi/website Indotix, scan QR masuk di lokasi wisata, lalu pilih tiket yang akan digunakan.
+                    </td>
+                    <td class="summary-total">
+                        <div class="label">Total Pembayaran</div>
+                        <div class="amount">Rp {{ number_format($booking->total_price ?? 0, 0, ',', '.') }}</div>
+                    </td>
+                </tr>
+            </table>
         </div>
+
         <div class="footer">
-            <div><strong>Customer Service</strong>0812-9205-9888</div>
-            <div class="right"><strong>Email Bantuan</strong>info@indotix.co.id</div>
+            <table class="footer-table">
+                <tr>
+                    <td><strong>Customer Service</strong> &nbsp; 0812-9205-9888</td>
+                    <td class="footer-right"><strong>Email Bantuan</strong> &nbsp; info@indotix.co.id</td>
+                </tr>
+            </table>
         </div>
     </div>
 </body>
