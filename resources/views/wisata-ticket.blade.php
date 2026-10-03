@@ -213,13 +213,20 @@
         }
 
         .timeline-connector td {
-            height: 10px;
+            height: 16px;
             padding: 0 !important;
         }
 
+        .timeline-connector .connector-cell {
+            width: 24px;
+            text-align: center;
+            vertical-align: middle !important;
+        }
+
         .timeline-connector .connector-line {
+            display: block;
             width: 2px;
-            height: 10px;
+            height: 16px;
             margin: 0 auto;
             background: #bae6fd;
         }
@@ -413,7 +420,9 @@
                         <div class="accent"></div>
                     </td>
                     <td class="brand-cell">
-                        <img src="{{ public_path('logo.png') }}" alt="Indotix" class="brand-logo" />
+                        @if ($logoDataUri)
+                            <img src="{{ $logoDataUri }}" alt="" class="brand-logo" />
+                        @endif
                     </td>
                 </tr>
             </table>
@@ -451,7 +460,7 @@
                         </tr>
                         <tr class="timeline-connector">
                             <td></td>
-                            <td><div class="connector-line"></div></td>
+                            <td class="connector-cell"><span class="connector-line"></span></td>
                             <td></td>
                         </tr>
                         <tr>
@@ -480,8 +489,8 @@
                 <div class="guide-column">
                     <div class="section-heading" style="margin-bottom:0;">Informasi Penggunaan</div>
                     <table class="guide-table">
-                        <tr><td class="guide-icon"><span>✓</span></td><td>Tunjukkan e-ticket dan identitas pemesan saat dibutuhkan petugas.</td></tr>
-                        <tr><td class="guide-icon"><span>1x</span></td><td>Setiap tiket hanya dapat digunakan satu kali sesuai tanggal kunjungan.</td></tr>
+                        <tr><td class="guide-icon"><span>1</span></td><td>Tunjukkan e-ticket dan identitas pemesan saat dibutuhkan petugas.</td></tr>
+                        <tr><td class="guide-icon"><span>2</span></td><td>Setiap tiket hanya dapat digunakan satu kali sesuai tanggal kunjungan.</td></tr>
                     </table>
                 </div>
             </div>
