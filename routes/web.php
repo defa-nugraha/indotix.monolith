@@ -774,7 +774,6 @@ Route::post('/payments/ipaymu/callback', IpaymuCallbackController::class)
     ->middleware('throttle:120,1')
     ->name('payments.ipaymu.callback');
 Route::get('/payments/ipaymu/return', IpaymuReturnController::class)
-    ->middleware('signed')
     ->name('payments.ipaymu.return');
 
 require __DIR__.'/settings.php';
