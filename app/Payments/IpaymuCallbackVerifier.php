@@ -52,8 +52,16 @@ final class IpaymuCallbackVerifier
                 if ($value === '[]') {
                     $payload[$key] = [];
                 }
-            } elseif (! is_array($value) && ! is_object($value) && $value !== null) {
-                $payload[$key] = (string) $value;
+            } elseif (is_array($value) || is_object($value)) {
+                // iPaymu's documented normalizer stringifies every non-special
+                // scalar value. Object/array values are only expected for
+                // additional_info; preserve them so JSON.stringify/json_encode
+                // can serialize them consistently.
+                continue;
+            } else {
+                // JavaScript String(null) is "null". This matters because
+                // the callback signature is calculated after normalization.
+                $payload[$key] = $value === null ? 'null' : (string) $value;
             }
         }
 
