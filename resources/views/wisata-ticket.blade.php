@@ -134,21 +134,6 @@
             </div>
 
             <table>
-                <div class="info">
-                    <div class="icon">i</div>
-                    <div>Tunjukkan e-ticket dan identitas pemesan saat dibutuhkan petugas.</div>
-                </div>
-                <div class="info">
-                    <div class="icon">✓</div>
-                    <div>Scan QR masuk milik mitra melalui menu Scan Tiket di Indotix.</div>
-                </div>
-                <div class="info">
-                    <div class="icon">1x</div>
-                    <div>Setiap tiket hanya dapat digunakan satu kali sesuai tanggal kunjungan.</div>
-                </div>
-            </div>
-
-            <table>
                 <thead>
                     <tr>
                         <th>No.</th>
