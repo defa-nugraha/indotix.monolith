@@ -70,7 +70,12 @@ final class IpaymuCallbackVerifier
     private function canonicalCandidates(array $payload): array
     {
         $normalized = $this->normalize($payload);
+        $sorted = $normalized;
+        ksort($sorted, SORT_STRING);
+
         $candidates = [
+            $this->encode($sorted),
+            $this->encode($sorted, true),
             $this->encode($normalized),
             $this->encode($normalized, true),
         ];
@@ -89,7 +94,6 @@ final class IpaymuCallbackVerifier
             $formCompatibility['is_escrow'] = $payload['is_escrow'];
         }
 
-        ksort($formCompatibility, SORT_STRING);
         $candidates[] = $this->encode($formCompatibility);
         $candidates[] = $this->encode($formCompatibility, true);
 
