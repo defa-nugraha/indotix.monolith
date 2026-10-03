@@ -1,9 +1,9 @@
 <?php
 
-namespace App\\Http\\Controllers;
+namespace App\Http\Controllers;
 
-use Illuminate\\Contracts\\View\\View;
-use Illuminate\\Http\\Request;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\Request;
 
 class IpaymuReturnController extends Controller
 {
