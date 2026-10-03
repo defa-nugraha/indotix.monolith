@@ -192,6 +192,9 @@ Route::middleware(['auth', 'verified', 'admin', 'admin.log'])->group(function ()
         ->name('admin.mitra-wisata.index');
     Route::post('admin/mitra-wisata', [MitraWisataController::class, 'store'])
         ->name('admin.mitra-wisata.store');
+    Route::get('admin/mitra-wisata/qr-download', [MitraWisataController::class, 'downloadQr'])
+        ->middleware('throttle:10,1')
+        ->name('admin.mitra-wisata.qr-download');
     Route::get('admin/mitra-wisata/{user}', [MitraWisataController::class, 'show'])
         ->name('admin.mitra-wisata.show');
     Route::get('admin/mitra-wisata/{user}/documents/{type}', [MitraWisataSensitiveDocumentController::class, 'showAdmin'])
@@ -662,6 +665,10 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
 });
 Route::get('/wisata', [PublicWisataController::class, 'index'])
     ->name('wisata.search');
+Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function () {
+    Route::get('/wisata/history', [PublicWisataHistoryController::class, 'index'])
+        ->name('public.wisata.history');
+});
 Route::get('/wisata/{destination}', [PublicWisataController::class, 'show'])
     ->name('wisata.show');
 Route::post('/wisata/booking/prepare', [WisataBookingController::class, 'prepare'])
@@ -734,8 +741,6 @@ Route::middleware(['auth', 'verified', 'user', 'user.activity'])->group(function
         ->name('public.notifications.read');
     Route::get('/history', [PublicHistoryController::class, 'index'])
         ->name('public.history');
-    Route::get('/wisata/history', [PublicWisataHistoryController::class, 'index'])
-        ->name('public.wisata.history');
     Route::get('/tickets/scan', [PublicWisataTicketScanController::class, 'index'])
         ->name('tickets.scan.index');
     Route::post('/tickets/scan/use', [PublicWisataTicketScanController::class, 'use'])
@@ -771,7 +776,6 @@ Route::post('/payments/ipaymu/callback', IpaymuCallbackController::class)
     ->middleware('throttle:120,1')
     ->name('payments.ipaymu.callback');
 Route::get('/payments/ipaymu/return', IpaymuReturnController::class)
-    ->middleware('signed')
     ->name('payments.ipaymu.return');
 
 require __DIR__.'/settings.php';

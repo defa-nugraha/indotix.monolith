@@ -39,3 +39,36 @@ it('renders a single A4 QR poster with branding and without a browser process', 
     ['Batu Lawang', 0],
     ['Taman Wisata Alam dan Rekreasi Keluarga Telaga Biru Majalengka', 3],
 ]);
+
+it('renders each selected destination on a separate poster page', function () {
+    $template = [
+        ...WisataEntryQrTemplate::defaults(),
+        'top_logo_images' => [],
+        'qr_logo_image' => null,
+        'background_image' => null,
+        'playstore_image' => null,
+    ];
+    $html = view('mitra-wisata-entry-qr', [
+        'posters' => [
+            [
+                'destinationName' => 'Wisata Pertama',
+                'qrImage' => QrCodeRenderer::dataUri('signed-merchant-qr-first', 520),
+            ],
+            [
+                'destinationName' => 'Wisata Kedua',
+                'qrImage' => QrCodeRenderer::dataUri('signed-merchant-qr-second', 520),
+            ],
+        ],
+        'template' => $template,
+    ])->render();
+
+    $options = new Options;
+    $options->set('isRemoteEnabled', false);
+    $pdf = new Dompdf($options);
+    $pdf->setPaper('A4', 'portrait');
+    $pdf->loadHtml($html, 'UTF-8');
+    $pdf->render();
+
+    expect($pdf->getCanvas()->get_page_count())->toBe(2)
+        ->and($pdf->output())->toStartWith('%PDF-');
+});

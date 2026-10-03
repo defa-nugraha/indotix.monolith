@@ -444,21 +444,16 @@ export default function MitraEventOnboarding({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dokumen Pendaftaran Event">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Dokumen Pendaftaran Event" />
 
-            <div className="relative flex flex-1 flex-col gap-6 overflow-x-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
+            <div className="relative flex flex-1 flex-col gap-6 overflow-x-hidden bg-[#f6fbff] px-6 py-8 font-sans text-slate-900">
                 <section className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                             <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Pendaftaran Mitra Event
                             </p>
-                            <h1 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900">
+                            <h1 className="font-sans text-2xl font-semibold text-slate-900">
                                 Lengkapi data EO sebelum membuat event
                             </h1>
                             <p className="mt-2 text-sm text-slate-500">

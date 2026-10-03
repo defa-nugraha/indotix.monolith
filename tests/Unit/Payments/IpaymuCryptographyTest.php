@@ -41,6 +41,48 @@ test('callback signature rejects payload mutation and malformed signatures', fun
         ->and($verifier->verify($payload, 'not-a-signature'))->toBeFalse();
 });
 
+test('callback signature accepts providers that omit JSON slash escaping', function () {
+    config(['services.ipaymu.va' => '1179000899']);
+    $verifier = app(IpaymuCallbackVerifier::class);
+    $payload = [
+        'reference_id' => 'ORDER-1',
+        'url' => 'https://staging.indotix.co.id/payments/ipaymu/callback',
+        'status_code' => '1',
+        'trx_id' => '4719',
+        'additional_info' => '[]',
+    ];
+    $signature = hash_hmac(
+        'sha256',
+        $verifier->canonicalJson($payload, true),
+        '1179000899',
+    );
+
+    expect($verifier->verify($payload, $signature))->toBeTrue();
+});
+
+test('callback normalization matches JavaScript String(null) semantics', function () {
+    config(['services.ipaymu.va' => '1179000899']);
+    $verifier = app(IpaymuCallbackVerifier::class);
+
+    $normalized = $verifier->normalize([
+        'trx_id' => '4719',
+        'status_code' => '1',
+        'transaction_status_code' => '7',
+        'paid_off' => '9950',
+        'is_escrow' => 'true',
+        'settlement_date' => null,
+    ]);
+
+    expect($normalized)
+        ->toHaveKey('additional_info', [])
+        ->and($normalized['trx_id'])->toBe(4719)
+        ->and($normalized['status_code'])->toBe(1)
+        ->and($normalized['transaction_status_code'])->toBe(7)
+        ->and($normalized['paid_off'])->toBe(9950)
+        ->and($normalized['is_escrow'])->toBeTrue()
+        ->and($normalized['settlement_date'])->toBe('null');
+});
+
 test('callback canonicalization is stable across key order', function () {
     config(['services.ipaymu.va' => '1179000899']);
     $verifier = app(IpaymuCallbackVerifier::class);
@@ -62,7 +104,7 @@ test('redirect payment uses the server booking total and sends no secret to the 
             'Success' => true,
             'Data' => [
                 'SessionID' => 'SESSION-1',
-                'Url' => 'https://sandbox.ipaymu.com/payment/SESSION-1',
+                'Url' => 'https://sandbox-payment.ipaymu.com/payment/SESSION-1',
             ],
         ]),
     ]);
@@ -78,7 +120,7 @@ test('redirect payment uses the server booking total and sends no secret to the 
     $result = app(IpaymuPaymentGateway::class)->create($booking, $payment);
 
     expect($result->amount)->toBe(100000)
-        ->and($result->paymentUrl)->toBe('https://sandbox.ipaymu.com/payment/SESSION-1')
+        ->and($result->paymentUrl)->toBe('https://sandbox-payment.ipaymu.com/payment/SESSION-1')
         ->and(json_encode($result->raw))->not->toContain('test-api-key');
     Http::assertSent(function ($request) {
         $body = json_decode($request->body(), true);

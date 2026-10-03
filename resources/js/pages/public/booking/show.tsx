@@ -92,9 +92,7 @@ export default function BookingShow({ booking }: { booking: Booking }) {
 
     return (
         <PublicLayout categories={categories} chips={chips}>
-            <Head title="Detail Booking">
-                <link href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700" rel="stylesheet" />
-            </Head>
+            <Head title="Detail Booking" />
 
                         <main className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1.25fr_0.9fr]">

@@ -21,13 +21,8 @@ export default function Register() {
     const isMitra = mode === 'mitra';
 
     return (
-        <div className="relative min-h-svh overflow-hidden bg-[#f6fbff] font-['Plus_Jakarta_Sans'] text-slate-900">
-            <Head title="Daftar">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+        <div className="relative min-h-svh overflow-hidden bg-[#f6fbff] font-sans text-slate-900">
+            <Head title="Daftar" />
 
             <div className="pointer-events-none absolute top-[-10%] -left-24 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
             <div className="pointer-events-none absolute top-[15%] right-[-8%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
@@ -47,7 +42,7 @@ export default function Register() {
                             <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Registrasi
                             </p>
-                            <h2 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900">
+                            <h2 className="font-sans text-2xl font-semibold text-slate-900">
                                 Buat akun Indotix
                             </h2>
                             <p className="text-sm text-slate-500">

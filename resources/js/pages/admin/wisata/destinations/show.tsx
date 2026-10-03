@@ -2,6 +2,8 @@ import { Head, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import Select from 'react-select';
 import Swal from 'sweetalert2';
+import CkeditorField from '@/components/ckeditor-field';
+import { ProductDescription } from '@/components/product-description';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -123,6 +125,9 @@ export default function AdminWisataDestinationShow({
         (destination.photo_other_paths ?? []).filter(Boolean) as string[],
     );
     const [removedOtherPhotos, setRemovedOtherPhotos] = useState<string[]>([]);
+    const [description, setDescription] = useState(
+        destination.description ?? '',
+    );
 
     const handleRemoveOtherPhoto = (path: string) => {
         setOtherPhotos((prev) => prev.filter((item) => item !== path));
@@ -296,9 +301,13 @@ export default function AdminWisataDestinationShow({
                             <p className="text-xs text-slate-400 uppercase">
                                 Deskripsi
                             </p>
-                            <p className="text-sm text-slate-700">
-                                {destination.description ?? '-'}
-                            </p>
+                            <ProductDescription
+                                text={destination.description}
+                                fallback="-"
+                                html={Boolean(destination.description)}
+                                lines={4}
+                                className="text-sm text-slate-700 [&_a]:text-sky-600 [&_a]:underline [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_p+p]:mt-2"
+                            />
                         </div>
                     </div>
 
@@ -454,6 +463,25 @@ export default function AdminWisataDestinationShow({
                                 }
                                 styles={selectStyles}
                             />
+                        </div>
+                        <div className="grid gap-2 md:col-span-2">
+                            <Label className="text-slate-700">
+                                Deskripsi wisata
+                            </Label>
+                            <CkeditorField
+                                value={description}
+                                onChange={setDescription}
+                                minHeightClassName="min-h-[220px]"
+                            />
+                            <input
+                                type="hidden"
+                                name="description"
+                                value={description}
+                            />
+                            <p className="text-xs text-slate-500">
+                                Deskripsi ini ditampilkan pada halaman publik
+                                destinasi.
+                            </p>
                         </div>
                         <div className="grid gap-2 md:col-span-2">
                             <label className="text-sm font-medium text-slate-700">

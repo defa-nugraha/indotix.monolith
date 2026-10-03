@@ -60,6 +60,7 @@ type Props = {
         id: number;
         name: string;
         email: string;
+        phone?: string | null;
         is_suspended: boolean;
         suspended_reason?: string | null;
         suspended_at?: string | null;
@@ -160,6 +161,19 @@ const payoutStatusMeta = (status?: string | null) => {
 };
 
 const imageUrl = (path?: string | null) => (path ? `/storage/${path}` : null);
+
+const responsibleRoleLabel = (role?: string | null) => {
+    if (!role) return '-';
+
+    return (
+        {
+            owner: 'Pemilik',
+            manager: 'Manajer',
+            pokdarwis: 'Pokdarwis',
+            staff: 'Staf',
+        }[role] ?? role
+    );
+};
 
 const DocItem = ({
     label,
@@ -441,6 +455,51 @@ export default function AdminMitraWisataShow({
 
                 <section className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                     <div className="space-y-6">
+                        <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
+                            <h2 className="text-lg font-semibold text-slate-900">
+                                Data Akun Penanggung Jawab
+                            </h2>
+                            <dl className="mt-4 grid gap-x-8 gap-y-4 text-sm sm:grid-cols-2">
+                                <div>
+                                    <dt className="text-xs font-semibold text-slate-500">
+                                        Nama
+                                    </dt>
+                                    <dd className="mt-1 font-medium text-slate-800">
+                                        {onboarding.responsible_name ??
+                                            mitra.name}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-xs font-semibold text-slate-500">
+                                        Email akun
+                                    </dt>
+                                    <dd className="mt-1 font-medium break-all text-slate-800">
+                                        {mitra.email}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-xs font-semibold text-slate-500">
+                                        Nomor telepon
+                                    </dt>
+                                    <dd className="mt-1 font-medium text-slate-800">
+                                        {onboarding.responsible_phone ??
+                                            mitra.phone ??
+                                            '-'}
+                                    </dd>
+                                </div>
+                                <div>
+                                    <dt className="text-xs font-semibold text-slate-500">
+                                        Jabatan
+                                    </dt>
+                                    <dd className="mt-1 font-medium text-slate-800">
+                                        {responsibleRoleLabel(
+                                            onboarding.responsible_role,
+                                        )}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
+
                         <div className="rounded-3xl border border-sky-100/80 bg-white/90 p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-slate-900">
                                 Identitas Destinasi

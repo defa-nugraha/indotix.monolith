@@ -1,5 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
-import { Trash2 } from 'lucide-react';
+import { Download, Trash2 } from 'lucide-react';
 import {
     createContext,
     useCallback,
@@ -26,10 +26,14 @@ export function BulkDeleteTable({
     children,
     requireReason = false,
     deletionWarning = 'Data terkait dapat ikut terhapus sesuai aturan fitur.',
+    onDownloadSelected,
+    downloadSelectedLabel = 'Download terpilih',
     ...props
 }: ComponentProps<'table'> & {
     requireReason?: boolean;
     deletionWarning?: string;
+    onDownloadSelected?: (selectedRows: string[]) => Promise<void>;
+    downloadSelectedLabel?: string;
 }) {
     const page = usePage();
     const [rows, setRows] = useState(new Set<string>());
@@ -158,6 +162,32 @@ export function BulkDeleteTable({
             if (mounted.current) setBusy(false);
         }
     };
+    const downloadSelected = async () => {
+        if (locked.current || !selected.size || !onDownloadSelected) return;
+
+        const selectedRows = [...selected].filter((url) => rows.has(url));
+        if (!selectedRows.length) return;
+
+        locked.current = true;
+        setBusy(true);
+        try {
+            await onDownloadSelected(selectedRows);
+        } catch (error) {
+            if (mounted.current) {
+                await Swal.fire({
+                    title: 'Download gagal',
+                    icon: 'error',
+                    text:
+                        error instanceof Error
+                            ? error.message
+                            : 'QR mitra tidak dapat didownload.',
+                });
+            }
+        } finally {
+            locked.current = false;
+            if (mounted.current) setBusy(false);
+        }
+    };
     const selection: Selection = {
         rows,
         selected,
@@ -184,6 +214,17 @@ export function BulkDeleteTable({
                             ? `${progress.completed}/${progress.total} diproses`
                             : `${selected.size} dipilih`}
                     </span>
+                    {onDownloadSelected && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            disabled={busy || !selected.size}
+                            onClick={downloadSelected}
+                        >
+                            <Download className="size-4" />
+                            {busy ? 'Memproses...' : downloadSelectedLabel}
+                        </Button>
+                    )}
                     <Button
                         type="button"
                         variant="destructive"
@@ -256,7 +297,7 @@ export function BulkDeleteRow({
                     <label className="flex min-h-11 min-w-11 items-center justify-center">
                         <input
                             type="checkbox"
-                            aria-label={`Pilih data ${deleteUrl.split('/').at(-1)} untuk dihapus`}
+                            aria-label={`Pilih data ${deleteUrl.split('/').at(-1)}`}
                             className="size-5 cursor-pointer"
                             checked={value.selected.has(deleteUrl)}
                             disabled={value.busy}

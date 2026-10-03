@@ -593,7 +593,12 @@ class WisataPaymentLifecycleService
             throw new RuntimeException('Provider transaction ID mismatch.');
         }
 
-        if ($result->amount === null || $result->amount !== (int) $payment->gross_amount) {
+        $paymentAmount = $result->amount;
+        if ($payment->provider === 'ipaymu') {
+            $paymentAmount = $this->ipaymuGrossAmount($result);
+        }
+
+        if ($paymentAmount === null || $paymentAmount !== (int) $payment->gross_amount) {
             Log::critical('Payment provider amount mismatch.', [
                 'event_type' => 'payment_amount_mismatch',
                 'payment_id' => $payment->id,
@@ -1597,6 +1602,18 @@ class WisataPaymentLifecycleService
         }
 
         return (int) $integer;
+    }
+
+    private function ipaymuGrossAmount(PaymentGatewayResult $result): ?int
+    {
+        $data = is_array($result->raw['Data'] ?? null) ? $result->raw['Data'] : [];
+        foreach (['SubTotal', 'sub_total', 'Subtotal'] as $key) {
+            if (array_key_exists($key, $data)) {
+                return $this->parseIdrAmount($data[$key]);
+            }
+        }
+
+        return $result->amount;
     }
 
     private function activeKey(WisataBooking $booking): string

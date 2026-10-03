@@ -8,6 +8,7 @@ use App\Models\Regency;
 use App\Models\User;
 use App\Services\MediaCompressionService;
 use App\Support\AdminDataScope;
+use App\Support\HtmlSanitizer;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -126,6 +127,7 @@ class WisataDestinationController extends Controller
         AdminDataScope::authorizeCreatedByOrUser($destination, request());
         $destination->load(['user:id,name,email']);
         $destination->setAttribute('encrypted_id', Crypt::encryptString((string) $destination->id));
+        $destination->setAttribute('description', HtmlSanitizer::clean($destination->description));
 
         $provinces = DB::table('provinces')
             ->orderBy('name')
@@ -152,6 +154,7 @@ class WisataDestinationController extends Controller
     public function store(Request $request, MediaCompressionService $mediaCompression): RedirectResponse
     {
         $data = $this->validateDestination($request);
+        $data['description'] = HtmlSanitizer::clean($data['description'] ?? null);
         $destination = new MitraWisataOnboarding();
         $destination->fill(Arr::except($data, [
             'photo_gate_file',
@@ -178,6 +181,7 @@ class WisataDestinationController extends Controller
         $destination = $this->resolveDestination($destination);
         AdminDataScope::authorizeCreatedByOrUser($destination, $request);
         $data = $this->validateDestination($request, $destination);
+        $data['description'] = HtmlSanitizer::clean($data['description'] ?? null);
 
         $payload = Arr::except($data, [
             'photo_gate_file',

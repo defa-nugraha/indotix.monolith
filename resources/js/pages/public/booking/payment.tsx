@@ -95,12 +95,7 @@ export default function BookingPayment({
 
     return (
         <PublicLayout>
-            <Head title="Pembayaran">
-                <link
-                    href="https://fonts.bunny.net/css?family=plus-jakarta-sans:400,500,600,700|space-grotesk:500,600,700"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Pembayaran" />
                         <div className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8">
                 <div className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
                     <div className="space-y-6">

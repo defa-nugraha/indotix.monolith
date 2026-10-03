@@ -8,20 +8,35 @@ use JsonException;
 
 final class IpaymuCallbackVerifier
 {
+    public function __construct(private readonly ?string $merchantVa = null) {}
+
     public function verify(array $payload, string $signature): bool
     {
-        $va = trim((string) config('services.ipaymu.va', ''));
+        $va = trim($this->merchantVa ?? (string) config('services.ipaymu.va', ''));
         if ($va === '' || ! preg_match('/\A[a-f0-9]{64}\z/i', $signature)) {
             return false;
         }
 
         try {
-            $canonical = $this->canonicalJson($payload);
+            $normalized = $this->normalize($payload);
+            $canonical = $this->canonicalJsonFromNormalized($normalized);
+            $expected = hash_hmac('sha256', $canonical, $va);
+
+            if (hash_equals($expected, strtolower($signature))) {
+                return true;
+            }
+
+            // Accept the equivalent JSON representation some callback
+            // senders use when they do not escape forward slashes.
+            $unescapedCanonical = $this->canonicalJsonFromNormalized($normalized, true);
+
+            return hash_equals(
+                hash_hmac('sha256', $unescapedCanonical, $va),
+                strtolower($signature),
+            );
         } catch (JsonException) {
             return false;
         }
-
-        return hash_equals(hash_hmac('sha256', $canonical, $va), strtolower($signature));
     }
 
     public function normalize(array $payload): array
@@ -33,10 +48,20 @@ final class IpaymuCallbackVerifier
                 $payload[$key] = filter_var($value, FILTER_VALIDATE_INT, FILTER_NULL_ON_FAILURE);
             } elseif ($key === 'is_escrow') {
                 $payload[$key] = in_array($value, [true, 1, '1', 'true'], true);
-            } elseif ($key === 'additional_info' && $value === '[]') {
-                $payload[$key] = [];
-            } elseif (! is_array($value) && ! is_object($value) && $value !== null) {
-                $payload[$key] = (string) $value;
+            } elseif ($key === 'additional_info') {
+                if ($value === '[]') {
+                    $payload[$key] = [];
+                }
+            } elseif (is_array($value) || is_object($value)) {
+                // iPaymu's documented normalizer stringifies every non-special
+                // scalar value. Object/array values are only expected for
+                // additional_info; preserve them so JSON.stringify/json_encode
+                // can serialize them consistently.
+                continue;
+            } else {
+                // JavaScript String(null) is "null". This matters because
+                // the callback signature is calculated after normalization.
+                $payload[$key] = $value === null ? 'null' : (string) $value;
             }
         }
 
@@ -49,9 +74,22 @@ final class IpaymuCallbackVerifier
         return $payload;
     }
 
-    public function canonicalJson(array $payload): string
+    public function canonicalJson(array $payload, bool $unescapedSlashes = false): string
     {
-        return json_encode($this->normalize($payload), JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        $normalized = $this->normalize($payload);
+
+        return $this->canonicalJsonFromNormalized($normalized, $unescapedSlashes);
+    }
+
+    private function canonicalJsonFromNormalized(array $payload, bool $unescapedSlashes = false): string
+    {
+        $flags = JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR;
+
+        if ($unescapedSlashes) {
+            $flags |= JSON_UNESCAPED_SLASHES;
+        }
+
+        return json_encode($payload, $flags);
     }
 
     public function validTimestamp(string $timestamp): bool

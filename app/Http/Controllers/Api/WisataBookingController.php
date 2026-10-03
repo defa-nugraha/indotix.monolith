@@ -366,7 +366,7 @@ class WisataBookingController extends Controller
 
         $booking->load('ticket', 'destination', 'items.ticket');
 
-        $filename = sprintf('tiket-wisata-%s.pdf', $booking->id);
+        $filename = sprintf('E-Tiket Indotix - %s.pdf', $booking->booking_code);
 
         return response($ticketPdf->render($booking), 200, [
             'Content-Type' => 'application/pdf',
@@ -616,7 +616,7 @@ class WisataBookingController extends Controller
                 'status' => $latestPayment->status,
                 'internal_status' => $latestPayment->internal_status,
                 'payment_type' => $latestPayment->payment_type,
-                'payment_url' => $latestPayment->payment_url ?? ($latestPayment->payload['redirect_url'] ?? null),
+                'payment_url' => $booking->isExpired() ? null : ($latestPayment->payment_url ?? ($latestPayment->payload['redirect_url'] ?? null)),
                 'expires_at' => $latestPayment->expires_at?->toIso8601String(),
                 'payload' => $latestPayment->payload,
             ] : null,

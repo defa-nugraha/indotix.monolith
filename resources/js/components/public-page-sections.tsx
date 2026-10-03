@@ -161,7 +161,7 @@ export function PublicPartnerSection({
             aria-label="Partner Kami"
         >
             <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
-                <h2 className="font-['Space_Grotesk'] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+                <h2 className="font-sans text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
                     Partner Kami
                 </h2>
                 <p className="mx-auto mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">
@@ -315,7 +315,7 @@ export function PublicPartOfSection({
                     {partOf.eyebrow}
                     <span className="h-px w-8 bg-sky-200" />
                 </div>
-                <h2 className="mt-2 font-['Space_Grotesk'] text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+                <h2 className="mt-2 font-sans text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
                     {partOf.title}
                 </h2>
                 <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 font-medium text-slate-600 sm:text-base">
@@ -362,7 +362,7 @@ export function PublicTrustSection({
                     <p className="text-base font-black text-slate-950 sm:text-lg">
                         {trust.eyebrow}
                     </p>
-                    <h2 className="mt-5 font-['Space_Grotesk'] text-2xl leading-tight font-black tracking-tight text-slate-950 sm:text-3xl">
+                    <h2 className="mt-5 font-sans text-2xl leading-tight font-black tracking-tight text-slate-950 sm:text-3xl">
                         {trust.title}
                     </h2>
                     <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-700">

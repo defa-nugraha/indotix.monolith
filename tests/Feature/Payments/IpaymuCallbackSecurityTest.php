@@ -245,3 +245,40 @@ test('authoritative refunded status records the refund exactly once', function (
         ->and(WisataRefund::query()->where('wisata_payment_id', $payment->id)->count())->toBe(1)
         ->and(WisataRefund::query()->where('wisata_payment_id', $payment->id)->value('status'))->toBe('processed');
 });
+
+test('successful callback remains paid when inquiry reports ambiguous status 7', function () {
+    [$booking, $payment] = ipaymuPaymentFixture();
+    $payload = ipaymuCallbackPayload($payment);
+    $payload['trx_id'] = '237262';
+    $payload['status_code'] = '1';
+    $payload['sub_total'] = '100000';
+    $payload['total'] = '114930';
+    $payload['fee'] = '14930';
+    $payload['paid_off'] = 100000;
+    $payload['transaction_status_code'] = '7';
+    $payload['settlement_status'] = 'settled';
+    $payload['is_escrow'] = 'true';
+
+    Http::fake([
+        'sandbox.ipaymu.com/api/v2/transaction' => Http::response([
+            'Status' => 200,
+            'Success' => true,
+            'Data' => [
+                'TransactionId' => 237262,
+                'ReferenceId' => $payment->order_id,
+                'Amount' => 100000,
+                'Fee' => 14930,
+                'Status' => 7,
+                'TypeDesc' => 'VA',
+            ],
+        ]),
+    ]);
+
+    postSignedIpaymuCallback($this, $payload, 'ambiguous-inquiry-status')->assertOk();
+
+    expect($booking->fresh()->status)->toBe('paid')
+        ->and($booking->fresh()->payment_status)->toBe('paid')
+        ->and($booking->fresh()->payment_deadline)->toBeNull()
+        ->and($payment->fresh()->internal_status)->toBe('paid')
+        ->and($payment->fresh()->transaction_id)->toBe('237262');
+});

@@ -496,14 +496,9 @@ export default function MitraOnboarding({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dokumen Pendaftaran Mitra">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Dokumen Pendaftaran Mitra" />
 
-            <div className="relative flex flex-1 flex-col gap-6 overflow-x-hidden bg-[#f6fbff] px-6 py-8 font-['Plus_Jakarta_Sans'] text-slate-900">
+            <div className="relative flex flex-1 flex-col gap-6 overflow-x-hidden bg-[#f6fbff] px-6 py-8 font-sans text-slate-900">
                 <div className="pointer-events-none absolute top-12 -left-32 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
                 <div className="pointer-events-none absolute top-0 right-[-10%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
 
@@ -513,7 +508,7 @@ export default function MitraOnboarding({
                             <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Dokumen Pendaftaran
                             </p>
-                            <h1 className="mt-2 font-['Space_Grotesk'] text-2xl font-semibold text-slate-900">
+                            <h1 className="mt-2 font-sans text-2xl font-semibold text-slate-900">
                                 Halo, {auth?.user?.name}
                             </h1>
                             <p className="text-sm text-slate-600">

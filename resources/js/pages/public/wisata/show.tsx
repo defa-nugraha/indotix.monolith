@@ -343,7 +343,7 @@ export default function WisataShow({
                     <span className="block text-xs font-extrabold tracking-widest text-sky-300 uppercase sm:text-sm">
                         {destination.city_name ?? 'Wisata Indonesia'}
                     </span>
-                    <h1 className="mx-auto line-clamp-2 max-w-4xl font-['Space_Grotesk'] text-3xl leading-tight font-black tracking-tight text-white drop-shadow-md sm:text-5xl sm:leading-none md:text-6xl">
+                    <h1 className="mx-auto line-clamp-2 max-w-4xl font-sans text-3xl leading-tight font-black tracking-tight text-white drop-shadow-md sm:text-5xl sm:leading-none md:text-6xl">
                         {destination.destination_name}
                     </h1>
                     <p className="text-sm font-medium text-slate-200 sm:text-lg">
@@ -377,7 +377,7 @@ export default function WisataShow({
                         className="space-y-4 rounded-3xl border border-slate-100 bg-white p-6 shadow-xs sm:p-8"
                         data-coach="wisata-detail-info"
                     >
-                        <h2 className="font-['Space_Grotesk'] text-xl font-bold text-slate-950">
+                        <h2 className="font-sans text-xl font-bold text-slate-950">
                             Tentang {destination.destination_name}
                         </h2>
                         <ProductDescription
@@ -385,9 +385,10 @@ export default function WisataShow({
                                 destination.description ??
                                 destination.highlights
                             }
+                            html={Boolean(destination.description)}
                             fallback="Deskripsi destinasi belum tersedia."
                             lines={4}
-                            className="text-xs leading-relaxed font-normal text-slate-600 sm:text-sm"
+                            className="text-xs leading-relaxed font-normal text-slate-600 sm:text-sm [&_a]:font-semibold [&_a]:text-sky-600 [&_a]:underline [&_blockquote]:border-l-4 [&_blockquote]:border-slate-200 [&_blockquote]:pl-4 [&_li]:ml-5 [&_li]:list-disc [&_ol_li]:list-decimal [&_p+p]:mt-3"
                         />
 
                         <div className="border-t border-slate-100 pt-6">
@@ -423,7 +424,7 @@ export default function WisataShow({
                         id="location"
                     >
                         <div className="mb-4 flex items-center justify-between">
-                            <h3 className="flex items-center gap-2 font-['Space_Grotesk'] text-base font-bold text-slate-900">
+                            <h3 className="flex items-center gap-2 font-sans text-base font-bold text-slate-900">
                                 <MapPinned className="h-5 w-5 text-sky-600" />
                                 Jelajahi Area
                             </h3>
@@ -471,7 +472,7 @@ export default function WisataShow({
                         data-coach="wisata-ticket-selector"
                     >
                         <div>
-                            <h3 className="font-['Space_Grotesk'] text-lg font-black tracking-tight text-slate-950">
+                            <h3 className="font-sans text-lg font-black tracking-tight text-slate-950">
                                 Paket {destination.destination_name}
                             </h3>
                             <div className="mt-1.5 flex items-baseline gap-1">

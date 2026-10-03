@@ -65,6 +65,32 @@ const statusTone = (status: string) => {
     return 'bg-slate-50 text-slate-600';
 };
 
+const selectedUserIds = (selectedRows: string[]) =>
+    selectedRows.map((url) => {
+        const id = Number(url.split('/').filter(Boolean).at(-1));
+        if (!Number.isSafeInteger(id) || id < 1) {
+            throw new Error(
+                'Pilihan mitra tidak valid. Muat ulang halaman lalu coba lagi.',
+            );
+        }
+
+        return id;
+    });
+
+const responseError = async (response: globalThis.Response) => {
+    try {
+        const payload = await response.json();
+        const errors = payload?.errors as Record<string, string[]> | undefined;
+        return (
+            errors?.ids?.[0] ||
+            payload?.message ||
+            'QR mitra tidak dapat didownload.'
+        );
+    } catch {
+        return 'QR mitra tidak dapat didownload.';
+    }
+};
+
 export default function AdminMitraWisataIndex({
     mitra,
     filters,
@@ -151,14 +177,52 @@ export default function AdminMitraWisataIndex({
         );
     };
 
+    const handleDownloadSelectedQr = async (selectedRows: string[]) => {
+        const params = new URLSearchParams();
+        selectedUserIds(selectedRows).forEach((id) =>
+            params.append('ids[]', String(id)),
+        );
+
+        const response = await fetch(
+            `/admin/mitra-wisata/qr-download?${params.toString()}`,
+            {
+                credentials: 'same-origin',
+                headers: { Accept: 'application/pdf, application/json' },
+            },
+        );
+        if (!response.ok) {
+            throw new Error(await responseError(response));
+        }
+
+        const contentType = response.headers.get('content-type') ?? '';
+        if (!contentType.toLowerCase().includes('application/pdf')) {
+            throw new Error(
+                'Server mengembalikan format file yang tidak valid.',
+            );
+        }
+
+        const blob = await response.blob();
+        if (!blob.size) {
+            throw new Error('File QR yang diterima kosong.');
+        }
+
+        const disposition = response.headers.get('content-disposition') ?? '';
+        const filename =
+            disposition.match(/filename="?([^";]+)"?/i)?.[1] ??
+            'qr-masuk-mitra-wisata.pdf';
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = objectUrl;
+        link.download = filename.replace(/[\\/:*?"<>|]/g, '-');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        URL.revokeObjectURL(objectUrl);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Mitra Wisata">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Mitra Wisata" />
             <div className="relative flex flex-1 flex-col gap-6 overflow-hidden bg-[#f6fbff] px-6 py-8 font-sans text-slate-900">
                 <section className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/85 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -564,7 +628,12 @@ export default function AdminMitraWisataIndex({
 
                 <section className="overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 shadow-sm">
                     <div className="overflow-x-auto">
-                        <BulkDeleteTable className="w-full text-sm" deletionWarning="Mitra beserta destinasi, tiket, booking, payout, komisi, afiliasi, review, dispute, staff, dokumen, dan file upload terkait akan dihapus permanen.">
+                        <BulkDeleteTable
+                            className="w-full text-sm"
+                            deletionWarning="Mitra beserta destinasi, tiket, booking, payout, komisi, afiliasi, review, dispute, staff, dokumen, dan file upload terkait akan dihapus permanen."
+                            onDownloadSelected={handleDownloadSelectedQr}
+                            downloadSelectedLabel="Download QR terpilih"
+                        >
                             <thead className="bg-slate-50 text-xs text-slate-500 uppercase">
                                 <tr>
                                     <BulkDeleteSelectAll />

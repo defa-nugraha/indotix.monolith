@@ -65,14 +65,9 @@ export default function VerifyOtp({
             title="Verifikasi Email"
             description={`Masukkan kode OTP yang dikirim ke ${email}`}
         >
-            <Head title="Verifikasi OTP">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+            <Head title="Verifikasi OTP" />
 
-            <div className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 p-6 font-['Plus_Jakarta_Sans'] text-slate-900 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
+            <div className="relative overflow-hidden rounded-3xl border border-sky-100/80 bg-white/90 p-6 font-sans text-slate-900 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.55)] backdrop-blur">
                 <div className="pointer-events-none absolute -right-14 -top-16 h-40 w-40 rounded-full bg-sky-200/30 blur-2xl" />
                 <div className="pointer-events-none absolute -bottom-20 -left-10 h-44 w-44 rounded-full bg-amber-200/30 blur-3xl" />
 

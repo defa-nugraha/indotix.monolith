@@ -10,6 +10,8 @@ HEALTH_URL="${HEALTH_URL:?HEALTH_URL is required}"
 SMOKE_URL="${SMOKE_URL:?SMOKE_URL is required}"
 RUN_MIGRATIONS="${RUN_MIGRATIONS:-1}"
 
+umask 0002
+
 [[ "$(id -u)" != '0' ]] || { echo 'Release deployment must not run as root.' >&2; exit 1; }
 [[ "$RELEASE_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || { echo 'Invalid release ID.' >&2; exit 64; }
 [[ "$GUIDE_HASH" =~ ^[a-f0-9]{64}$ ]] || { echo 'Invalid guide hash.' >&2; exit 64; }
@@ -49,6 +51,19 @@ trap rollback_on_error ERR
 [[ -d "$RELEASE_DIR" && -f "$RELEASE_DIR/artisan" ]] || { echo "Invalid release directory: ${RELEASE_DIR}" >&2; exit 1; }
 [[ -f "${SHARED_DIR}/.env" ]] || { echo 'Missing shared/.env.' >&2; exit 1; }
 [[ -d "${SHARED_DIR}/storage" ]] || { echo 'Missing shared/storage.' >&2; exit 1; }
+for writable_dir in \
+    "${SHARED_DIR}/storage/app/public" \
+    "${SHARED_DIR}/storage/framework/cache/data" \
+    "${SHARED_DIR}/storage/framework/sessions" \
+    "${SHARED_DIR}/storage/framework/views" \
+    "${SHARED_DIR}/storage/logs"; do
+    mkdir -p "$writable_dir"
+    [[ -w "$writable_dir" ]] || {
+        echo "Shared Laravel path is not writable by the deployment user: ${writable_dir}" >&2
+        echo 'Run deploy/server-bootstrap-example.sh as root to repair ownership and ACLs.' >&2
+        exit 1
+    }
+done
 [[ -f "${SHARED_DIR}/public/guide-releases/${GUIDE_HASH}/index.html" ]] || { echo 'Missing shared Mitra guide.' >&2; exit 1; }
 [[ "$(read_env APP_ENV)" == "$EXPECTED_ENVIRONMENT" ]] || { echo 'APP_ENV guard rejected deployment.' >&2; exit 1; }
 [[ "$(php -r 'echo parse_url($argv[1], PHP_URL_HOST) ?: "";' "$(read_env APP_URL)")" == "$EXPECTED_HOST" ]] || { echo 'APP_URL guard rejected deployment.' >&2; exit 1; }

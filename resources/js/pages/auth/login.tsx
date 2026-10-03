@@ -27,13 +27,8 @@ export default function Login({
     const [showPassword, setShowPassword] = useState(false);
 
     return (
-        <div className="relative min-h-svh overflow-hidden bg-[#f6fbff] font-['Plus_Jakarta_Sans'] text-slate-900">
-            <Head title="Masuk">
-                <link
-                    href="https://fonts.bunny.net/css?family=space-grotesk:400,500,600,700|plus-jakarta-sans:400,500,600"
-                    rel="stylesheet"
-                />
-            </Head>
+        <div className="relative min-h-svh overflow-hidden bg-[#f6fbff] font-sans text-slate-900">
+            <Head title="Masuk" />
 
             <div className="pointer-events-none absolute top-10 -left-32 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
             <div className="pointer-events-none absolute top-0 right-[-10%] h-96 w-96 rounded-full bg-blue-500/20 blur-[120px]" />
@@ -53,7 +48,7 @@ export default function Login({
                             <p className="text-xs font-semibold text-sky-600 uppercase">
                                 Masuk
                             </p>
-                            <h2 className="font-['Space_Grotesk'] text-2xl font-semibold text-slate-900">
+                            <h2 className="font-sans text-2xl font-semibold text-slate-900">
                                 Selamat datang kembali
                             </h2>
                             <p className="text-sm text-slate-500">
